@@ -1,0 +1,93 @@
+/*
+ * !\file	command.hpp
+ * !\brief
+ */
+
+#ifndef COMMAND_HPP
+#define COMMAND_HPP
+
+#include "world.hpp"
+
+#include <stdarg.h>
+
+///////////////////////////////////////////////////////////////////////////////////
+// Forward declarations
+namespace gt{
+	class cPlugTag;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// constants
+namespace gt{
+	const unsigned int uNotMyBag=0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+namespace gt{
+
+	//--------------------------------------------------------
+	// A command defines what input/output functions a class
+	// can use.
+	class cCommand{
+	public:
+		typedef unsigned int dUID;	//!< unique command ID
+
+		const dUID	mID;
+		const dStr	mName;
+
+		cCommand(
+			const dUID pID,
+			const dNatChar* pName,
+			const dNameHash pParentHash,
+			unsigned int pSwitch
+		);
+
+		~cCommand();
+
+		template<typename T>
+		unsigned int getSwitch() const;	//!< Gives you the switch, but only if you are the figment it is looking for.
+
+		bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
+		void addTag(const cPlugTag* pTag);
+
+		cCommand& operator=(const cCommand& pCom);
+
+	private:
+		const dNameHash mParent;	//!< Used to determine which figment this command belongs too.
+		const unsigned int mSwitch;
+
+		std::set<const cPlugTag*> mDataTags;
+	};
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// Template functions
+namespace gt{
+
+	//!\brief	Generates a hash for this class and remembers is, so it won't regenerate it every time.
+	template <typename T>
+	dNameHash
+	getHash(){
+		static dNameHash name = 0;
+		if(name == 0){
+			name = ::makeHash(T::identify());
+		}
+		return name;
+	}
+}
+
+////////////////////////////////////////////////////////////////////
+// Template methods
+namespace gt{
+
+	template<typename T>
+	unsigned int
+	cCommand::getSwitch() const{
+		if (mParent == getHash<T>())
+			return mSwitch;
+		else
+			return uNotMyBag;
+	}
+}
+
+#endif
