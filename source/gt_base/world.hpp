@@ -203,5 +203,10 @@ namespace gt{
 // Handy for all those (...) catch blocks.
 #define UNKNOWN_ERROR	{ excep::unknownError temp(__FILE__, __LINE__); WARN(temp); }
 
+#ifdef GTUT
+	#undef GTUT_END
+	#define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld->flushLines(); }
+#endif
+
 #endif
 

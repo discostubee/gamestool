@@ -179,9 +179,8 @@ cLead::clear(){
 // Tests
 #ifdef GTUT
 
-GTUT_START(testLead, something)
-{
-}
-GTUT_END
+//GTUT_START(testLead, something)
+//GTUT_END;
+
 
 #endif

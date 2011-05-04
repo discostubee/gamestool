@@ -69,13 +69,16 @@ public:
 	void operator = (const cProfiler& pCopyIt);
 };
 
-//#ifdef DEBUG
-//	extern cGlobalPtrMan<cProfiler>	gProfiler;
-//	cProfiler::cToken singletonMakeToken(const char* pFile, unsigned int pLine);
+/*
+#ifdef DEBUG
+	cCoolStatic<cProfiler> gProfiler;
 
-//	#define PROFILE	//cProfiler::cToken profileToken = singletonMakeToken(__FUNCTION__, __LINE__);
-//#else
-//	#define PROFILE
-//#endif
+	#define PROFILE cProfiler::cToken profileToken = cCoolStatic<cProfiler>::get()->makeToken(__FILE__, __LINE__)
+	#define LOG_PROFILE cCoolStatic<cProfiler>::get()->flushThatLog(std::cout);
+#else
+	#define PROFILE
+	#define LOG_PROFILE
+#endif
+*/
 
 #endif

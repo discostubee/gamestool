@@ -17,27 +17,6 @@ cProfiler::cEntry::~cEntry(){
 }
 
 
-//std::vector<cProfiler::cEntry>::iterator
-//cProfiler::getIt(const dNameHash pTag){
-//	std::vector<cEntry>::iterator i;
-//
-//	//- attempt to find
-//	for(
-//		i=mEntries.begin();
-//		i != mEntries.end() &&
-//		(*i).mTag != pTag;
-//		++i
-//	);
-//
-//	if(i == mEntries.end()){
-//		cEntry newEntry(pTag);
-//		mEntries.push_back(newEntry);
-//		i = mEntries.begin() + (mEntries.size()-1);
-//	}
-//
-//	return i;
-//}
-
 cProfiler::cProfiler():
 	mGetTime(NULL)
 {}

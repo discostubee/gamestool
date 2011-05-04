@@ -31,7 +31,7 @@ namespace gt{
 	//!		aware of what is already loaded. That way, a plugin is only loaded/unloaded once.
 	//!\note	When an addon dies, it removes all its blueprints from the world. Removing drafts causes any
 	//!		figments of that type to become empty objects (refer to world removeBlueprint).
-	class cAddon: public cFigment, public tOutline<cAddon>{
+	class cAddon: public cFigment, private tOutline<cAddon>{
 	protected:
 		typedef boost::shared_ptr<dStr> ptrStr;
 

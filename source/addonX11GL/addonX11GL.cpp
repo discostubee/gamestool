@@ -35,10 +35,7 @@ closeLib(){
 		gt::tOutline<gt::cLayer_X11GL>::removeFromWorld();
 		gt::tOutline<gt::cLayer>::removeFromWorld();
 
-		cTracker::makeReport(std::cout);
 		DBUG_LO("closed x11 addon.");
-
-		gt::gWorld->flushLines();
 
 	}catch(excep::base_error &e){
 		WARN(e);

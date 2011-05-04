@@ -21,12 +21,12 @@
 			//!\brief	If this statment is false, then it fails and displays a message as to why.
 			#define GTUT_ASRT(statement, failMsg) ASSERT_TRUE(statement) << std::endl << "Problem: " << failMsg
 
-			//!\brief	Try calling a function, are report if anything is thrown out of it.
+			//!\brief	Try calling a function, reports if anything is thrown out of it.
 			#define TRYME(f) try{ f; }catch(std::exception &e){ ASSERT_TRUE(false) << e.what(); }catch(...){ ASSERT_TRUE(false) << "Unknown exception"; }
 
-			#define GTUT_START(name, args)	TEST(name, args)
+			#define GTUT_START(name, args)	TEST(name, args){ try
 
-			#define GTUT_END
+			#define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  }
 
 		#else
 

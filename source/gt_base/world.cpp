@@ -255,7 +255,15 @@ gt::redirectWorld(cWorld* pWorldNew){
 	pWorldNew->copyWorld(gt::gWorld);
 	delete gt::gWorld;
 
-	gt::gWorld = pWorldNew;
 	gt::cWorld::xLines.set(pWorldNew->mLines);
 	gt::cWorld::xProfiler.set(pWorldNew->mProfiler);
+	gt::gWorld = pWorldNew;
 }
+
+////////////////////////////////////////////////////////////
+// Tests
+#ifdef GTUT
+
+
+
+#endif

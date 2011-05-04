@@ -90,7 +90,7 @@ GTUT_START(testName, testArgs)
 	GTUT_ASRT(i==0, "i is not zero");
 	//GTUT_ASRT(i!=0, "i is zero");	//use to see a fail.
 }
-GTUT_END
+GTUT_END;
 
 GTUT_START(TestingFind, something)
 {
@@ -105,7 +105,7 @@ GTUT_START(TestingFind, something)
 
 	GTUT_ASRT( isIn(MagicNum, vecA) == true, "Couldn't find the magic number");
 }
-GTUT_END
+GTUT_END;
 
 #endif
 

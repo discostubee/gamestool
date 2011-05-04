@@ -43,9 +43,6 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
     	DBUG_LO("XF86 VideoMode extension version " << vmMajor << "." << vmMinor);
     }
 
-    // save desktop-resolution before switching modes
-    mDesktopMode = *modes[0];
-
     // get an appropriate visual
     vi = glXChooseVisual(mDisplay, mScreen, attrListDoubleBuff);
 
@@ -72,8 +69,14 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
     mWinAttr.colormap = cmap;
     mWinAttr.border_pixel = 0;
 
+    if(modes==NULL)
+    	mFullscreen = false;
+
     if (mFullscreen){
     	int dpyWidth, dpyHeight;
+
+    	// save desktop-resolution before switching modes
+		mDesktopMode = *modes[0];
 
     	// look for mode with requested resolution
 		for (int i = 0; i < modeNum; i++)

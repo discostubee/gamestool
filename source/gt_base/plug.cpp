@@ -81,8 +81,7 @@ GTUT_START(testPlugCopy, something)
 	}
 
 	delete(B);
-
 }
-GTUT_END
+GTUT_END;
 
 #endif

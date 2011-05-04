@@ -37,3 +37,33 @@ cCommand&
 cCommand::operator=(const cCommand& pCom){
 	DONT_USE_THIS;
 }
+
+////////////////////////////////////////////////////////////
+// Tests
+#ifdef GTUT
+
+class cComTestFig: public cFigment, private tOutline<cComTestFig>{
+public:
+	static const cPlugTag* xPT_testTag;
+
+	static const dNatChar* identify(){ return "command test figment"; }
+
+	enum{
+		eTestSwitch = cFigment::eSwitchEnd +1,
+		eSwitchEnd
+	};
+
+	cComTestFig(){}
+	~cComTestFig(){}
+};
+
+const cPlugTag* cComTestFig::xPT_testTag = tOutline<cComTestFig>::makePlugTag("test tag");
+
+GTUT_START(command, nothing)
+{
+	const cCommand* A = tOutline<cComTestFig>::makeCommand("test command", cComTestFig::eTestSwitch, cComTestFig::xPT_testTag);
+	GTUT_ASRT( A->getSwitch<cComTestFig>() ==  cComTestFig::eTestSwitch, "command switch is not correct" );
+}
+GTUT_END;
+
+#endif

@@ -5,7 +5,7 @@ using namespace gt;
 void
 cAddon_OSX::draftAddon(const std::string &pName){
 	if( mLibHandle == NULL ){
-		mLibPath = "./" + pName + ".dylib";
+		mLibPath = "addon" + pName + ".dylib";
 
 		DBUG_LO("using OSX to load shared library " << pName);
 
@@ -39,6 +39,8 @@ cAddon_OSX::closeAddon(){
 		}else{
 			DBUG_LO("unable to close shared library '" << mLibPath << "' because " << dlerror() );
 		}
+		gt::gWorld->flushLines();
+		cTracker::makeReport(std::cout);
 		dlclose(mLibHandle);
 	}
 }
