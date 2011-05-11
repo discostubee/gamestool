@@ -170,6 +170,12 @@ public:
 		setupOrCleanup(false);
 		mD = pSetter;
 	}
+
+	//!\brief	Used when we don't want this static to manage the pointer anymore.
+	static void drop(){
+		mD = NULL;
+		setupOrCleanup(false);
+	}
 };
 
 // Don't assign anything here.

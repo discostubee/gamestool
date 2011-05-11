@@ -109,6 +109,9 @@ namespace gt{
 
 		const cBlueprint* getBlueprint(dNameHash pNameHash);
 
+		//!\brief	Removed, or un-draft, a blueprint from the world.
+		//!\note	Super slow.
+		//!\todo	Figure out a way to avoid traversing the program tree every time.
 		void removeBlueprint(const cBlueprint* pRemoveMe);
 
 		//--------------------------------------------------------
@@ -134,7 +137,9 @@ namespace gt{
 
 		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
 		//!			bicycle.
-		ptrFig getEmptyFig();		
+		ptrFig getEmptyFig();
+
+
 
 		//--------------------------------------------------------
 		// Polymorphs
@@ -172,19 +177,23 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Globals
 namespace gt{
-	extern cWorld* gWorld;
+	extern cWorld* gWorld;	//!< World is a singleton.
 }
 
 ////////////////////////////////////////////////////////////////////
 // Functions.
+
 namespace gt{
+	//!\brief	Used to redirect the global, which is why it's not a static function of the world class.
+	//!			Only used when directing the global inside a shared library to the global inside the main program.
+	//!\param	pWorldNew	Pointer to the world you want to use. Can be null, in which case, the statics are redirected to NULL.
 	void redirectWorld(cWorld* pWorldNew);
 }
 
 ////////////////////////////////////////////////////////////////////
 // Macros
 #ifdef DEBUG
-	#define PROFILE	cProfiler::cToken profileToken = gt::gWorld->makeProfileToken(__FILE__, __LINE__)
+	#define PROFILE	//cProfiler::cToken profileToken = gt::gWorld->makeProfileToken(__FILE__, __LINE__)
 	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 	
 #else

@@ -39,16 +39,13 @@ cAddon_OSX::closeAddon(){
 		}else{
 			DBUG_LO("unable to close shared library '" << mLibPath << "' because " << dlerror() );
 		}
-		gt::gWorld->flushLines();
-		cTracker::makeReport(std::cout);
 		dlclose(mLibHandle);
 	}
 }
 
 cAddon_OSX::cAddon_OSX():
 	mLibHandle(NULL)
-{
-}
+{}
 
 cAddon_OSX::~cAddon_OSX(){
 	closeAddon();

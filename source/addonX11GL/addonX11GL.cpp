@@ -36,6 +36,9 @@ closeLib(){
 		gt::tOutline<gt::cLayer>::removeFromWorld();
 
 		DBUG_LO("closed x11 addon.");
+		gt::gWorld->flushLines();
+
+		gt::redirectWorld(NULL);
 
 	}catch(excep::base_error &e){
 		WARN(e);

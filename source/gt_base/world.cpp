@@ -13,6 +13,7 @@ cCoolStatic<cWorld::dLines> cWorld::xLines;
 cCoolStatic<cProfiler> cWorld::xProfiler;
 
 ////////////////////////////////////////////////////////////
+// Blueprint stuff
 using namespace gt;
 
 //!\brief	Used to keep track of the things which may have been replaced by this blueprint.
@@ -41,6 +42,8 @@ struct cWorld::sBlueprintHeader{
 
 
 ////////////////////////////////////////////////////////////
+// World
+
 using namespace gt;
 
 void
@@ -172,7 +175,7 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 			itr->second = getEmptyFig();	// This should be enough to empty the figment.
 		}
 
-		DBUG_LO("Erasing blueprint " << pRemoveMe->hash());
+		DBUG_LO("Erasing blueprint " << pRemoveMe->name());
 		mBlueprints.erase(mScrBMapItr);
 	}
 }
@@ -184,15 +187,15 @@ cWorld::makeFig(dNameHash pNameHash){
 	mScrBMapItr = mBlueprints.find(pNameHash);
 
 	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("bad name hash", __FILE__, __LINE__);
+		throw excep::base_error("Can't make figment as the provided name hash isn't drafted.", __FILE__, __LINE__);
 
 	return mScrBMapItr->second.mBlueprint->make();
 }
 
 void
 cWorld::copyWorld(cWorld* pWorld){
-	this->mLines->splice(this->mLines->end(), *pWorld->mLines);
-	*this->mProfiler = *pWorld->mProfiler;
+	mLines->splice(mLines->end(), *pWorld->mLines);
+	*mProfiler = *pWorld->mProfiler;
 }
 
 ptrLead
@@ -249,21 +252,20 @@ cWorld::getEmptyFig(){
 }
 
 ////////////////////////////////////////////////////////////
+// Functions
+
 void
 gt::redirectWorld(cWorld* pWorldNew){
-	gt::gWorld = new gt::cWorld();	// This should give you a reference to copy the statics
-	pWorldNew->copyWorld(gt::gWorld);
-	delete gt::gWorld;
+	if(pWorldNew){
+		gt::gWorld = new gt::cWorld();	// We need the member pointers to the statics to exist.
+		pWorldNew->copyWorld(gt::gWorld);
+		delete gt::gWorld;
 
-	gt::cWorld::xLines.set(pWorldNew->mLines);
-	gt::cWorld::xProfiler.set(pWorldNew->mProfiler);
-	gt::gWorld = pWorldNew;
+		gt::cWorld::xLines.set(pWorldNew->mLines);
+		gt::cWorld::xProfiler.set(pWorldNew->mProfiler);
+		gt::gWorld = pWorldNew;
+	}else{
+		gt::cWorld::xLines.drop();
+		gt::cWorld::xProfiler.drop();
+	}
 }
-
-////////////////////////////////////////////////////////////
-// Tests
-#ifdef GTUT
-
-
-
-#endif

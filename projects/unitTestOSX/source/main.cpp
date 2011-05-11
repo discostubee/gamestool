@@ -9,34 +9,7 @@
 
 using namespace gt;
 
-#ifdef GTUT
-
-	GTUT_START(addons, load)
-	{
-		ptrFig aoGL= gWorld->makeFig(getHash<cAddon>());
-		ptrFig window;
-		ptrLead setPath = gWorld->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID);
-		cPlug<dStr> path = cPlug<dStr>("OSXGL");
-
-		setPath->add(&path, cAddon::xPT_addonName);
-		aoGL->jack(setPath);
-
-		window = gWorld->makeFig(getHash<cWindowFrame>());
-	}
-	GTUT_END;
-
-
-	GTUT_START(addons, sharedLines)
-	{
-	}
-	GTUT_END;
-
-	GTUT_START(addons, sharedProfile)
-	{
-	}
-	GTUT_END;
-
-#endif
+ptrFig addonGL;
 
 int
 main(int argc, char **argv){
@@ -61,3 +34,34 @@ main(int argc, char **argv){
 
 	return result;
 }
+
+#ifdef GTUT
+
+	GTUT_START(addonOSX, load)
+	{
+		ptrFig window;
+		ptrLead setPath = gWorld->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID);
+		cPlug<dStr> path = cPlug<dStr>("X11GL");
+
+		addonGL = gWorld->makeFig(getHash<cAddon>());
+		setPath->add(&path, cAddon::xPT_addonName);
+		addonGL->jack(setPath);
+
+		window = gWorld->makeFig(getHash<cWindowFrame>());
+	}
+	GTUT_END;
+
+	GTUT_START(addonOSX, unload)
+	{
+		bool addonBlueprintRemoved = false;
+		addonGL.reset();
+		try{
+			gWorld->getBlueprint(getHash<cWindowFrame>());
+		}catch(excep::base_error){
+			addonBlueprintRemoved = true;
+		}
+		GTUT_ASRT(addonBlueprintRemoved, "didn't remove blueprints.");
+	}
+	GTUT_END;
+
+#endif

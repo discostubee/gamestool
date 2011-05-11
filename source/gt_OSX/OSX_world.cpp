@@ -40,6 +40,7 @@ cOSXWorld::loop(){
 
 void
 cOSXWorld::flushLines(){
+	std::cout << "count " << mLines->size() << std::endl; //!!! test code.º
 	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
 		std::cout << (*i) << std::endl; //!!!Put back in.
 	}
