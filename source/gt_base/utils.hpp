@@ -6,7 +6,6 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include "unitTests.hpp"
 #include "gt_string.hpp"
 #include "exceptions.hpp"
 #include <iostream>
@@ -14,6 +13,10 @@
 #include <map>
 #include <string>
 #include <sstream>
+
+#ifdef GTUT
+	#include "unitTests.hpp"
+#endif
 
 using namespace std;
 

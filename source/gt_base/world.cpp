@@ -12,6 +12,7 @@ cWorld* 			gt::gWorld					=NULL;
 cCoolStatic<cWorld::dLines> cWorld::xLines;
 cCoolStatic<cProfiler> cWorld::xProfiler;
 
+
 ////////////////////////////////////////////////////////////
 // Blueprint stuff
 using namespace gt;
@@ -117,18 +118,23 @@ void
 cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	PROFILE;
 
-	if(	// Some figments should never be remove.
+	DBUG_LO("Erasing blueprint '" << pRemoveMe->name() << "'");
+
+	//- Some figments should never be remove.
+	if(
 		pRemoveMe->hash() == getHash<cFigment>()
 		|| pRemoveMe->hash() == getHash<cEmptyFig>()
 	)
 		return;
 
+	//- If this figment replaced another, restore the original blueprint.
 	if(pRemoveMe->replace() != uDoesntReplace){
 		mScrBMapItr = mBlueprints.find(pRemoveMe->replace());
 		if(mScrBMapItr != mBlueprints.end()){
 			mScrBMapItr = mBlueArchive.find(mScrBMapItr->first);
 			if(mScrBMapItr != mBlueArchive.end()){
 				mBlueprints[pRemoveMe->replace()] = mScrBMapItr->second;
+				DBUG_LO("Blueprint '" << mScrBMapItr->second.mBlueprint->name() << "' restored");
 			}
 		}
 	}
@@ -139,7 +145,7 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 		std::list<ptrFig>*	prev = new std::list<ptrFig>();
 		std::map<cFigment*, ptrFig> figs;
 
-		// Find and empty any objects using this blueprint.
+		//- Find and empty any objects using this blueprint.
 		mRoot->getLinks(branches);
 		prev->push_back(mRoot);
 
@@ -165,17 +171,18 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 
 		}while(branches->size() > 0);
 
-		// empty the figments
+		//- Empty the figments
 		for(
 			std::map<cFigment*, ptrFig>::iterator itr = figs.begin();
 			itr != figs.end();
 			++itr
 		){
 			DBUG_VERBOSE_LO( "Emptying figment " << reinterpret_cast<unsigned int>(itr->first) );
-			itr->second = getEmptyFig();	// This should be enough to empty the figment.
+
+			itr->second.redirect(getEmptyFig());
 		}
 
-		DBUG_LO("Erasing blueprint " << pRemoveMe->name());
+		//- Now erase the blueprint.
 		mBlueprints.erase(mScrBMapItr);
 	}
 }

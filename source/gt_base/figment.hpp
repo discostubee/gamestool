@@ -21,15 +21,14 @@
 #ifndef FIGMENT_HPP
 #define FIGMENT_HPP
 
+#include "blueprint.hpp"
 #include "context.hpp"
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 // classes
 namespace gt{
 
 	//-------------------------------------------------------------------------------------
-	//!\class	cFigment
 	//!\brief	A figment of your imagination! More specifically, it's the base class type
 	//!			for all the funky new stuff you'll make.
 	class cFigment: private tOutline<cFigment>{
@@ -115,6 +114,71 @@ namespace gt{
 
 		virtual void run(cContext* pCon);
 	};
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// template specializations
+namespace gt{
+	//--------------------------------------
+	template<>
+	class cPlug<ptrFig>: public cBase_plug{
+	public:
+		ptrFig mD;
+
+		cPlug() : cBase_plug(typeid(ptrFig)), mD(gWorld->getEmptyFig()){
+		}
+
+		cPlug(ptrFig pA) : cBase_plug(typeid(ptrFig)), mD(pA){
+		}
+
+		virtual ~cPlug(){}
+
+		virtual cBase_plug& operator= (const cBase_plug &pD){
+			PROFILE;
+
+			//!\todo figure out a way to prevent code duplication.
+			if( mType == pD.mType ){	// we can just cast
+				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
+				mD = dynamic_cast< cPlug<ptrFig>* >(
+					const_cast<cBase_plug*>(&pD)
+				)->mD;
+			}else{
+				PLUG_CANT_COPY_ID(pD.mType);
+			}
+
+			return *this;
+		}
+
+		virtual void operator= (ptrFig pA){ mD = pA; }
+
+		virtual cByteBuffer& save(){
+			PROFILE;
+
+			//- Using the pointer as a unique number to identify the referenced figment.
+			cByteBuffer* saveBuff = new cByteBuffer();
+			dFigSaveSig saveSig = static_cast<dFigSaveSig>( mD.get() );
+			saveBuff->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
+			return *saveBuff;
+		}
+
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
+			PROFILE;
+
+			if(pReloads != NULL){
+				dFigSaveSig saveSig = 0;
+				pChewToy->fill(&saveSig);
+				dReloadMap::iterator itr = pReloads->find(saveSig);
+
+				mD = itr->second->fig;
+				pChewToy->trim(sizeof saveSig);
+			}
+		}
+
+		virtual void reset(){
+			mD = gWorld->getEmptyFig();
+		}
+	};
+
 
 }
 

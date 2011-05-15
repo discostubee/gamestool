@@ -30,8 +30,8 @@ draftAll(gt::cWorld* pWorld){
 DYN_LIB_DEF(void)
 closeLib(){
 	try{
-		gt::tOutline<gt::cWindowFrame>::removeFromWorld();
 		gt::tOutline<gt::cWindowFrame_X11GL>::removeFromWorld();
+		gt::tOutline<gt::cWindowFrame>::removeFromWorld();
 		gt::tOutline<gt::cLayer_X11GL>::removeFromWorld();
 		gt::tOutline<gt::cLayer>::removeFromWorld();
 

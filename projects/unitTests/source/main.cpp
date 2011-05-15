@@ -7,18 +7,20 @@
 
 int
 main(int argc, char **argv){
+	int result = EXIT_FAILURE;
 
 	std::cout << "Running gamestool tests. Version 0.1" << std::endl;
 
 	gt::gWorld = new gt::cWorld();
 #ifdef GTUT_GOOGLE
 	::testing::InitGoogleTest(&argc, argv);
-	RUN_ALL_TESTS();
+	result = RUN_ALL_TESTS();
 #endif
 	delete gt::gWorld;
 
-	std::cout << "Tests over. Press any key to finish" << std::endl;
-	getchar();
+	//std::cout << "Tests over. Press any key to finish" << std::endl;
+	//getchar();
 
-	return EXIT_SUCCESS;
+	return result;
 }
+

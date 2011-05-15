@@ -4,6 +4,12 @@
 #include "lead.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////
+// Forward declarations
+namespace gt{
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 // Constants
 namespace gt{
 	const dNameHash uDoesntReplace = 0;
@@ -154,7 +160,7 @@ namespace gt{
 	}
 
 	template<typename T>
-	void 
+	void
 	tOutline<T>::readyTags(bool pDontCleanup){
 		static bool setup = false;
 		if(!pDontCleanup){
@@ -259,14 +265,14 @@ namespace gt{
 			}
 			va_end(params);
 
-			DBUG_LO( T::identify() << " made command '" << pName );
+			DBUG_LO( "The outline of '" << T::identify() << "' made command '" << pName << "'");
 
 			return &itrCom->second;
 		}
 	}
 
 	template<typename T>
-	const cPlugTag* 
+	const cPlugTag*
 	tOutline<T>::makePlugTag(const dNatChar* pName){
 		dPTagContainer::iterator itrTag;
 
@@ -307,7 +313,7 @@ namespace gt{
 	}
 
 	template<typename T>
-	const cPlugTag* 
+	const cPlugTag*
 	tOutline<T>::getPlugTag(dNameHash pHash){
 		dPTagContainer::iterator itrTag;
 
@@ -322,6 +328,7 @@ namespace gt{
 
 		return &itrTag->second;
 	}
+
 }
 
 #endif

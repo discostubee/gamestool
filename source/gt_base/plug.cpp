@@ -4,6 +4,18 @@
 using namespace gt;
 
 
+cReload::cReload(){
+}
+
+cReload::cReload(ptrFig pFig, const dByte* buff, size_t buffSize): fig(pFig){
+	if(buff != NULL && buffSize > 0)
+		data.copy(buff, buffSize);
+}
+
+cReload::~cReload(){
+}
+
+////////////////////////////////////////////////////////////
 cBase_plug::cBase_plug(PLUG_TYPE_ID pTI):
 	mType(pTI)
 {

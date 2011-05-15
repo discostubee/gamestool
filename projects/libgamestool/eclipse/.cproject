@@ -38,6 +38,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1018436817" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>

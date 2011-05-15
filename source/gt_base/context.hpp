@@ -2,10 +2,9 @@
 #ifndef CONTEXT_HPP
 #define CONTEXT_HPP
 
-#include "blueprint.hpp"
+#include "world.hpp"
 
-#include <stack>
-#include <map>
+#include <deque>
 
 ///////////////////////////////////////////////////////////////////////////////////
 // typedefs and defines

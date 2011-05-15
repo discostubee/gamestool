@@ -34,33 +34,31 @@
 #ifndef	WORLD_HPP
 #define WORLD_HPP
 
-#include "profiler.hpp"
-#include "utils.hpp"
+#include "dirPtr.hpp"
 #include "gt_string.hpp"
-#include "exceptions.hpp"
+#include "utils.hpp"
+#include "profiler.hpp"
 
-#include <sstream>
-#include <vector>
 #include <list>
-#include <map>
 #include <set>
-#include <boost/smart_ptr.hpp>
+#include <stdarg.h>
+#include <boost/shared_ptr.hpp>
 
-////////////////////////////////////////////////////////////////////
-// Forward declarations & typedefs
+///////////////////////////////////////////////////////////////////////////////////
+// forward declarations
+
 namespace gt{
-	class cFigment;
+	class cBase_plug;
+	class cPlugTag;
 	class cLead;
+	class cFigment;
 	class cBlueprint;
 	class cCommand;
-	class cBase_plug;
-	class cPlugTag;	
 
-	typedef boost::shared_ptr<cFigment> ptrFig;	//!<
-	typedef boost::shared_ptr<cLead> ptrLead;	//!<
-	typedef const cFigment* dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time.
+	typedef tDirPtr<cFigment> ptrFig;
+	typedef boost::shared_ptr<cLead> ptrLead;
+	typedef const void* dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time.
 }
-
 
 ////////////////////////////////////////////////////////////////////
 // Classes
@@ -194,7 +192,7 @@ namespace gt{
 // Macros
 #ifdef DEBUG
 	#define PROFILE	//cProfiler::cToken profileToken = gt::gWorld->makeProfileToken(__FILE__, __LINE__)
-	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+	#define DBUG_LO(x) std::cout << x << std::endl; //{ std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 	
 #else
 	#define PROFILE

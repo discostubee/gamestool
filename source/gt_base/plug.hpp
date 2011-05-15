@@ -31,10 +31,8 @@
 	#define PLUG_CANT_COPY_ID(t) throw excep::cantCopy("", "", __FILE__, __LINE__)
 #endif
 
-
 ///////////////////////////////////////////////////////////////////////////////////
 // Classes
-
 namespace gt{
 
 	//-------------------------------------------------------------------------------------
@@ -44,12 +42,9 @@ namespace gt{
 		ptrFig		fig;
 		cByteBuffer	data;
 
-		cReload(){}
-		cReload(ptrFig pFig, const dByte* buff = NULL, size_t buffSize = 0): fig(pFig){
-			if(buff != NULL && buffSize > 0)
-				data.copy(buff, buffSize);
-		}
-		~cReload(){}
+		cReload();
+		cReload(ptrFig pFig, const dByte* buff = NULL, size_t buffSize = 0);
+		~cReload();
 	};
 
 	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
@@ -131,6 +126,7 @@ namespace gt{
 
 		virtual cByteBuffer& save();
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads);	//!< Eats the buffer you pass it in order to load. This way, memory is conserved.
+		virtual void reset();	//!< reset back to a default.
 	private:
 		void genericCopy(const cBase_plug* pD);
 	};
@@ -257,67 +253,15 @@ namespace gt{
 	cPlug<A>::loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
 		//!\todo
 	}
+
+	template<typename A>
+	void
+	cPlug<A>::reset(){}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Template specialisations.
 namespace gt{
-
-	//--------------------------------------
-	template<>
-	class cPlug<ptrFig>: public cBase_plug{
-	public:
-		ptrFig mD;
-
-		cPlug() : cBase_plug(typeid(ptrFig)), mD(gWorld->getEmptyFig()){
-		}
-
-		cPlug(boost::shared_ptr<cFigment> pA) : cBase_plug(typeid(ptrFig)), mD(pA){
-		}
-
-		virtual ~cPlug(){}
-
-		virtual cBase_plug& operator= (const cBase_plug &pD){
-			PROFILE;
-
-			//!\todo figure out a way to prevent code duplication.
-			if( mType == pD.mType ){	// we can just cast
-				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
-				mD = dynamic_cast< cPlug<ptrFig>* >(
-					const_cast<cBase_plug*>(&pD)
-				)->mD;
-			}else{
-				PLUG_CANT_COPY_ID(pD.mType);
-			}
-
-			return *this;
-		}
-
-		virtual void operator= (ptrFig pA){ mD = pA; }
-
-		virtual cByteBuffer& save(){
-			PROFILE;
-
-			//- Using the pointer as a unique number to identify the referenced figment.
-			cByteBuffer* saveBuff = new cByteBuffer();
-			dFigSaveSig saveSig = static_cast<dFigSaveSig>(mD.get());
-			saveBuff->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
-			return *saveBuff;
-		}
-
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
-			PROFILE;
-
-			if(pReloads != NULL){
-				dFigSaveSig saveSig = 0;
-				pChewToy->fill(&saveSig);
-				dReloadMap::iterator itr = pReloads->find(saveSig);
-
-				mD = itr->second->fig;
-				pChewToy->trim(sizeof saveSig);
-			}
-		}
-	};
 
 	//--------------------------------------
 	template<>
@@ -369,6 +313,10 @@ namespace gt{
 			mD = (dNatChar*)temp;
 			pBuff->trim(length-1);
 			delete temp;
+		}
+
+		virtual void reset(){
+			mD = dStr("");
 		}
 	};
 }

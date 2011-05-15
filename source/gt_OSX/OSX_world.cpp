@@ -17,7 +17,7 @@ cOSXWorld::cOSXWorld(){
 }
 
 cOSXWorld::~cOSXWorld(){
-	mRoot.reset();	//so that our console displays that all figments were destroyed.
+	mRoot.redirect(NULL);	//so that our console displays that all figments were destroyed.
 	flushLines();
 }
 
@@ -28,7 +28,6 @@ cOSXWorld::getAppTime(){
 
 void
 cOSXWorld::loop(){
-	//!\todo get the main OSX program loop going.
 	cContext worldContext;
 
 	DBUG_LO("OSX world loop");
@@ -40,9 +39,9 @@ cOSXWorld::loop(){
 
 void
 cOSXWorld::flushLines(){
-	std::cout << "count " << mLines->size() << std::endl; //!!! test code.º
+	std::cout << "flush from "<< mLines << ", "<< mLines->size() <<" lines" << std::endl;
 	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
-		std::cout << (*i) << std::endl; //!!!Put back in.
+		std::cout << (*i) << std::endl;
 	}
 	mLines->clear();
 }

@@ -29,19 +29,34 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
 
     XVisualInfo *vi = NULL;
     Colormap cmap;
-    XF86VidModeModeInfo **modes;
+    XF86VidModeModeInfo **modes=NULL;
     int modeNum=0, bestMode=0;
 
     // get a connection
     mDisplay = XOpenDisplay(0);
     mScreen = DefaultScreen(mDisplay);
-    XF86VidModeGetAllModeLines(mDisplay, mScreen, &modeNum, &modes);
 
+//#ifdef DEBUG
+#if 0
     {
-    	int vmMajor, vmMinor;
-    	XF86VidModeQueryVersion(mDisplay, &vmMajor, &vmMinor);
-    	DBUG_LO("XF86 VideoMode extension version " << vmMajor << "." << vmMinor);
-    }
+		char** list=NULL;
+		int extCount=0;
+		int extension=0;
+		int vmMajor=0, vmMinor=0;
+
+		list = XListExtensions(mDisplay, &extCount);
+		while(extension < extCount){
+			DBUG_LO("xlib extension: "<<list[extension]);
+			++extension;
+		}
+		XFreeExtensionList(list);
+
+		XF86VidModeQueryVersion(mDisplay, &vmMajor, &vmMinor);
+		DBUG_LO("XF86 VideoMode extension version " << vmMajor << "." << vmMinor);
+	}
+#endif
+
+	XF86VidModeGetAllModeLines(mDisplay, mScreen, &modeNum, &modes);
 
     // get an appropriate visual
     vi = glXChooseVisual(mDisplay, mScreen, attrListDoubleBuff);
@@ -69,8 +84,23 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
     mWinAttr.colormap = cmap;
     mWinAttr.border_pixel = 0;
 
-    if(modes==NULL)
-    	mFullscreen = false;
+    if(mFullscreen){	//- Run checks before attempting fullscreen.
+		if(modes==NULL){
+			mFullscreen = false;
+			DBUG_LO("Unable to set fullscreen because we can't get modes.");
+		}
+
+		// look for mode with requested resolution
+		for (int i = 0; i < modeNum; i++)
+		{
+			if (
+				modes[i]->hdisplay == mWidth
+				&& modes[i]->vdisplay == mHeight
+				&& XF86VidModeValidateModeLine(mDisplay, 0, modes[i])==0/*MODE_OK*/
+			)
+				bestMode = i;
+		}
+    }
 
     if (mFullscreen){
     	int dpyWidth, dpyHeight;
@@ -78,19 +108,11 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
     	// save desktop-resolution before switching modes
 		mDesktopMode = *modes[0];
 
-    	// look for mode with requested resolution
-		for (int i = 0; i < modeNum; i++)
-		{
-			if ((modes[i]->hdisplay == mWidth) && (modes[i]->vdisplay == mHeight))
-				bestMode = i;
-		}
-
         XF86VidModeSwitchToMode(mDisplay, mScreen, modes[bestMode]);
         XF86VidModeSetViewPort(mDisplay, mScreen, 0, 0);
         dpyWidth = modes[bestMode]->hdisplay;
         dpyHeight = modes[bestMode]->vdisplay;
         DBUG_LO("resolution " << dpyWidth << ", " << dpyHeight);
-        XFree(modes);
 
         mWinAttr.override_redirect = True;
         mWinAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
@@ -117,7 +139,7 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         	0, 0, 0, 0, 0, 0
         );
 
-    }else{	// create a window in window mode
+    }else{	// create a window
 
     	mWinAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
 
@@ -148,9 +170,14 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         );
 
         XMapRaised(mDisplay, mWindow);
+        DBUG_LO("window created ("<<mWidth<<","<<mHeight<<")");
     }
 
     setDim(0, 0, mWidth, mHeight);
+
+    if(modes)
+    XFree(modes);
+    XFlush(mDisplay);
 }
 
 cWindowFrame_X11GL::~cWindowFrame_X11GL(){

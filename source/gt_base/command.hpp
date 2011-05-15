@@ -8,13 +8,6 @@
 
 #include "world.hpp"
 
-#include <stdarg.h>
-
-///////////////////////////////////////////////////////////////////////////////////
-// Forward declarations
-namespace gt{
-	class cPlugTag;
-}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // constants
@@ -25,9 +18,10 @@ namespace gt{
 ///////////////////////////////////////////////////////////////////////////////////
 namespace gt{
 
-	//--------------------------------------------------------
-	// A command defines what input/output functions a class
-	// can use.
+	//----------------------------------------------------------------------------
+	//!\brief	A command defines what input/output functions a class can use.
+	//!\note	We need to use commands because they can be serialized and
+	//!			form part of a user program.
 	class cCommand{
 	public:
 		typedef unsigned int dUID;	//!< unique command ID
