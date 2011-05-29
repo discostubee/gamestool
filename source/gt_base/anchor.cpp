@@ -27,7 +27,7 @@ cAnchor::save(){
 	ptrLead				append(new cLead(cBase_fileIO::xInsert));
 	std::list<ptrFig>*	branches = new std::list<ptrFig>();
 	std::list<ptrFig>*	prev = new std::list<ptrFig>();
-	std::set<cFigment*> figs;
+	std::set<iFigment*> figs;
 
 	size_t				chunkSize = 0;
 	dNameHash			chunkHash = 0;
@@ -61,7 +61,7 @@ cAnchor::save(){
 		chunkSig = mRoot.mD.get();
 		saveBuff->add( &chunkSig ); // Save reference to the root.
 
-		for( std::set<cFigment*>::iterator i = figs.begin(); i != figs.end(); ++i ){
+		for( std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i ){
 			cByteBuffer	chunkSave;
 
 			DBUG_LO("	saving a " << (*i)->name());
@@ -73,7 +73,7 @@ cAnchor::save(){
 			}
 
 			//- Get the hash.
-			chunkHash = (*i)->replaces();
+			chunkHash = (*i)->getReplacement();
 
 			if( chunkHash == uDoesntReplace ){
 				chunkHash = (*i)->hash();

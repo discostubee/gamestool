@@ -39,7 +39,7 @@ cOSXWorld::loop(){
 
 void
 cOSXWorld::flushLines(){
-	std::cout << "flush from "<< mLines << ", "<< mLines->size() <<" lines" << std::endl;
+	//std::cout << "flush from "<< mLines << ", "<< mLines->size() <<" lines" << std::endl;
 	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
 		std::cout << (*i) << std::endl;
 	}

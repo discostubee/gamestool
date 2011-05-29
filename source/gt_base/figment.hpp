@@ -31,7 +31,7 @@ namespace gt{
 	//-------------------------------------------------------------------------------------
 	//!\brief	A figment of your imagination! More specifically, it's the base class type
 	//!			for all the funky new stuff you'll make.
-	class cFigment: private tOutline<cFigment>{
+	class cFigment: public iFigment, private tOutline<cFigment>{
 	public:
 		//-----------------------------
 		// Defines
@@ -81,12 +81,14 @@ namespace gt{
 		virtual cByteBuffer& save();							//!< Outputs all the data it needs to re-load later into a byte buffer
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL){}				//!< Called load eat because the head of the buffer is consume by the load function.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks){}	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
+		virtual dNameHash getReplacement() const{ return cFigment::replaces(); }	//!< You'll need to override this if you are replacing stuff.
 	};
 
 	//-------------------------------------------------------------------------------------
-	// Designed to be the null return type. It doesn't do anything
-	// and it allows objects to still function by referencing this
-	// dummy instead of null.
+	//!\brief	Designed to be the null return type. It doesn't do anything and it allows
+	//			objects to still function by referencing this dummy instead of null.
+	//!\note	This is an example of the bare minimum that you have to do in order to make
+	//!			a new figment type class.
 	class cEmptyFig: public cFigment, private tOutline<cEmptyFig>{
 	public:
 		static const dNatChar* identify(){ return "empty figment"; }
@@ -99,9 +101,9 @@ namespace gt{
 	};
 
 	//-------------------------------------------------------------------------------------
-	// Use this object to cause the program to no longer loop, and so exit. However, this
-	// is not an instant shutdown because the program must still finish the loop it is on.
-	// Simply run it to shutoff the loop.
+	//!\brief	Use this object to cause the program to no longer loop, and so exit. However,
+	//!			this is not an instant shutdown because the program must still finish the loop
+	//!			it is on. Simply run it to shutoff the loop.
 	class cWorldShutoff: public cFigment, private tOutline<cWorldShutoff>{
 	public:
 		static const dNatChar* identify(){ return "world shutoff"; }

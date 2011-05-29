@@ -30,7 +30,8 @@ namespace gt{
 		virtual ~cBitmap_gl();
 
 		//-----------------------------
-		virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
+		virtual const char* name() const{ return identify(); }
+		virtual dNameHash getReplacement() const{ return replaces(); }
 
 	};
 }

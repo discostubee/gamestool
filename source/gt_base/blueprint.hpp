@@ -24,6 +24,22 @@ namespace gt{
 	//---------------------------------------------------------------------------------------------------
 	//!\brief	Blueprint for a figment
 	class cBlueprint{
+	public:
+
+		cBlueprint();
+		~cBlueprint();
+
+		template<typename T> void setup();
+
+		ptrFig make() const;
+		dNameHash hash() const;
+		const char* name() const;
+		dNameHash replace() const;
+		const cCommand* getCom(dNameHash pHash) const;
+		const cPlugTag* getPlugTag(dNameHash pPT) const;
+		void addToGivenContainers(dComContainer* pComContain, dPTagContainer* pPTagContain) const;
+		const cBlueprint* operator = (const cBlueprint* pCopy);
+
 	private:
 		dNameHash mHash;
 		dNameHash mReplaces;
@@ -34,25 +50,7 @@ namespace gt{
 		const dComContainer* mComContainRef;
 		const dPTagContainer* mPTagContainRef;
 
-		template<typename T>
-		static ptrFig maker();
-
-	public:
-
-		cBlueprint();
-		~cBlueprint();
-
-		template<typename T>
-		void setup();
-
-		ptrFig make() const;
-		dNameHash hash() const;
-		const char* name() const;
-		dNameHash replace() const;
-		const cCommand* getCom(dNameHash pHash) const;
-		const cPlugTag* getPlugTag(dNameHash pPT) const;
-		void addToGivenContainers(dComContainer* pComContain, dPTagContainer* pPTagContain) const;
-		const cBlueprint* operator = (const cBlueprint* pCopy);
+		template<typename T> static ptrFig maker();
 	};
 
 	//---------------------------------------------------------------------------------------------------

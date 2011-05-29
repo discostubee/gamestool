@@ -43,6 +43,8 @@ namespace gt{
 
 		cAddon_OSX();
 		virtual ~cAddon_OSX();
+
+		virtual dNameHash getReplacement() const{ return replaces(); }
 	};
 }
 

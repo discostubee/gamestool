@@ -12,13 +12,13 @@ cContext::~cContext(){
 }
 
 void
-cContext::add(cFigment* pFig){
+cContext::add(iFigment* pFig){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
 
 	//!\todo	Update this so that it there can be a deep nest of replaced figments.
-	dNameHash pancakeHash = pFig->replaces() == uDoesntReplace ? pFig->hash() : pFig->replaces();
+	dNameHash pancakeHash = pFig->getReplacement() == uDoesntReplace ? pFig->hash() : pFig->getReplacement();
 
 	//DBUG_LO("Context adds "<< pFig->name());
 
@@ -40,13 +40,13 @@ cContext::add(cFigment* pFig){
 }
 
 void
-cContext::finished(cFigment* pFig){
+cContext::finished(iFigment* pFig){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
 
 	//!\todo	Update this so that it there can be a deep nest of replaced figments.
-	dNameHash pancakeHash = pFig->replaces() == uDoesntReplace ? pFig->hash() : pFig->replaces();
+	dNameHash pancakeHash = pFig->getReplacement() == uDoesntReplace ? pFig->hash() : pFig->getReplacement();
 
 	//DBUG_LO("Context finishes hash " << pancakeHash);
 
@@ -82,7 +82,7 @@ cContext::finished(cFigment* pFig){
 }
 
 bool
-cContext::isStacked(cFigment* pFig){
+cContext::isStacked(iFigment* pFig){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
@@ -94,7 +94,7 @@ cContext::isStacked(cFigment* pFig){
 	return false;
 }
 
-cFigment*
+iFigment*
 cContext::getLastOfType(dNameHash pType){
 	PROFILE;
 

@@ -91,35 +91,5 @@
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
-		<link>
-			<name>gt_OSX/OSX_addon.cpp</name>
-			<type>1</type>
-			<location>/Users/stuandlou/Documents/workspace/gamestool/branch_sherlock/source/gt_OSX/OSX_addon.cpp</location>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_addon.hpp</name>
-			<type>1</type>
-			<location>/Users/stuandlou/Documents/workspace/gamestool/branch_sherlock/source/gt_OSX/OSX_addon.hpp</location>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_fileIO.cpp</name>
-			<type>1</type>
-			<location>/Users/stuandlou/Documents/workspace/gamestool/branch_sherlock/source/gt_OSX/OSX_fileIO.cpp</location>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_fileIO.hpp</name>
-			<type>1</type>
-			<location>/Users/stuandlou/Documents/workspace/gamestool/branch_sherlock/source/gt_OSX/OSX_fileIO.hpp</location>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_world.cpp</name>
-			<type>1</type>
-			<location>/Users/stuandlou/Documents/workspace/gamestool/branch_sherlock/source/gt_OSX/OSX_world.cpp</location>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_world.hpp</name>
-			<type>1</type>
-			<location>/Users/stuandlou/Documents/workspace/gamestool/branch_sherlock/source/gt_OSX/OSX_world.hpp</location>
-		</link>
 	</linkedResources>
 </projectDescription>

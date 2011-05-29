@@ -36,6 +36,7 @@ cCommand::addTag(const cPlugTag* pTag){
 cCommand&
 cCommand::operator=(const cCommand& pCom){
 	DONT_USE_THIS;
+	return *this;
 }
 
 ////////////////////////////////////////////////////////////

@@ -27,7 +27,8 @@ namespace gt{
 		cLayer_X11GL();
 		virtual ~cLayer_X11GL();
 
-		virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
+		virtual const char* name() const{ return identify(); }
+		virtual dNameHash getReplacement() const{ return replaces(); }
 
 		virtual void run(cContext* pCon);
 	};

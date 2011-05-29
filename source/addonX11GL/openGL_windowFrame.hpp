@@ -36,6 +36,7 @@ public:
 	virtual ~cWindowFrame_X11GL();
 
 	virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
+	virtual dNameHash getReplacement() const{ return replaces(); }
 
 	virtual void run(cContext* pCon);
 
@@ -50,13 +51,15 @@ protected:
 	Bool                    mFullscreen;
 	Bool                    mDoubleBuffered;
 	XF86VidModeModeInfo     mDesktopMode;
-	Atom 					mDeleteMessage;
 	int                     mX, mY;
 	unsigned int            mWidth, mHeight;
 	unsigned int            mDepth;
     XEvent					mEvent;
+	Atom 					mDeleteMessage;
 
     virtual void setDim(dUnitPix pX, dUnitPix pY, dUnitPix pW, dUnitPix pH);
+
+    void testPattern();	//!< Draw a test pattern.
 
 private:
     bool isDestroyWindowAtom(const ::Atom& pAtom);

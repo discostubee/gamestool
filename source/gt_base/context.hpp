@@ -9,8 +9,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // typedefs and defines
 namespace gt{
-	typedef std::deque<cFigment*> dProgramStack;
-	typedef std::map<cFigment*, int> dFigSigCount;
+	typedef std::deque<iFigment*> dProgramStack;
+	typedef std::map<iFigment*, int> dFigSigCount;
 	typedef std::map<dNameHash, dProgramStack> dPancakes;	//!< There are many different kinds of pancakes, and each plate can have any number of that kind on it.
 }
 
@@ -35,10 +35,10 @@ public:
 	cContext();
 	~cContext();
 
-	void add(cFigment* pFig);
-	void finished(cFigment* pFig);
-	bool isStacked(cFigment* pFig);
-	cFigment* getLastOfType(dNameHash pType);
+	void add(iFigment* pFig);
+	void finished(iFigment* pFig);
+	bool isStacked(iFigment* pFig);
+	iFigment* getLastOfType(dNameHash pType);
 };
 
 }

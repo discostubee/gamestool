@@ -143,7 +143,7 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	if(mScrBMapItr != mBlueprints.end()){
 		std::list<ptrFig>*	branches = new std::list<ptrFig>();
 		std::list<ptrFig>*	prev = new std::list<ptrFig>();
-		std::map<cFigment*, ptrFig> figs;
+		std::map<iFigment*, ptrFig> figs;
 
 		//- Find and empty any objects using this blueprint.
 		mRoot->getLinks(branches);
@@ -173,7 +173,7 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 
 		//- Empty the figments
 		for(
-			std::map<cFigment*, ptrFig>::iterator itr = figs.begin();
+			std::map<iFigment*, ptrFig>::iterator itr = figs.begin();
 			itr != figs.end();
 			++itr
 		){
@@ -201,8 +201,9 @@ cWorld::makeFig(dNameHash pNameHash){
 
 void
 cWorld::copyWorld(cWorld* pWorld){
-	mLines->splice(mLines->end(), *pWorld->mLines);
-	*mProfiler = *pWorld->mProfiler;
+	if(!pWorld->mLines->empty())
+		mLines->splice(mLines->end(), *pWorld->mLines);
+	*mProfiler += *pWorld->mProfiler;
 }
 
 ptrLead
@@ -265,6 +266,9 @@ void
 gt::redirectWorld(cWorld* pWorldNew){
 	if(pWorldNew){
 		gt::gWorld = new gt::cWorld();	// We need the member pointers to the statics to exist.
+		std::cout << (long)gt::gWorld << " vs " << (long)pWorldNew << std::endl; //!!!
+		std::cout << "xLines at " << (long)(&gt::cWorld::xLines) << std::endl;
+		std::cout << (long)gt::cWorld::xLines.get() << " vs " << (long)pWorldNew->mLines << std::endl; //!!!
 		pWorldNew->copyWorld(gt::gWorld);
 		delete gt::gWorld;
 

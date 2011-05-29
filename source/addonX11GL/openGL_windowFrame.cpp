@@ -4,6 +4,18 @@ using namespace gt;
 
 void
 cWindowFrame_X11GL::setDim(dUnitPix pX, dUnitPix pY, dUnitPix pW, dUnitPix pH){
+	if(pW==0 || pH==0)
+		return;
+
+	glViewport(0, 0, static_cast<GLdouble>(pW), static_cast<GLdouble>(pH));
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(
+		45.0,	// Field of view.
+		static_cast<GLdouble>(pW / pH), // aspect ratio.
+		0.1, // z near clip.
+		100.0 // z far clip.
+	);
 }
 
 cWindowFrame_X11GL::cWindowFrame_X11GL():
@@ -64,10 +76,8 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
     if(vi == NULL){
         vi = glXChooseVisual(mDisplay, mScreen, attrListSingleBuff);
         mDoubleBuffered = False;
-        DBUG_LO("single-buffered rendering will be used, no double-buffering available");
     }else{
         mDoubleBuffered = True;
-        DBUG_LO("double-buffered rendering available");
     }
 
     // create a GLX context
@@ -83,6 +93,7 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
 
     mWinAttr.colormap = cmap;
     mWinAttr.border_pixel = 0;
+    mWinAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
 
     if(mFullscreen){	//- Run checks before attempting fullscreen.
 		if(modes==NULL){
@@ -115,7 +126,7 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         DBUG_LO("resolution " << dpyWidth << ", " << dpyHeight);
 
         mWinAttr.override_redirect = True;
-        mWinAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
+
 
         mWindow = XCreateWindow(
         	mDisplay,
@@ -140,8 +151,6 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         );
 
     }else{	// create a window
-
-    	mWinAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
 
         mWindow = XCreateWindow(
         	mDisplay,
@@ -173,10 +182,27 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         DBUG_LO("window created ("<<mWidth<<","<<mHeight<<")");
     }
 
+    glXMakeCurrent(mDisplay, mWindow, mContext);
+
+	if(glXIsDirect(mDisplay, mContext)){ DBUG_LO("DRI enabled"); }else{ DBUG_LO("no DRI available"); }
+
     setDim(0, 0, mWidth, mHeight);
 
-    if(modes)
-    XFree(modes);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0f);
+    glShadeModel(GL_SMOOTH);
+
+    glEnable(GL_CULL_FACE);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glDisable(GL_DITHER);
+
+	glDepthFunc(GL_LEQUAL);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    if(modes) XFree(modes);
     XFlush(mDisplay);
 }
 
@@ -201,50 +227,19 @@ cWindowFrame_X11GL::~cWindowFrame_X11GL(){
 
 void
 cWindowFrame_X11GL::run(cContext* pCon){
-	bool reestablish = false;
-
-	//!!! temp
-	{
-		static bool test = true;
-
-		if(test)
-			reestablish = true;
-
-		test = false;
-	}
-
-    // Test to see if the window frame has changed.
-	if(reestablish){
-#ifdef DEBUG
-		int glxMajor=0, glxMinor=0;
-		glXQueryVersion(mDisplay, &glxMajor, &glxMinor);
-		DBUG_LO("GLX-Version " << glxMajor << "." << glxMinor);
-#endif
-
-		// connect the glx-context to the window
-		glXMakeCurrent(mDisplay, mWindow, mContext);
-
-		if( glXIsDirect(mDisplay, mContext) ){
-			DBUG_LO("DRI enabled");
-		}else{
-			DBUG_LO("no DRI available");
-		}
-
-		reestablish = false;
-	}
 
 	// handle the events in the queue
-	for(int run=0; run < xEventsPerRun; ++run){
+	for(int run=0; run < xEventsPerRun && XPending(mDisplay) > 0; ++run){
 		XNextEvent(mDisplay, &mEvent);
 		switch (mEvent.type){
 			//case Expose:
 
-			case DestroyNotify:
+/*			case DestroyNotify:
 				DBUG_LO("destroy notify.");
 				pCon->add(this);
-				mContent.mD->run(pCon);
+				mClosing.mD->run(pCon);
 				pCon->finished(this);
-				break;
+				break;*/
 
 			case ConfigureNotify:
 				if (
@@ -266,9 +261,9 @@ cWindowFrame_X11GL::run(cContext* pCon){
 			case ClientMessage:{
 				DBUG_LO("client message " << XGetAtomName( mDisplay, mEvent.xclient.message_type ));
 				if( isDestroyWindowAtom(mEvent.xclient.message_type) ){
-					DBUG_LO("destroy message. Calling " << mContent.mD->name());
+					DBUG_LO("destroy message. Calling " << mClosing.mD->name());
 					pCon->add(this);
-					mContent.mD->run(pCon);
+					mClosing.mD->run(pCon);
 					pCon->finished(this);
 				}
 			}break;
@@ -278,11 +273,20 @@ cWindowFrame_X11GL::run(cContext* pCon){
 		}
 	}
 
-	pCon->add(this);
-	mContent.mD->run(pCon);
-	pCon->finished(this);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-	glFlush();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if(mContent.mD->hash()==getHash<cEmptyFig>()){
+    	testPattern();
+    }else{
+		pCon->add(this);
+		mContent.mD->run(pCon);
+		pCon->finished(this);
+    }
+
+	if(mDoubleBuffered) glXSwapBuffers(mDisplay, mWindow); else glFlush();
 }
 
 
@@ -300,4 +304,56 @@ cWindowFrame_X11GL::isDestroyWindowAtom(const ::Atom& pAtom){
 		return true;
 
 	return false;
+}
+
+
+void
+cWindowFrame_X11GL::testPattern(){
+
+	//- Shamelessly ripping off http://gpwiki.org/index.php/OpenGL:Tutorials:Setting_up_OpenGL_on_X11
+	static GLfloat rotate;
+	glPushMatrix();
+		glTranslatef(0.0f, 0.0f, -7.0f);
+		glRotatef(rotate, 1.0f, 0.5f, 0.25f);
+		glScalef(0.5f, 0.5f, 0.5f);
+		glBegin(GL_QUADS);
+			// top of cube
+			glColor3f(0.0f, 1.0f, 0.0f);
+			glVertex3f(1.0f, 1.0f, -1.0f);
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+			glVertex3f(-1.0f, 1.0f, 1.0f);
+			glVertex3f(1.0f, 1.0f, 1.0f);
+			// bottom of cube
+			glColor3f(1.0f, 0.5f, 0.0f);
+			glVertex3f(1.0f, -1.0f, 1.0f);
+			glVertex3f(-1.0f, -1.0f, 1.0f);
+			glVertex3f(-1.0f, -1.0f, -1.0f);
+			glVertex3f(1.0f, -1.0f, -1.0f);
+			// front of cube
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glVertex3f(1.0f, 1.0f, 1.0f);
+			glVertex3f(-1.0f, 1.0f, 1.0f);
+			glVertex3f(-1.0f, -1.0f, 1.0f);
+			glVertex3f(1.0f, -1.0f, 1.0f);
+			// back of cube
+			glColor3f(1.0f, 1.0f, 0.0f);
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+			glVertex3f(1.0f, 1.0f, -1.0f);
+			glVertex3f(1.0f, -1.0f, -1.0f);
+			glVertex3f(-1.0f, -1.0f, -1.0f);
+			// right side of cube
+			glColor3f(1.0f, 0.0f, 1.0f);
+			glVertex3f(1.0f, 1.0f, -1.0f);
+			glVertex3f(1.0f, 1.0f, 1.0f);
+			glVertex3f(1.0f, -1.0f, 1.0f);
+			glVertex3f(1.0f, -1.0f, -1.0f);
+			// left side of cube
+			glColor3f(0.0f, 1.0f, 1.0f);
+			glVertex3f(-1.0f, 1.0f, 1.0f);
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+			glVertex3f(-1.0f, -1.0f, -1.0f);
+			glVertex3f(-1.0f, -1.0f, 1.0f);
+		glEnd();
+	glPopMatrix();
+    ++rotate;
 }

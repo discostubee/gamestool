@@ -42,7 +42,8 @@ namespace gt{
 		cOSX_fileIO();
 		virtual ~cOSX_fileIO();
 
-		virtual const char* name() const{ return cOSX_fileIO::identify(); }	//!<
+		virtual const char* name() const{ return cOSX_fileIO::identify(); }
+		virtual dNameHash getReplacement() const{ return replaces(); }
 		virtual dNameHash hash() const{ return tOutline<cOSX_fileIO>::hash(); }
 	};
 }

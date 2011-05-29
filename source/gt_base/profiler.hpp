@@ -66,7 +66,7 @@ public:
 	cToken& makeToken(const dNatChar* pFile, const unsigned int pLine);
 	void tokenFinished(cProfiler::cToken* pToken);
 	void flushThatLog(std::ostream &log);
-	void operator = (const cProfiler& pCopyIt);
+	cProfiler& operator += (const cProfiler& pCopyIt);
 };
 
 /*

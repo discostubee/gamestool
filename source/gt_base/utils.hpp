@@ -141,6 +141,7 @@ private:
 public:
 
 	cCoolStatic(){
+		std::cout << "cool static made at " << (long)(this) << " as a " << typeid(T).name() << std::endl; //!!!
 	}
 
 	~cCoolStatic(){
@@ -154,9 +155,11 @@ public:
 			if(!setup){
 				mD = new T();
 				setup = true;
+				std::cout << "cool static got memory at " << (long)mD << " for " << typeid(T).name() << std::endl; //!!!
 			}
 		}else{
 			if(setup){
+				std::cout << "cool static about to clean memory at " << (long)mD << " for " << typeid(T).name() << std::endl; //!!!
 				delete mD;
 				mD = NULL;
 				setup = false;

@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>unitTestOSX</name>
+	<name>bulletClothDemo</name>
 	<comment></comment>
 	<projects>
-		<project>addonOSXGL</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -32,7 +31,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildLocation</key>
-					<value>${workspace_loc:/unitTestOSX/Debug}</value>
+					<value>${workspace_loc:/bulletClothDemo/Debug}</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.cleanBuildTarget</key>
@@ -83,6 +82,16 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>addonBullet</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
 			<name>gt_OSX</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -93,19 +102,64 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
-			<name>main.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/source/main.cpp</locationURI>
+			<name>gt_graphics</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
-			<name>gt_OSX/OSX_addon.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_addon.cpp</locationURI>
+			<name>source</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
-			<name>gt_OSX/OSX_addon.hpp</name>
+			<name>addonBullet/bullet.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_addon.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonBullet/bullet.cpp</locationURI>
+		</link>
+		<link>
+			<name>addonBullet/bullet.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonBullet/bullet.hpp</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL/openGL_bitmap.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonX11GL/openGL_bitmap.cpp</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL/openGL_bitmap.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonX11GL/openGL_bitmap.hpp</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL/openGL_layer.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonX11GL/openGL_layer.cpp</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL/openGL_layer.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonX11GL/openGL_layer.hpp</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL/openGL_polyMesh.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonX11GL/openGL_polyMesh.cpp</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL/openGL_polyMesh.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonX11GL/openGL_polyMesh.hpp</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL/openGL_windowFrame.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonX11GL/openGL_windowFrame.cpp</locationURI>
+		</link>
+		<link>
+			<name>addonX11GL/openGL_windowFrame.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/addonX11GL/openGL_windowFrame.hpp</locationURI>
 		</link>
 		<link>
 			<name>gt_OSX/OSX_fileIO.cpp</name>
@@ -126,26 +180,6 @@
 			<name>gt_OSX/OSX_world.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_world.hpp</locationURI>
-		</link>
-		<link>
-			<name>gt_base/addon.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/addon.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_base/addon.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/addon.hpp</locationURI>
-		</link>
-		<link>
-			<name>gt_base/anchor.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_base/anchor.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.hpp</locationURI>
 		</link>
 		<link>
 			<name>gt_base/blueprint.cpp</name>
@@ -190,12 +224,12 @@
 		<link>
 			<name>gt_base/dirPtr.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/dirPtr.cpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/dirPtr.cpp</locationURI>
 		</link>
 		<link>
 			<name>gt_base/dirPtr.hpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/dirPtr.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/dirPtr.hpp</locationURI>
 		</link>
 		<link>
 			<name>gt_base/exceptions.hpp</name>
@@ -293,16 +327,6 @@
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/textFig.hpp</locationURI>
 		</link>
 		<link>
-			<name>gt_base/thread.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/thread.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_base/thread.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/thread.hpp</locationURI>
-		</link>
-		<link>
 			<name>gt_base/unitTests.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTests.hpp</locationURI>
@@ -326,6 +350,61 @@
 			<name>gt_base/world.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/world.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/bitmap.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/bitmap.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/bitmap.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/bitmap.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/layer.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/layer.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/layer.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/layer.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/polygonMesh.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/polygonMesh.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/polygonMesh.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/polygonMesh.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/windowFrame.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/windowFrame.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/windowFrame.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/windowFrame.hpp</locationURI>
+		</link>
+		<link>
+			<name>source/demo.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/source/demo.cpp</locationURI>
+		</link>
+		<link>
+			<name>source/demo.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/source/demo.hpp</locationURI>
+		</link>
+		<link>
+			<name>source/main.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/source/main.cpp</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

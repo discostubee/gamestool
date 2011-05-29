@@ -1,6 +1,6 @@
 /*
  * !\file	world.hpp
- * !\brief	
+ * !\brief	This is the starting point for the source code dependency (ignoring some included utility source).
  *
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -38,6 +38,7 @@
 #include "gt_string.hpp"
 #include "utils.hpp"
 #include "profiler.hpp"
+#include "byteBuffer.hpp"
 
 #include <list>
 #include <set>
@@ -46,18 +47,54 @@
 
 ///////////////////////////////////////////////////////////////////////////////////
 // forward declarations
-
 namespace gt{
 	class cBase_plug;
 	class cPlugTag;
 	class cLead;
-	class cFigment;
 	class cBlueprint;
 	class cCommand;
+	class cContext;
+	class iFigment;
+}
 
-	typedef tDirPtr<cFigment> ptrFig;
-	typedef boost::shared_ptr<cLead> ptrLead;
+////////////////////////////////////////////////////////////////////
+// Typedefs
+namespace gt{
+	typedef tDirPtr<iFigment> ptrFig;	//!< Smart pointer to a figment.
+	typedef boost::shared_ptr<cLead> ptrLead;	//!< Smart pointer to a lead.
 	typedef const void* dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time.
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// figment interface along with with supporting classes
+namespace gt{
+
+	//!\brief	helpful when loading.
+	class cReload{
+	public:
+		ptrFig		fig;
+		cByteBuffer	data;
+
+		cReload();
+		cReload(ptrFig pFig, const dByte* buff = NULL, size_t buffSize = 0);
+		~cReload();
+	};
+
+	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
+
+	//!\brief	Figment interface, put here so we have a complete interface for the ptrFig type. Refer to the base implementation of this
+	//!			class to get the low down on what all these methods mean.
+	class iFigment{
+	public:
+		virtual const dNatChar* name() const =0;
+		virtual dNameHash getReplacement() const =0;
+		virtual dNameHash hash() const =0;
+		virtual void jack(ptrLead pLead)=0;
+		virtual void run(cContext* pCon)=0;
+		virtual cByteBuffer& save()=0;
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL)=0;
+		virtual void getLinks(std::list<ptrFig>* pOutLinks)=0;
+	};
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -70,6 +107,9 @@ namespace gt{
 	//!			factory that creates figment-type objects. The world object is also a singleton that is 
 	//!			seen by every figment-type object and offers services to them. It also designed to 
 	//!			coordinate different heaps located in addons.
+	//!\todo	Prevent a collection of objects become an island which is separate from the root node, and
+	//!			thus will never be cleaned up. This will also be a huge problem when removing addons where
+	//!			the objects made in the addon need to be blanked.
 	class cWorld{
 	public:
 
@@ -137,8 +177,6 @@ namespace gt{
 		//!			bicycle.
 		ptrFig getEmptyFig();
 
-
-
 		//--------------------------------------------------------
 		// Polymorphs
 		virtual dMillisec	getAppTime	(){ return 0; }
@@ -184,7 +222,7 @@ namespace gt{
 namespace gt{
 	//!\brief	Used to redirect the global, which is why it's not a static function of the world class.
 	//!			Only used when directing the global inside a shared library to the global inside the main program.
-	//!\param	pWorldNew	Pointer to the world you want to use. Can be null, in which case, the statics are redirected to NULL.
+	//!\param	pWorldNew	Pointer to the world you want to use. Can be null, in which case, the statics are redirected to NULL and nothing is cleaned.
 	void redirectWorld(cWorld* pWorldNew);
 }
 
@@ -192,7 +230,7 @@ namespace gt{
 // Macros
 #ifdef DEBUG
 	#define PROFILE	//cProfiler::cToken profileToken = gt::gWorld->makeProfileToken(__FILE__, __LINE__)
-	#define DBUG_LO(x) std::cout << x << std::endl; //{ std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 	
 #else
 	#define PROFILE

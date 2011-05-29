@@ -102,9 +102,13 @@ cProfiler::flushThatLog(std::ostream &log){
 	}
 }
 
-void
-cProfiler::operator = (const cProfiler& pCopyIt){
+cProfiler&
+cProfiler::operator += (const cProfiler& pCopyIt){
+	if(&pCopyIt == this)
+		return *this;
+
 	mEntries.insert(pCopyIt.mEntries.begin(), pCopyIt.mEntries.end());
+	return *this;
 }
 
 cProfiler::cToken::cToken(cProfiler* pParent, dNameHash pEntry, dMillisec pTime):

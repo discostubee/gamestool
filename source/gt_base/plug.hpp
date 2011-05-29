@@ -35,20 +35,6 @@
 // Classes
 namespace gt{
 
-	//-------------------------------------------------------------------------------------
-	//!\brief	helpful when loading.
-	class cReload{
-	public:
-		ptrFig		fig;
-		cByteBuffer	data;
-
-		cReload();
-		cReload(ptrFig pFig, const dByte* buff = NULL, size_t buffSize = 0);
-		~cReload();
-	};
-
-	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
-
 	//--------------------------------------------------------
 	//!\brief	this helps to identify what each plug is on a lead.
 	class cPlugTag{
@@ -134,11 +120,7 @@ namespace gt{
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Templates
-
 namespace gt{
-
-	//--------------------------------------
-	
 	template<typename T>
 	T
 	cBase_plug::getMDCopy(void){
@@ -184,6 +166,13 @@ namespace gt{
 
 		return *this;
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// Specialisations.
+
+namespace gt{
+
 
 	//--------------------------------------
 	template<typename A>

@@ -1,6 +1,6 @@
 /*
  * !\file
- * !\brief	Contains declaration implementation of a template class which provides smart pointers.
+ * !\brief	Contains declaration and implementation of a template class which provides smart pointers.
  * !\note	Created because the boost smart pointers didn't provide a way to redirect all pointers to a new memory location.
  *
  *  Copyright (C) 2010  Stuart Bridgens
@@ -35,6 +35,7 @@ namespace gt{
 	//!			pointers to the content instance. This is different to just using boost
 	//!			smart pointers because you are able to redirect every pointer to another
 	//!			figment. When the count reaches, this content is cleaned up by the pointers.
+	//!\todo	Prevent circular redirections.
 	template<typename T>
 	class tDirector{
 	public:
@@ -238,7 +239,7 @@ namespace gt{
 		if(!pFDir.mDir)
 			return *this;
 
-		if(mDir == pFDir.mDir)
+		if(mDir == pFDir.mDir)	// Should also handle self reference.
 			return *this;
 
 		if(mDir){
