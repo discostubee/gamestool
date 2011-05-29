@@ -38,52 +38,48 @@ main(int argc, char **argv){
 
 #ifdef GTUT
 
-	GTUT_START(addonOSX, load)
-	{
+	GTUT_START(addonOSX, load){
+		ptrFig elements;
+		cPlug<ptrFig> addonGL;
+		cPlug<ptrFig> window;
+		ptrLead setPath = gWorld->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID);
+		cPlug<dStr> path = cPlug<dStr>("X11GL");
+		ptrLead addElements = gWorld->makeLead(getHash<cRunList>(), cRunList::xAdd->mID);
 
-		{
-			ptrFig elements;
-			cPlug<ptrFig> addonGL;
-			cPlug<ptrFig> window;
-			ptrLead setPath = gWorld->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID);
-			cPlug<dStr> path = cPlug<dStr>("X11GL");
-			ptrLead addElements = gWorld->makeLead(getHash<cRunList>(), cRunList::xAdd->mID);
+		elements = gWorld->makeFig(getHash<cRunList>());
 
-			elements = gWorld->makeFig(getHash<cRunList>());
+		addonGL.mD = gWorld->makeFig(getHash<cAddon>());
+		setPath->add(&path, cAddon::xPT_addonName);
+		addonGL.mD->jack(setPath);
 
-			addonGL.mD = gWorld->makeFig(getHash<cAddon>());
-			setPath->add(&path, cAddon::xPT_addonName);
-			addonGL.mD->jack(setPath);
+		window.mD = gWorld->makeFig(getHash<cWindowFrame>());
 
-			window.mD = gWorld->makeFig(getHash<cWindowFrame>());
+		addElements->addToPile(&addonGL);
+		addElements->addToPile(&window);
+		elements->jack(addElements);
 
-			addElements->addToPile(&addonGL);
-			addElements->addToPile(&window);
-			elements->jack(addElements);
+		gWorld->setRoot(elements);
+	}GTUT_END;
 
-			gWorld->setRoot(elements);
+	GTUT_START(addonOSX, unload){
+		bool addonBlueprintRemoved = false;
+
+		gWorld->setRoot(gWorld->getEmptyFig());	// Will take out everything.
+		try{
+			gWorld->getBlueprint(getHash<cAddon_OSX>());
+		}catch(excep::base_error){
+			DBUG_LO("removed the OSX addon blueprint.");
+			addonBlueprintRemoved = true;
 		}
-		{
-			bool addonBlueprintRemoved = false;
-
-			gWorld->setRoot(gWorld->getEmptyFig());	// Will take out everything.
-			try{
-				gWorld->getBlueprint(getHash<cAddon_OSX>());
-			}catch(excep::base_error){
-				DBUG_LO("removed the OSX addon blueprint.");
-				addonBlueprintRemoved = true;
-			}
-			try{
-				gWorld->getBlueprint(getHash<cWindowFrame>());
-			}catch(excep::base_error){
-				DBUG_LO("removed the x11 window frame blueprint.");
-				addonBlueprintRemoved = true;
-			}
-			GTUT_ASRT(addonBlueprintRemoved, "didn't remove blueprints.");
-
-			TRYME(gWorld->getBlueprint(getHash<cAddon>()));	// Check the base addon was restored.
+		try{
+			gWorld->getBlueprint(getHash<cWindowFrame>());
+		}catch(excep::base_error){
+			DBUG_LO("removed the x11 window frame blueprint.");
+			addonBlueprintRemoved = true;
 		}
-	}
-	GTUT_END;
+		GTUT_ASRT(addonBlueprintRemoved, "didn't remove blueprints.");
+
+		TRYME(gWorld->getBlueprint(getHash<cAddon>()));	// Check the base addon was restored.
+	}GTUT_END;
 
 #endif
