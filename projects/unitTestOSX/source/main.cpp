@@ -38,7 +38,7 @@ main(int argc, char **argv){
 
 #ifdef GTUT
 
-	GTUT_START(addonOSX, load){
+	GTUT_START(OSX, load){
 		ptrFig elements;
 		cPlug<ptrFig> addonGL;
 		cPlug<ptrFig> window;
@@ -61,7 +61,7 @@ main(int argc, char **argv){
 		gWorld->setRoot(elements);
 	}GTUT_END;
 
-	GTUT_START(addonOSX, unload){
+	GTUT_START(OSX, unload){
 		bool addonBlueprintRemoved = false;
 
 		gWorld->setRoot(gWorld->getEmptyFig());	// Will take out everything.
