@@ -30,8 +30,6 @@ namespace gt{
 		};
 
 		static const dNatChar* identify(){ return "text fig"; }
-		static void draft(){ tOutline<cTextFig>::draft(); }
-		static void requirements();
 
 		cTextFig();
 		virtual ~cTextFig();

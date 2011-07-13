@@ -35,9 +35,9 @@ namespace gt{
 	public:
 		//-----------------------------
 		// Defines
-		static const cPlugTag*	xPT_buffer;
-		static const cCommand*	xSave;	//!< \note ID=0
-		static const cCommand*	xLoad;	//!< \note ID=1
+		static const cPlugTag*	xPT_buffer;	//!< \todo rename to save buffer or something.
+		static const cCommand*	xSave;	//!< Serialization is supported at the base level.
+		static const cCommand*	xLoad;	//!< Ditto above.
 
 		enum{
 			eNotMyBag = uNotMyBag,
@@ -47,46 +47,42 @@ namespace gt{
 		};
 
 		//-----------------------------
-		// Statics members.
+		cFigment();
+		virtual ~cFigment();
 
-		//!\fn		static const dNatChar* identify() const
+		//-----------------------------
+		// These things are REQUIRED for any figment class.
+
 		//!\brief	Used to define the string name of this object. It is also hashed to give the unique number
 		//!			used to quickly compare objects.
 		//!\note	You MUST replace this to identify your own
 		static const dNatChar* identify(){ return "figment"; }
 
-		//!\fn		static dNameHash replaces() const
+		//- Not sure how I could eliminate this. I should be able to.
+		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		virtual dNameHash hash() const { return tOutline<cFigment>::hash(); }
+
+		//-----------------------------
+		// standard interface. These are all optional in later classes.
+
+		virtual void jack(ptrLead pLead);						//!< Jack is the interface used to get and set various members in a super generic fashion.
+		virtual void run(cContext* pCon){}						//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
+		virtual void save(cByteBuffer* pAddHere);				//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL){}				//!< Called load eat because the head of the buffer is consume by the load function.
+		virtual void getLinks(std::list<ptrFig>* pOutLinks){}	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
+
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
 		//!			specific version.
 		static dNameHash replaces(){ return uDoesntReplace; }
 
-		//!\fn		static void requirements()
-		//!\brief	This is used to make sure that all the figments this one requires, are drafted as well.
-		static void requirements();
-
-		//-----------------------------
-		cFigment();
-		virtual ~cFigment();
-
-		//-----------------------------
-		// constant polymorphs. These are not optional.
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<cFigment>::hash(); }
-
-		//-----------------------------
-		// standard interface polymorphs. These are all optional in later classes.
-		virtual void jack(ptrLead pLead);						//!< Jack is the interface used to get and set various members in a super generic fashion.
-		virtual void run(cContext* pCon);						//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
-		virtual cByteBuffer& save();							//!< Outputs all the data it needs to re-load later into a byte buffer
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL){}				//!< Called load eat because the head of the buffer is consume by the load function.
-		virtual void getLinks(std::list<ptrFig>* pOutLinks){}	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
-		virtual dNameHash getReplacement() const{ return cFigment::replaces(); }	//!< You'll need to override this if you are replacing stuff.
+		//!\brief	You'll need to override this if you are replacing stuff.
+		virtual dNameHash getReplacement() const{ return cFigment::replaces(); }
 	};
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	Designed to be the null return type. It doesn't do anything and it allows
-	//			objects to still function by referencing this dummy instead of null.
+	//!			objects to still function by referencing this dummy instead of null.
 	//!\note	This is an example of the bare minimum that you have to do in order to make
 	//!			a new figment type class.
 	class cEmptyFig: public cFigment, private tOutline<cEmptyFig>{
@@ -121,6 +117,7 @@ namespace gt{
 ///////////////////////////////////////////////////////////////////////////////////
 // template specializations
 namespace gt{
+
 	//--------------------------------------
 	template<>
 	class cPlug<ptrFig>: public cBase_plug{
@@ -136,6 +133,7 @@ namespace gt{
 		virtual ~cPlug(){}
 
 		virtual cBase_plug& operator= (const cBase_plug &pD){
+			NOTSELF(&pD);
 			PROFILE;
 
 			//!\todo figure out a way to prevent code duplication.
@@ -151,16 +149,31 @@ namespace gt{
 			return *this;
 		}
 
-		virtual void operator= (ptrFig pA){ mD = pA; }
+		virtual cBase_plug& operator= (const cBase_plug* pD){
+			NOTSELF(pD);
+			PROFILE;
 
-		virtual cByteBuffer& save(){
+			//!\todo figure out a way to prevent code duplication.
+			if( mType == pD->mType ){	// we can just cast
+				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
+				mD = dynamic_cast< cPlug<ptrFig>* >(
+					const_cast<cBase_plug*>(pD)
+				)->mD;
+			}else{
+				PLUG_CANT_COPY_ID(pD->mType);
+			}
+
+			return *this;
+		}
+
+		virtual cBase_plug& operator= (ptrFig pA){ mD = pA; return *this; }
+
+		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;
 
 			//- Using the pointer as a unique number to identify the referenced figment.
-			cByteBuffer* saveBuff = new cByteBuffer();
 			dFigSaveSig saveSig = static_cast<dFigSaveSig>( mD.get() );
-			saveBuff->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
-			return *saveBuff;
+			pAddHere->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
 		}
 
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
@@ -169,10 +182,14 @@ namespace gt{
 			if(pReloads != NULL){
 				dFigSaveSig saveSig = 0;
 				pChewToy->fill(&saveSig);
+				pChewToy->trimHead(sizeof saveSig);
+
 				dReloadMap::iterator itr = pReloads->find(saveSig);
 
+				if(itr == pReloads->end());
+					throw excep::notFound("reloaded figment", __FILE__, __LINE__);
+
 				mD = itr->second->fig;
-				pChewToy->trim(sizeof saveSig);
 			}
 		}
 

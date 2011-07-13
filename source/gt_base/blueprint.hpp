@@ -4,12 +4,6 @@
 #include "lead.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Forward declarations
-namespace gt{
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////
 // Constants
 namespace gt{
 	const dNameHash uDoesntReplace = 0;
@@ -57,24 +51,6 @@ namespace gt{
 	//!\brief	The outline of an object is used to manage the figment's blueprint, commands and plug tags.
 	template<typename T>
 	class tOutline{
-	private:
-		static bool xDrafted;
-
-		static void readyCommands(bool pDontCleanup=true);	//!<
-		static void readyTags(bool pDontCleanup=true);
-
-	protected:
-		static cBlueprint xBlueprint;
-		static dComContainer* xCommands;
-		static dPTagContainer* xPlugTags;
-
-		tOutline();
-		~tOutline();
-
-		dNameHash hash() const;
-
-		friend class cBlueprint;
-
 	public:
 		static void draft();
 		static void removeFromWorld();
@@ -89,6 +65,24 @@ namespace gt{
 		static const cPlugTag* makePlugTag(const dNatChar* pName);
 		static const cCommand* getCommand(dNameHash pCommandID);
 		static const cPlugTag* getPlugTag(dNameHash pPTagID);
+
+	protected:
+		static cBlueprint xBlueprint;
+		static dComContainer* xCommands;
+		static dPTagContainer* xPlugTags;
+
+		tOutline();
+		~tOutline();
+
+		dNameHash hash() const;
+
+		friend class cBlueprint;
+
+	private:
+		static bool xDrafted;
+
+		static void readyCommands(bool pDontCleanup=true);	//!<
+		static void readyTags(bool pDontCleanup=true);
 	};
 
 }
@@ -194,7 +188,7 @@ namespace gt{
 	tOutline<T>::draft(){
 		if(!xDrafted){
 
-			T::requirements();	// (currently not working) Make sure that this figment has all the others it needs drafted in.
+			//T::requirements();	// (currently not working) Make sure that this figment has all the others it needs drafted in.
 
 			readyCommands(); // You can't be sure a makeCommand has been run.
 			readyTags(); // just in case.

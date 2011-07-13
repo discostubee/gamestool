@@ -28,17 +28,8 @@
 namespace gt{
 
 class cWindowFrame_X11GL: public cWindowFrame, private tOutline<cWindowFrame_X11GL>{
-public:
-	static const char* identify(){ return "window frame X11GL"; }
-	static dNameHash replaces(){ return getHash<cWindowFrame>(); }
-
-	cWindowFrame_X11GL();
-	virtual ~cWindowFrame_X11GL();
-
-	virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
-	virtual dNameHash getReplacement() const{ return replaces(); }
-
-	virtual void run(cContext* pCon);
+private:
+    bool isDestroyWindowAtom(const ::Atom& pAtom);
 
 protected:
 	static const unsigned short xEventsPerRun = 3;
@@ -61,8 +52,20 @@ protected:
 
     void testPattern();	//!< Draw a test pattern.
 
-private:
-    bool isDestroyWindowAtom(const ::Atom& pAtom);
+public:
+	static const char* identify(){ return "window frame X11GL"; }
+	static dNameHash replaces(){ return getHash<cWindowFrame>(); }
+
+	cWindowFrame_X11GL();
+	virtual ~cWindowFrame_X11GL();
+
+	virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
+	virtual dNameHash hash() const{ return tOutline<cWindowFrame_X11GL>::hash(); }
+	virtual dNameHash getReplacement() const{ return replaces(); }
+
+	virtual void run(cContext* pCon);
+
+
 };
 
 }

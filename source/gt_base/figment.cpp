@@ -38,7 +38,7 @@ cFigment::jack(ptrLead pLead){
 		switch( pLead->mCom->getSwitch<cFigment>() ){
 			case eSave:{
 				cPlug<cByteBuffer>* saveBuff = new cPlug<cByteBuffer>;
-				saveBuff->mD = save();
+				save(&saveBuff->mD);
 				pLead->take(saveBuff, cFigment::xPT_buffer );
 			}break;
 
@@ -58,30 +58,20 @@ cFigment::jack(ptrLead pLead){
 	}
 }
 
+
 void
-cFigment::run(cContext* pCon){
-	//DBUG_LO( "running " << name() );
-}
-
-cByteBuffer&
-cFigment::save(){
-	cByteBuffer* empty = new cByteBuffer();
-	return *empty;
-}
-
-void 
-cFigment::requirements(){
+cFigment::save(cByteBuffer* pAddHere){
 }
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
 cEmptyFig::cEmptyFig(){
-	//DBUG_LO("*** empty fig made " << reinterpret_cast<unsigned int>(this));
+	DBUG_LO("empty fig made @ " << reinterpret_cast<unsigned long>(this));
 }
 
 cEmptyFig::~cEmptyFig(){
-	//DBUG_LO("*** empty fig destroyed! " << reinterpret_cast<unsigned int>(this));
+	DBUG_LO("empty fig destroyed @ " << reinterpret_cast<unsigned long>(this));
 }
 
 ////////////////////////////////////////////////////////////
@@ -98,4 +88,53 @@ cWorldShutoff::run(cContext* pCon){
 	gWorld->mKeepLooping = false;
 }
 
+////////////////////////////////////////////////////////////
 
+#ifdef GTUT
+
+GTUT_START(figment, polymorphNames){
+	tOutline<cFigment>::draft();
+	tOutline<cEmptyFig>::draft();
+	tOutline<cWorldShutoff>::draft();
+
+	ptrFig stdFig = gWorld->makeFig(getHash<cFigment>());
+	ptrFig emptyFig = gWorld->makeFig(getHash<cEmptyFig>());
+	ptrFig shutoff = gWorld->makeFig(getHash<cWorldShutoff>());
+
+	GTUT_ASRT(
+		strncmp(stdFig->name(), cFigment::identify(), 10)==0,
+		"figment names don't match."
+	);
+
+	GTUT_ASRT(
+		strncmp(emptyFig->name(), cEmptyFig::identify(), 10)==0,
+		"Empty figment names don't match."
+	);
+
+	GTUT_ASRT(
+		strncmp(shutoff->name(), cWorldShutoff::identify(), 10)==0,
+		"World shutoff names don't match."
+	);
+
+}GTUT_END;
+
+GTUT_START(figment, hashes){
+	tOutline<cFigment>::draft();
+	cFigment test;
+
+	GTUT_ASRT(getHash<cFigment>()==test.hash(), "hashes don't match");
+}GTUT_END;
+
+GTUT_START(figment, givesSave){
+	tOutline<cFigment>::draft();
+
+	ptrLead save = gWorld->makeLead(getHash<cFigment>(), cFigment::xSave->mID);
+	ptrFig testMe = gWorld->makeFig(getHash<cFigment>());
+
+	testMe->jack(save);
+	cBase_plug *saveBuff = save->getD(cFigment::xPT_buffer);
+	saveBuff->getMDPtr<cByteBuffer>();
+
+}GTUT_END;
+
+#endif

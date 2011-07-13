@@ -16,11 +16,6 @@ cRunList::~cRunList(){
 }
 
 void
-cRunList::requirements(){
-	//tOutline<cFigment>::draft();
-}
-
-void
 cRunList::run(cContext* pCon){
 	PROFILE;
 
@@ -67,19 +62,16 @@ cRunList::jack(ptrLead pLead){
 	}
 }
 
-cByteBuffer&
-cRunList::save(){
+void
+cRunList::save(cByteBuffer* pAddHere){
 	PROFILE;
 
 	size_t listSize = mList.size();
-	cByteBuffer* outBuff = new cByteBuffer();
 
-	outBuff->add( &listSize );
+	pAddHere->add( &listSize );
 	for( std::vector< cPlug<ptrFig> >::iterator i = mList.begin(); i != mList.end(); ++i){
-		outBuff->add( i->save() );
+		i->save(pAddHere);
 	}
-
-	return *outBuff;
 }
 
 void
@@ -91,6 +83,7 @@ cRunList::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 	size_t listSize;
 	pBuff->fill(&listSize);
+	pBuff->trimHead(sizeof listSize);
 	for(size_t i = 0; i < listSize; ++i){
 		cPlug<ptrFig> tempFig;
 		tempFig.loadEat(pBuff, pReloads); // there should be enough in this buffer for all figs to load.
@@ -182,15 +175,10 @@ cValves::jack(ptrLead pLead){
 	}
 }
 
-cByteBuffer&
-cValves::save(){
-	cByteBuffer* temp = new cByteBuffer();
-
-	//!\todo, add your stuff in first.
-
-	temp->add( cRunList::save() );
-
-	return *temp;
+void
+cValves::save(cByteBuffer* pAddHere){
+	//!\todo add saves for each valve
+	cRunList::save(pAddHere);
 }
 
 void

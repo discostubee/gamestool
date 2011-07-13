@@ -43,8 +43,8 @@ namespace gt{
 		virtual const char* name() const { return cLayer::identify(); }	//!<
 
 		virtual void jack(ptrLead pLead);
-		virtual cByteBuffer& save();
-		virtual void loadEat(cByteBuffer* pBuff);
+		virtual void save(cByteBuffer* pAddHere);
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 	};
 }

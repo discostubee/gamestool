@@ -59,6 +59,7 @@ namespace gt{
 				return false;
 			}
 
+			//!\todo Change to a reference return.
 			cBase_plug* getPlug(){
 				return *mItr;
 			}
@@ -83,12 +84,14 @@ namespace gt{
 
 		//!\fn		void take(cBase_plug** pData, const cPlugTag &pTag)
 		//!\brief	Use this function if you want the lead to manage the plug instead of using a reference.
-		//!\param	pData
+		//!\param	pData	Change to auto pointer
 		//!\param	pTag	The tag to give this data.
 		void take(cBase_plug* pData, const cPlugTag* pTag);
 
+		//!\todo change to auto pointer.
 		void takeToPile(cBase_plug* pData);
 
+		//!\todo change to reference return.
 		cBase_plug* getD(const cPlugTag* pTag);	//!< Get data by its tag.
 
 		cPileItr getPiledDItr();

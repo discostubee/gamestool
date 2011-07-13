@@ -73,17 +73,25 @@ namespace gt{
 		void linkLead(cLead* pLead); //!< Leads must let the plug know that they are linked in.
 		void unlinkLead(cLead* pLead); //!< When a plug is destroyed, it must let the lead know.
 
-		//!\brief	Converts data from the native system format, into a cross platform buffer to be saved later.
-		virtual cByteBuffer& save()
-			{ DONT_USE_THIS; cByteBuffer *temp = new cByteBuffer(); return *temp; }	
+		//!\brief	Converts data from the native system format, into a cross platform buffer that can be loaded again later.
+		//!\param	pAddHere	Appends save data to the end of this buffer.
+		virtual void save(cByteBuffer *pAddHere)
+			{ DUMB_REF_ARG(pAddHere); DONT_USE_THIS; }
 		
 		//!\brief	Allows you to pass this plug a buffer for it try and load from.
-		virtual void load(const cByteBuffer& pBuff)					
-			{ DUMB_REF_ARG(pBuff); DONT_USE_THIS; }
+		//!\param	pChewToy	Eats the buffer you pass it in order to load. This way, memory is conserved. It is up to the byte
+		//!						buffer to decide if it should use tricks to expend memory (by delaying the trim), rather than
+		//!						take a performance hit. Keeping in minds that saving and loading is not meant to be a fast
+		//!						process.
+		//!\param	pReloads	This needs to be renamed to something like 'party' or something, because the reload map reflects only the figments
+		//!\					that are visible to the reload process.
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads)
+			{ DUMB_REF_ARG(pChewToy); DUMB_REF_ARG(pReloads); DONT_USE_THIS; }
 
 		virtual					cBase_plug&	operator= (const cBase_plug &pD);
-		template<typename T>	cBase_plug& operator= (const T &pT);
+		virtual					cBase_plug& operator= (const cBase_plug* pD);
 
+		template<typename T>	cBase_plug& operator= (const T &pT);
 		template< template<typename> class plug, typename T>	cBase_plug& operator= (plug<T> &pT);
 
 		template<typename T>	T getMDCopy(void);
@@ -96,8 +104,10 @@ namespace gt{
 
 	//--------------------------------------------------------
 	//!\brief	A plug is a data container that a lead can connect too.
-	//			The lead can then connect that data to another object
-	//			via the call function.
+	//!			The lead can then connect that data to another object
+	//!			via the call function, as well as automatically disconnect
+	//!			itself from its linked leads when it dies.
+	//!			It is also designed for serialization using a byte buffer.
 	template<typename A>
 	class cPlug: public cBase_plug{
 	public:
@@ -107,12 +117,13 @@ namespace gt{
 		cPlug(const A& pA);
 		virtual ~cPlug();
 
-		virtual cBase_plug& operator= (const cBase_plug &pD);
-		virtual void operator= (const A& pA);
+		virtual void save(cByteBuffer* pAddHere);
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads);
+		virtual void reset();	//!< reset back to a default. Whatever that may be.
 
-		virtual cByteBuffer& save();
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads);	//!< Eats the buffer you pass it in order to load. This way, memory is conserved.
-		virtual void reset();	//!< reset back to a default.
+		virtual cBase_plug& operator= (const cBase_plug &pD);
+		virtual cBase_plug& operator= (const cBase_plug* pD);
+		virtual cBase_plug& operator= (const A& pA);
 	private:
 		void genericCopy(const cBase_plug* pD);
 	};
@@ -121,27 +132,6 @@ namespace gt{
 ///////////////////////////////////////////////////////////////////////////////////
 // Templates
 namespace gt{
-	template<typename T>
-	T
-	cBase_plug::getMDCopy(void){
-		PROFILE;
-
-		if(mType != PLUG_TYPE_TO_ID(T))
-			PLUG_CANT_COPY(T);
-
-		return dynamic_cast< cPlug<T>* >(this)->mD;
-	}
-
-	template<typename T>
-	T*
-	cBase_plug::getMDPtr(void){
-		PROFILE;
-
-		if(mType != PLUG_TYPE_TO_ID(T))
-			PLUG_CANT_COPY(T);
-
-		return &dynamic_cast< cPlug<T>* >(this)->mD;
-	}
 
 	template<typename T>
 	cBase_plug&
@@ -166,12 +156,28 @@ namespace gt{
 
 		return *this;
 	}
-}
 
-///////////////////////////////////////////////////////////////////////////////////
-// Specialisations.
+	template<typename T>
+	T
+	cBase_plug::getMDCopy(void){
+		PROFILE;
 
-namespace gt{
+		if(mType != PLUG_TYPE_TO_ID(T))
+			PLUG_CANT_COPY(T);
+
+		return dynamic_cast< cPlug<T>* >(this)->mD;
+	}
+
+	template<typename T>
+	T*
+	cBase_plug::getMDPtr(void){
+		PROFILE;
+
+		if(mType != PLUG_TYPE_TO_ID(T))
+			PLUG_CANT_COPY(T);
+
+		return &dynamic_cast< cPlug<T>* >(this)->mD;
+	}
 
 
 	//--------------------------------------
@@ -211,36 +217,41 @@ namespace gt{
 	template<typename A>
 	cBase_plug&
 	cPlug<A>::operator= (const cBase_plug &pD){
+		//NOTSELF(&pD);	// Performed in generic copy.
 		genericCopy(&pD);
 		return *this;
 	}
 
 	template<typename A>
-	void
-	cPlug<A>::operator= (const A& pA){
-		mD = pA;
+	cBase_plug&
+	cPlug<A>::operator= (const cBase_plug* pD){
+		//NOTSELF(pD);	// Performed in generic copy.
+		genericCopy(pD);
+		return *this;
 	}
 
 	template<typename A>
-	cByteBuffer&
-	cPlug<A>::save(){
-		PROFILE;
+	cBase_plug&
+	cPlug<A>::operator= (const A& pA){
+		mD = pA;
+		return *this;
+	}
 
-		//void* temp = &mD;	//stop compiler bitching.
-		cByteBuffer* saveBuff = new cByteBuffer();
-		saveBuff->copy(
-			static_cast<dByte*>(
-				reinterpret_cast<dByte*>(&mD)
-			),
-			sizeof(A)
-		);
-		return *saveBuff;
+	template<typename A>
+	void
+	cPlug<A>::save(cByteBuffer* pAddHere){
+		PROFILE;
+		pAddHere->add(&mD);
 	}
 
 	template<typename A>
 	void
 	cPlug<A>::loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
-		//!\todo
+		if(pChewToy->size() < sizeof(mD))
+			throw cByteBuffer::excepUnderFlow(__FILE__, __LINE__);
+
+		::memcpy(&mD, pChewToy->get(), sizeof(mD));
+		pChewToy->trimHead(sizeof(mD));
 	}
 
 	template<typename A>
@@ -269,43 +280,71 @@ namespace gt{
 		virtual void operator= (dStr pA){ mD = pA; }
 
 		virtual cBase_plug& operator= (const cBase_plug &pD){
-
+			NOTSELF(&pD);
 			if( mType == pD.mType ){	// we can just cast
-				// bein' bad
-				mD = *const_cast<cBase_plug*>(&pD)->getMDPtr<dStr>();
-
+				mD = *(const_cast<cBase_plug*>(&pD)->getMDPtr<dStr>());
 			}else{
 				PLUG_CANT_COPY_ID(pD.mType);
 			}
 			return *this;
 		}
 
-		virtual cByteBuffer& save(){
-			
-			cByteBuffer* saveBuff = new cByteBuffer();
+		virtual cBase_plug& operator= (const cBase_plug* pD){
+			NOTSELF(pD);
+			if( mType == pD->mType ){	// we can just cast
+				mD = *(const_cast<cBase_plug*>(pD)->getMDPtr<dStr>());
+			}else{
+				PLUG_CANT_COPY_ID(pD->mType);
+			}
+			return *this;
+		}
 
-			//- Need to make up the version that saves the portable buffer
-			char* temp = new char[mD.size()+1];
-			::memcpy( temp, mD.c_str(), mD.size() );
-			temp[mD.size()] = '\0';
-			saveBuff->take(static_cast<dByte*>(temp), (mD.size() +1) * sizeof(char));
-			return *saveBuff;
+		virtual void save(cByteBuffer* pAddHere){
+			//!\todo	Avoid temporary buffer.
+			const size_t length = mD.size();
+			const size_t totalSize = length+sizeof(size_t);	// each character should only be 1 byte in size.
+			dByte* temp = new dByte[totalSize];
+
+			::memcpy( temp, &length, sizeof(size_t) );
+			for(size_t idx=0; idx < length; ++idx){
+				//!\todo make a more sophisticated conversion.
+				temp[idx+sizeof(size_t)] = mD.at(idx);
+			}
+
+			try{
+				pAddHere->add(temp, totalSize);
+			}catch(...){
+				delete [] temp; throw;
+			}
+			delete [] temp;
 		}
 
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
-			//!\todo Avoid temp buffer.
-			size_t length = pBuff->size()+1;
-			dByte* temp = new dByte[length];
 
-			pBuff->copy(temp, length-1);
-			temp[length-1] = '\0';
-			mD = (dNatChar*)temp;
-			pBuff->trim(length-1);
-			delete temp;
+			if(pBuff->size() < sizeof(size_t))
+				throw cByteBuffer::excepUnderFlow(__FILE__, __LINE__);
+
+			size_t length = *(reinterpret_cast<const size_t*>(pBuff->get()));	// Length in 8 bit ascii.
+
+			if(length==0)
+				return;
+
+			if(pBuff->size() < sizeof(size_t) + length )
+				throw cByteBuffer::excepUnderFlow(__FILE__, __LINE__);
+
+			mD.clear();
+			mD.reserve(length);
+
+			for(size_t idx=0; idx< length; ++idx){
+				//!\todo make more sophisticated conversion.
+				mD.push_back( *pBuff->get(sizeof(size_t)+idx) );
+			}
+
+			pBuff->trimHead(sizeof(size_t)+length);
 		}
 
 		virtual void reset(){
-			mD = dStr("");
+			mD.clear();
 		}
 	};
 }

@@ -19,11 +19,6 @@ const cCommand* cTextFig::xGetText = tOutline<cTextFig>::makeCommand(
 	NULL
 );
 
-void
-cTextFig::requirements(){
-	//tOutline<cFigment>::draft();
-}
-
 cTextFig::cTextFig(){
 }
 
@@ -59,7 +54,7 @@ cTextFig::jack(ptrLead pLead){
 cByteBuffer&
 cTextFig::save(){
 	cByteBuffer* rtBuff =  new cByteBuffer();
-	rtBuff->copyBuff( mText.save() );
+	mText.save(rtBuff);
 	return *rtBuff;
 }
 

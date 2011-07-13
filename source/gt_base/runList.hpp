@@ -28,19 +28,18 @@ namespace gt{ //gamestool
 			eSwitchEnd,
 		};
 
-		static const dNatChar* identify(){ return "run list"; }
-		static void draft(){ tOutline<cRunList>::draft(); }
-		static void requirements();
-
 		cRunList();
 		virtual ~cRunList();
 
+		//- Required
+		static const dNatChar* identify(){ return "run list"; }
 		virtual const dNatChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cRunList>::hash(); }
 
+		//- Optional
 		virtual void run(cContext* pCon);				//!< runs every element in the list
 		virtual void jack(ptrLead pLead);
-		virtual cByteBuffer& save();
+		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 	};
@@ -64,18 +63,18 @@ namespace gt{ //gamestool
 			eSwitchEnd
 		};
 
-		static const dNatChar* identify(){ return "run list"; }
-		static const void draft(){ tOutline<cValves>::draft(); }
-
 		cValves();
 		virtual ~cValves();
 
+		//- Required
+		static const dNatChar* identify(){ return "run list"; }
 		virtual const dNatChar* name() const { return identify(); }
 		virtual dNameHash hash() const { return tOutline<cValves>::hash(); }
 
+		//- Optional
 		virtual void run(cContext* pCon);				//!< runs every element in the list
 		virtual void jack(ptrLead pLead);
-		virtual cByteBuffer& save();
+		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 	};
 }

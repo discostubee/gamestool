@@ -3,12 +3,12 @@
 #define UNITTEST_HPP
 
 	#ifdef DEBUG
-		//#define GTUT //!< Enable unit tests
+		//#define GTUT //!< Enable unit tests by putting this option into your compiler settings.
 
 		#ifdef GTUT
 
 			//- Choose a testing framework
-			//#define GTUT_GOOGLE	//!< Google testing framework enabled.
+			//#define GTUT_GOOGLE	//!< Google testing framework enabled. Put this option into your compiler settings.
 
 		#endif
 

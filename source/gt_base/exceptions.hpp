@@ -19,7 +19,7 @@ namespace excep{
         dStr mInfo;
 
     public:
-        base_error(const dNatChar* pFile, const unsigned int pLine){
+        base_error(const dNatChar* pFile, const unsigned int pLine) throw(){
 			try{
 				std::stringstream ss;
 				ss << "Problem in file '" << pFile << "' at line " << pLine << ". Info: ";
@@ -50,7 +50,7 @@ namespace excep{
     //!\brief	Nobody knows.
 	class unknownError: public base_error{
 	public:
-		unknownError(const dNatChar* pFunc, const unsigned int pLine):
+		unknownError(const dNatChar* pFunc, const unsigned int pLine) throw():
             base_error(pFunc, pLine)
         {
 		    addInfo(dStr("Unknown error"));
@@ -62,7 +62,7 @@ namespace excep{
 	//!\brief	Thrown when you try to find something and it isn't there.
 	class notFound: public base_error{
 	public:
-		notFound(const dNatChar* pDidntFind, const dNatChar* pFunc, const unsigned int pLine):
+		notFound(const dNatChar* pDidntFind, const dNatChar* pFunc, const unsigned int pLine) throw():
             base_error(pFunc, pLine)
         {
 		    std::stringstream ss;
@@ -76,7 +76,7 @@ namespace excep{
 	//!\brief	Thrown when a NULL pointer is passed in, and it can't be handled nicely.
 	class isNull: public base_error{
 	public:
-		isNull(const dNatChar* pFunc, const unsigned int pLine):
+		isNull(const dNatChar* pFunc, const unsigned int pLine) throw():
             base_error(pFunc, pLine)
         {
             addInfo("Is Null");
@@ -87,7 +87,7 @@ namespace excep{
 	//!\brief	Generic error used when an interator or index is out of range.
 	class outOfRange: public base_error{
 	public:
-		outOfRange(size_t maxRange, int index, const dNatChar* pFunc, const unsigned int pLine):
+		outOfRange(size_t maxRange, int index, const dNatChar* pFunc, const unsigned int pLine) throw():
 			base_error(pFunc, pLine)
 		{
 			std::stringstream ss;
@@ -100,7 +100,7 @@ namespace excep{
 	//!			instantiated in it's base form, but some of it's functions are not meant to be used.
 	class dontUseThis:  public base_error{
 	public:
-		dontUseThis(const dNatChar* pFunc, const unsigned int pLine):
+		dontUseThis(const dNatChar* pFunc, const unsigned int pLine) throw():
             base_error(pFunc, pLine)
         {
             addInfo("What are you doing! Don't use this.");
@@ -111,7 +111,7 @@ namespace excep{
 	//!\brief	Generic error trown when a function tries to copy something it should't (IE, polymorphed classes).
 	class cantCopy: public base_error{
 	public:
-		cantCopy(const dStr &copyer, const dStr &copyee, const dNatChar* pFunc, const unsigned int pLine):
+		cantCopy(const dStr &copyer, const dStr &copyee, const dNatChar* pFunc, const unsigned int pLine) throw():
 			base_error(pFunc, pLine)
 		{
 			std::stringstream ss;
@@ -119,7 +119,7 @@ namespace excep{
 			addInfo(ss.str());
 		}
 
-		cantCopy(const dNatChar* copyer, const dNatChar* copyee, const dNatChar* pFunc, const unsigned int pLine):
+		cantCopy(const dNatChar* copyer, const dNatChar* copyee, const dNatChar* pFunc, const unsigned int pLine) throw():
 			base_error(pFunc, pLine)
 		{
 			std::stringstream ss;
@@ -143,5 +143,7 @@ namespace excep{
 	#define ASRT_NOTSELF(p)
 	#define DONT_USE_THIS
 #endif
+
+#define NOTSELF(p)			if(p == this) return *this
 
 #endif

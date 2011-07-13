@@ -12,6 +12,7 @@ main(int argc, char **argv){
 	std::cout << "Running gamestool tests. Version 0.1" << std::endl;
 
 	gt::gWorld = new gt::cWorld();
+
 #ifdef GTUT_GOOGLE
 	::testing::InitGoogleTest(&argc, argv);
 	result = RUN_ALL_TESTS();

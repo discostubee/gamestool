@@ -58,11 +58,6 @@ cBase_fileIO::~cBase_fileIO(){
 }
 
 void
-cBase_fileIO::requirements(){
-	//tOutline<cFigment>::draft();
-}
-
-void
 cBase_fileIO::jack(ptrLead pLead){
 	PROFILE;
 

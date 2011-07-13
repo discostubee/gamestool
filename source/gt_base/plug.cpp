@@ -7,9 +7,9 @@ using namespace gt;
 cReload::cReload(){
 }
 
-cReload::cReload(ptrFig pFig, const dByte* buff, size_t buffSize): fig(pFig){
-	if(buff != NULL && buffSize > 0)
-		data.copy(buff, buffSize);
+cReload::cReload(ptrFig pFig, const dByte* copyMe, size_t buffSize): fig(pFig){
+	if(copyMe != NULL && buffSize > 0)
+		data.copy(copyMe, buffSize);
 }
 
 cReload::~cReload(){
@@ -69,11 +69,18 @@ cBase_plug::operator= (const cBase_plug &pD){
 	return *this; 
 }
 
+cBase_plug&
+cBase_plug::operator= (const cBase_plug* pD){
+	DUMB_REF_ARG(pD);
+	DONT_USE_THIS;
+	return *this;
+}
+
 ////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
 
-GTUT_START(testPlugCopy, something)
+GTUT_START(testPlug, copy)
 {
 	cPlug<int> A;
 	cBase_plug *B = new cPlug<int>();
@@ -93,7 +100,17 @@ GTUT_START(testPlugCopy, something)
 	}
 
 	delete(B);
-}
-GTUT_END;
+}GTUT_END;
+
+GTUT_START(testPlug, saveLoad){
+	cPlug<int> A, B;
+	cByteBuffer buff;
+	dReloadMap dontCare;
+
+	A.mD = 42;
+	A.save(&buff);
+	B.loadEat(&buff, &dontCare);
+	GTUT_ASRT(B.mD == A.mD, "A didn't save, or B didn't load, correctly.");
+}GTUT_END;
 
 #endif

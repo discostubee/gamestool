@@ -20,7 +20,7 @@
  * sSomething	A structure name.
  * eSomething	an enum, for both the scope and the values.
  * mSomething	Variable data stored in a class or structure, otherwise known as a member variable.
- * pSomething	A parameter passed into a function call.
+ * aSomething	An argument passed into a function call.
  * nSomething	A name space.
  * uSomething	Constant and constant static data where the u stands for unchanging. Not to replace p when constant data is passed to a function.
  * tSomething	A template class or struct.
@@ -29,6 +29,15 @@
  * SOMETHING	A pre-processor macro or value.
  * gSomething	A global variable.
  *
+ * set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.
+ * copy		Copy a stream/buffer
+ * get		Return a primitive by copy, return a stream/buffer copy, return a reference to an object
+ * link		Set a smart pointer to different, already existing, reference.
+ * make		Return a fresh new instance of an object from a factory.
+ * clone	Make a duplicate of an object instance and return a smart pointer to the new clone.
+ * clear	Empty something so that it doesn't contain any data.
+ * blank	Change a link to being a blank or dead end (terminator) object.
+ * take		The function will clean up the memory it is being passed. The object becomes the custodian of this memory.
  */
 
 #ifndef	WORLD_HPP
@@ -73,10 +82,18 @@ namespace gt{
 	class cReload{
 	public:
 		ptrFig		fig;
-		cByteBuffer	data;
+		cByteBuffer	data;	//!< Accompanying reload data. Applied after all figments have been remade.
 
 		cReload();
-		cReload(ptrFig pFig, const dByte* buff = NULL, size_t buffSize = 0);
+
+		//!\brief	Stores a figment before it has been passed the rest of its reloaded data. This is so that figment plugs
+		//!			can see all the reloaded figments when they are passed the buffer.
+		//!\param	pFig	Reference to the newly made figment (it's not reloaded until it has been passed the buffer.
+		//!\param	copyMe	This is the accompanying reload buffer which has yet to be applied to the figment. The data
+		//!					being pointed to is copied so that it exists at the right time.
+		cReload(ptrFig pFig, const dByte* copyMe = NULL, size_t buffSize = 0);
+
+		//!\brief	Cleans up the data it has copied.
 		~cReload();
 	};
 
@@ -87,11 +104,12 @@ namespace gt{
 	class iFigment{
 	public:
 		virtual const dNatChar* name() const =0;
-		virtual dNameHash getReplacement() const =0;
 		virtual dNameHash hash() const =0;
+
+		virtual dNameHash getReplacement() const =0;
 		virtual void jack(ptrLead pLead)=0;
 		virtual void run(cContext* pCon)=0;
-		virtual cByteBuffer& save()=0;
+		virtual void save(cByteBuffer* pAddHere)=0;
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL)=0;
 		virtual void getLinks(std::list<ptrFig>* pOutLinks)=0;
 	};
@@ -180,8 +198,8 @@ namespace gt{
 		//--------------------------------------------------------
 		// Polymorphs
 		virtual dMillisec	getAppTime	(){ return 0; }
-		virtual void		loop		(){} //!< Enter the main program loop. Continues looping until it is told to stop.
-		virtual void		flushLines	(){} //!< Process the lines to be displayed on the console.
+		virtual void		loop		(){}	//!< Enter the main program loop. Continues looping until it is told to stop.
+		virtual void		flushLines	();		//!< Process the lines to be displayed on the console. Uses cout by default
 
 	protected:
 

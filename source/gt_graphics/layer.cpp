@@ -54,19 +54,14 @@ cLayer::jack(ptrLead pLead){
 	}
 }
 
-cByteBuffer&
-cLayer::save(){
-	cByteBuffer* saveBuff = new cByteBuffer();
-
-	//- Must remember the order we put them in, so we can take them out in the right order.
-	saveBuff->add(mRoot.save());
-
-	return *saveBuff;
+void
+cLayer::save(cByteBuffer* pAddHere){
+	mRoot.save(pAddHere);
 }
 
-
 void
-cLayer::loadEat(cByteBuffer* pBuff){
+cLayer::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
+	mRoot.loadEat(pBuff, pReloads);
 }
 
 void

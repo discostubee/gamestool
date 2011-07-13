@@ -61,7 +61,7 @@ cByteBuffer::take(dByte* pBuffIn, size_t pInSize){
 }
 
 void
-cByteBuffer::trim(size_t pSize, size_t pStart){
+cByteBuffer::trimHead(size_t pSize, size_t pStart){
 	dByte* orig = NULL;
 
 	if(pSize == 0)
@@ -80,15 +80,16 @@ cByteBuffer::trim(size_t pSize, size_t pStart){
 		mBuff = new dByte[mBuffSize - pSize];
 		if(pStart > 0){
 			::memcpy(mBuff, orig, pStart);
-			::memcpy(mBuff, &orig[pStart+pSize], mBuffSize - (pStart+pSize));
+			::memcpy(&mBuff[pStart], &orig[pStart+pSize], mBuffSize - (pStart+pSize));
 		}else{
-			::memcpy(mBuff, orig, mBuffSize - (pStart+pSize));
+			::memcpy(mBuff, &orig[pSize], mBuffSize - pSize);
 		}
 
 		mBuffSize = mBuffSize - (pStart+pSize);
 		::free(orig);
 	}
 }
+
 
 void 
 cByteBuffer::clear(){
@@ -124,7 +125,17 @@ cByteBuffer::add(const cByteBuffer &pBuff ){
 
 cByteBuffer &
 cByteBuffer::operator = (const cByteBuffer &pCopyMe){
+	NOTSELF(&pCopyMe);
+
 	copyBuff(pCopyMe);
+	return *this;
+}
+
+cByteBuffer &
+cByteBuffer::operator+= (const cByteBuffer &pCopyMe){
+	NOTSELF(&pCopyMe);
+
+	add(pCopyMe);
 	return *this;
 }
 
@@ -149,3 +160,65 @@ cByteBuffer::operator = (const cByteBuffer &pCopyMe){
 //
 //	return scrHead;
 //}
+
+
+////////////////////////////////////////////////////////////
+
+#ifdef GTUT
+
+GTUT_START(testByteBuffer, copy){
+	cByteBuffer A;
+	cByteBuffer B;
+	const char *str = "derp";
+	size_t strn = strlen(str);
+
+	A.copy(reinterpret_cast<const dByte*>(str), strn);
+	B.copyBuff(A);
+
+	const char *strOut = reinterpret_cast<const char*>(B.get());
+	GTUT_ASRT(strncmp(str, strOut, strn)==0, "buffer didn't copy correctly");
+}GTUT_END;
+
+GTUT_START(testByteBuffer, add){
+	static const char *strA = "herp ";
+	static const char *strB = "derp";
+	size_t aLen = strlen(strA);
+	size_t bLen = strlen(strB);
+	cByteBuffer A;
+	cByteBuffer B;
+
+	A.copy(reinterpret_cast<const dByte*>(strA), aLen);
+	B.copy(reinterpret_cast<const dByte*>(strB), bLen);
+
+	A.add(B);
+	const char *strOut = reinterpret_cast<const char*>(A.get());
+	GTUT_ASRT(strncmp(strOut, "herp derp", 9)==0, "buffer didn't add correctly");
+}GTUT_END;
+
+GTUT_START(testByteBuffer, trimHead){
+	static const char *str = "nick cave";
+	cByteBuffer test;
+
+	test.copy(reinterpret_cast<const dByte*>(str), strlen(str));
+	test.trimHead(5);
+	GTUT_ASRT(strncmp("cave", reinterpret_cast<const char*>(test.get()), 4)==0, "didn't trim correctly");
+}GTUT_END;
+
+GTUT_START(testByteBuffer, trimMiddle){
+	static const char *str = "hungry hungry hippos";
+	cByteBuffer test;
+
+	test.copy(reinterpret_cast<const dByte*>(str), strlen(str));
+	test.trimHead(7, 7);
+	GTUT_ASRT(strncmp("hungry hippos", reinterpret_cast<const char*>(test.get()), 4)==0, "didn't trim correctly");
+}GTUT_END;
+
+GTUT_START(testByteBuffer, take){
+
+}GTUT_END;
+
+GTUT_START(testByteBuffer, fill){
+
+}GTUT_END;
+
+#endif
