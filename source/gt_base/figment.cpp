@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag* cFigment::xPT_buffer = tOutline<cFigment>::makePlugTag("buffer");
+const tPlugTag* cFigment::xPT_buffer = tOutline<cFigment>::makePlugTag("buffer");
 
 const cCommand* cFigment::xSave = tOutline<cFigment>::makeCommand(
 	"save",
@@ -31,13 +31,13 @@ cFigment::~cFigment(){
 }
 
 void
-cFigment::jack(ptrLead pLead){
+cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
 	try{
 		switch( pLead->mCom->getSwitch<cFigment>() ){
 			case eSave:{
-				cPlug<cByteBuffer>* saveBuff = new cPlug<cByteBuffer>;
+				tPlug<cByteBuffer>* saveBuff = new tPlug<cByteBuffer>;
 				save(&saveBuff->mD);
 				pLead->take(saveBuff, cFigment::xPT_buffer );
 			}break;
@@ -128,10 +128,11 @@ GTUT_START(figment, hashes){
 GTUT_START(figment, givesSave){
 	tOutline<cFigment>::draft();
 
+	cContext fake;
 	ptrLead save = gWorld->makeLead(getHash<cFigment>(), cFigment::xSave->mID);
 	ptrFig testMe = gWorld->makeFig(getHash<cFigment>());
 
-	testMe->jack(save);
+	testMe->jack(save, &fake);
 	cBase_plug *saveBuff = save->getD(cFigment::xPT_buffer);
 	saveBuff->getMDPtr<cByteBuffer>();
 

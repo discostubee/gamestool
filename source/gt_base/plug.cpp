@@ -82,8 +82,8 @@ cBase_plug::operator= (const cBase_plug* pD){
 
 GTUT_START(testPlug, copy)
 {
-	cPlug<int> A;
-	cBase_plug *B = new cPlug<int>();
+	tPlug<int> A;
+	cBase_plug *B = new tPlug<int>();
 	int C = 0;
 	char D = 'a';
 	
@@ -103,7 +103,7 @@ GTUT_START(testPlug, copy)
 }GTUT_END;
 
 GTUT_START(testPlug, saveLoad){
-	cPlug<int> A, B;
+	tPlug<int> A, B;
 	cByteBuffer buff;
 	dReloadMap dontCare;
 

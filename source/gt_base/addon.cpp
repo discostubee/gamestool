@@ -7,7 +7,7 @@ std::vector<cAddon::ptrStr> cAddon::xOpenAddons;
 const char* cAddon::xDraftAllFooStr = "draftAll";
 const char* cAddon::xCloseAddonFooStr = "closeLib";
 
-const cPlugTag* cAddon::xPT_addonName = tOutline<cAddon>::makePlugTag("addon name");
+const tPlugTag* cAddon::xPT_addonName = tOutline<cAddon>::makePlugTag("addon name");
 
 const cCommand* cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
 	"load addon",
@@ -44,12 +44,7 @@ cAddon::~cAddon(){
 }
 
 void
-cAddon::requirements(){
-	//tOutline<cFigment>::draft();
-}
-
-void
-cAddon::jack(ptrLead pLead){
+cAddon::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 	try{
 		switch( pLead->mCom->getSwitch<cAddon>() ){
@@ -58,7 +53,7 @@ cAddon::jack(ptrLead pLead){
 				if(mAddonName->empty()){
 					std::vector<ptrStr>::iterator itr;
 
-					*mAddonName = *pLead->getD(cAddon::xPT_addonName)->getMDPtr<dStr>();
+					mAddonName = pLead->getD(cAddon::xPT_addonName)->getMDCopy<ptrStr>();
 
 					for(
 						itr = xOpenAddons.begin();
@@ -80,7 +75,7 @@ cAddon::jack(ptrLead pLead){
 			}break;
 
 			default:
-				return cFigment::jack(pLead);
+				return cFigment::jack(pLead, pCon);
 
 				break;
 		}

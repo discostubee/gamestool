@@ -8,6 +8,10 @@ using namespace gt;
 cContext::cContext(){
 }
 
+cContext::cContext(const cContext & copyMe){
+
+}
+
 cContext::~cContext(){
 }
 
@@ -17,7 +21,6 @@ cContext::add(iFigment* pFig){
 
 	ASRT_NOTNULL(pFig);
 
-	//!\todo	Update this so that it there can be a deep nest of replaced figments.
 	dNameHash pancakeHash = pFig->getReplacement() == uDoesntReplace ? pFig->hash() : pFig->getReplacement();
 
 	//DBUG_LO("Context adds "<< pFig->name());
@@ -94,7 +97,7 @@ cContext::isStacked(iFigment* pFig){
 	return false;
 }
 
-iFigment*
+refFig
 cContext::getLastOfType(dNameHash pType){
 	PROFILE;
 
@@ -112,5 +115,5 @@ cContext::getLastOfType(dNameHash pType){
 	if(cakeItr == mPlateOPancakes.end())
 		throw excep::notFound("name hash", __FILE__, __LINE__);
 
-	return cakeItr->second.back();
+	return refFig(cakeItr->second.back());
 }

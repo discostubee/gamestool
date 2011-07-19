@@ -20,8 +20,6 @@ namespace gt{
 
 	//----------------------------------------------------------------------------
 	//!\brief	A command defines what input/output functions a class can use.
-	//!\note	We need to use commands because they can be serialized and
-	//!			form part of a user program.
 	class cCommand{
 	public:
 		typedef unsigned int dUID;	//!< unique command ID
@@ -41,8 +39,8 @@ namespace gt{
 		template<typename T>
 		unsigned int getSwitch() const;	//!< Gives you the switch, but only if you are the figment it is looking for.
 
-		bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
-		void addTag(const cPlugTag* pTag);
+		bool usesTag(const tPlugTag* pTag) const;	//!< Checks if it has such a tag.
+		void addTag(const tPlugTag* pTag);
 
 		cCommand& operator=(const cCommand& pCom);
 
@@ -50,7 +48,7 @@ namespace gt{
 		const dNameHash mParent;	//!< Used to determine which figment this command belongs too.
 		const unsigned int mSwitch;
 
-		std::set<const cPlugTag*> mDataTags;
+		std::set<const tPlugTag*> mDataTags;
 	};
 }
 

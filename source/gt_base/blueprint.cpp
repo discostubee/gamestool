@@ -44,7 +44,7 @@ cBlueprint::getCom(dNameHash pHash) const{
 	return mGetCom(pHash);
 }
 
-const cPlugTag* 
+const tPlugTag* 
 cBlueprint::getPlugTag(dNameHash pPT) const{
 	ASRT_NOTNULL(mGetPlugTag);
 	return mGetPlugTag(pPT);

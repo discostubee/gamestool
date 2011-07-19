@@ -3,10 +3,10 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag*	cBase_fileIO::xPT_buffer = tOutline<cBase_fileIO>::makePlugTag("buffer");
-const cPlugTag*	cBase_fileIO::xPT_startSpot = tOutline<cBase_fileIO>::makePlugTag("start spot");
-const cPlugTag*	cBase_fileIO::xPT_readSize = tOutline<cBase_fileIO>::makePlugTag("read size");
-const cPlugTag*	cBase_fileIO::xPT_fileSize = tOutline<cBase_fileIO>::makePlugTag("file size");
+const tPlugTag*	cBase_fileIO::xPT_buffer = tOutline<cBase_fileIO>::makePlugTag("buffer");
+const tPlugTag*	cBase_fileIO::xPT_startSpot = tOutline<cBase_fileIO>::makePlugTag("start spot");
+const tPlugTag*	cBase_fileIO::xPT_readSize = tOutline<cBase_fileIO>::makePlugTag("read size");
+const tPlugTag*	cBase_fileIO::xPT_fileSize = tOutline<cBase_fileIO>::makePlugTag("file size");
 
 const cCommand*	cBase_fileIO::xSetPath = tOutline<cBase_fileIO>::makeCommand(
 	"set path",
@@ -58,7 +58,7 @@ cBase_fileIO::~cBase_fileIO(){
 }
 
 void
-cBase_fileIO::jack(ptrLead pLead){
+cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
 	try{
@@ -69,7 +69,7 @@ cBase_fileIO::jack(ptrLead pLead){
 
 			case eRead:{
 				PROFILE;
-				cPlug<cByteBuffer>* buff = new cPlug<cByteBuffer>;
+				tPlug<cByteBuffer>* buff = new tPlug<cByteBuffer>;
 
 				DBUG_LO("reading");
 
@@ -112,7 +112,7 @@ cBase_fileIO::jack(ptrLead pLead){
 			}break;
 
 			default:
-				cFigment::jack(pLead);
+				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){

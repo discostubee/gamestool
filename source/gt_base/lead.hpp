@@ -28,12 +28,13 @@
 namespace gt{
 
 	//--------------------------------------------------------------------------------------------------------
-	// A lead allows you to connect data from any number of different
-	// figments and then jack them into another figment. Leads use
-	// references to a command in order to identify what they are
-	// meant to do. Once a lead has one of its plugs connected to the
-	// data in a figment, that plug continues to reference the live
-	// data.
+	//!\brief	Figments are designed to have a generic interface, where calls to it can be saved as part of
+	//!			a users program. In order to do this, an interface call (known as jacking) uses a messenger
+	//!			class, in this case it's called a lead. A lead must have a command so the figment getting
+	//!			jacked knows what to do with it. A lead then has multiple plugs, some are labeled/tagged, while
+	//!			others are in an ordered pile. Leads do offer a 2 way connection to plugs it has, but because
+	//!			all plugs are mutex lockable, this shouldn't be a problem.
+	//!\todo	rename piled data to series.
 	class cLead{
 	public:
 		typedef std::map<unsigned int, cBase_plug*> dDataMap;
@@ -74,25 +75,25 @@ namespace gt{
 		cLead(const cCommand* pCom);
 		~cLead();
 
-		//!\fn		void add(cBase_plug* pData, const cPlugTag &pTag)
+		//!\fn		void add(cBase_plug* pData, const tPlugTag &pTag)
 		//!\brief	Add a reference to a plug and assign it a label
-		void add(cBase_plug* pData, const cPlugTag* pTag);
+		void add(cBase_plug* pData, const tPlugTag* pTag);
 
 		//!\fn		void addToPile(cBase_plug* pData)
 		//!\brief	Chunk a plug into the pile of other plugs.
 		void addToPile(cBase_plug* pData);
 
-		//!\fn		void take(cBase_plug** pData, const cPlugTag &pTag)
+		//!\fn		void take(cBase_plug** pData, const tPlugTag &pTag)
 		//!\brief	Use this function if you want the lead to manage the plug instead of using a reference.
 		//!\param	pData	Change to auto pointer
 		//!\param	pTag	The tag to give this data.
-		void take(cBase_plug* pData, const cPlugTag* pTag);
+		void take(cBase_plug* pData, const tPlugTag* pTag);
 
 		//!\todo change to auto pointer.
 		void takeToPile(cBase_plug* pData);
 
 		//!\todo change to reference return.
-		cBase_plug* getD(const cPlugTag* pTag);	//!< Get data by its tag.
+		cBase_plug* getD(const tPlugTag* pTag);	//!< Get data by its tag.
 
 		cPileItr getPiledDItr();
 

@@ -19,7 +19,7 @@ namespace gt{ //gamestool
 	//!			is not the same as dealing with a single direction tree).
 	class cAnchor: public cFigment, private tOutline<cAnchor>{
 	public:
-		static const cPlugTag*	xPT_root;
+		static const tPlugTag*	xPT_root;
 		static const cCommand*	xSetRoot;	//!\todo	Rename to linkRoot. Gotta keep the term link consistent.
 		static const cCommand*	xGetRoot;
 
@@ -39,12 +39,12 @@ namespace gt{ //gamestool
 
 		//- Optional
 		virtual void run(cContext* pCon);
-		virtual void jack(ptrLead pLead);
+		virtual void jack(ptrLead pLead, cContext* pCon);
 		virtual void save(cByteBuffer* pAddHereb);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);
 
 	private:
-		cPlug<ptrFig>	mRoot;
+		tPlug<ptrFig>	mRoot;
 	};
 }
 

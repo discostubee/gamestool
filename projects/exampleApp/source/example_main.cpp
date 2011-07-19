@@ -26,7 +26,13 @@
 
 using namespace gt;
 
-#if defined LINUX
+#ifdef __APPLE__
+
+int
+main(void){
+	gWorld = new cOSXWorld();
+
+#elif defined LINUX
 
 int
 main(void){

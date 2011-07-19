@@ -37,21 +37,21 @@ namespace gt{
 
 	//--------------------------------------------------------
 	//!\brief	this helps to identify what each plug is on a lead.
-	class cPlugTag{
+	class tPlugTag{
 	public:
 		typedef unsigned int dUID;	//!< Unique ID.
 
 		const dUID	mID;
 		const dStr	mName;
 
-		cPlugTag(
+		tPlugTag(
 			const dNatChar* pPlugName
 		):
 			mID( makeHash(pPlugName) ),
 			mName( pPlugName )
 		{}
 
-		cPlugTag& operator=(const cPlugTag& pPlug){ 
+		tPlugTag& operator=(const tPlugTag& pPlug){ 
 			::memcpy((void*)(&mID), (void*)(&pPlug.mID), sizeof(mID));
 			::memcpy((void*)(&mName), (void*)(&pPlug.mName), sizeof(mName));
 			return *this; 
@@ -61,7 +61,8 @@ namespace gt{
 
 	//--------------------------------------------------------
 	//!\brief	The base plug gives a consistent interface for the
-	//			template class.
+	//!			template class. Plugs are also responsible for
+	//!			mutex locking.
 	class cBase_plug{
 	public:
 		PLUG_TYPE_ID mType;
@@ -108,14 +109,17 @@ namespace gt{
 	//!			via the call function, as well as automatically disconnect
 	//!			itself from its linked leads when it dies.
 	//!			It is also designed for serialization using a byte buffer.
+	//!\note	You don't have to use plugs for all your figments stuff.
+	//!			Just for the things you want to save and reload or pass
+	//!			through a lead to another object.
 	template<typename A>
-	class cPlug: public cBase_plug{
+	class tPlug: public cBase_plug{
 	public:
 		A mD;
 
-		cPlug();
-		cPlug(const A& pA);
-		virtual ~cPlug();
+		tPlug();
+		tPlug(const A& pA);
+		virtual ~tPlug();
 
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads);
@@ -140,7 +144,7 @@ namespace gt{
 		if(mType != PLUG_TYPE_TO_ID(T))
 			PLUG_CANT_COPY(T);
 
-		dynamic_cast< cPlug<T>* >(this)->mD = pT;
+		dynamic_cast< tPlug<T>* >(this)->mD = pT;
 
 		return *this;
 	}
@@ -152,7 +156,7 @@ namespace gt{
 		if(mType != pT.mType)
 			PLUG_CANT_COPY_ID(pT.mType);
 
-		dynamic_cast< cPlug<T>* >(this)->mD = pT.mD;
+		dynamic_cast< tPlug<T>* >(this)->mD = pT.mD;
 
 		return *this;
 	}
@@ -165,7 +169,7 @@ namespace gt{
 		if(mType != PLUG_TYPE_TO_ID(T))
 			PLUG_CANT_COPY(T);
 
-		return dynamic_cast< cPlug<T>* >(this)->mD;
+		return dynamic_cast< tPlug<T>* >(this)->mD;
 	}
 
 	template<typename T>
@@ -176,37 +180,37 @@ namespace gt{
 		if(mType != PLUG_TYPE_TO_ID(T))
 			PLUG_CANT_COPY(T);
 
-		return &dynamic_cast< cPlug<T>* >(this)->mD;
+		return &dynamic_cast< tPlug<T>* >(this)->mD;
 	}
 
 
 	//--------------------------------------
 	template<typename A>
-	cPlug<A>::cPlug():
+	tPlug<A>::tPlug():
 		cBase_plug(typeid(A))
 	{
 	}
 
 	template<typename A>
-	cPlug<A>::cPlug(const A& pA):
+	tPlug<A>::tPlug(const A& pA):
 		cBase_plug(typeid(A)), mD(pA)
 	{
 	}
 
 	template<typename A>
-	cPlug<A>::~cPlug(){
+	tPlug<A>::~tPlug(){
 	}
 
 	template<typename A>
 	void 
-	cPlug<A>::genericCopy(const cBase_plug* pD){
+	tPlug<A>::genericCopy(const cBase_plug* pD){
 		PROFILE;
 
 		ASRT_NOTNULL(pD);
 		ASRT_NOTSELF(pD);
 
 		if( mType == pD->mType ){	// we can just cast
-			mD = dynamic_cast< cPlug<A>* >( const_cast<cBase_plug*>(pD) )->mD;
+			mD = dynamic_cast< tPlug<A>* >( const_cast<cBase_plug*>(pD) )->mD;
 		}else{ // we need to see if there is an acceptable converter.
 			//!!! can do this with a map of maps (2D map). Map this thing's template version of the copy check to the targets. Then at the right location, check if there is a templated copy function.
 			//!!! for now we just fail.
@@ -216,7 +220,7 @@ namespace gt{
 
 	template<typename A>
 	cBase_plug&
-	cPlug<A>::operator= (const cBase_plug &pD){
+	tPlug<A>::operator= (const cBase_plug &pD){
 		//NOTSELF(&pD);	// Performed in generic copy.
 		genericCopy(&pD);
 		return *this;
@@ -224,7 +228,7 @@ namespace gt{
 
 	template<typename A>
 	cBase_plug&
-	cPlug<A>::operator= (const cBase_plug* pD){
+	tPlug<A>::operator= (const cBase_plug* pD){
 		//NOTSELF(pD);	// Performed in generic copy.
 		genericCopy(pD);
 		return *this;
@@ -232,21 +236,21 @@ namespace gt{
 
 	template<typename A>
 	cBase_plug&
-	cPlug<A>::operator= (const A& pA){
+	tPlug<A>::operator= (const A& pA){
 		mD = pA;
 		return *this;
 	}
 
 	template<typename A>
 	void
-	cPlug<A>::save(cByteBuffer* pAddHere){
+	tPlug<A>::save(cByteBuffer* pAddHere){
 		PROFILE;
 		pAddHere->add(&mD);
 	}
 
 	template<typename A>
 	void
-	cPlug<A>::loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
+	tPlug<A>::loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
 		if(pChewToy->size() < sizeof(mD))
 			throw cByteBuffer::excepUnderFlow(__FILE__, __LINE__);
 
@@ -256,7 +260,7 @@ namespace gt{
 
 	template<typename A>
 	void
-	cPlug<A>::reset(){}
+	tPlug<A>::reset(){}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -265,17 +269,17 @@ namespace gt{
 
 	//--------------------------------------
 	template<>
-	class cPlug<dStr>: public cBase_plug{
+	class tPlug<dStr>: public cBase_plug{
 	public:
 		dStr mD;
 
-		cPlug(): cBase_plug(typeid(dStr)){
+		tPlug(): cBase_plug(typeid(dStr)){
 		}
 
-		cPlug(dStr pA): cBase_plug(typeid(dStr)), mD(pA){
+		tPlug(dStr pA): cBase_plug(typeid(dStr)), mD(pA){
 		}
 
-		virtual ~cPlug(){}
+		virtual ~tPlug(){}
 
 		virtual void operator= (dStr pA){ mD = pA; }
 

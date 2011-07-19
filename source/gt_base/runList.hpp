@@ -15,7 +15,7 @@ namespace gt{ //gamestool
 	//!\brief	When you run this figment, you also run every figment in its list.
 	class cRunList: public cFigment, private tOutline<cRunList>{
 	protected:
-		typedef std::vector< cPlug<ptrFig> > dList;
+		typedef std::vector< tPlug<ptrFig> > dList;
 		typedef dList::iterator dListItr;
 
 		dList mList;
@@ -38,7 +38,7 @@ namespace gt{ //gamestool
 
 		//- Optional
 		virtual void run(cContext* pCon);				//!< runs every element in the list
-		virtual void jack(ptrLead pLead);
+		virtual void jack(ptrLead pLead, cContext* pCon);
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
@@ -50,11 +50,11 @@ namespace gt{ //gamestool
 	//		time this figment is run.
 	class cValves: public cRunList, private tOutline<cValves>{
 	protected:
-		std::map< dListItr, cPlug<bool> > mStates;	//!< Maps states to the list entries. These states control which objects are run.
+		std::map< dListItr, tPlug<bool> > mStates;	//!< Maps states to the list entries. These states control which objects are run.
 
 	public:
-		static const cPlugTag*	xPT_state;		//!< Turn turns valve on.
-		static const cPlugTag*	xPT_valveIdx;	//!< The numeric index for the valve.
+		static const tPlugTag*	xPT_state;		//!< Turn turns valve on.
+		static const tPlugTag*	xPT_valveIdx;	//!< The numeric index for the valve.
 
 		static const cCommand*	xSetState;
 
@@ -73,7 +73,7 @@ namespace gt{ //gamestool
 
 		//- Optional
 		virtual void run(cContext* pCon);				//!< runs every element in the list
-		virtual void jack(ptrLead pLead);
+		virtual void jack(ptrLead pLead, cContext* pCon);
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 	};

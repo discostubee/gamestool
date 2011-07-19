@@ -28,25 +28,28 @@ namespace gt{
 	//!\brief	An addon can draft figments contained in external plugins. These plugin figments are only valid as
 	//!		long as the addon containing their code is valid.
 	//!\note	Because there will be plenty of modules adding the same few plugins, addon figments must be
-	//!		aware of what is already loaded. That way, a plugin is only loaded/unloaded once.
-	//!\note	When an addon dies, it removes all its blueprints from the world. Removing drafts causes any
+	//!		aware of what is already loaded. That way, a plugin is only loaded once. An it is only unloaded
+	//!		once every addon for the same plugin is destroyed.
+	//!\note	When an addon finally dies, it removes all its blueprints from the world. Removing drafts causes any
 	//!		figments of that type to become empty objects (refer to world removeBlueprint).
+	//!\note	Addons must not have platform specific names. If an addon isn't available for a certain OS, that's
+	//!		just too bad.
 	class cAddon: public cFigment, private tOutline<cAddon>{
 	protected:
 		typedef boost::shared_ptr<dStr> ptrStr;
 
-		static std::vector<ptrStr> xOpenAddons;	//!< Tracks all open addons. Allowing you to only open a library when you need to. Using vector because they're fast to iterate over.
+		static std::vector<ptrStr> xOpenAddons;	//!< Tracks all open addons. Allowing you to only open a library when you need to. Using vector because they're fast to iterate over and I don't care that it's slow to add to.
 
 		virtual void draftAddon(const dStr &pName){}	//!< draft all the blueprints contained in an external addon.
 		virtual void closeAddon(){}
 
-		ptrStr mAddonName;
+		ptrStr mAddonName;	//!< Stores the name of the addon we want.
 
 	public:
 		static const char* xDraftAllFooStr;
 		static const char* xCloseAddonFooStr;
 
-		static const cPlugTag* xPT_addonName;
+		static const tPlugTag* xPT_addonName;
 		static const cCommand* xLoadAddon;
 
 		enum{
@@ -63,7 +66,7 @@ namespace gt{
 		virtual const dNatChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cAddon>::hash(); }
 
-		virtual void jack(ptrLead pLead);
+		virtual void jack(ptrLead pLead, cContext* pCon);
 	};
 
 	

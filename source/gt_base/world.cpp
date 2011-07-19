@@ -218,7 +218,7 @@ cWorld::makeLead(dNameHash pFigHash, dNameHash pComHash){
 	return ptrLead(new cLead(mScrBMapItr->second.mBlueprint->getCom(pComHash)));
 }
 
-const cPlugTag* 
+const tPlugTag* 
 cWorld::getPlugTag(dNameHash pFigHash, dNameHash pPTHash){
 	PROFILE;
 

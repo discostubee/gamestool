@@ -20,9 +20,19 @@ namespace gt{
 
 //-------------------------------------------------------------------------------------
 //!\class	cContext
-//!\brief	A context is used to pass information to a figments that is downstream, about
-//!			a figment upstream.
+//!\brief	A context is used to avoid circular references and to also create a way to
+//!			block threads from running into each other.
 class cContext{
+public:
+	cContext();
+	cContext(const cContext & copyMe);
+	~cContext();
+
+	void add(iFigment* pFig);
+	void finished(iFigment* pFig);
+	bool isStacked(iFigment* pFig);
+	refFig getLastOfType(dNameHash pType);
+
 private:
 	dProgramStack mStack;
 	dFigSigCount mTimesStacked;	//!<
@@ -30,18 +40,14 @@ private:
 
 	dFigSigCount::iterator figSigItr;
 	dPancakes::iterator cakeItr;
-
-public:
-	cContext();
-	~cContext();
-
-	void add(iFigment* pFig);
-	void finished(iFigment* pFig);
-	bool isStacked(iFigment* pFig);
-	iFigment* getLastOfType(dNameHash pType);
 };
 
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+// Helper macros
+#define CON_START(con)	if(con->isStacked(this)){ return; } con->add(this)
+#define CON_STOP(con)	con->finished(this);
 
 ///////////////////////////////////////////////////////////////////////////////////
 // errors

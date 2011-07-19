@@ -16,10 +16,10 @@ namespace gt{
 	//!			When saving, it is converted into a string format that is consistent across all compilations.
 	class cTextFig: public cFigment, private tOutline<cTextFig>{
 	private:
-		cPlug<dStr> mText;
+		tPlug<dStr> mText;
 
 	public:
-		static const cPlugTag* xPT_text;
+		static const tPlugTag* xPT_text;
 		static const cCommand* xSetText;
 		static const cCommand* xGetText;
 
@@ -38,7 +38,7 @@ namespace gt{
 		virtual dNameHash hash() const{ return tOutline<cTextFig>::hash(); }
 
 		virtual void run(cContext* pCon);				//!< Temp code to display text in console.
-		virtual void jack(ptrLead pLead);
+		virtual void jack(ptrLead pLead, cContext* pCon);
 		virtual cByteBuffer& save();
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 	};

@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag* cAnchor::xPT_root = tOutline<cAnchor>::makePlugTag("root");
+const tPlugTag* cAnchor::xPT_root = tOutline<cAnchor>::makePlugTag("root");
 
 const cCommand* cAnchor::xSetRoot = tOutline<cAnchor>::makeCommand(
 	"set root",
@@ -30,7 +30,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 	size_t				chunkSize = 0;
 	dNameHash			chunkHash = 0;
-	cPlug<size_t>		currentSpot = 0;
+	tPlug<size_t>		currentSpot = 0;
 	dFigSaveSig			chunkSig = 0;
 
 	try{
@@ -180,13 +180,13 @@ cAnchor::~cAnchor() {
 
 void
 cAnchor::run(cContext* pCon) {
-	ASRT_NOTNULL(pCon);
-
+	CON_START(pCon);
 	mRoot.mD->run(pCon);
+	CON_STOP(pCon);
 }
 
 void
-cAnchor::jack(ptrLead pLead) {
+cAnchor::jack(ptrLead pLead, cContext* pCon) {
 	try{
 		switch( pLead->mCom->getSwitch<cAnchor>() ){
 			case eSetRoot:
@@ -198,7 +198,7 @@ cAnchor::jack(ptrLead pLead) {
 				break;
 
 			default:
-				cFigment::jack(pLead);
+				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){
@@ -222,7 +222,7 @@ public:
 	virtual const dNatChar* name() const{ return cSaveTester::identify(); }
 	virtual dNameHash hash() const{ return tOutline<cSaveTester>::hash(); }
 
-	virtual void jack(ptrLead pLead){ pLead->addToPile(&myStr); pLead->addToPile(&myNum); }
+	virtual void jack(ptrLead pLead, cContext* pCon){ pLead->addToPile(&myStr); pLead->addToPile(&myNum); }
 	virtual void save(cByteBuffer* pAddHere) {
 		myStr.save(pAddHere); myNum.save(pAddHere);
 	}
@@ -230,8 +230,8 @@ public:
 		myStr.loadEat(pBuff, pReloads); myNum.loadEat(pBuff, pReloads);
 	}
 private:
-	cPlug<dStr> myStr;
-	cPlug<int> myNum;
+	tPlug<dStr> myStr;
+	tPlug<int> myNum;
 };
 
 const cCommand*	cSaveTester::xGetMyStr = tOutline<cSaveTester>::makeCommand( "get my string", cFigment::eNotMyBag, NULL);
@@ -243,11 +243,12 @@ GTUT_START(testAnchor, basicSave){
 	tOutline<cSaveTester>::draft();
 
 	cAnchor ank;
-	cPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
+	cContext fake;
+	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
 	ptrLead add(new cLead(cAnchor::xSetRoot));
 
 	add->add(&tester, cAnchor::xPT_root);
-	ank.jack(add);
+	ank.jack(add, &fake);
 
 	buff.clear();
 	ank.save(&buff);
@@ -255,20 +256,20 @@ GTUT_START(testAnchor, basicSave){
 
 GTUT_START(testAnchor, basicLoad){
 	cAnchor ank;
-
+	cContext fake;
 	ptrLead load(new cLead(cAnchor::xLoad));
 	dReloadMap dontcare;
 	ank.loadEat(&buff, &dontcare);
 
 	ptrLead root(new cLead(cAnchor::xGetRoot));
-	ank.jack(root);
-	cPlug<ptrFig> reload;
+	ank.jack(root, &fake);
+	tPlug<ptrFig> reload;
 	reload = root->getD(cAnchor::xPT_root);
 
 	ptrLead checkStr(new cLead(cSaveTester::xGetMyStr));
-	reload.mD->jack(checkStr);
-	cPlug<dStr> myStr;
-	cPlug<int> myNum;
+	reload.mD->jack(checkStr, &fake);
+	tPlug<dStr> myStr;
+	tPlug<int> myNum;
 	cLead::cPileItr itr = checkStr->getPiledDItr();
 	myStr = itr.getPlug();
 	++itr;

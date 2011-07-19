@@ -1,7 +1,6 @@
 /*
- * !\file
- * !\brief	Contains declaration and implementation of a template class which provides smart pointers.
- * !\note	Created because the boost smart pointers didn't provide a way to redirect all pointers to a new memory location.
+ * !\file	dirPtr.hpp
+ * !\brief	Contains a few pointer management classes.
  *
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -23,6 +22,7 @@
 #define FIGPTR_HPP
 
 #include "exceptions.hpp"
+#include <memory>
 
 #ifdef GTUT
 #include "unitTests.hpp"
@@ -35,6 +35,7 @@ namespace gt{
 	//!			pointers to the content instance. This is different to just using boost
 	//!			smart pointers because you are able to redirect every pointer to another
 	//!			figment. When the count reaches, this content is cleaned up by the pointers.
+	//!\note	Created because the boost smart pointers didn't provide a way to redirect all pointers to a new memory location.
 	//!\todo	Prevent circular redirections.
 	template<typename T>
 	class tDirector{
@@ -81,6 +82,23 @@ namespace gt{
 		tDirector<T>* mDir;	//!< link to the director which contains the figment. Null until it is made equal to another pointer.
 	};
 
+	//-------------------------------------------------------------------------------------
+	//!\brief
+	template <typename T>
+	class tPtrRef{
+	public:
+		tPtrRef();
+		tPtrRef(T& ref);
+		tPtrRef(T* ptr);
+		tPtrRef(const tPtrRef<T>& other);
+		~tPtrRef();
+
+		T* operator -> ();
+		tPtrRef<T>& operator = (const tPtrRef& other);
+
+	private:
+		T* myPtr;
+	};
 }
 
 ////////////////////////////////////////////////////////////
@@ -245,8 +263,8 @@ namespace gt{
 		if(mDir){
 			if(unique())
 				delete mDir;
-
-			mDir->unlink();
+			else
+				mDir->unlink();
 		}
 
 		mDir = pFDir.mDir;
@@ -285,4 +303,31 @@ namespace gt{
 	}
 }
 
+////////////////////////////////////////////////////////////
+namespace gt{
+	template<typename T>
+	tPtrRef<T>::tPtrRef() : myPtr(NULL) {}
+
+	template<typename T>
+	tPtrRef<T>::tPtrRef(T& ref) : myPtr(&ref) {}
+
+	template<typename T>
+	tPtrRef<T>::tPtrRef(T* ptr) : myPtr(ptr) {}
+
+	template<typename T>
+	tPtrRef<T>::tPtrRef(const tPtrRef<T>& other) : myPtr(other.myPtr) {}
+
+	template<typename T>
+	tPtrRef<T>::~tPtrRef() {}
+
+	template<typename T>
+	T*
+	tPtrRef<T>::operator -> () { return myPtr; }
+
+	template<typename T>
+	tPtrRef<T>&
+	tPtrRef<T>::operator = (const tPtrRef& other){
+		if(this != &other) myPtr = other.myPtr; return *this;
+	}
+}
 #endif

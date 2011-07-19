@@ -98,7 +98,6 @@ namespace gt{
 		virtual cBase_plug& operator= (const cBase_plug &pD){ if(&pD != this){} return *this;}
 		virtual void operator= (const sMesh& pA){}
 
-		virtual cByteBuffer& save(){ cByteBuffer meshSave; return meshSave; }
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){}
 		virtual void reset(){ mD = sMesh();}
 	};

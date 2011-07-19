@@ -19,31 +19,27 @@ void
 cRunList::run(cContext* pCon){
 	PROFILE;
 
-	ASRT_NOTNULL(pCon);
-
-	if(pCon->isStacked(this))
-		return;	
-
-	pCon->add(this);
+	CON_START(pCon);
 
 	for(
-		std::vector< cPlug<ptrFig> >::iterator i = mList.begin();
+		std::vector< tPlug<ptrFig> >::iterator i = mList.begin();
 		i != mList.end();
 		++i
 	){
 		(*i).mD->run(pCon);
 	}
-	pCon->finished(this);
+
+	CON_STOP(pCon);
 }
 
 void
-cRunList::jack(ptrLead pLead){
+cRunList::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
 	try{
 		switch( pLead->mCom->getSwitch<cRunList>() ){
 			case eAdd: {
-				cPlug<ptrFig> temp;
+				tPlug<ptrFig> temp;
 
 				for(cLead::cPileItr itr = pLead->getPiledDItr(); !itr.atEnd(); ++itr){
 					temp = *itr.getPlug();
@@ -54,7 +50,7 @@ cRunList::jack(ptrLead pLead){
 			}break;
 
 			default:{
-				cFigment::jack(pLead);
+				cFigment::jack(pLead, pCon);
 			}break;
 		}
 	}catch(excep::base_error &e){
@@ -69,7 +65,7 @@ cRunList::save(cByteBuffer* pAddHere){
 	size_t listSize = mList.size();
 
 	pAddHere->add( &listSize );
-	for( std::vector< cPlug<ptrFig> >::iterator i = mList.begin(); i != mList.end(); ++i){
+	for( std::vector< tPlug<ptrFig> >::iterator i = mList.begin(); i != mList.end(); ++i){
 		i->save(pAddHere);
 	}
 }
@@ -85,7 +81,7 @@ cRunList::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	pBuff->fill(&listSize);
 	pBuff->trimHead(sizeof listSize);
 	for(size_t i = 0; i < listSize; ++i){
-		cPlug<ptrFig> tempFig;
+		tPlug<ptrFig> tempFig;
 		tempFig.loadEat(pBuff, pReloads); // there should be enough in this buffer for all figs to load.
 		mList.push_back(tempFig);
 	}
@@ -96,7 +92,7 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 	ASRT_NOTNULL(pOutLinks);
 
 	for(
-		std::vector< cPlug<ptrFig> >::iterator i = mList.begin();
+		std::vector< tPlug<ptrFig> >::iterator i = mList.begin();
 		i != mList.end();
 		++i
 	){
@@ -107,8 +103,8 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag* cValves::xPT_state = tOutline<cValves>::makePlugTag("valve state");
-const cPlugTag* cValves::xPT_valveIdx = tOutline<cValves>::makePlugTag("Valve index");
+const tPlugTag* cValves::xPT_state = tOutline<cValves>::makePlugTag("valve state");
+const tPlugTag* cValves::xPT_valveIdx = tOutline<cValves>::makePlugTag("Valve index");
 
 const cCommand* cValves::xSetState = tOutline<cValves>::makeCommand(
 	"add",
@@ -134,7 +130,7 @@ cValves::run(cContext* pCon){
 	pCon->add(this);
 
 	for(
-		std::vector< cPlug<ptrFig> >::iterator itr = mList.begin();
+		std::vector< tPlug<ptrFig> >::iterator itr = mList.begin();
 		itr != mList.end();
 		++itr
 	){
@@ -145,13 +141,13 @@ cValves::run(cContext* pCon){
 }
 
 void
-cValves::jack(ptrLead pLead){
+cValves::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
 	try{
 		switch( pLead->mCom->getSwitch<cValves>() ){
 			case eAdd:{
-				cPlug<ptrFig> temp;
+				tPlug<ptrFig> temp;
 
 				for(cLead::cPileItr itr = pLead->getPiledDItr(); !itr.atEnd(); ++itr ){
 					temp = *itr.getPlug();
@@ -167,7 +163,7 @@ cValves::jack(ptrLead pLead){
 			}break;
 
 			default:{
-				cFigment::jack(pLead);
+				cFigment::jack(pLead, pCon);
 			}break;
 		}
 	}catch(excep::base_error &e){

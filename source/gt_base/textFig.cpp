@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag* cTextFig::xPT_text = tOutline<cTextFig>::makePlugTag("text");
+const tPlugTag* cTextFig::xPT_text = tOutline<cTextFig>::makePlugTag("text");
 
 const cCommand* cTextFig::xSetText = tOutline<cTextFig>::makeCommand(
 	"set text",
@@ -27,11 +27,13 @@ cTextFig::~cTextFig(){
 
 void
 cTextFig::run(cContext* pCon){
+	CON_START(pCon);
 	DBUG_LO("text figment = " << mText.mD);
+	CON_STOP(pCon);
 }
 
 void
-cTextFig::jack(ptrLead pLead){
+cTextFig::jack(ptrLead pLead, cContext* pCon){
 	try{
 		switch( pLead->mCom->getSwitch<cTextFig>() ){
 			case eSetText:
@@ -43,7 +45,7 @@ cTextFig::jack(ptrLead pLead){
 				break;
 
 			default:
-				cFigment::jack(pLead);
+				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){

@@ -1,7 +1,9 @@
 #ifndef USERPROGRAM_EXAMPLE_HPP
 #define USERPROGRAM_EXAMPLE_HPP
 
-#if defined LINUX
+#ifdef __APPLE__
+	#include <gt_OSX/OSX_fileIO.hpp>
+#elif defined LINUX
     #include <gt_linux/linux_fileIO.hpp>
 #elif defined WIN32
     #include <gt_win7/win_fileIO.hpp>
@@ -93,7 +95,9 @@ namespace showoff{
 		tOutline<cAnchor>::draft();
 		tOutline<cBase_fileIO>::draft();
 
-#ifdef LINUX
+#ifdef __APPLE__
+		tOutline<cOSX_fileIO>::draft();
+#elif LINUX
 		tOutline<cLinux_fileIO>::draft();
 #elif WIN32
 		tOutline<cWin_fileIO>::draft();

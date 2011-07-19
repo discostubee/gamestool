@@ -1,6 +1,7 @@
 /*
- * !\file	world.hpp
- * !\brief	This is the starting point for the source code dependency (ignoring some included utility source).
+ *!\file	world.hpp
+ *!\brief	This is the starting point for the source code dependency (ignoring some included utility source).
+ *!\todo	Make world access thread safe.
  *
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -16,28 +17,32 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * cSomething	A class name.
- * sSomething	A structure name.
- * eSomething	an enum, for both the scope and the values.
- * mSomething	Variable data stored in a class or structure, otherwise known as a member variable.
- * aSomething	An argument passed into a function call.
- * nSomething	A name space.
- * uSomething	Constant and constant static data where the u stands for unchanging. Not to replace p when constant data is passed to a function.
- * tSomething	A template class or struct.
- * xSomething	Static data as either a class member or a function variable.
- * dSomething	A type definition.
- * SOMETHING	A pre-processor macro or value.
- * gSomething	A global variable.
+ *!\note	This file, seeing as how it's our sort of, starting point: We'll add all the kind of info that's useful right here.
+ *!\note	A little bit about the short hand being used in this project.
+ *! oSomething		An object name, either a class or struct.
+ *! eSomething		an enum, for both the scope and the values.
+ *! mSomething		Variable data stored in a class or structure, otherwise known as a member variable.
+ *! aSomething		An argument passed into a function call.
+ *! uSomething		Constant and constant static data where the u stands for unchanging. Not to replace p when constant data is passed to a function.
+ *! tSomething		A template class or struct.
+ *! xSomething		Static data as either a class member or a function variable.
+ *! dSomething		A type definition.
+ *! SOMETHING		A pre-processor macro or value.
+ *! gSomething		A global variable.
+ *! ptrSomething	A managed pointer.
+ *! fPtrSomething	A function pointer.
  *
- * set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.
- * copy		Copy a stream/buffer
- * get		Return a primitive by copy, return a stream/buffer copy, return a reference to an object
- * link		Set a smart pointer to different, already existing, reference.
- * make		Return a fresh new instance of an object from a factory.
- * clone	Make a duplicate of an object instance and return a smart pointer to the new clone.
- * clear	Empty something so that it doesn't contain any data.
- * blank	Change a link to being a blank or dead end (terminator) object.
- * take		The function will clean up the memory it is being passed. The object becomes the custodian of this memory.
+ *\note		A little bit about some of the terms used around the place. This isn't shorthand exactly, so it get's it's own note coz it's special.
+ *! set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.
+ *! copy	Copy a stream/buffer
+ *! get		Return a primitive by copy, return a stream/buffer copy, return a reference to an object
+ *! link	Set a smart pointer to different, already existing, reference.
+ *! make	Return a fresh new instance of an object from a factory.
+ *! clone	Make a duplicate of an object instance and return a smart pointer to the new clone.
+ *! clear	Empty something so that it doesn't contain any data.
+ *! blank	Change a link to being a blank or dead end (terminator) object.
+ *! take	The function will clean up the memory it is being passed. The object becomes the custodian of this memory.
+ *!
  */
 
 #ifndef	WORLD_HPP
@@ -58,7 +63,7 @@
 // forward declarations
 namespace gt{
 	class cBase_plug;
-	class cPlugTag;
+	class tPlugTag;
 	class cLead;
 	class cBlueprint;
 	class cCommand;
@@ -107,7 +112,7 @@ namespace gt{
 		virtual dNameHash hash() const =0;
 
 		virtual dNameHash getReplacement() const =0;
-		virtual void jack(ptrLead pLead)=0;
+		virtual void jack(ptrLead pLead, cContext* pCon)=0;
 		virtual void run(cContext* pCon)=0;
 		virtual void save(cByteBuffer* pAddHere)=0;
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL)=0;
@@ -189,7 +194,7 @@ namespace gt{
 		// Get references
 		
 		//!\note	Slow. Intended for ease of reading.
-		const cPlugTag* getPlugTag(dNameHash pFigHash, dNameHash pPTHash);
+		const tPlugTag* getPlugTag(dNameHash pFigHash, dNameHash pPTHash);
 
 		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
 		//!			bicycle.
@@ -226,6 +231,12 @@ namespace gt{
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
 		bool mBicycleSetup;	//!< Faster than looking for it in the library every time.
 	};
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// Typedefs
+namespace gt{
+	typedef tPtrRef<iFigment> refFig;	//!< Used when you want access to a figment
 }
 
 ////////////////////////////////////////////////////////////////////

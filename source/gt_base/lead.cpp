@@ -23,7 +23,7 @@ cLead::~cLead(){
 }
 
 void
-cLead::add(cBase_plug* pData, const cPlugTag* pTag){
+cLead::add(cBase_plug* pData, const tPlugTag* pTag){
 	PROFILE;
 
 	scrTDataItr = mTaggedData.find(pTag->mID);
@@ -50,7 +50,7 @@ cLead::addToPile(cBase_plug* pData){
 }
 
 void
-cLead::take(cBase_plug* pData, const cPlugTag* pTag){
+cLead::take(cBase_plug* pData, const tPlugTag* pTag){
 	PROFILE;
 
 	if(!mCom->usesTag(pTag))
@@ -91,7 +91,7 @@ cLead::takeToPile(cBase_plug* pData){
 }
 
 cBase_plug*
-cLead::getD(const cPlugTag* pTag){
+cLead::getD(const tPlugTag* pTag){
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr == mTaggedData.end())
 		throw excep::notFound(pTag->mName.c_str(), __FILE__, __LINE__);

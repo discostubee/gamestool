@@ -17,6 +17,27 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * EXAMPLE
+ * Dealt with because when c encounters c again, it unwinds. b gets blocked
+ * until c winds.
+ *
+ * 	    a
+ * 	    b-->c
+ * 	    b   c
+ * 	|-->0   c
+ * 	|   c<--c
+ *  |<--c
+ *
+ *
+ *
+ *  a
+ *  b-->c
+ *  b   d-->e
+ *  b   0   e--|
+ *  b          |
+ *  f-->g      |
+ *  0   g<-----|
+ *  0   g
  */
 
 #ifndef THREAD_HPP
@@ -27,14 +48,32 @@
 namespace gt{
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	Launches a new thread and maintains it.
+	//!\brief	Launches a new thread that runs through its linked figment. The context
+	//!			is copied and run as a new one. A figment is blocked from running when
+	//!			it encounters a context from a different thread. But if it encounters
+	//!			its own thread again, it unwinds. Uses a threadpool.
 	class cThread: public cFigment, public tOutline<cThread>{
 	public:
+		static const tPlugTag*	xPT_fig;	//!< The figment to link.
+		static const cCommand*	xLinkFig;	//!< Link figment to run in the separate thread.
+
 		static const dNatChar* identify(){ return "thread"; }
+
+		enum{
+			eLinkFig = cFigment::eSwitchEnd +1,
+			eSwitchEnd
+		};
 
 		cThread();
 		virtual ~cThread();
 
+		virtual const dNatChar* name() const{ return cThread::identify(); }
+		virtual dNameHash hash() const{ return tOutline<cThread>::hash(); }
+		virtual void run(cContext* pCon);
+		virtual void jack(ptrLead pLead, cContext* pCon);
+
+	protected:
+		tPlug<ptrFig> link;
 	};
 }
 

@@ -35,8 +35,8 @@ namespace gt{
 	public:
 		//-----------------------------
 		// Defines
-		static const cPlugTag*	xPT_buffer;	//!< \todo rename to save buffer or something.
-		static const cCommand*	xSave;	//!< Serialization is supported at the base level.
+		static const tPlugTag*	xPT_buffer;	//!< \todo rename to save buffer or something.
+		static const cCommand*	xSave;	//!< Serialization is a base level ability.
 		static const cCommand*	xLoad;	//!< Ditto above.
 
 		enum{
@@ -65,7 +65,7 @@ namespace gt{
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
 
-		virtual void jack(ptrLead pLead);						//!< Jack is the interface used to get and set various members in a super generic fashion.
+		virtual void jack(ptrLead pLead, cContext* pCon);		//!< Jack is the interface used to get and set various members in a super generic fashion.
 		virtual void run(cContext* pCon){}						//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
 		virtual void save(cByteBuffer* pAddHere);				//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL){}				//!< Called load eat because the head of the buffer is consume by the load function.
@@ -120,17 +120,17 @@ namespace gt{
 
 	//--------------------------------------
 	template<>
-	class cPlug<ptrFig>: public cBase_plug{
+	class tPlug<ptrFig>: public cBase_plug{
 	public:
 		ptrFig mD;
 
-		cPlug() : cBase_plug(typeid(ptrFig)), mD(gWorld->getEmptyFig()){
+		tPlug() : cBase_plug(typeid(ptrFig)), mD(gWorld->getEmptyFig()){
 		}
 
-		cPlug(ptrFig pA) : cBase_plug(typeid(ptrFig)), mD(pA){
+		tPlug(ptrFig pA) : cBase_plug(typeid(ptrFig)), mD(pA){
 		}
 
-		virtual ~cPlug(){}
+		virtual ~tPlug(){}
 
 		virtual cBase_plug& operator= (const cBase_plug &pD){
 			NOTSELF(&pD);
@@ -139,7 +139,7 @@ namespace gt{
 			//!\todo figure out a way to prevent code duplication.
 			if( mType == pD.mType ){	// we can just cast
 				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
-				mD = dynamic_cast< cPlug<ptrFig>* >(
+				mD = dynamic_cast< tPlug<ptrFig>* >(
 					const_cast<cBase_plug*>(&pD)
 				)->mD;
 			}else{
@@ -156,7 +156,7 @@ namespace gt{
 			//!\todo figure out a way to prevent code duplication.
 			if( mType == pD->mType ){	// we can just cast
 				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
-				mD = dynamic_cast< cPlug<ptrFig>* >(
+				mD = dynamic_cast< tPlug<ptrFig>* >(
 					const_cast<cBase_plug*>(pD)
 				)->mD;
 			}else{
@@ -197,7 +197,6 @@ namespace gt{
 			mD = gWorld->getEmptyFig();
 		}
 	};
-
 
 }
 
