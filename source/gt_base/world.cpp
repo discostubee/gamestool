@@ -7,11 +7,13 @@ using namespace gt;
 // Globals and statics
 using namespace gt;
 
-cWorld* 			gt::gWorld					=NULL;
+tMrSafety<cWorld> gt::gWorld;
 
-cCoolStatic<cWorld::dLines> cWorld::xLines;
-cCoolStatic<cProfiler> cWorld::xProfiler;
+//- Don't assign anything to the stuff below.
+cWorld::dLines* cWorld::xLines;
+cProfiler* cWorld::xProfiler;
 
+bool cWorld::thereCanBeOnlyOne = false;
 
 ////////////////////////////////////////////////////////////
 // Blueprint stuff
@@ -51,28 +53,51 @@ void
 cWorld::lo(const dStr& pLine){
 	PROFILE;
 
-	xLines.get()->push_back(pLine);
+	static bool linesSetup = false;
+	if(!linesSetup){
+		linesSetup = true;
+		xLines = new dLines();
+	}
+	xLines->push_back(pLine);
 }
 
 cProfiler::cToken
 cWorld::makeProfileToken(const dNatChar* pFile, unsigned int pLine){
-	return xProfiler.get()->makeToken(pFile, pLine);
+	static bool profileSetup = false;
+	if(!profileSetup){
+		profileSetup = true;
+		xProfiler = new cProfiler();
+	}
+	return xProfiler->makeToken(pFile, pLine);
 }
 
 cWorld::cWorld():
-	mKeepLooping(true)
+	mKeepLooping(true),
+	mBicycleSetup(false)
 {
-	mLines = xLines.get();
-	mProfiler = xProfiler.get();
+	if(thereCanBeOnlyOne)
+		throw excep::base_error("can only create the world once", __FILE__, __LINE__);
+
+	thereCanBeOnlyOne = true;
+
 	mVillageBicycle = ptrFig(new cEmptyFig());
-	mBicycleSetup = false;
 	mRoot = ptrFig(new cWorldShutoff());
 
-	DBUG_VERBOSE_LO("World created.");
+	makeProfileToken("", 0); //- Ensure it exists.
+	mProfiles = xProfiler;
+
+	lo("World created."); //- Ensure it exists.
+	mLines = xLines;
 }
 
 cWorld::~cWorld(){
-	DBUG_VERBOSE_LO("It's the end of the world.");
+	makeProfileToken("", 0); //- Ensure it exists.
+
+	delete xProfiler;
+
+	lo(""); //- Ensure it exists.
+	flushLines();
+	delete xLines;
 }
 
 void
@@ -203,7 +228,8 @@ void
 cWorld::copyWorld(cWorld* pWorld){
 	if(!pWorld->mLines->empty())
 		mLines->splice(mLines->end(), *pWorld->mLines);
-	*mProfiler += *pWorld->mProfiler;
+
+	*mProfiles += *pWorld->mProfiles;
 }
 
 ptrLead
@@ -237,7 +263,7 @@ cWorld::setRoot(ptrFig pNewRoot){
 
 void
 cWorld::makeProfileReport(std::ostream &log){
-	mProfiler->flushThatLog(log);
+
 }
 
 void
@@ -261,10 +287,10 @@ cWorld::getEmptyFig(){
 
 void
 cWorld::flushLines(){
-	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
+	for(dLines::iterator i = xLines->begin(); i != xLines->end(); ++i){
 		std::cout << (*i) << std::endl;
 	}
-	mLines->clear();
+	xLines->clear();
 }
 
 ////////////////////////////////////////////////////////////
@@ -273,18 +299,18 @@ cWorld::flushLines(){
 void
 gt::redirectWorld(cWorld* pWorldNew){
 	if(pWorldNew){
-		gt::gWorld = new gt::cWorld();	// We need the member pointers to the statics to exist.
-		std::cout << (long)gt::gWorld << " vs " << (long)pWorldNew << std::endl; //!!!
-		std::cout << "xLines at " << (long)(&gt::cWorld::xLines) << std::endl;
-		std::cout << (long)gt::cWorld::xLines.get() << " vs " << (long)pWorldNew->mLines << std::endl; //!!!
-		pWorldNew->copyWorld(gt::gWorld);
-		delete gt::gWorld;
+		cWorld* temp = new cWorld();	// We need the member pointers to the statics to exist.
+		//std::cout << (long)gt::gWorld << " vs " << (long)pWorldNew << std::endl; //!!!
+		//std::cout << "xLines at " << (long)(&gt::cWorld::xLines) << std::endl; //!!!
+		//std::cout << (long)gt::cWorld::xLines.get() << " vs " << (long)pWorldNew->mLines << std::endl; //!!!
+		pWorldNew->copyWorld(temp);
+		delete temp;
 
-		gt::cWorld::xLines.set(pWorldNew->mLines);
-		gt::cWorld::xProfiler.set(pWorldNew->mProfiler);
-		gt::gWorld = pWorldNew;
+		cWorld::xLines = pWorldNew->mLines;
+		cWorld::xProfiler = pWorldNew->mProfiles;
+		gWorld.take(pWorldNew);
 	}else{
-		gt::cWorld::xLines.drop();
-		gt::cWorld::xProfiler.drop();
+		gWorld.cleanup();
 	}
+
 }

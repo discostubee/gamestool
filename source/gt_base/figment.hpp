@@ -124,7 +124,7 @@ namespace gt{
 	public:
 		ptrFig mD;
 
-		tPlug() : cBase_plug(typeid(ptrFig)), mD(gWorld->getEmptyFig()){
+		tPlug() : cBase_plug(typeid(ptrFig)), mD(gWorld.get()->getEmptyFig()){
 		}
 
 		tPlug(ptrFig pA) : cBase_plug(typeid(ptrFig)), mD(pA){
@@ -194,7 +194,7 @@ namespace gt{
 		}
 
 		virtual void reset(){
-			mD = gWorld->getEmptyFig();
+			mD = gWorld.get()->getEmptyFig();
 		}
 	};
 

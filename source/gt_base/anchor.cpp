@@ -140,13 +140,13 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 			if(chunkSize>0){	//- lastly, lets make the figment and save its additional data.
 				reloads[reloadSig] = new cReload(
-					ptrFig(gWorld->makeFig(tempHash)),
+					ptrFig(gWorld.get()->makeFig(tempHash)),
 					pBuff->get(readSpot),
 					chunkSize
 				);
 				readSpot += chunkSize;
 			}else{	//- No additional data appart from the figment itself.
-				reloads[reloadSig] = new cReload( ptrFig(gWorld->makeFig(tempHash)) );
+				reloads[reloadSig] = new cReload( ptrFig(gWorld.get()->makeFig(tempHash)) );
 			}
 		}
 
@@ -172,7 +172,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 }
 
 cAnchor::cAnchor():
-	mRoot(gWorld->getEmptyFig())
+	mRoot(gWorld.get()->getEmptyFig())
 {}
 
 cAnchor::~cAnchor() {

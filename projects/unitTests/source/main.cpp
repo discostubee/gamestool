@@ -49,7 +49,7 @@ public:
 		if( realFoo->find(inPost->ID) != realFoo->end() ) inPost->say(this);
 	}
 
-	template <typename T> static postFace* makePost(void (T::*fooPtr)() ) {
+	template <typename T> static postFace* makePost(post<T>::footPtr inPtr) {
 		dNameHash fooNH = makeHash( (dNatChar*)typeid(post<T>).name() );
 		postFace* postPtr = new post<T>(fooPtr, fooNH);
 
@@ -110,16 +110,14 @@ main(int argc, char **argv){
 
 	//testAll();
 
-	gt::gWorld = new gt::cWorld();
+	gt::gWorld.take( new gt::cWorld() );
 
 #ifdef GTUT_GOOGLE
 	::testing::InitGoogleTest(&argc, argv);
 	result = RUN_ALL_TESTS();
 #endif
-	delete gt::gWorld;
+	gt::gWorld.cleanup();
 
-	//std::cout << "Tests over. Press any key to finish" << std::endl;
-	//getchar();
 
 	return result;
 }

@@ -45,18 +45,6 @@ typedef unsigned int	dMillisec;
 dNameHash makeHash(const dNatChar* pString);
 
 //------------------------------------------------------------------------------------------
-//!\class	cGlobalPtrMan
-//!\brief	Global pointer manager. Used to delete a global pointer.
-template<typename TYPE>
-class cGlobalPtrMan{
-public:
-	TYPE* mPtr;
-
-	cGlobalPtrMan(TYPE* pPtr):mPtr(pPtr){}
-	~cGlobalPtrMan(){ SAFEDEL(mPtr); }
-};
-
-//------------------------------------------------------------------------------------------
 // Dimension stuff. Should go in its own source file.
 
 typedef float dUnitVD;	//!< Virtual distance measurement.
@@ -129,64 +117,6 @@ isIn(const T &pFindMe, const vector<T> &pFindIn){
 	}
 	return false;
 }
-
-//------------------------------------------------------------------------------------------
-//!\brief	Makes using statics cool again. Used when you can't be sure of when a global will
-//!			be initialised.
-template<typename T>
-class cCoolStatic{
-private:
-	static T* mD;
-
-public:
-
-	cCoolStatic(){
-		std::cout << "cool static made at " << (long)(this) << " as a " << typeid(T).name() << std::endl; //!!!
-	}
-
-	~cCoolStatic(){
-		setupOrCleanup(false);
-	}
-
-	static void setupOrCleanup(bool pDontCleanup=true){
-		static bool setup = false;
-
-		if(pDontCleanup){
-			if(!setup){
-				mD = new T();
-				setup = true;
-				std::cout << "cool static got memory at " << (long)mD << " for " << typeid(T).name() << std::endl; //!!!
-			}
-		}else{
-			if(setup){
-				std::cout << "cool static about to clean memory at " << (long)mD << " for " << typeid(T).name() << std::endl; //!!!
-				delete mD;
-				mD = NULL;
-				setup = false;
-			}
-		}
-	}
-
-	static T* get(){
-		setupOrCleanup();
-		return mD;
-	}
-
-	static void set(T* pSetter){
-		setupOrCleanup(false);
-		mD = pSetter;
-	}
-
-	//!\brief	Used when we don't want this static to manage the pointer anymore.
-	static void drop(){
-		mD = NULL;
-		setupOrCleanup(false);
-	}
-};
-
-// Don't assign anything here.
-template<typename T>
-T* cCoolStatic<T>::mD;
 
 
 //------------------------------------------------------------------------------------------

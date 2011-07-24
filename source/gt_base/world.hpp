@@ -48,6 +48,8 @@
 #ifndef	WORLD_HPP
 #define WORLD_HPP
 
+#include "threadTools.hpp"
+#include "ptrTools.hpp"
 #include "dirPtr.hpp"
 #include "gt_string.hpp"
 #include "utils.hpp"
@@ -148,10 +150,14 @@ namespace gt{
 		// Logging and info services
 
 		//!\brief	Add a line to be displayed in the console.
+		//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
 		static void lo(const dStr& pLine);
 
 		//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
 		void warnError(excep::base_error &pE, const dNatChar* pFile, const unsigned int pLine);
+
+		//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
+		static void makeProfileReport(std::ostream &log);
 
 		//--------------------------------------------------------
 		// Regular world methods
@@ -165,7 +171,7 @@ namespace gt{
 		//--------------------------------------------------------
 		// Blueprint stuff
 
-		//!\brief	Adds a blueprint to the library. Will replace a blueprint if the new one say to.
+		//!\brief	Adds a blueprint to the library. Will replace a blueprint if the new ones say to.
 		void addBlueprint(const cBlueprint* pAddMe);
 
 		const cBlueprint* getBlueprint(dNameHash pNameHash);
@@ -178,16 +184,15 @@ namespace gt{
 		//--------------------------------------------------------
 		// Factory outlets
 
-		//!\brief
+		//!\brief	Makes a new figment that is managed by a smart pointer.
 		ptrFig makeFig(dNameHash pNameHash);
 
-		//!\brief
+		//!\brief	Makes a new lead that is managed by a smart pointer.
 		//!\param	pFigNameHash
 		//!\param	pCommandID
 		ptrLead makeLead(dNameHash pFigHash, dNameHash pComHash);
 
-		void makeProfileReport(std::ostream &log);
-
+		//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
 		static cProfiler::cToken makeProfileToken(const dNatChar* pFile, unsigned int pLine);
 
 		//--------------------------------------------------------
@@ -209,15 +214,19 @@ namespace gt{
 	protected:
 
 		//--------------------------------------------------------
-		// Data which can be redirected from an addon's heap.
-		static cCoolStatic<cWorld::dLines> xLines;
-		static cCoolStatic<cProfiler> xProfiler;
+		// Data which must be redirected if this is an addon's heap.
+		// This stuff also needs specific setup
+		static dLines* xLines;
+		static cProfiler* xProfiler;
+
+		// Allows you to copy the statics from different heaps
+		dLines* mLines;
+		cProfiler* mProfiles;
 
 		ptrFig mRoot;
-		cProfiler* mProfiler;
-		dLines* mLines;
 
 		friend void redirectWorld(cWorld*);
+		//--------------------------------------------------------
 
 	private:
 		struct sBlueprintHeader;
@@ -230,7 +239,12 @@ namespace gt{
 		dBlueprintMap::iterator mScrBMapItr;	//!< scratch variable for iterating over blueprint library.
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
 		bool mBicycleSetup;	//!< Faster than looking for it in the library every time.
+
+		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).
+
 	};
+
+	extern tMrSafety<cWorld> gWorld;	//!< Gives you threadsafe access to the world.
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -240,25 +254,15 @@ namespace gt{
 }
 
 ////////////////////////////////////////////////////////////////////
-// Globals
+// Functions
 namespace gt{
-	extern cWorld* gWorld;	//!< World is a singleton.
-}
-
-////////////////////////////////////////////////////////////////////
-// Functions.
-
-namespace gt{
-	//!\brief	Used to redirect the global, which is why it's not a static function of the world class.
-	//!			Only used when directing the global inside a shared library to the global inside the main program.
-	//!\param	pWorldNew	Pointer to the world you want to use. Can be null, in which case, the statics are redirected to NULL and nothing is cleaned.
 	void redirectWorld(cWorld* pWorldNew);
 }
 
 ////////////////////////////////////////////////////////////////////
 // Macros
 #ifdef DEBUG
-	#define PROFILE	//cProfiler::cToken profileToken = gt::gWorld->makeProfileToken(__FILE__, __LINE__)
+	#define PROFILE	//cProfiler::cToken profileToken = gt::gWorld.get()->makeProfileToken(__FILE__, __LINE__)
 	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 	
 #else
@@ -272,14 +276,14 @@ namespace gt{
 	#define DBUG_VERBOSE_LO(x)
 #endif
 
-#define WARN(x)	gt::gWorld->warnError(x, __FILE__, __LINE__)
+#define WARN(x)	gt::gWorld.get()->warnError(x, __FILE__, __LINE__)
 
 // Handy for all those (...) catch blocks.
 #define UNKNOWN_ERROR	{ excep::unknownError temp(__FILE__, __LINE__); WARN(temp); }
 
 #ifdef GTUT
 	#undef GTUT_END
-	#define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld->flushLines(); }
+	#define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
 #endif
 
 #endif

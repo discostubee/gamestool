@@ -85,7 +85,7 @@ cWorldShutoff::~cWorldShutoff(){
 
 void
 cWorldShutoff::run(cContext* pCon){
-	gWorld->mKeepLooping = false;
+	gWorld.get()->mKeepLooping = false;
 }
 
 ////////////////////////////////////////////////////////////
@@ -97,9 +97,9 @@ GTUT_START(figment, polymorphNames){
 	tOutline<cEmptyFig>::draft();
 	tOutline<cWorldShutoff>::draft();
 
-	ptrFig stdFig = gWorld->makeFig(getHash<cFigment>());
-	ptrFig emptyFig = gWorld->makeFig(getHash<cEmptyFig>());
-	ptrFig shutoff = gWorld->makeFig(getHash<cWorldShutoff>());
+	ptrFig stdFig = gWorld.get()->makeFig(getHash<cFigment>());
+	ptrFig emptyFig = gWorld.get()->makeFig(getHash<cEmptyFig>());
+	ptrFig shutoff = gWorld.get()->makeFig(getHash<cWorldShutoff>());
 
 	GTUT_ASRT(
 		strncmp(stdFig->name(), cFigment::identify(), 10)==0,
@@ -129,8 +129,8 @@ GTUT_START(figment, givesSave){
 	tOutline<cFigment>::draft();
 
 	cContext fake;
-	ptrLead save = gWorld->makeLead(getHash<cFigment>(), cFigment::xSave->mID);
-	ptrFig testMe = gWorld->makeFig(getHash<cFigment>());
+	ptrLead save = gWorld.get()->makeLead(getHash<cFigment>(), cFigment::xSave->mID);
+	ptrFig testMe = gWorld.get()->makeFig(getHash<cFigment>());
 
 	testMe->jack(save, &fake);
 	cBase_plug *saveBuff = save->getD(cFigment::xPT_buffer);

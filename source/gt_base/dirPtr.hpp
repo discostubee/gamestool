@@ -1,6 +1,6 @@
 /*
  * !\file	dirPtr.hpp
- * !\brief	Contains a few pointer management classes.
+ * !\brief	Contains the directional pointer.
  *
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -81,111 +81,7 @@ namespace gt{
 	protected:
 		tDirector<T>* mDir;	//!< link to the director which contains the figment. Null until it is made equal to another pointer.
 	};
-
-	//-------------------------------------------------------------------------------------
-	//!\brief
-	template <typename T>
-	class tPtrRef{
-	public:
-		tPtrRef();
-		tPtrRef(T& ref);
-		tPtrRef(T* ptr);
-		tPtrRef(const tPtrRef<T>& other);
-		~tPtrRef();
-
-		T* operator -> ();
-		tPtrRef<T>& operator = (const tPtrRef& other);
-
-	private:
-		T* myPtr;
-	};
 }
-
-////////////////////////////////////////////////////////////
-namespace gt{
-	template<typename T>
-	tDirector<T>::tDirector(T* pContent):
-		mContent(pContent), mRedirect(NULL), mCount(0)
-	{
-	}
-
-	template<typename T>
-	tDirector<T>::~tDirector(){
-		delete mContent;	// This should always be either valid, or NULL, which C++ delete can handle it.
-		delete mRedirect;	// Same as content. Saves putting conditions here.
-	}
-
-
-	template<typename T>
-	void
-	tDirector<T>::redirect(tDirector<T>* pDirector){
-		delete mContent;
-		mContent=NULL;
-		mRedirect = pDirector;
-		mRedirect->mCount += mCount; //- Some more pointers joined the party.
-		mCount = 0;	//- We no longer use this director for handling count. We defer to the other director.
-	}
-
-	template<typename T>
-	void
-	tDirector<T>::change(T* pNewContent){
-		if(mRedirect){
-			mRedirect->change(pNewContent);
-		}else{
-			delete mContent;
-			mContent = pNewContent;
-		}
-	}
-
-	template<typename T>
-	void
-	tDirector<T>::link(){
-		if(mRedirect){
-			mRedirect->link();
-		}else{
-			ASRT_NOTNULL(mContent);
-			++mCount;
-		}
-	}
-
-	template<typename T>
-	void
-	tDirector<T>::unlink(){
-		if(mRedirect){
-			mRedirect->unlink();
-		}else{
-			ASRT_NOTNULL(mContent);
-			if(mCount < 1)
-				throw excep::base_error("director underflow. Too many unlinks somehow...", __FILE__, __LINE__);
-
-			--mCount;
-		}
-	}
-
-	template<typename T>
-	T*
-	tDirector<T>::get() const{
-		if(mRedirect){
-			return mRedirect->get();
-		}else{
-			ASRT_NOTNULL(mContent);
-			return mContent;
-		}
-	}
-
-	template<typename T>
-	unsigned int
-	tDirector<T>::getCount() const{
-		if(mRedirect){
-			return mRedirect->getCount();
-		}else{
-			ASRT_NOTNULL(mContent);
-			return mCount;
-		}
-	}
-
-}
-
 ////////////////////////////////////////////////////////////
 namespace gt{
 	template<typename T>
@@ -303,31 +199,89 @@ namespace gt{
 	}
 }
 
+
 ////////////////////////////////////////////////////////////
 namespace gt{
 	template<typename T>
-	tPtrRef<T>::tPtrRef() : myPtr(NULL) {}
+	tDirector<T>::tDirector(T* pContent):
+		mContent(pContent), mRedirect(NULL), mCount(0)
+	{
+	}
 
 	template<typename T>
-	tPtrRef<T>::tPtrRef(T& ref) : myPtr(&ref) {}
+	tDirector<T>::~tDirector(){
+		delete mContent;	// This should always be either valid, or NULL, which C++ delete can handle it.
+		delete mRedirect;	// Same as content. Saves putting conditions here.
+	}
+
 
 	template<typename T>
-	tPtrRef<T>::tPtrRef(T* ptr) : myPtr(ptr) {}
+	void
+	tDirector<T>::redirect(tDirector<T>* pDirector){
+		delete mContent;
+		mContent=NULL;
+		mRedirect = pDirector;
+		mRedirect->mCount += mCount; //- Some more pointers joined the party.
+		mCount = 0;	//- We no longer use this director for handling count. We defer to the other director.
+	}
 
 	template<typename T>
-	tPtrRef<T>::tPtrRef(const tPtrRef<T>& other) : myPtr(other.myPtr) {}
+	void
+	tDirector<T>::change(T* pNewContent){
+		if(mRedirect){
+			mRedirect->change(pNewContent);
+		}else{
+			delete mContent;
+			mContent = pNewContent;
+		}
+	}
 
 	template<typename T>
-	tPtrRef<T>::~tPtrRef() {}
+	void
+	tDirector<T>::link(){
+		if(mRedirect){
+			mRedirect->link();
+		}else{
+			ASRT_NOTNULL(mContent);
+			++mCount;
+		}
+	}
+
+	template<typename T>
+	void
+	tDirector<T>::unlink(){
+		if(mRedirect){
+			mRedirect->unlink();
+		}else{
+			ASRT_NOTNULL(mContent);
+			if(mCount < 1)
+				throw excep::base_error("director underflow. Too many unlinks somehow...", __FILE__, __LINE__);
+
+			--mCount;
+		}
+	}
 
 	template<typename T>
 	T*
-	tPtrRef<T>::operator -> () { return myPtr; }
+	tDirector<T>::get() const{
+		if(mRedirect){
+			return mRedirect->get();
+		}else{
+			ASRT_NOTNULL(mContent);
+			return mContent;
+		}
+	}
 
 	template<typename T>
-	tPtrRef<T>&
-	tPtrRef<T>::operator = (const tPtrRef& other){
-		if(this != &other) myPtr = other.myPtr; return *this;
+	unsigned int
+	tDirector<T>::getCount() const{
+		if(mRedirect){
+			return mRedirect->getCount();
+		}else{
+			ASRT_NOTNULL(mContent);
+			return mCount;
+		}
 	}
+
 }
 #endif

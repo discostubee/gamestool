@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef THREAD_HPP
-#define THREAD_HPP
+#ifndef POSTMAN_HPP
+#define POSTMAN_HPP
 
 #include "figment.hpp"
 

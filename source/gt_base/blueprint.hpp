@@ -196,11 +196,11 @@ namespace gt{
 
 			//- If this replaces a figment, it must also copy some of its properties.
 			if(T::replaces() != uDoesntReplace){
-				const cBlueprint* temp = gWorld->getBlueprint(T::replaces());
+				const cBlueprint* temp = gWorld.get()->getBlueprint(T::replaces());
 				temp->addToGivenContainers(xCommands, xPlugTags);
 			}
 
-			gWorld->addBlueprint(&xBlueprint);
+			gWorld.get()->addBlueprint(&xBlueprint);
 
 			xDrafted=true;
 
@@ -213,7 +213,7 @@ namespace gt{
 	void
 	tOutline<T>::removeFromWorld(){
 		if(xDrafted){
-			gWorld->removeBlueprint(&xBlueprint);
+			gWorld.get()->removeBlueprint(&xBlueprint);
 			xDrafted=false;
 		}
 	}

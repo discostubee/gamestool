@@ -71,10 +71,10 @@ public:
 
 /*
 #ifdef DEBUG
-	cCoolStatic<cProfiler> gProfiler;
+	tCoolStatic<cProfiler> gProfiler;
 
-	#define PROFILE cProfiler::cToken profileToken = cCoolStatic<cProfiler>::get()->makeToken(__FILE__, __LINE__)
-	#define LOG_PROFILE cCoolStatic<cProfiler>::get()->flushThatLog(std::cout);
+	#define PROFILE cProfiler::cToken profileToken = tCoolStatic<cProfiler>::get()->makeToken(__FILE__, __LINE__)
+	#define LOG_PROFILE tCoolStatic<cProfiler>::get()->flushThatLog(std::cout);
 #else
 	#define PROFILE
 	#define LOG_PROFILE

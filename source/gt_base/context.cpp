@@ -103,7 +103,7 @@ cContext::getLastOfType(dNameHash pType){
 
 	// We need to get the base type.
 	//!\todo make this deal with deep nests of blueprints.
-	dNameHash pancakeHash = gWorld->getBlueprint(pType)->replace();
+	dNameHash pancakeHash = gWorld.get()->getBlueprint(pType)->replace();
 
 	if (pancakeHash == uDoesntReplace)
 		pancakeHash = pType;
