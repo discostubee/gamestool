@@ -1,6 +1,6 @@
 /*
  * !\file	thread.hpp
- * !\brief	Declares the threadding object.
+ * !\brief	Declares the threading figment. The strategy for threading figments is driven by the design of the context class.
  *
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -17,27 +17,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * EXAMPLE
- * Dealt with because when c encounters c again, it unwinds. b gets blocked
- * until c winds.
  *
- * 	    a
- * 	    b-->c
- * 	    b   c
- * 	|-->0   c
- * 	|   c<--c
- *  |<--c
- *
- *
- *
- *  a
- *  b-->c
- *  b   d-->e
- *  b   0   e--|
- *  b          |
- *  f-->g      |
- *  0   g<-----|
- *  0   g
  */
 
 #ifndef THREAD_HPP
@@ -74,6 +54,10 @@ namespace gt{
 
 	protected:
 		tPlug<ptrFig> link;
+		boost::thread myThread;
+		boost::condition_variable sync;
+
+		static void runThread(tPlug<ptrFig> fig, cContext* pCon);
 	};
 }
 

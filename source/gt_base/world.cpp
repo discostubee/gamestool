@@ -277,7 +277,7 @@ ptrFig
 cWorld::getEmptyFig(){
 	if(mBicycleSetup == false){
 		if(mBlueprints.find(getHash<cEmptyFig>()) == mBlueprints.end()){
-			tOutline<cEmptyFig>::draft();			
+			tOutline<cEmptyFig>::draft();
 		}
 		mBicycleSetup = true;
 	}

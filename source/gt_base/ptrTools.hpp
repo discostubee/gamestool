@@ -60,12 +60,9 @@ namespace gt{
 		T* myPtr;
 	};
 
-
-
 	//------------------------------------------------------------------------------------------
 	//- Forward dec
 	template<typename T> class tSpitLemming;
-
 
 	//!\brief	Go forth and let me know when you die.
 	//!\note	behaves like an auto pointer. Copying a lemming frees the old one.
@@ -73,9 +70,10 @@ namespace gt{
 	class tLemming{
 	public:
 		tLemming(tLemming<T>& copy);
-		~tLemming();
+		virtual ~tLemming();
 
-		T* operator -> ();
+		virtual T* operator -> ();
+		virtual T* get();
 
 		tLemming& operator = (const tLemming& copy);
 
@@ -85,7 +83,6 @@ namespace gt{
 
 		void parentDied();
 
-	private:
 		tSpitLemming<T>* mParent;
 
 	friend class tSpitLemming<T>;
@@ -97,31 +94,21 @@ namespace gt{
 	template<typename T>
 	class tSpitLemming{
 	public:
-		tSpitLemming() : inTheWild(0) {}
-		virtual ~tSpitLemming() {}
+		tSpitLemming();
+		virtual ~tSpitLemming();
 
-		tLemming<T>& get(){
-			++inTheWild;
+		virtual tLemming<T>& get();
+		virtual tSpitLemming<T>& operator = (const tSpitLemming<T>& spitter);
 
-			return *(new tLemming<T>(this));
-		}
-
-		virtual tSpitLemming<T>& operator = (const tSpitLemming<T>& spitter){
-			return *this;
-		}
-
-		unsigned int inWild() { return inTheWild; }	//!< Let's you know how many tokens are out there.
+		unsigned int inWild();
 
 	protected:
-		virtual T* getData() { return NULL; }					//!< Must over-ride
-		virtual void deadLemming(const tLemming<T>* corpse) {}	//!< Must over-ride
-		virtual void lemmingChange(const tLemming<T>* lem) {  }
+		virtual T* getData(const tLemming<T>* requester);
+		virtual void deadLemming(const tLemming<T>* corpse);
+		virtual void lemmingChange(const tLemming<T>* lem);
 
 		//!\brief	called by lemming after its called the polymorphed deadLemming foo.
-		void finish() {
-			if (inTheWild==0) throw excep::base_error("lemming underflow", __FILE__, __LINE__);
-			--inTheWild;
-		}
+		void finish();
 
 		unsigned int inTheWild;
 
@@ -204,8 +191,64 @@ namespace gt{
 
 	template<typename T> T*
 	tLemming<T>:: operator -> (){
+		return get();
+	}
+
+	template<typename T> T*
+	tLemming<T>::get() {
 		if(!mParent) throw std::exception();	// make this nicer.
-		return mParent->getData();
+		return mParent->getData(this);
+	}
+}
+
+////////////////////////////////////////////////////////////
+namespace gt{
+
+	template<typename T>
+	tSpitLemming<T>::tSpitLemming() : inTheWild(0) {
+
+	}
+
+	template<typename T>
+	tSpitLemming<T>::~tSpitLemming() {}
+
+	template<typename T> tLemming<T>&
+	tSpitLemming<T>::get(){
+		tLemming<T>* temp = new tLemming<T>(this);
+		++inTheWild;
+
+		return *temp;
+	}
+
+	template<typename T> tSpitLemming<T>&
+	tSpitLemming<T>::operator = (const tSpitLemming<T>& spitter){
+		return *this;
+	}
+
+	template<typename T> unsigned int
+	tSpitLemming<T>::inWild() {
+		return inTheWild;
+	}
+
+	template<typename T> T*
+	tSpitLemming<T>::getData(const tLemming<T>* requester){
+		return NULL;
+	}
+
+	template<typename T> void
+	tSpitLemming<T>::deadLemming(const tLemming<T>* corpse) {
+
+	}
+
+	template<typename T> void
+	tSpitLemming<T>::lemmingChange(const tLemming<T>* lem) {
+
+	}
+
+	template<typename T> void
+	tSpitLemming<T>::finish() {
+		if (inTheWild==0) throw excep::base_error("lemming underflow", __FILE__, __LINE__);
+		--inTheWild;
 	}
 }
 

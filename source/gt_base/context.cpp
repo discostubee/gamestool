@@ -8,15 +8,17 @@ using namespace gt;
 cContext::cContext(){
 }
 
-cContext::cContext(const cContext & copyMe){
-
-}
+cContext::cContext(const cContext & copyMe) :
+	mStack(copyMe.mStack),
+	mTimesStacked(copyMe.mTimesStacked),
+	mPlateOPancakes(copyMe.mPlateOPancakes)
+{}
 
 cContext::~cContext(){
 }
 
 void
-cContext::add(iFigment* pFig){
+cContext::add(dFigConSig pFig){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
@@ -43,7 +45,7 @@ cContext::add(iFigment* pFig){
 }
 
 void
-cContext::finished(iFigment* pFig){
+cContext::finished(dFigConSig pFig){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
@@ -58,21 +60,19 @@ cContext::finished(iFigment* pFig){
 	}
 
 	figSigItr = mTimesStacked.find(pFig);
-	if(figSigItr == mTimesStacked.end()){
-		throw excep::stackFault(mStack, "", __FUNCTION__, __LINE__);
-	}
-	--figSigItr->second;
-	if(figSigItr->second == 0){
-		mTimesStacked.erase(figSigItr);
+	if(figSigItr != mTimesStacked.end()){
+
+		--figSigItr->second;
+		if(figSigItr->second == 0){
+			mTimesStacked.erase(figSigItr);
+		}
 	}
 
 	cakeItr = mPlateOPancakes.find(pancakeHash);
-	if(cakeItr == mPlateOPancakes.end()){
-		throw excep::stackFault(mStack, "", __FUNCTION__, __LINE__);
-	}
-	{
+	if(cakeItr != mPlateOPancakes.end()){
+
 		if( cakeItr->second.back() != pFig ){
-			throw excep::stackFault(mStack, "", __FUNCTION__, __LINE__);
+			throw excep::stackFault(mStack, "the last figment on the type stack isn't the one we expected", __FUNCTION__, __LINE__);
 		}
 		cakeItr->second.pop_back();
 
@@ -85,7 +85,7 @@ cContext::finished(iFigment* pFig){
 }
 
 bool
-cContext::isStacked(iFigment* pFig){
+cContext::isStacked(dFigConSig pFig){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
@@ -116,4 +116,14 @@ cContext::getLastOfType(dNameHash pType){
 		throw excep::notFound("name hash", __FILE__, __LINE__);
 
 	return refFig(cakeItr->second.back());
+}
+
+dProgramStack
+cContext::makeStackDump(){
+	return mStack;
+}
+
+bool
+cContext::isBlocked(){
+	return false;
 }

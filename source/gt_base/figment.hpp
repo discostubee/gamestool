@@ -31,7 +31,7 @@ namespace gt{
 	//-------------------------------------------------------------------------------------
 	//!\brief	A figment of your imagination! More specifically, it's the base class type
 	//!			for all the funky new stuff you'll make.
-	class cFigment: public iFigment, private tOutline<cFigment>{
+	class cFigment: public cFigThread, private tOutline<cFigment>{
 	public:
 		//-----------------------------
 		// Defines
@@ -193,7 +193,7 @@ namespace gt{
 			}
 		}
 
-		virtual void reset(){
+		virtual void reset(cContext* context){
 			mD = gWorld.get()->getEmptyFig();
 		}
 	};

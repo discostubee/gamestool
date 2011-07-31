@@ -61,6 +61,7 @@ void
 cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cBase_fileIO>() ){
 			case eSetPath:
@@ -112,10 +113,12 @@ cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 			}break;
 
 			default:
+				stop(pCon);
 				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }

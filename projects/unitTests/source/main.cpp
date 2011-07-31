@@ -110,14 +110,17 @@ main(int argc, char **argv){
 
 	//testAll();
 
+	//demo::threadTestFoo();
+
 	gt::gWorld.take( new gt::cWorld() );
 
 #ifdef GTUT_GOOGLE
 	::testing::InitGoogleTest(&argc, argv);
 	result = RUN_ALL_TESTS();
 #endif
-	gt::gWorld.cleanup();
 
+	gt::gWorld.get()->makeProfileReport(std::cout);
+	gt::gWorld.cleanup();
 
 	return result;
 }

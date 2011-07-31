@@ -34,6 +34,7 @@ void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cFigment>() ){
 			case eSave:{
@@ -56,6 +57,7 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 	}catch(...){
 		UNKNOWN_ERROR;
 	}
+	stop(pCon);
 }
 
 
@@ -85,7 +87,10 @@ cWorldShutoff::~cWorldShutoff(){
 
 void
 cWorldShutoff::run(cContext* pCon){
+	start(pCon);
 	gWorld.get()->mKeepLooping = false;
+	stop(pCon);
+
 }
 
 ////////////////////////////////////////////////////////////

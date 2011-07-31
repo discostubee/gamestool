@@ -46,6 +46,8 @@ cAddon::~cAddon(){
 void
 cAddon::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
+
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cAddon>() ){
 
@@ -75,13 +77,14 @@ cAddon::jack(ptrLead pLead, cContext* pCon){
 			}break;
 
 			default:
+				stop(pCon);
 				return cFigment::jack(pLead, pCon);
-
 				break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 

@@ -85,6 +85,7 @@ namespace gt{
 // figment interface along with with supporting classes
 namespace gt{
 
+	//-------------------------------------------------------------------------------------
 	//!\brief	helpful when loading.
 	class cReload{
 	public:
@@ -106,6 +107,7 @@ namespace gt{
 
 	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
 
+	//-------------------------------------------------------------------------------------
 	//!\brief	Figment interface, put here so we have a complete interface for the ptrFig type. Refer to the base implementation of this
 	//!			class to get the low down on what all these methods mean.
 	class iFigment{
@@ -131,7 +133,8 @@ namespace gt{
 	//!\brief	The world is a single object that ties the program together, as well as being the main 
 	//!			factory that creates figment-type objects. The world object is also a singleton that is 
 	//!			seen by every figment-type object and offers services to them. It also designed to 
-	//!			coordinate different heaps located in addons.
+	//!			coordinate different heaps located in addons. Must also be threadsafe when accessed by
+	//!			a mr safety.
 	//!\todo	Prevent a collection of objects become an island which is separate from the root node, and
 	//!			thus will never be cleaned up. This will also be a huge problem when removing addons where
 	//!			the objects made in the addon need to be blanked.

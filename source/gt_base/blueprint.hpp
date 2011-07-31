@@ -52,8 +52,8 @@ namespace gt{
 	template<typename T>
 	class tOutline{
 	public:
-		static void draft();
-		static void removeFromWorld();
+		static void draft();	//!< Adds your figment to the world library.
+		static void removeFromWorld(cContext* context);
 
 		static const cCommand* makeCommand(
 			const dNatChar* pName,
@@ -211,7 +211,7 @@ namespace gt{
 
 	template<typename T>
 	void
-	tOutline<T>::removeFromWorld(){
+	tOutline<T>::removeFromWorld(cContext* context){
 		if(xDrafted){
 			gWorld.get()->removeBlueprint(&xBlueprint);
 			xDrafted=false;

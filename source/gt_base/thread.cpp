@@ -11,10 +11,16 @@ const cCommand* cThread::xLinkFig = tOutline<cThread>::makeCommand(
 	NULL
 );
 
+void
+cThread::runThread(tPlug<ptrFig> fig, cContext* pCon){
+	fig.mD->run(pCon);
+}
+
 cThread::cThread(){
 }
 
 cThread::~cThread(){
+	myThread.join();
 }
 
 void
@@ -24,7 +30,8 @@ cThread::run(cContext* pCon){
 	cContext newContext(*pCon);
 
 	pCon->add(this);
-	link.mD->run(&newContext);
+
+	myThread = boost::thread(cThread::runThread, link, &newContext);
 }
 
 void
@@ -37,6 +44,7 @@ cThread::jack(ptrLead pLead, cContext* pCon){
 				break;
 
 			default:
+				stop(pCon);
 				cFigment::jack(pLead, pCon);
 				break;
 		}

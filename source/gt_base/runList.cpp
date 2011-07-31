@@ -19,7 +19,7 @@ void
 cRunList::run(cContext* pCon){
 	PROFILE;
 
-	CON_START(pCon);
+	start(pCon);
 
 	for(
 		std::vector< tPlug<ptrFig> >::iterator i = mList.begin();
@@ -29,13 +29,14 @@ cRunList::run(cContext* pCon){
 		(*i).mD->run(pCon);
 	}
 
-	CON_STOP(pCon);
+	stop(pCon);
 }
 
 void
 cRunList::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cRunList>() ){
 			case eAdd: {
@@ -50,12 +51,14 @@ cRunList::jack(ptrLead pLead, cContext* pCon){
 			}break;
 
 			default:{
+				stop(pCon);
 				cFigment::jack(pLead, pCon);
 			}break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 void
@@ -122,7 +125,7 @@ void
 cValves::run(cContext* pCon){
 	PROFILE;
 
-	ASRT_NOTNULL(pCon);
+	start(pCon);
 
 	if(pCon->isStacked(this))
 		return;
@@ -137,13 +140,15 @@ cValves::run(cContext* pCon){
 		if( mStates[itr].mD )
 			(*itr).mD->run(pCon);
 	}
-	pCon->finished(this);
+
+	stop(pCon);
 }
 
 void
 cValves::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cValves>() ){
 			case eAdd:{
@@ -169,6 +174,7 @@ cValves::jack(ptrLead pLead, cContext* pCon){
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 void

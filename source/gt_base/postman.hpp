@@ -52,7 +52,7 @@ namespace gt{
 		virtual dNameHash hash() const{ return tOutline<cPostman>::hash(); }
 
 		virtual void run(cContext* pCon);
-		virtual void jack(ptrLead cLead, cContext* pCon);
+		virtual void jack(ptrLead pLead, cContext* pCon);
 	private:
 		tPlug<ptrLead> mLead;
 		tPlug<ptrFig> mTarget;

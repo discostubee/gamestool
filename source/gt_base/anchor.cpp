@@ -180,9 +180,9 @@ cAnchor::~cAnchor() {
 
 void
 cAnchor::run(cContext* pCon) {
-	CON_START(pCon);
+	start(pCon);
 	mRoot.mD->run(pCon);
-	CON_STOP(pCon);
+	stop(pCon);
 }
 
 void
@@ -198,6 +198,7 @@ cAnchor::jack(ptrLead pLead, cContext* pCon) {
 				break;
 
 			default:
+				stop(pCon);
 				cFigment::jack(pLead, pCon);
 				break;
 		}
