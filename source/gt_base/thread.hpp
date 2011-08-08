@@ -28,12 +28,15 @@
 namespace gt{
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	Launches a new thread that runs through its linked figment. The context
-	//!			is copied and run as a new one. A figment is blocked from running when
-	//!			it encounters a context from a different thread. But if it encounters
-	//!			its own thread again, it unwinds. Uses a threadpool.
+	//!\brief	Launches a new thread that runs through its linked figments. The context
+	//!			is copied and run as a new one. When you run a thread figment, causes its
+	//!			actual thread to run its loop again. The figment however, doesn't wait to
+	//!			see if the thread finished or not. This is ideal for tasks which take an
+	//!			unknown amount of time to finish.
 	class cThread: public cFigment, public tOutline<cThread>{
 	public:
+		typedef boost::unique_lock<boost::mutex> dLock;
+
 		static const tPlugTag*	xPT_fig;	//!< The figment to link.
 		static const cCommand*	xLinkFig;	//!< Link figment to run in the separate thread.
 
@@ -53,11 +56,16 @@ namespace gt{
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 	protected:
+		bool firstRun;
 		tPlug<ptrFig> link;
 		boost::thread myThread;
-		boost::condition_variable sync;
+		boost::mutex syncMu;
+		boost::condition_variable sync;		//!< sync the thread to the calling of the run function.
+		bool threadStop;					//!< Stops the thread loop.
+		boost::mutex finishMu;				//!< The destructor must wait for the thread to finish.
 
-		static void runThread(tPlug<ptrFig> fig, cContext* pCon);
+
+		static void runThread(cThread *me, cContext* pCon);
 	};
 }
 

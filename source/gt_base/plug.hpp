@@ -32,6 +32,10 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
+// Typedefs
+
+
+
 // Classes
 namespace gt{
 
@@ -50,35 +54,62 @@ namespace gt{
 			mID( makeHash(pPlugName) ),
 			mName( pPlugName )
 		{}
-
-		tPlugTag& operator=(const tPlugTag& pPlug){ 
-			::memcpy((void*)(&mID), (void*)(&pPlug.mID), sizeof(mID));
-			::memcpy((void*)(&mName), (void*)(&pPlug.mName), sizeof(mName));
-			return *this; 
-		}
-		
 	};
 
-	//--------------------------------------------------------
-	//!\brief	The base plug gives a consistent interface for the
-	//!			template class. Plugs are also responsible for
-	//!			mutex locking.
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	The interface for the plug template below.
 	class cBase_plug{
 	public:
-		PLUG_TYPE_ID mType;
+		PLUG_TYPE_ID mType;	//!< Must be public so the tPlug templates can use it.
 
 		cBase_plug(PLUG_TYPE_ID pTI);
 		cBase_plug(const cBase_plug& pCopy);
 		virtual ~cBase_plug();
 
+		template<typename T> T getCopy();
+
+		template<typename T> T* getPtr();
+
+		virtual	cBase_plug&	operator= (const cBase_plug &pD)
+			{	DONT_USE_THIS; return *this; }
+
+		virtual	cBase_plug& operator= (const cBase_plug *pD)
+			{	DONT_USE_THIS; return *this; }
+
+		template<typename T>	cBase_plug& operator= (const T &pT);
+
+		template< template<typename> class plug, typename T>	cBase_plug& operator= (plug<T> &pT);
+
+	protected:
+
 		void linkLead(cLead* pLead); //!< Leads must let the plug know that they are linked in.
 		void unlinkLead(cLead* pLead); //!< When a plug is destroyed, it must let the lead know.
 
-		//!\brief	Converts data from the native system format, into a cross platform buffer that can be loaded again later.
-		//!\param	pAddHere	Appends save data to the end of this buffer.
-		virtual void save(cByteBuffer *pAddHere)
-			{ DUMB_REF_ARG(pAddHere); DONT_USE_THIS; }
-		
+	friend class cLead;
+	private:
+		std::set<cLead*> mLeadsConnected;
+
+	};
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	A plug is a data container that a lead can connect too. The lead can then connect that data to another
+	//!			object via the jack function, as well as automatically disconnect itself from its linked leads when it
+	//!			dies. It is also designed for serialization using a byte buffer.
+	//!\note	You don't have to use plugs for all your figments stuff.
+	//!			Just for the things you want to save and reload or pass
+	//!			through a lead to another object.
+	template<typename A>
+	class tPlug: public cBase_plug{
+	public:
+		A mD;	//!< Data: This is public so that the owner can have easy access to it.
+
+		tPlug();
+		tPlug(const A& pA);
+		virtual ~tPlug();
+
+		//!\brief
+		virtual void save(cByteBuffer* pAddHere);
+
 		//!\brief	Allows you to pass this plug a buffer for it try and load from.
 		//!\param	pChewToy	Eats the buffer you pass it in order to load. This way, memory is conserved. It is up to the byte
 		//!						buffer to decide if it should use tricks to expend memory (by delaying the trim), rather than
@@ -86,48 +117,17 @@ namespace gt{
 		//!						process.
 		//!\param	pReloads	This needs to be renamed to something like 'party' or something, because the reload map reflects only the figments
 		//!\					that are visible to the reload process.
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads)
-			{ DUMB_REF_ARG(pChewToy); DUMB_REF_ARG(pReloads); DONT_USE_THIS; }
-
-		virtual					cBase_plug&	operator= (const cBase_plug &pD);
-		virtual					cBase_plug& operator= (const cBase_plug* pD);
-
-		template<typename T>	cBase_plug& operator= (const T &pT);
-		template< template<typename> class plug, typename T>	cBase_plug& operator= (plug<T> &pT);
-
-		template<typename T>	T getMDCopy(void);
-		template<typename T>	T* getMDPtr(void);
-
-	private:
-		std::set<cLead*> mLeadsConnected;
-
-	};
-
-	//--------------------------------------------------------
-	//!\brief	A plug is a data container that a lead can connect too.
-	//!			The lead can then connect that data to another object
-	//!			via the call function, as well as automatically disconnect
-	//!			itself from its linked leads when it dies.
-	//!			It is also designed for serialization using a byte buffer.
-	//!\note	You don't have to use plugs for all your figments stuff.
-	//!			Just for the things you want to save and reload or pass
-	//!			through a lead to another object.
-	template<typename A>
-	class tPlug: public cBase_plug{
-	public:
-		A mD;
-
-		tPlug();
-		tPlug(const A& pA);
-		virtual ~tPlug();
-
-		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads);
-		virtual void reset();	//!< reset back to a default. Whatever that may be.
+
+		//!\brief	reset back to a default. Whatever that may be.
+		virtual void reset();
 
 		virtual cBase_plug& operator= (const cBase_plug &pD);
-		virtual cBase_plug& operator= (const cBase_plug* pD);
+
+		virtual cBase_plug& operator= (const cBase_plug *pD);
+
 		virtual cBase_plug& operator= (const A& pA);
+
 	private:
 		void genericCopy(const cBase_plug* pD);
 	};
@@ -136,6 +136,24 @@ namespace gt{
 ///////////////////////////////////////////////////////////////////////////////////
 // Templates
 namespace gt{
+
+	template<typename T>
+	T
+	cBase_plug::getCopy(){
+		if(mType != PLUG_TYPE_TO_ID(T))
+			PLUG_CANT_COPY(T);
+
+		return dynamic_cast< tPlug<T>* >(this)->mD;
+	}
+
+	template<typename T>
+	T*
+	cBase_plug::getPtr(){
+		if(mType != PLUG_TYPE_TO_ID(T))
+			PLUG_CANT_COPY(T);
+
+		return &dynamic_cast< tPlug<T>* >(this)->mD;
+	}
 
 	template<typename T>
 	cBase_plug&
@@ -159,28 +177,6 @@ namespace gt{
 		dynamic_cast< tPlug<T>* >(this)->mD = pT.mD;
 
 		return *this;
-	}
-
-	template<typename T>
-	T
-	cBase_plug::getMDCopy(void){
-		PROFILE;
-
-		if(mType != PLUG_TYPE_TO_ID(T))
-			PLUG_CANT_COPY(T);
-
-		return dynamic_cast< tPlug<T>* >(this)->mD;
-	}
-
-	template<typename T>
-	T*
-	cBase_plug::getMDPtr(void){
-		PROFILE;
-
-		if(mType != PLUG_TYPE_TO_ID(T))
-			PLUG_CANT_COPY(T);
-
-		return &dynamic_cast< tPlug<T>* >(this)->mD;
 	}
 
 
@@ -285,21 +281,21 @@ namespace gt{
 
 		virtual cBase_plug& operator= (const cBase_plug &pD){
 			NOTSELF(&pD);
-			if( mType == pD.mType ){	// we can just cast
-				mD = *(const_cast<cBase_plug*>(&pD)->getMDPtr<dStr>());
-			}else{
+			if( mType != pD.mType )
 				PLUG_CANT_COPY_ID(pD.mType);
-			}
+
+				mD = dynamic_cast< const tPlug<dStr>* >( &pD )->mD;
+
 			return *this;
 		}
 
 		virtual cBase_plug& operator= (const cBase_plug* pD){
 			NOTSELF(pD);
-			if( mType == pD->mType ){	// we can just cast
-				mD = *(const_cast<cBase_plug*>(pD)->getMDPtr<dStr>());
-			}else{
+			if( mType != pD->mType )
 				PLUG_CANT_COPY_ID(pD->mType);
-			}
+
+				mD = *(const_cast<cBase_plug*>(pD)->getPtr<dStr>());
+
 			return *this;
 		}
 

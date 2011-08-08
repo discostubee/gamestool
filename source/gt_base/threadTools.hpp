@@ -34,6 +34,17 @@ namespace gt{
 	template<typename T> class tMrSafety;
 
 	//-------------------------------------------------------------------------------------
+	//!\brief	Because this is a read only functions, and because this
+	//!			is updated once before starting threads, we don't need to be mutex locked
+	class isMultithreading{
+	public:
+		static bool yes() { return xThreading; }
+		static void nowThreading() { xThreading = true; }
+	private:
+		static bool xThreading;
+	};
+
+	//-------------------------------------------------------------------------------------
 	//!\brief	Handle to a resource kept by mr safety, who is told when this handle dies.
 	template<typename T>
 	class tSafeLem{
@@ -160,8 +171,9 @@ tMrSafety<T>::tMrSafety() :
 template<typename T>
 tMrSafety<T>::~tMrSafety()
 {
-	delete mData;
+	sync.notify_all();
 	dataMutex.unlock();
+	delete mData;
 	wildLock.unlock();
 }
 
@@ -204,14 +216,18 @@ tMrSafety<T>::get() {
 
 template<typename T> void
 tMrSafety<T>::deadLemming(tSafeLem<T>* corpse){
-	wildLock.lock();
-	--inTheWild;
-	if(inTheWild==0){
-		firstLem = NULL;
-		corpse->myLock.unlock();
-		sync.notify_one();
+	if(isMultithreading::yes()){
+		wildLock.lock();
+		--inTheWild;
+		if(inTheWild==0){
+			firstLem = NULL;
+			corpse->myLock.unlock();
+			sync.notify_one();
+		}
+		wildLock.unlock();
+	}else{
+		--inTheWild;
 	}
-	wildLock.unlock();
 }
 
 template<typename T> void
@@ -220,27 +236,31 @@ tMrSafety<T>::changedLem(const tSafeLem<T>* from, const tSafeLem<T>* to){
 
 template<typename T> T*
 tMrSafety<T>::getLockData(tSafeLem<T>* requester){
-	wildLock.lock();
-
-	if(inTheWild==0){	//- There are no other requests waiting for this data.
-		inTheWild = 1;
-		firstLem = requester;
-		current = boost::this_thread::get_id();
-		requester->myLock = dLock(dataMutex);
-		wildLock.unlock();
-	}else if(!isSameThread()){	//- Another thread is using the data. When waken this thread becomes owner.
-		wildLock.unlock();
-		requester->myLock = dLock(dataMutex);
-		sync.wait(requester->myLock);	//- Should block all requests from this thread.
+	if(isMultithreading::yes()){
 		wildLock.lock();
-		inTheWild = 1;
-		wildLock.unlock();
-		firstLem = requester;
-		current = boost::this_thread::get_id();
+
+		if(inTheWild==0){	//- There are no other requests waiting for this data.
+			inTheWild = 1;
+			firstLem = requester;
+			current = boost::this_thread::get_id();
+			wildLock.unlock();
+			requester->myLock = dLock(dataMutex);
+		}else if(!isSameThread()){	//- Another thread is using the data. When waken this thread becomes owner.
+			wildLock.unlock();
+			requester->myLock = dLock(dataMutex);
+			sync.wait(requester->myLock);	//- Should block all requests from this thread.
+			wildLock.lock();
+			inTheWild = 1;
+			firstLem = requester;
+			current = boost::this_thread::get_id();
+			wildLock.unlock();
+		}else{
+			if(!requester->requested)
+				++inTheWild;
+			wildLock.unlock();
+		}
 	}else{
-		if(!requester->requested)
-			++inTheWild;
-		wildLock.unlock();
+		++inTheWild;
 	}
 	requester->requested = true;
 	return mData;
@@ -248,7 +268,10 @@ tMrSafety<T>::getLockData(tSafeLem<T>* requester){
 
 template<typename T> bool
 tMrSafety<T>::isSameThread(){
-	return (inTheWild > 0 && current == boost::this_thread::get_id());
+	if(isMultithreading::yes())
+		return (inTheWild > 0 && current == boost::this_thread::get_id());
+
+	return (inTheWild > 0);
 }
 
 }

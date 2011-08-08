@@ -5,8 +5,9 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-cContext::cContext(){
-}
+cContext::cContext() :
+	mThreadID(boost::this_thread::get_id())
+{}
 
 cContext::cContext(const cContext & copyMe) :
 	mStack(copyMe.mStack),
@@ -126,4 +127,38 @@ cContext::makeStackDump(){
 bool
 cContext::isBlocked(){
 	return false;
+}
+
+////////////////////////////////////////////////////////////
+cFigContext::cFigContext() :
+	currentCon(NULL)
+{}
+
+cFigContext::~cFigContext(){
+
+}
+
+void
+cFigContext::start(cContext *con){
+	PROFILE;
+	boost::unique_lock<boost::mutex> lock(conMu);
+	if(con->isStacked(this))
+		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
+
+	con->add(this);
+
+	if(currentCon != NULL){
+		conSync.wait(lock);
+	}
+
+	currentCon = con;
+}
+
+void
+cFigContext::stop(cContext *con){
+	PROFILE;
+	boost::unique_lock<boost::mutex> lock(conMu);
+	currentCon = NULL;
+	con->finished(this);
+	conSync.notify_one();
 }

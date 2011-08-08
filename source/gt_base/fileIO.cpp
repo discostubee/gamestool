@@ -7,10 +7,12 @@ const tPlugTag*	cBase_fileIO::xPT_buffer = tOutline<cBase_fileIO>::makePlugTag("
 const tPlugTag*	cBase_fileIO::xPT_startSpot = tOutline<cBase_fileIO>::makePlugTag("start spot");
 const tPlugTag*	cBase_fileIO::xPT_readSize = tOutline<cBase_fileIO>::makePlugTag("read size");
 const tPlugTag*	cBase_fileIO::xPT_fileSize = tOutline<cBase_fileIO>::makePlugTag("file size");
+const tPlugTag*	cBase_fileIO::xPT_filePath = tOutline<cBase_fileIO>::makePlugTag("file path");
 
 const cCommand*	cBase_fileIO::xSetPath = tOutline<cBase_fileIO>::makeCommand(
 	"set path",
 	cBase_fileIO::eSetPath,
+	cBase_fileIO::xPT_filePath,
 	NULL
 );
 
@@ -51,6 +53,7 @@ const cCommand*	cBase_fileIO::xGetSize = tOutline<cBase_fileIO>::makeCommand(
 	NULL
 );
 
+
 cBase_fileIO::cBase_fileIO(){
 }
 
@@ -65,41 +68,33 @@ cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 	try{
 		switch( pLead->mCom->getSwitch<cBase_fileIO>() ){
 			case eSetPath:
-				mPath = *pLead->getPiledDItr().getPlug();
+				mPath = pLead->getPlug(xPT_filePath, pCon);
 				break;
 
 			case eRead:{
 				PROFILE;
-				tPlug<cByteBuffer>* buff = new tPlug<cByteBuffer>;
 
 				DBUG_LO("reading");
 
-				try{
-					buff->mD = read(
-						pLead->getD(xPT_startSpot)->getMDCopy<dFilePoint>(),
-						pLead->getD(xPT_readSize)->getMDCopy<size_t>()
-					);
-				}catch(...){//}catch(excep::notFound){
-					buff->mD = read(0,0);
-				}
-				pLead->take( buff, xPT_buffer);
+				*pLead->getPlug(xPT_buffer, pCon) = read(
+					pLead->getPlug(xPT_startSpot, pCon)->getCopy<dFilePoint>(),
+					pLead->getPlug(xPT_readSize, pCon)->getCopy<size_t>()
+				);
 
 			}break;
 
 			case eWrite:{
 				PROFILE;
-				write( pLead->getD(xPT_buffer)->getMDPtr< cByteBuffer >() );
+				write( pLead->getPlug(xPT_buffer, pCon)->getPtr<cByteBuffer>() );
 			}break;
 
 			case eInsert:{
 				PROFILE;
-				size_t startSpot = ENDOF_FILE;
-				try{
-					startSpot = pLead->getD(xPT_startSpot)->getMDCopy<size_t>();
-				}catch(...){//}catch(excep::notFound){
-					startSpot = ENDOF_FILE;
-				}
-				insert( pLead->getD(xPT_buffer)->getMDPtr< cByteBuffer >(), startSpot );
+
+				insert(
+					pLead->getPlug(xPT_buffer, pCon)->getPtr<cByteBuffer>(),
+					pLead->getPlug(xPT_startSpot, pCon)->getCopy<size_t>()
+				);
 			}break;
 
 			case eDeleteFile:
@@ -109,7 +104,7 @@ cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 			case eGetSize:{
 				PROFILE;
 				mFileSize.mD = getFileSize();
-				pLead->add( &mFileSize, xPT_fileSize );
+				pLead->setPlug(&mFileSize, xPT_fileSize, pCon);
 			}break;
 
 			default:

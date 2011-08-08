@@ -76,6 +76,7 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Typedefs
 namespace gt{
+	typedef const cContext* dConSig;	//!< This is the signature of a context.
 	typedef tDirPtr<iFigment> ptrFig;	//!< Smart pointer to a figment.
 	typedef boost::shared_ptr<cLead> ptrLead;	//!< Smart pointer to a lead.
 	typedef const void* dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time.
@@ -193,7 +194,7 @@ namespace gt{
 		//!\brief	Makes a new lead that is managed by a smart pointer.
 		//!\param	pFigNameHash
 		//!\param	pCommandID
-		ptrLead makeLead(dNameHash pFigHash, dNameHash pComHash);
+		ptrLead makeLead(dNameHash pFigHash, dNameHash pComHash, dConSig pConx);
 
 		//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
 		static cProfiler::cToken makeProfileToken(const dNatChar* pFile, unsigned int pLine);

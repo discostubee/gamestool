@@ -23,7 +23,6 @@ void
 cAnchor::save(cByteBuffer* pAddHere){
 	PROFILE;
 
-	ptrLead				append(new cLead(cBase_fileIO::xInsert));
 	std::list<ptrFig>*	branches = new std::list<ptrFig>();
 	std::list<ptrFig>*	prev = new std::list<ptrFig>();
 	std::set<iFigment*> figs;
@@ -190,11 +189,11 @@ cAnchor::jack(ptrLead pLead, cContext* pCon) {
 	try{
 		switch( pLead->mCom->getSwitch<cAnchor>() ){
 			case eSetRoot:
-				mRoot = *pLead->getD(cAnchor::xPT_root);
+				mRoot = pLead->getPlug(cAnchor::xPT_root, pCon);
 				break;
 
 			case eGetRoot:
-				pLead->add(&mRoot, cAnchor::xPT_root);
+				pLead->add(&mRoot, cAnchor::xPT_root, pCon);
 				break;
 
 			default:
@@ -223,10 +222,14 @@ public:
 	virtual const dNatChar* name() const{ return cSaveTester::identify(); }
 	virtual dNameHash hash() const{ return tOutline<cSaveTester>::hash(); }
 
-	virtual void jack(ptrLead pLead, cContext* pCon){ pLead->addToPile(&myStr); pLead->addToPile(&myNum); }
+	virtual void jack(ptrLead pLead, cContext* pCon){
+		pLead->addToPile(&myStr, pCon); pLead->addToPile(&myNum, pCon);
+	}
+
 	virtual void save(cByteBuffer* pAddHere) {
 		myStr.save(pAddHere); myNum.save(pAddHere);
 	}
+
 	virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL) {
 		myStr.loadEat(pBuff, pReloads); myNum.loadEat(pBuff, pReloads);
 	}
@@ -242,13 +245,14 @@ const char *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
 	tOutline<cSaveTester>::draft();
+	cContext fakeCon;
 
 	cAnchor ank;
 	cContext fake;
 	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
-	ptrLead add(new cLead(cAnchor::xSetRoot));
+	ptrLead add(new cLead(cAnchor::xSetRoot, &fakeCon));
 
-	add->add(&tester, cAnchor::xPT_root);
+	add->add(&tester, cAnchor::xPT_root, &fakeCon);
 	ank.jack(add, &fake);
 
 	buff.clear();
@@ -258,20 +262,21 @@ GTUT_START(testAnchor, basicSave){
 GTUT_START(testAnchor, basicLoad){
 	cAnchor ank;
 	cContext fake;
-	ptrLead load(new cLead(cAnchor::xLoad));
+
+	ptrLead load(new cLead(cAnchor::xLoad, &fake));
 	dReloadMap dontcare;
 	ank.loadEat(&buff, &dontcare);
 
-	ptrLead root(new cLead(cAnchor::xGetRoot));
+	ptrLead root(new cLead(cAnchor::xGetRoot, &fake));
 	ank.jack(root, &fake);
 	tPlug<ptrFig> reload;
-	reload = root->getD(cAnchor::xPT_root);
+	reload = root->getPlug(cAnchor::xPT_root, &fake);
 
-	ptrLead checkStr(new cLead(cSaveTester::xGetMyStr));
+	ptrLead checkStr(new cLead(cSaveTester::xGetMyStr, &fake));
 	reload.mD->jack(checkStr, &fake);
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
-	cLead::cPileItr itr = checkStr->getPiledDItr();
+	cLead::cPileItr itr = checkStr->getPiledDItr(&fake);
 	myStr = itr.getPlug();
 	++itr;
 	myNum = itr.getPlug();

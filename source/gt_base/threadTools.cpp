@@ -1,5 +1,8 @@
 #include "threadTools.hpp"
 
+using namespace gt;
+
+bool isMultithreading::xThreading = false;
 
 ////////////////////////////////////////////////////////////
 // Tests

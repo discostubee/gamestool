@@ -40,12 +40,10 @@ cRunList::jack(ptrLead pLead, cContext* pCon){
 	try{
 		switch( pLead->mCom->getSwitch<cRunList>() ){
 			case eAdd: {
-				tPlug<ptrFig> temp;
 
-				for(cLead::cPileItr itr = pLead->getPiledDItr(); !itr.atEnd(); ++itr){
-					temp = *itr.getPlug();
-					mList.push_back(temp);
-					DBUG_LO("	RunList added a " << temp.mD->name() );
+				for(cLead::cPileItr itr = pLead->getPiledDItr(pCon); !itr.atEnd(); ++itr){
+					mList.push_back( itr.getPlug()->getCopy<ptrFig>() );
+					DBUG_VERBOSE_LO("	RunList added a " << temp.mD->name() );
 				};
 
 			}break;
@@ -151,20 +149,9 @@ cValves::jack(ptrLead pLead, cContext* pCon){
 	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cValves>() ){
-			case eAdd:{
-				tPlug<ptrFig> temp;
-
-				for(cLead::cPileItr itr = pLead->getPiledDItr(); !itr.atEnd(); ++itr ){
-					temp = *itr.getPlug();
-					mList.push_back(temp);
-					mStates[mList.end() -1] = false;
-					DBUG_LO("	Valves added a " << temp.mD->name() );
-				};
-			}break;
 
 			case eSetState:{
-				dListItr tempItr = mList.begin() + pLead->getD(xPT_valveIdx)->getMDCopy<unsigned int>();
-				mStates[ tempItr ] = pLead->getD(xPT_state)->getMDCopy<bool>();
+
 			}break;
 
 			default:{

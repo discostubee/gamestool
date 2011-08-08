@@ -58,13 +58,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////////
 namespace gt{
-	class cFigThread;
+	class cFigContext;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 // typedefs
 namespace gt{
-	typedef cFigThread* dFigConSig;							//!< A figments context signature.
+	typedef cFigContext* dFigConSig;						//!< A figments context signature.
 	typedef std::deque<dFigConSig> dProgramStack;			//!< This is the entire stack of figments. The pancake map below doesn't copy this stack (in case you're wondering).
 	typedef std::map<dFigConSig, int> dFigSigCount;			//!<
 	typedef std::map<dNameHash, dProgramStack> dPancakes;	//!< There are many different kinds of pancakes, and each plate can have any number of that kind on it.
@@ -120,6 +120,7 @@ namespace gt{
 		bool isBlocked();
 
 	private:
+		const dThreadID mThreadID;
 		dProgramStack mStack;		//!< This is the entire stack of figments in the order that they were added in.
 		dFigSigCount mTimesStacked;	//!<
 		dPancakes mPlateOPancakes;	//!< Maps types to a stack, so you can tell what the most recent object of a certain type is.
@@ -130,35 +131,26 @@ namespace gt{
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	Provides services to handle multithreading figments.
-	class cFigThread : public iFigment{
+	class cFigContext : public iFigment{
 	public:
-		cFigThread() : currentCon(NULL) {}
-		~cFigThread() {}
+		cFigContext();
+		~cFigContext();
 
 	protected:
+
+		//!\brief	Puts this figment onto the stack. If this thread is already on the stack,
+		//!			if it's already in use by another thread, stackFault_selfReference is thrown.
+		//!			If this figment is in use by another thread, it is blocked and wait for it to be free. But if
+		//!			the context is already blocked, something is thrown to avoid deadlocks.
+		//!\todo	avoid using exceptions.
+		void start(cContext *con);
+		void stop(cContext *con);
+
+	private:
 		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
-
-		void start(cContext *con) {
-			PROFILE;
-
-			if(con->isStacked(this)){
-				throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
-			}
-			if(currentCon != NULL){
-
-			}
-
-			currentCon = con;
-			con->add(this);
-		}
-		void stop(cContext *con) {
-			PROFILE;
-
-			currentCon = NULL;
-			con->finished(this);
-		}
+		boost::condition_variable conSync;
+		boost::mutex conMu;
 	};
-
 }
 
 

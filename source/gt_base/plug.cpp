@@ -62,20 +62,6 @@ cBase_plug::unlinkLead(cLead* pLead){
 	}
 }
 
-cBase_plug&	
-cBase_plug::operator= (const cBase_plug &pD){ 
-	DUMB_REF_ARG(pD); 
-	DONT_USE_THIS; 
-	return *this; 
-}
-
-cBase_plug&
-cBase_plug::operator= (const cBase_plug* pD){
-	DUMB_REF_ARG(pD);
-	DONT_USE_THIS;
-	return *this;
-}
-
 ////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
@@ -90,11 +76,11 @@ GTUT_START(testPlug, copy)
 	A = 5;
 	TRYME( *B = A );
 
-	TRYME( C = B->getMDCopy<int>() );
+	TRYME( C = B->getCopy<int>() );
 	GTUT_ASRT(C == 5, "B didn't copy A");
 
 	try{
-		D = B->getMDCopy<int>();
+		D = B->getCopy<int>();
 	}catch(std::exception){
 		GTUT_ASRT(true, "");
 	}

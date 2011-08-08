@@ -55,7 +55,7 @@ cAddon::jack(ptrLead pLead, cContext* pCon){
 				if(mAddonName->empty()){
 					std::vector<ptrStr>::iterator itr;
 
-					mAddonName = pLead->getD(cAddon::xPT_addonName)->getMDCopy<ptrStr>();
+					mAddonName = pLead->getPlug(cAddon::xPT_addonName, pCon)->getCopy<ptrStr>();
 
 					for(
 						itr = xOpenAddons.begin();

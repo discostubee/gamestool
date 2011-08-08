@@ -40,11 +40,11 @@ cTextFig::jack(ptrLead pLead, cContext* pCon){
 	try{
 		switch( pLead->mCom->getSwitch<cTextFig>() ){
 			case eSetText:
-				mText = *pLead->getD(cTextFig::xPT_text);
+				mText = pLead->getPlug(cTextFig::xPT_text, pCon);
 				break;
 
 			case eGetText:
-				pLead->add( &mText, cTextFig::xPT_text );
+				pLead->setPlug( &mText, cTextFig::xPT_text, pCon );
 				break;
 
 			default:
