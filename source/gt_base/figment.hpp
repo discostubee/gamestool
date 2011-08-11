@@ -35,7 +35,7 @@ namespace gt{
 	public:
 		//-----------------------------
 		// Defines
-		static const tPlugTag*	xPT_buffer;	//!< \todo rename to save buffer or something.
+		static const cPlugTag*	xPT_buffer;	//!< \todo rename to save buffer or something.
 		static const cCommand*	xSave;	//!< Serialization is a base level ability.
 		static const cCommand*	xLoad;	//!< Ditto above.
 
@@ -166,7 +166,7 @@ namespace gt{
 			return *this;
 		}
 
-		virtual cBase_plug& operator= (ptrFig pA){ mD = pA; return *this; }
+		cBase_plug& operator= (ptrFig pA){ mD = pA; return *this; }
 
 		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;

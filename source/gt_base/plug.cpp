@@ -66,8 +66,7 @@ cBase_plug::unlinkLead(cLead* pLead){
 // Tests
 #ifdef GTUT
 
-GTUT_START(testPlug, copy)
-{
+GTUT_START(testPlug, copy){
 	tPlug<int> A;
 	cBase_plug *B = new tPlug<int>();
 	int C = 0;
@@ -98,5 +97,6 @@ GTUT_START(testPlug, saveLoad){
 	B.loadEat(&buff, &dontCare);
 	GTUT_ASRT(B.mD == A.mD, "A didn't save, or B didn't load, correctly.");
 }GTUT_END;
+
 
 #endif

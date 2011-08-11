@@ -33,6 +33,8 @@ namespace gt{
 		std::string mLibPath;
 
 	protected:
+		typedef void (*draftFoo)(cWorld *pWorld);
+
 		virtual void draftAddon(const std::string &pName);
 		virtual void closeAddon();
 

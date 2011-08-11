@@ -34,8 +34,8 @@ namespace gt{
 	//!\brief	The postman jacks into another figment using the lead it has been given.
 	class cPostman: public cFigment, private tOutline<cPostman>{
 	public:
-		static const tPlugTag* xPT_target;
-		static const tPlugTag* xPT_lead;
+		static const cPlugTag* xPT_target;
+		static const cPlugTag* xPT_lead;
 		static const cCommand* xSetupPostman;
 
 		static const dNatChar* identify(){ return "postman"; }

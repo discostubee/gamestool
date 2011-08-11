@@ -55,7 +55,7 @@ namespace gt{
 
 		T* get ();
 		T* operator -> ();
-		tSafeLem<T>& operator = (tSafeLem &copy);
+		tSafeLem<T>& operator = (tSafeLem<T> &copy);
 
 	protected:
 		bool requested;

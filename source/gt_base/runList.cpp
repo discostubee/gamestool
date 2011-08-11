@@ -104,8 +104,8 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const tPlugTag* cValves::xPT_state = tOutline<cValves>::makePlugTag("valve state");
-const tPlugTag* cValves::xPT_valveIdx = tOutline<cValves>::makePlugTag("Valve index");
+const cPlugTag* cValves::xPT_state = tOutline<cValves>::makePlugTag("valve state");
+const cPlugTag* cValves::xPT_valveIdx = tOutline<cValves>::makePlugTag("Valve index");
 
 const cCommand* cValves::xSetState = tOutline<cValves>::makeCommand(
 	"add",

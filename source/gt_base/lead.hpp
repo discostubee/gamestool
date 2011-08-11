@@ -74,7 +74,7 @@ namespace gt{
 		//!\param	aTag	This is what the plug is known as in this lead.
 		//!\param	aCon	To avoid deadlocks and having to mutex lock stuff all the time,
 		//!					a lead can only add plugs from the same context.
-		void add(cBase_plug *aPlug, const tPlugTag *aTag, dConSig aCon);
+		void add(cBase_plug *aPlug, const cPlugTag *aTag, dConSig aCon);
 
 		//!\brief	Chuck a plug into the pile of other plugs.
 		//!\param	aPlug	The plug we want.
@@ -83,13 +83,13 @@ namespace gt{
 
 		//!\brief	Lets you play with another figments plug, but only if you're from the same
 		//!			context, and only if you play nice.
-		cBase_plug* getPlug(const tPlugTag *aTag, dConSig aCon);
+		cBase_plug* getPlug(const cPlugTag *aTag, dConSig aCon);
 
 		//!\brief	Lets you go through all the piled data.
 		cPileItr getPiledDItr(dConSig aCon);
 
 		//!\brief	An easy way to set the plug
-		void setPlug(cBase_plug *aPlug, const tPlugTag *aTag, dConSig aCon);
+		void setPlug(cBase_plug *aPlug, const cPlugTag *aTag, dConSig aCon);
 
 		//!\brief	Clears only the linked plugs. The command link and context remains the same
 		void clear();
@@ -137,6 +137,17 @@ namespace gt{
 		dPiledData::iterator scrPDataItr;
 		dTagCleanup::iterator scrTCleanItr;
 		dPileCleanup::iterator scrPCleanItr;
+	};
+}
+
+namespace excep{
+	class badContext : public base_error{
+	public:
+		badContext(const dNatChar* pFile, const unsigned int pLine) :
+			base_error(pFile, pLine)
+		{ addInfo("bad context"); }
+
+		virtual ~badContext() throw() {}
 	};
 }
 

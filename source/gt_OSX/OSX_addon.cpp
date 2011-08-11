@@ -11,12 +11,11 @@ cAddon_OSX::draftAddon(const std::string &pName){
 
 		mLibHandle = dlopen(mLibPath.c_str(), RTLD_LAZY);
 		if(mLibHandle != NULL){
-			void (*fn)(cWorld*);
 
-			fn = reinterpret_cast<void(*)(cWorld*)>(dlsym(mLibHandle, "draftAll"));
+			draftFoo fn = reinterpret_cast<draftFoo>(dlsym(mLibHandle, "draftAll"));
 
 			if( fn != NULL ){
-				(*fn)(gWorld);
+				(*fn)(gWorld.get().get());
 			}else{
 				DBUG_LO("Unable to use shared library function 'draftAll' because " << dlerror());
 			}

@@ -41,18 +41,21 @@ namespace gt{
 
 	//--------------------------------------------------------
 	//!\brief	this helps to identify what each plug is on a lead.
-	class tPlugTag{
+	class cPlugTag{
 	public:
 		typedef unsigned int dUID;	//!< Unique ID.
 
 		const dUID	mID;
 		const dStr	mName;
 
-		tPlugTag(
+		cPlugTag(
 			const dNatChar* pPlugName
 		):
 			mID( makeHash(pPlugName) ),
 			mName( pPlugName )
+		{}
+
+		~cPlugTag()
 		{}
 	};
 
@@ -79,6 +82,9 @@ namespace gt{
 		template<typename T>	cBase_plug& operator= (const T &pT);
 
 		template< template<typename> class plug, typename T>	cBase_plug& operator= (plug<T> &pT);
+
+		//!\brief
+
 
 	protected:
 
@@ -126,11 +132,12 @@ namespace gt{
 
 		virtual cBase_plug& operator= (const cBase_plug *pD);
 
-		virtual cBase_plug& operator= (const A& pA);
+		cBase_plug& operator= (const A& pA);
 
 	private:
 		void genericCopy(const cBase_plug* pD);
 	};
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -277,8 +284,6 @@ namespace gt{
 
 		virtual ~tPlug(){}
 
-		virtual void operator= (dStr pA){ mD = pA; }
-
 		virtual cBase_plug& operator= (const cBase_plug &pD){
 			NOTSELF(&pD);
 			if( mType != pD.mType )
@@ -298,6 +303,8 @@ namespace gt{
 
 			return *this;
 		}
+
+		void operator= (dStr pA){ mD = pA; }
 
 		virtual void save(cByteBuffer* pAddHere){
 			//!\todo	Avoid temporary buffer.

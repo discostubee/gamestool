@@ -8,7 +8,7 @@ bool isMultithreading::xThreading = false;
 // Tests
 using namespace gt;
 
-#ifdef DEBUG
+#ifdef OFF
 namespace demo{
 	typedef boost::unique_lock<boost::mutex> dLock;
 	boost::mutex myMutex;

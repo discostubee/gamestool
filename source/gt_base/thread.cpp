@@ -2,7 +2,7 @@
 
 using namespace gt;
 
-const tPlugTag*	cThread::xPT_fig = tOutline<cThread>::makePlugTag("figment");
+const cPlugTag*	cThread::xPT_fig = tOutline<cThread>::makePlugTag("figment");
 
 const cCommand* cThread::xLinkFig = tOutline<cThread>::makeCommand(
 	"link fig",
@@ -25,7 +25,10 @@ cThread::runThread(cThread *me, cContext* pCon){
 			me->link.mD->run(&newContext);
 			me->sync.wait(syncLock);
 		}
-
+	}catch(excep::base_error &e){
+		std::cout << e.what() << std::endl;	//!!!
+	}catch(std::exception &e){
+		std::cout << e.what() << std::endl;	//!!!
 	}catch(...){
 		std::cout << "unknown error in thread" << std::endl;	//!!!
 	}
@@ -97,6 +100,7 @@ cThread::jack(ptrLead pLead, cContext* pCon){
 	stop(pCon);
 }
 
+
 ////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
@@ -162,43 +166,46 @@ namespace gt{
 	};
 
 	GTUT_START(test_Thread, sharedData){
-		const short timeout = 100;
+		const short timeout = 1000;
 		const short testLength = 5;
 		short testCount = 0;
 		short time = 0;
 		cContext fakeContext;
-		cThread threadA, threadB;
 		cShareTarget share;
-		dStr AChatter = "me.";
-		dStr BChatter = "you.";
+		dStr AChatter = "dog.";
+		dStr BChatter = "cat.";
 		tPlug<ptrFig> writerA( ptrFig(new cWriter(share, AChatter)) );
 		tPlug<ptrFig> writerB( ptrFig(new cWriter(share, BChatter)) );
 		ptrLead getHits(new cLead(&cShareTarget::xGetHits, &fakeContext));
 
+		GTUT_ASRT(AChatter.length() == BChatter.length(), "you didn't choose 2 strings of equal length.");
 		{
-			ptrLead linkTest(new cLead(cThread::xLinkFig, &fakeContext));
-			linkTest->add(&writerA, cThread::xPT_fig, &fakeContext);
-			threadA.jack(linkTest, &fakeContext);
-		}
-		{
-			ptrLead linkTest(new cLead(cThread::xLinkFig, &fakeContext));
-			linkTest->add(&writerB, cThread::xPT_fig, &fakeContext);
-			threadB.jack(linkTest, &fakeContext);
-		}
+			cThread threadA, threadB;	//- These must be cleaned first to prevent class definitions being cleaned.
+			{
+				ptrLead linkTest(new cLead(cThread::xLinkFig, &fakeContext));
+				linkTest->add(&writerA, cThread::xPT_fig, &fakeContext);
+				threadA.jack(linkTest, &fakeContext);
+			}
+			{
+				ptrLead linkTest(new cLead(cThread::xLinkFig, &fakeContext));
+				linkTest->add(&writerB, cThread::xPT_fig, &fakeContext);
+				threadB.jack(linkTest, &fakeContext);
+			}
 
-		while(testCount < testLength){
-			threadA.run(&fakeContext);
-			threadB.run(&fakeContext);
-			share.jack(getHits, &fakeContext);
-			testCount = getHits->getPiledDItr(&fakeContext).getPlug()->getCopy<size_t>();
-			++time;
-			std::cout<<testCount;
-			GTUT_ASRT(time < timeout, "timeout when running.");
+			while(testCount < testLength){
+				threadA.run(&fakeContext);
+				threadB.run(&fakeContext);
+				share.jack(getHits, &fakeContext);
+				testCount = getHits->getPiledDItr(&fakeContext).getPlug()->getCopy<size_t>();
+				++time;
+				//std::cout<<testCount;
+				GTUT_ASRT(time < timeout, "timeout when running.");
+			}
+
+			std::cout << "chatter=" << share.chatter << std::endl;
+
+			GTUT_ASRT(share.chatter.length() == (AChatter.length() * testCount), "Shared data isn't the right size.");
 		}
-
-		std::cout << "chatter=" << share.chatter << std::endl;
-
-		GTUT_ASRT(share.chatter.length() == (AChatter.length() + BChatter.length()) * testLength, "Shared data isn't the right size.");
 	}GTUT_END;
 
 	GTUT_START(test_Thread, threadDestruction){
@@ -214,3 +221,4 @@ namespace gt{
 
 }
 #endif
+

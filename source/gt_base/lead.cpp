@@ -24,7 +24,7 @@ cLead::~cLead(){
 }
 
 void
-cLead::add(cBase_plug* pData, const tPlugTag* pTag, dConSig aCon){
+cLead::add(cBase_plug* pData, const cPlugTag* pTag, dConSig aCon){
 	PROFILE;
 
 	if(aCon != mConx)
@@ -50,18 +50,18 @@ cLead::addToPile(cBase_plug* pData, dConSig aCon){
 	PROFILE;
 
 	if(aCon != mConx)
-		return;
+		throw excep::badContext(__FILE__, __LINE__);
 
 	mDataPile.push_back(pData);
 	pData->linkLead(this);
 }
 
 cBase_plug*
-cLead::getPlug(const tPlugTag* pTag, dConSig aCon){
+cLead::getPlug(const cPlugTag* pTag, dConSig aCon){
 	PROFILE;
 
 	if(aCon != mConx)
-		return NULL;
+		throw excep::badContext(__FILE__, __LINE__);
 
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr == mTaggedData.end())
@@ -73,15 +73,15 @@ cLead::getPlug(const tPlugTag* pTag, dConSig aCon){
 cLead::cPileItr
 cLead::getPiledDItr(dConSig aCon){
 	if(aCon != mConx)
-		return cPileItr(NULL);
+		throw excep::badContext(__FILE__, __LINE__);
 
 	return cPileItr(&mDataPile);
 }
 
 
 void
-cLead::setPlug(cBase_plug *aPlug, const tPlugTag *aTag, dConSig aCon){
-	*getPlug(aTag, aCon) = aPlug;
+cLead::setPlug(cBase_plug *aPlug, const cPlugTag *aTag, dConSig aCon){
+	*getPlug(aTag, aCon) = *aPlug;
 }
 
 void
@@ -159,8 +159,41 @@ cLead::unplug(cBase_plug* pPlug){
 // Tests
 #ifdef GTUT
 
-GTUT_START(testLead, plugLinking){
+using namespace gt;
+
+GTUT_START(testLead, addByTag){
+	cContext fake;
+	cCommand dontCare(0, "", 0, 0);
+	cPlugTag tag("tag");
+	cLead testMe(&dontCare, &fake);
+	tPlug<int> number;
+	tPlug<int> target;
+
+	number = 42;
+
+	testMe.add(&number, &tag, &fake);
+	target = testMe.getPlug(&tag, &fake);
+	GTUT_ASRT(target.mD==42, "Lead didn't give back the right data.");
 }GTUT_END;
 
+GTUT_START(testLead, pile){
+}GTUT_END;
+
+GTUT_START(testLead, setPlug){
+	cContext fake;
+	cCommand dontCare(0, "", 0, 0);
+	cPlugTag tag("tag");
+	cLead testMe(&dontCare, &fake);
+	tPlug<int> number;
+	tPlug<int> target;
+
+	number = 42;
+	testMe.add(&target, &tag, &fake);
+	testMe.setPlug(&number, &tag, &fake);
+	GTUT_ASRT(target.mD==42, "Lead didn't give back the right data.");
+}GTUT_END;
+
+GTUT_START(testLead, stopBadContext){
+}GTUT_END;
 
 #endif

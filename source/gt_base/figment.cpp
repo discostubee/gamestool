@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const tPlugTag* cFigment::xPT_buffer = tOutline<cFigment>::makePlugTag("buffer");
+const cPlugTag* cFigment::xPT_buffer = tOutline<cFigment>::makePlugTag("buffer");
 
 const cCommand* cFigment::xSave = tOutline<cFigment>::makeCommand(
 	"save",
@@ -135,9 +135,10 @@ GTUT_START(figment, givesSave){
 	ptrLead save = gWorld.get()->makeLead(getHash<cFigment>(), cFigment::xSave->mID, &fake);
 	ptrFig testMe = gWorld.get()->makeFig(getHash<cFigment>());
 
+	tPlug<cByteBuffer> saveBuff;
+	save->add(&saveBuff, cFigment::xPT_buffer, &fake);
 	testMe->jack(save, &fake);
-	cBase_plug *saveBuff = save->getPlug(cFigment::xPT_buffer, &fake);
-	saveBuff->getPtr<cByteBuffer>();
+
 
 }GTUT_END;
 

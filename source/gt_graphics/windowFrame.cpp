@@ -44,28 +44,28 @@ cWindowFrame::~cWindowFrame(){
 }
 
 void 
-cWindowFrame::jack(ptrLead pLead){
+cWindowFrame::jack(ptrLead pLead, cContext *pCon){
 	PROFILE;
 
 	try{
 		switch( pLead->mCom->getSwitch<cWindowFrame>() ){
 			case eLinkContent:
-				mContent = *pLead->getD(cWindowFrame::xPT_content);
+				mContent = *pLead->getPlug(cWindowFrame::xPT_content, pCon);
 				break;
 			case eLinkCloseFig:
-				mClosing = *pLead->getD(cWindowFrame::xPT_closer);
+				mClosing = *pLead->getPlug(cWindowFrame::xPT_closer, pCon);
 				DBUG_LO("The closer is now " << mClosing.mD->name());
 				break;
 			case eChangeDim:{
-					try{ mX = *pLead->getD(xPT_x); }catch(excep::base_error){}
-					try{ mY = *pLead->getD(xPT_y); }catch(excep::base_error){}
-					try{ mWidth = *pLead->getD(xPT_width); }catch(excep::base_error){}
-					try{ mHeight = *pLead->getD(xPT_height); }catch(excep::base_error){}
+					try{ mX = *pLead->getPlug(xPT_x, pCon); }catch(excep::base_error){}
+					try{ mY = *pLead->getPlug(xPT_y, pCon); }catch(excep::base_error){}
+					try{ mWidth = *pLead->getPlug(xPT_width, pCon); }catch(excep::base_error){}
+					try{ mHeight = *pLead->getPlug(xPT_height, pCon); }catch(excep::base_error){}
 					
 					refreshDim();
 				}break;
 			default:
-				cFigment::jack(pLead);
+				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){

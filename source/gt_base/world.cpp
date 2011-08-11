@@ -244,8 +244,8 @@ cWorld::makeLead(dNameHash pFigHash, dNameHash pComHash, dConSig pConx){
 	return ptrLead(new cLead( mScrBMapItr->second.mBlueprint->getCom(pComHash), pConx ));
 }
 
-const tPlugTag* 
-cWorld::getPlugTag(dNameHash pFigHash, dNameHash pPTHash){
+const cPlugTag* 
+cWorld::gecPlugTag(dNameHash pFigHash, dNameHash pPTHash){
 	PROFILE;
 
 	mScrBMapItr =  mBlueprints.find(pFigHash);
@@ -253,7 +253,7 @@ cWorld::getPlugTag(dNameHash pFigHash, dNameHash pPTHash){
 	if(mScrBMapItr == mBlueprints.end())
 		throw excep::base_error("bad name hash", __FILE__, __LINE__);
 
-	return mScrBMapItr->second.mBlueprint->getPlugTag(pPTHash);
+	return mScrBMapItr->second.mBlueprint->gecPlugTag(pPTHash);
 }
 
 void

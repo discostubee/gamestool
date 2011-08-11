@@ -39,8 +39,8 @@ namespace gt{
 		template<typename T>
 		unsigned int getSwitch() const;	//!< Gives you the switch, but only if you are the figment it is looking for.
 
-		bool usesTag(const tPlugTag* pTag) const;	//!< Checks if it has such a tag.
-		void addTag(const tPlugTag* pTag);
+		bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
+		void addTag(const cPlugTag* pTag);
 
 		cCommand& operator=(const cCommand& pCom);
 
@@ -48,7 +48,7 @@ namespace gt{
 		const dNameHash mParent;	//!< Used to determine which figment this command belongs too.
 		const unsigned int mSwitch;
 
-		std::set<const tPlugTag*> mDataTags;
+		std::set<const cPlugTag*> mDataTags;
 	};
 }
 

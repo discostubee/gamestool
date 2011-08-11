@@ -3,8 +3,8 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const tPlugTag* cPostman::xPT_target = tOutline<cPostman>::makePlugTag("target");
-const tPlugTag* cPostman::xPT_lead = tOutline<cPostman>::makePlugTag("lead");
+const cPlugTag* cPostman::xPT_target = tOutline<cPostman>::makePlugTag("target");
+const cPlugTag* cPostman::xPT_lead = tOutline<cPostman>::makePlugTag("lead");
 const cCommand* cPostman::xSetupPostman = tOutline<cPostman>::makeCommand(
 	"setup postman",
 	cPostman::eSwitchEnd,

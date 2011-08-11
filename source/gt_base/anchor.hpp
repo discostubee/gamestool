@@ -19,7 +19,7 @@ namespace gt{ //gamestool
 	//!			is not the same as dealing with a single direction tree).
 	class cAnchor: public cFigment, private tOutline<cAnchor>{
 	public:
-		static const tPlugTag*	xPT_root;
+		static const cPlugTag*	xPT_root;
 		static const cCommand*	xSetRoot;	//!\todo	Rename to linkRoot. Gotta keep the term link consistent.
 		static const cCommand*	xGetRoot;
 

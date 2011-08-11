@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const tPlugTag* cAnchor::xPT_root = tOutline<cAnchor>::makePlugTag("root");
+const cPlugTag* cAnchor::xPT_root = tOutline<cAnchor>::makePlugTag("root");
 
 const cCommand* cAnchor::xSetRoot = tOutline<cAnchor>::makeCommand(
 	"set root",
@@ -210,6 +210,7 @@ cAnchor::jack(ptrLead pLead, cContext* pCon) {
 
 #ifdef GTUT
 
+
 class cSaveTester: public cFigment, private tOutline<cSaveTester>{
 public:
 	static const cCommand*	xGetMyStr;
@@ -246,14 +247,12 @@ const char *testStr = "proper job";
 GTUT_START(testAnchor, basicSave){
 	tOutline<cSaveTester>::draft();
 	cContext fakeCon;
-
 	cAnchor ank;
-	cContext fake;
 	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
 	ptrLead add(new cLead(cAnchor::xSetRoot, &fakeCon));
 
 	add->add(&tester, cAnchor::xPT_root, &fakeCon);
-	ank.jack(add, &fake);
+	ank.jack(add, &fakeCon);
 
 	buff.clear();
 	ank.save(&buff);

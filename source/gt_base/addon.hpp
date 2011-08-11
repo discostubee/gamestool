@@ -35,21 +35,11 @@ namespace gt{
 	//!\note	Addons must not have platform specific names. If an addon isn't available for a certain OS, that's
 	//!		just too bad.
 	class cAddon: public cFigment, private tOutline<cAddon>{
-	protected:
-		typedef boost::shared_ptr<dStr> ptrStr;
-
-		static std::vector<ptrStr> xOpenAddons;	//!< Tracks all open addons. Allowing you to only open a library when you need to. Using vector because they're fast to iterate over and I don't care that it's slow to add to.
-
-		virtual void draftAddon(const dStr &pName){}	//!< draft all the blueprints contained in an external addon.
-		virtual void closeAddon(){}
-
-		ptrStr mAddonName;	//!< Stores the name of the addon we want.
-
 	public:
 		static const char* xDraftAllFooStr;
 		static const char* xCloseAddonFooStr;
 
-		static const tPlugTag* xPT_addonName;
+		static const cPlugTag* xPT_addonName;
 		static const cCommand* xLoadAddon;
 
 		enum{
@@ -67,6 +57,18 @@ namespace gt{
 		virtual dNameHash hash() const{ return tOutline<cAddon>::hash(); }
 
 		virtual void jack(ptrLead pLead, cContext* pCon);
+
+	protected:
+		typedef boost::shared_ptr<dStr> ptrStr;
+		typedef std::map<dNameHash, unsigned int> dTimesOpened;
+
+		static dTimesOpened xOpenAddons;	//!< We want to track all open addons, so we use a hash of the name to search for it, and also keep track of how many figments require that addon.
+
+		virtual void draftAddon(const dStr &pName){}	//!< draft all the blueprints contained in an external addon.
+		virtual void closeAddon(){}
+
+		tPlug<dStr> mAddonName;	//!< Stores the name of the addon we want.
+		dNameHash mAddonHash;
 	};
 
 	

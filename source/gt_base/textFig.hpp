@@ -19,7 +19,7 @@ namespace gt{
 		tPlug<dStr> mText;
 
 	public:
-		static const tPlugTag* xPT_text;
+		static const cPlugTag* xPT_text;
 		static const cCommand* xSetText;
 		static const cCommand* xGetText;
 

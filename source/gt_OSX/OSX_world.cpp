@@ -13,7 +13,7 @@ cOSXWorld::getOSXTime(){
 }
 
 cOSXWorld::cOSXWorld(){
-	mProfiler->mGetTime = &getOSXTime;
+	mProfiles->mGetTime = &getOSXTime;
 }
 
 cOSXWorld::~cOSXWorld(){

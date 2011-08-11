@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const tPlugTag* cTextFig::xPT_text = tOutline<cTextFig>::makePlugTag("text");
+const cPlugTag* cTextFig::xPT_text = tOutline<cTextFig>::makePlugTag("text");
 
 const cCommand* cTextFig::xSetText = tOutline<cTextFig>::makeCommand(
 	"set text",

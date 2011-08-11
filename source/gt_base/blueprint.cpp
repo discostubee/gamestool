@@ -9,7 +9,7 @@ cBlueprint::cBlueprint():
 	mReplaces(uDoesntReplace),
 	mFuncMake(NULL),
 	mGetCom(NULL),
-	mGetPlugTag(NULL),
+	mGecPlugTag(NULL),
 	mGetName(NULL)
 {}
 
@@ -44,10 +44,10 @@ cBlueprint::getCom(dNameHash pHash) const{
 	return mGetCom(pHash);
 }
 
-const tPlugTag* 
-cBlueprint::getPlugTag(dNameHash pPT) const{
-	ASRT_NOTNULL(mGetPlugTag);
-	return mGetPlugTag(pPT);
+const cPlugTag* 
+cBlueprint::gecPlugTag(dNameHash pPT) const{
+	ASRT_NOTNULL(mGecPlugTag);
+	return mGecPlugTag(pPT);
 }
 
 void
@@ -69,7 +69,7 @@ cBlueprint::operator = (const cBlueprint* pCopy){
 	{
 		mHash = pCopy->mHash;
 		mReplaces = pCopy->mReplaces;
-		mGetPlugTag = pCopy->mGetPlugTag;
+		mGecPlugTag = pCopy->mGecPlugTag;
 
 		//- Unsure if these need to be freed first.
 		mFuncMake = pCopy->mFuncMake;
