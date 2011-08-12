@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F396E736-531F-4854-872D-F59DF6741DF8}</ProjectGuid>
+    <RootNamespace>unitTest</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\workspace\gamestool_hg\source;C:\include\boost_1_46_1;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;GTUT;GTUT_GOOGLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\source\gt_base\addon.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\anchor.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\blueprint.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\byteBuffer.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\command.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\context.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\dirPtr.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\figment.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\fileIO.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\gt_string.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\lead.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\plug.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\postman.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\precompiledHeader.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\profiler.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\ptrTools.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\runList.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\textFig.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\thread.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\threadTools.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\utils.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\world.cpp" />
+    <ClCompile Include="..\source\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\source\gt_base\addon.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\anchor.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\blueprint.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\byteBuffer.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\command.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\context.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\dirPtr.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\exceptions.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\figment.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\fileIO.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\gt_string.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\lead.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\plug.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\postman.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\precompiledHeader.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\profiler.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\ptrTools.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\runList.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\textFig.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\thread.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\threadTools.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\unitTests.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\utils.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\world.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
