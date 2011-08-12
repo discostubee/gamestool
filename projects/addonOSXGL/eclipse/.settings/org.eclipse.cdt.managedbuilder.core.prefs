@@ -1,0 +1,15 @@
+#Tue May 03 19:42:24 BST 2011
+eclipse.preferences.version=1
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/CPATH/delimiter=\:
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/CPATH/operation=replace
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/CPATH/value=/Developer/SDKs/boost_1_46_0\:/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include\:/Developer/SDKs/gtest-1.5.0/include
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/CPLUS_INCLUDE_PATH/delimiter=\:
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/CPLUS_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/C_INCLUDE_PATH/delimiter=\:
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/C_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/append=true
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/appendContributed=true
+environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/LIBRARY_PATH/delimiter=\:
+environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/LIBRARY_PATH/operation=remove
+environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/append=true
+environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.macosx.exe.debug.651958957/appendContributed=true
