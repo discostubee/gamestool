@@ -75,25 +75,25 @@ namespace gt{
 		cLead(const cCommand* pCom);
 		~cLead();
 
-		//!\fn		void add(cBase_plug* pData, const tPlugTag &pTag)
+		//!\fn		void add(cBase_plug* pData, const cPlugTag &pTag)
 		//!\brief	Add a reference to a plug and assign it a label
-		void add(cBase_plug* pData, const tPlugTag* pTag);
+		void add(cBase_plug* pData, const cPlugTag* pTag);
 
 		//!\fn		void addToPile(cBase_plug* pData)
 		//!\brief	Chunk a plug into the pile of other plugs.
 		void addToPile(cBase_plug* pData);
 
-		//!\fn		void take(cBase_plug** pData, const tPlugTag &pTag)
+		//!\fn		void take(cBase_plug** pData, const cPlugTag &pTag)
 		//!\brief	Use this function if you want the lead to manage the plug instead of using a reference.
 		//!\param	pData	Change to auto pointer
 		//!\param	pTag	The tag to give this data.
-		void take(cBase_plug* pData, const tPlugTag* pTag);
+		void take(cBase_plug* pData, const cPlugTag* pTag);
 
 		//!\todo change to auto pointer.
 		void takeToPile(cBase_plug* pData);
 
 		//!\todo change to reference return.
-		cBase_plug* getD(const tPlugTag* pTag);	//!< Get data by its tag.
+		cBase_plug* getD(const cPlugTag* pTag);	//!< Get data by its tag.
 
 		cPileItr getPiledDItr();
 

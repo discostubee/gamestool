@@ -68,7 +68,7 @@ namespace gt{
 		cPolyMesh();
 		virtual ~cPolyMesh();
 
-		virtual void jack(ptrLead pLead);
+		virtual void jack(ptrLead pLead, cContext *pCon);
 
 	protected:
 		sMesh* mLazyMesh;	//!<	the idea here is that we fill the lazy mesh up with data, and then on its next run, we take that data and fill up
@@ -87,13 +87,13 @@ namespace gt{
 
 	//!\brief	sMesh requires a special plug in order to work.
 	template<>
-	class cPlug<sMesh>: public cBase_plug{
+	class tPlug<sMesh>: public cBase_plug{
 	public:
 		sMesh mD;
 
-		cPlug() : cBase_plug(typeid(sMesh)){}
-		cPlug(const sMesh& pMesh) : cBase_plug(typeid(sMesh)), mD(pMesh){}
-		virtual ~cPlug(){}
+		tPlug() : cBase_plug(typeid(sMesh)){}
+		tPlug(const sMesh& pMesh) : cBase_plug(typeid(sMesh)), mD(pMesh){}
+		virtual ~tPlug(){}
 
 		virtual cBase_plug& operator= (const cBase_plug &pD){ if(&pD != this){} return *this;}
 		virtual void operator= (const sMesh& pA){}

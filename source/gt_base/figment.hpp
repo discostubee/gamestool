@@ -35,7 +35,7 @@ namespace gt{
 	public:
 		//-----------------------------
 		// Defines
-		static const tPlugTag*	xPT_buffer;	//!< \todo rename to save buffer or something.
+		static const cPlugTag*	xPT_buffer;	//!< \todo rename to save buffer or something.
 		static const cCommand*	xSave;	//!< Serialization is a base level ability.
 		static const cCommand*	xLoad;	//!< Ditto above.
 
@@ -186,7 +186,7 @@ namespace gt{
 
 				dReloadMap::iterator itr = pReloads->find(saveSig);
 
-				if(itr == pReloads->end());
+				if(itr == pReloads->end())
 					throw excep::notFound("reloaded figment", __FILE__, __LINE__);
 
 				mD = itr->second->fig;

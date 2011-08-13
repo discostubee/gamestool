@@ -76,7 +76,7 @@ win::MSStrLen(const TCHAR* pString){
 
 HINSTANCE 
 win::getInst(){
-	return reinterpret_cast<gt::cWinWorld*>(gt::gWorld)->mInst;
+	return reinterpret_cast<gt::cWinWorld*>(gt::gWorld.get().get())->mInst;
 }
 
 
@@ -90,7 +90,7 @@ cWinWorld::getWinTime(){
 
 cWinWorld::cWinWorld(HINSTANCE pInst){
 	mInst = pInst;
-	mProfiler->mGetTime = &getWinTime;
+	mProfiles->mGetTime = &getWinTime;
 }
 
 cWinWorld::~cWinWorld() {

@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const tPlugTag* cAnchor::xPT_root = tOutline<cAnchor>::makePlugTag("root");
+const cPlugTag* cAnchor::xPT_root = tOutline<cAnchor>::makePlugTag("root");
 
 const cCommand* cAnchor::xSetRoot = tOutline<cAnchor>::makeCommand(
 	"set root",

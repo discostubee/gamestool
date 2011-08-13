@@ -7,7 +7,7 @@ std::vector<cAddon::ptrStr> cAddon::xOpenAddons;
 const char* cAddon::xDraftAllFooStr = "draftAll";
 const char* cAddon::xCloseAddonFooStr = "closeLib";
 
-const tPlugTag* cAddon::xPT_addonName = tOutline<cAddon>::makePlugTag("addon name");
+const cPlugTag* cAddon::xPT_addonName = tOutline<cAddon>::makePlugTag("addon name");
 
 const cCommand* cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
 	"load addon",
