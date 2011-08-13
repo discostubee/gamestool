@@ -25,6 +25,7 @@ namespace gt{
 		virtual const dNatChar* name() const { return cWin_fileIO::identify(); }		//!<
 		virtual dNameHash hash() const { return tOutline<cWin_fileIO>::hash(); }
 
+	protected:
 		//- polymorphs
 		virtual cByteBuffer& read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 );
 		virtual void write(const cByteBuffer* pBuff);

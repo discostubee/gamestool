@@ -19,7 +19,7 @@ cCommand::~cCommand(){
 
 
 bool
-cCommand::usesTag(const tPlugTag* pTag) const{
+cCommand::usesTag(const cPlugTag* pTag) const{
 	if( mDataTags.find(pTag) != mDataTags.end() )
 		return true;
 
@@ -27,7 +27,7 @@ cCommand::usesTag(const tPlugTag* pTag) const{
 }
 
 void
-cCommand::addTag(const tPlugTag* pTag){
+cCommand::addTag(const cPlugTag* pTag){
 	ASRT_NOTNULL(pTag);
 
 	mDataTags.insert(pTag);
@@ -45,7 +45,7 @@ cCommand::operator=(const cCommand& pCom){
 
 class cComTestFig: public cFigment, private tOutline<cComTestFig>{
 public:
-	static const tPlugTag* xPT_testTag;
+	static const cPlugTag* xPT_testTag;
 
 	static const dNatChar* identify(){ return "command test figment"; }
 
@@ -58,7 +58,7 @@ public:
 	~cComTestFig(){}
 };
 
-const tPlugTag* cComTestFig::xPT_testTag = tOutline<cComTestFig>::makePlugTag("test tag");
+const cPlugTag* cComTestFig::xPT_testTag = tOutline<cComTestFig>::makePlugTag("test tag");
 
 GTUT_START(command, nothing)
 {

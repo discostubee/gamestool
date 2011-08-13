@@ -75,10 +75,11 @@ namespace gt{
 		tLemming(tLemming<T>& copy);
 		~tLemming();
 
+		T* get();
+
 		T* operator -> ();
-
 		tLemming& operator = (const tLemming& copy);
-
+		
 	protected:
 		tLemming();
 		tLemming(tSpitLemming<T>* parent);
@@ -190,6 +191,12 @@ namespace gt{
 	template<typename T> void
 	tLemming<T>::parentDied(){
 		mParent = false;
+	}
+
+	template<typename T> T* 
+	tLemming<T>::get(){
+		if(!mParent) throw std::exception();	// make this nicer.
+		return mParent->getData();
 	}
 
 	template<typename T> tLemming<T>&

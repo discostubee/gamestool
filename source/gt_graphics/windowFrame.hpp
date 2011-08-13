@@ -46,12 +46,12 @@ namespace gt{
 		virtual const dNatChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cWindowFrame>::hash(); }
 
-		virtual void jack(ptrLead pLead);
+		virtual void jack(ptrLead pLead, cContext *pCon);
 
 	protected:
-		cPlug<ptrFig>	mContent;
-		cPlug<ptrFig>	mClosing;
-		cPlug<dUnitPix>	mX, mY, mHeight, mWidth;
+		tPlug<ptrFig>	mContent;
+		tPlug<ptrFig>	mClosing;
+		tPlug<dUnitPix>	mX, mY, mHeight, mWidth;
 
 		//-------------------
 		virtual void refreshDim(){ }	//!< Sets dimensions of frame.

@@ -13,7 +13,7 @@ namespace gt{
 // Classes
 namespace gt{
 	typedef std::map<dNameHash, cCommand> dComContainer;
-	typedef std::map<dNameHash, tPlugTag> dPTagContainer;
+	typedef std::map<dNameHash, cPlugTag> dPTagContainer;
 
 	//---------------------------------------------------------------------------------------------------
 	//!\brief	Blueprint for a figment
@@ -30,7 +30,7 @@ namespace gt{
 		const char* name() const;
 		dNameHash replace() const;
 		const cCommand* getCom(dNameHash pHash) const;
-		const tPlugTag* getPlugTag(dNameHash pPT) const;
+		const cPlugTag* gecPlugTag(dNameHash pPT) const;
 		void addToGivenContainers(dComContainer* pComContain, dPTagContainer* pPTagContain) const;
 		const cBlueprint* operator = (const cBlueprint* pCopy);
 
@@ -39,7 +39,7 @@ namespace gt{
 		dNameHash mReplaces;
 		ptrFig (*mFuncMake)();
 		const cCommand* (*mGetCom)(dNameHash);
-		const tPlugTag* (*mGetPlugTag)(dNameHash);
+		const cPlugTag* (*mGecPlugTag)(dNameHash);
 		const char* (*mGetName)();
 		const dComContainer* mComContainRef;
 		const dPTagContainer* mPTagContainRef;
@@ -58,13 +58,13 @@ namespace gt{
 		static const cCommand* makeCommand(
 			const dNatChar* pName,
 			unsigned int pSwitch,
-			const tPlugTag* pTags,
+			const cPlugTag* pTags,
 			...
 		);
 
-		static const tPlugTag* makePlugTag(const dNatChar* pName);
+		static const cPlugTag* makePlugTag(const dNatChar* pName);
 		static const cCommand* getCommand(dNameHash pCommandID);
-		static const tPlugTag* getPlugTag(dNameHash pPTagID);
+		static const cPlugTag* gecPlugTag(dNameHash pPTagID);
 
 	protected:
 		static cBlueprint xBlueprint;
@@ -109,7 +109,7 @@ namespace gt{
 		mReplaces = T::replaces();
 		mFuncMake = &(maker<T>);
 		mGetCom = &(tOutline<T>::getCommand);
-		mGetPlugTag = &(tOutline<T>::getPlugTag);
+		mGecPlugTag = &(tOutline<T>::gecPlugTag);
 		mGetName = &(T::identify);
 		mComContainRef = tOutline<T>::xCommands;
 		mPTagContainRef = tOutline<T>::xPlugTags;
@@ -230,7 +230,7 @@ namespace gt{
 	tOutline<T>::makeCommand(
 		const char* pName,
 		unsigned int pSwitch,
-		const tPlugTag* pTags,
+		const cPlugTag* pTags,
 		...
 	){
 		PROFILE;
@@ -240,7 +240,7 @@ namespace gt{
 		{	//- Using braces to ensure that the pointer to the command map is correct.
 			dNameHash comUID = makeHash(pName);
 			dComContainer::iterator itrCom;
-			tPlugTag* param=const_cast<tPlugTag*>(pTags);
+			cPlugTag* param=const_cast<cPlugTag*>(pTags);
 			va_list params;
 
 			xCommands->insert( dComContainer::value_type(
@@ -253,7 +253,7 @@ namespace gt{
 			va_start(params, pTags);
 			while(param != NULL){
 				itrCom->second.addTag(param);
-				param  = va_arg( params, tPlugTag* );
+				param  = va_arg( params, cPlugTag* );
 			}
 			va_end(params);
 
@@ -264,7 +264,7 @@ namespace gt{
 	}
 
 	template<typename T>
-	const tPlugTag*
+	const cPlugTag*
 	tOutline<T>::makePlugTag(const dNatChar* pName){
 		dPTagContainer::iterator itrTag;
 
@@ -278,7 +278,7 @@ namespace gt{
 			dNameHash tagUID = makeHash(pName);
 
 			xPlugTags->insert( dPTagContainer::value_type(
-				tagUID,	tPlugTag(pName)
+				tagUID,	cPlugTag(pName)
 			) );
 
 			itrTag = xPlugTags->find(tagUID);
@@ -305,8 +305,8 @@ namespace gt{
 	}
 
 	template<typename T>
-	const tPlugTag*
-	tOutline<T>::getPlugTag(dNameHash pHash){
+	const cPlugTag*
+	tOutline<T>::gecPlugTag(dNameHash pHash){
 		dPTagContainer::iterator itrTag;
 
 		PROFILE;

@@ -32,10 +32,10 @@ namespace gt{
 		};
 
 		static const unsigned int ENDOF_FILE = static_cast<unsigned int>(-1);	//!< special identifier used mostly by insert function.
-		static const tPlugTag*	xPT_buffer;
-		static const tPlugTag*	xPT_startSpot;
-		static const tPlugTag*	xPT_readSize;
-		static const tPlugTag*	xPT_fileSize;
+		static const cPlugTag*	xPT_buffer;
+		static const cPlugTag*	xPT_startSpot;
+		static const cPlugTag*	xPT_readSize;
+		static const cPlugTag*	xPT_fileSize;
 
 		static const cCommand*	xSetPath;	//!< set the path to the file you want to manipulate.
 		static const cCommand*	xRead;		//!< write to the file specified with set path.

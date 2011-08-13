@@ -18,7 +18,7 @@ cPolyMesh::~cPolyMesh(){
 }
 
 void
-cPolyMesh::jack(ptrLead pLead){
+cPolyMesh::jack(ptrLead pLead, cContext *pCon){
 	PROFILE;
 
 	try{
@@ -40,7 +40,9 @@ cPolyMesh::jack(ptrLead pLead){
 			}break;
 
 			default:
-			case eNotMyBag:{ DBUG_LO("not my bag"); }break;
+			case eNotMyBag:
+				cFigment::jack(pLead, pCon);
+			break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);

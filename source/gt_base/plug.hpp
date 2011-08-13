@@ -37,21 +37,21 @@ namespace gt{
 
 	//--------------------------------------------------------
 	//!\brief	this helps to identify what each plug is on a lead.
-	class tPlugTag{
+	class cPlugTag{
 	public:
 		typedef unsigned int dUID;	//!< Unique ID.
 
 		const dUID	mID;
 		const dStr	mName;
 
-		tPlugTag(
+		cPlugTag(
 			const dNatChar* pPlugName
 		):
 			mID( makeHash(pPlugName) ),
 			mName( pPlugName )
 		{}
 
-		tPlugTag& operator=(const tPlugTag& pPlug){ 
+		cPlugTag& operator=(const cPlugTag& pPlug){ 
 			::memcpy((void*)(&mID), (void*)(&pPlug.mID), sizeof(mID));
 			::memcpy((void*)(&mName), (void*)(&pPlug.mName), sizeof(mName));
 			return *this; 

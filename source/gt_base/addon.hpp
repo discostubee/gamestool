@@ -49,7 +49,7 @@ namespace gt{
 		static const char* xDraftAllFooStr;
 		static const char* xCloseAddonFooStr;
 
-		static const tPlugTag* xPT_addonName;
+		static const cPlugTag* xPT_addonName;
 		static const cCommand* xLoadAddon;
 
 		enum{

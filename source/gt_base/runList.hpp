@@ -53,8 +53,8 @@ namespace gt{ //gamestool
 		std::map< dListItr, tPlug<bool> > mStates;	//!< Maps states to the list entries. These states control which objects are run.
 
 	public:
-		static const tPlugTag*	xPT_state;		//!< Turn turns valve on.
-		static const tPlugTag*	xPT_valveIdx;	//!< The numeric index for the valve.
+		static const cPlugTag*	xPT_state;		//!< Turn turns valve on.
+		static const cPlugTag*	xPT_valveIdx;	//!< The numeric index for the valve.
 
 		static const cCommand*	xSetState;
 

@@ -54,7 +54,7 @@ namespace gt{
 	//!			its own thread again, it unwinds. Uses a threadpool.
 	class cThread: public cFigment, public tOutline<cThread>{
 	public:
-		static const tPlugTag*	xPT_fig;	//!< The figment to link.
+		static const cPlugTag*	xPT_fig;	//!< The figment to link.
 		static const cCommand*	xLinkFig;	//!< Link figment to run in the separate thread.
 
 		static const dNatChar* identify(){ return "thread"; }

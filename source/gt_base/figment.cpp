@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const tPlugTag* cFigment::xPT_buffer = tOutline<cFigment>::makePlugTag("buffer");
+const cPlugTag* cFigment::xPT_buffer = tOutline<cFigment>::makePlugTag("buffer");
 
 const cCommand* cFigment::xSave = tOutline<cFigment>::makeCommand(
 	"save",

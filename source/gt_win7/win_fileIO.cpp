@@ -27,7 +27,7 @@ cWin_fileIO::read(const dFilePoint pStartPoint, const size_t pReadAmount ){
 		stream.open(mPath.mD.c_str(), std::fstream::in | std::fstream::binary );
 
 		stream.seekg(0, std::fstream::end);
-		fileSize = stream.tellg();
+		fileSize = static_cast<size_t>(stream.tellg().seekpos());
 
 		if(fileSize == 0 || fileSize == static_cast<unsigned int>(-1) )
 			throw excep::base_error("file empty", __FILE__, __LINE__); //!\todo
@@ -90,7 +90,7 @@ cWin_fileIO::insert(const cByteBuffer* pBuff, dFilePoint pStartPoint){
 		stream.open(mPath.mD.c_str(), std::fstream::out | std::fstream::in | std::fstream::binary | std::fstream::app );
 		stream.seekg(0, std::fstream::end);
 
-		fileSize = stream.tellg();
+		fileSize = static_cast<size_t>(stream.tellg().seekpos());
 
 		if( fileSize == static_cast<unsigned int>(-1)
 			|| fileSize == 0
@@ -133,7 +133,7 @@ cWin_fileIO::getFileSize(){
 
 	stream.open(mPath.mD.c_str(), std::fstream::in | std::fstream::binary);
 	stream.seekg(0, std::fstream::end);
-	fileSize = stream.tellg();
+	fileSize = static_cast<size_t>(stream.tellg());
 	stream.close();
 	return fileSize;
 }

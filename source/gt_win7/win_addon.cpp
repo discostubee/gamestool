@@ -32,7 +32,7 @@ cAddon_win::draftAddon(const dStr &pName){
 		CHECK_WIN_ERR;
 
 		if(tempPtrDraftAll != NULL){
-			tempPtrDraftAll(gWorld);
+			tempPtrDraftAll(gWorld.get().get());
 		}
 	}
 }
@@ -57,10 +57,6 @@ cAddon_win::closeAddon(){
 	}
 }
 
-void
-cAddon_win::requirements(){
-	tOutline<cAddon>::draft();
-}
 
 cAddon_win::cAddon_win():
 	mLibHand(NULL)

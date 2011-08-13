@@ -32,11 +32,11 @@ cLayer::~cLayer(){
 }
 
 void
-cLayer::jack(ptrLead pLead){
+cLayer::jack(ptrLead pLead, cContext *pCon){
 	try{
 		switch(pLead->mCom->getSwitch<cLayer>()){
 			case eSetDim:{
-				cPlug<dUnitPix> w, h, x, y;
+				tPlug<dUnitPix> w, h, x, y;
 				try{ w = *pLead->getD(xPT_width); }catch(excep::base_error){}
 				try{ h = *pLead->getD(xPT_height); }catch(excep::base_error){}
 				try{ x = *pLead->getD(xPT_posX); }catch(excep::base_error){}
@@ -46,7 +46,7 @@ cLayer::jack(ptrLead pLead){
 			}break;
 
 			default:
-				cFigment::jack(pLead);
+				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){

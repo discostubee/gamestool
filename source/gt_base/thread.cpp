@@ -2,7 +2,7 @@
 
 using namespace gt;
 
-const tPlugTag*	cThread::xPT_fig = tOutline<cThread>::makePlugTag("figment");
+const cPlugTag*	cThread::xPT_fig = tOutline<cThread>::makePlugTag("figment");
 
 const cCommand* cThread::xLinkFig = tOutline<cThread>::makeCommand(
 	"link fig",

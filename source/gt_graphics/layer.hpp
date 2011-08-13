@@ -12,7 +12,7 @@ namespace gt{
 	//!\brief	A frame is a 2D window you can render into
 	class cLayer: public cFigment, private tOutline<cLayer>{
 	protected:
-		cPlug<ptrFig>	mRoot;	//!< Run everything linked by this root.
+		tPlug<ptrFig>	mRoot;	//!< Run everything linked by this root.
 
 		//-------------------
 		virtual void setDim(dUnitPix pX, dUnitPix pY, dUnitPix pW, dUnitPix pH){ }	//!< Sets dimensions of frame.
@@ -42,7 +42,7 @@ namespace gt{
 
 		virtual const char* name() const { return cLayer::identify(); }	//!<
 
-		virtual void jack(ptrLead pLead);
+		virtual void jack(ptrLead pLead, cContext *pCon);
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);

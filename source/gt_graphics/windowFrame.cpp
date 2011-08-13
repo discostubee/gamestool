@@ -44,7 +44,7 @@ cWindowFrame::~cWindowFrame(){
 }
 
 void 
-cWindowFrame::jack(ptrLead pLead){
+cWindowFrame::jack(ptrLead pLead, cContext *pCon){
 	PROFILE;
 
 	try{
@@ -65,7 +65,7 @@ cWindowFrame::jack(ptrLead pLead){
 					refreshDim();
 				}break;
 			default:
-				cFigment::jack(pLead);
+				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){
