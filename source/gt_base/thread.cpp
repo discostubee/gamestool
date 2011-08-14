@@ -13,6 +13,7 @@ const cCommand* cThread::xLinkFig = tOutline<cThread>::makeCommand(
 
 void
 cThread::runThread(cThread *me, cContext* pCon){
+#ifdef GT_THREADS
 	try{
 
 		dLock syncLock(me->syncMu);
@@ -32,15 +33,21 @@ cThread::runThread(cThread *me, cContext* pCon){
 	}catch(...){
 		std::cout << "unknown error in thread" << std::endl;	//!!!
 	}
+#endif
 }
 
+#ifdef GT_THREADS
 cThread::cThread() :
 	firstRun(true), threadStop(true)
 {}
+#else
+cThread::cThread()
+{}
+#endif
 
 cThread::~cThread(){
+#ifdef GT_THREADS
 	if(!firstRun){
-
 		{
 			dLock lockReady(syncMu);
 			threadStop = true;
@@ -52,6 +59,7 @@ cThread::~cThread(){
 			myThread.join();
 		}
 	}
+#endif
 }
 
 void
@@ -59,6 +67,7 @@ cThread::run(cContext* pCon){
 	PROFILE;
 
 	start(pCon);
+#ifdef GT_THREADS
 	if(firstRun){
 		dLock lockMake(syncMu); // If we don't wait for the thread to be made, it can be possible to deadlock.
 		firstRun = false;
@@ -71,7 +80,9 @@ cThread::run(cContext* pCon){
 
 		sync.notify_all();
 	}
-
+#else
+	link.mD->run(pCon);
+#endif
 	stop(pCon);
 
 }
@@ -103,7 +114,7 @@ cThread::jack(ptrLead pLead, cContext* pCon){
 
 ////////////////////////////////////////////////////////////
 // Tests
-#ifdef GTUT
+#if defined(GTUT) && defined(GT_THREADS)
 
 namespace gt{
 

@@ -22,26 +22,41 @@
 #ifndef THREADTOOLS_HPP
 #define THREADTOOLS_HPP
 
+//!\brief	Define this in your project settings if you want to compile threadding. You'll need to include the compiled
+//!			boost library if you do.
+//#define GT_THREADS
+
 #include "ptrTools.hpp"
-#include <boost/thread/locks.hpp>
-#include <boost/thread.hpp>
+
+#ifdef GT_THREADS
+	#include <boost/thread/locks.hpp>
+	#include <boost/thread.hpp>
+#endif
 
 namespace gt{
 
+#ifdef GT_THREADS
 	typedef boost::thread::id dThreadID;
 	typedef boost::unique_lock<boost::mutex> dLock;
+#endif
 
 	template<typename T> class tMrSafety;
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	Because this is a read only functions, and because this
-	//!			is updated once before starting threads, we don't need to be mutex locked
+	//!			is updated once before starting threads, it doesn't need to be mutex locked
 	class isMultithreading{
+#ifdef GT_THREADS
 	public:
 		static bool yes() { return xThreading; }
 		static void nowThreading() { xThreading = true; }
 	private:
 		static bool xThreading;
+#else
+	public:
+		static bool yes() { return false; }
+		static void nowThreading() {}
+#endif
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -49,7 +64,7 @@ namespace gt{
 	template<typename T>
 	class tSafeLem{
 	public:
-		tSafeLem(tMrSafety<T> &mr);
+		tSafeLem(tMrSafety<T> *mr);
 		tSafeLem(tSafeLem<T> &lem);
 		~tSafeLem<T>();
 
@@ -60,9 +75,9 @@ namespace gt{
 	protected:
 		bool requested;
 		tMrSafety<T> *mParent;
-		boost::unique_lock<boost::mutex> myLock;
-
-		tSafeLem(tMrSafety<T> *mr);
+		#ifdef GT_THREADS
+			boost::unique_lock<boost::mutex> myLock;
+		#endif
 
 	friend class tMrSafety<T>;
 	};
@@ -81,15 +96,21 @@ namespace gt{
 		void drop(); 				//!< Don't manage this anymore. Doesn't cleanup. Waits to acquire lock.
 		void set(const T& data);	//!< Set containing data and deletes any old data. Requires lock.
 		tSafeLem<T> get();
+		tSafeLem<T> operator -> ();
 
 	protected:
+#ifdef GT_THREADS
 		dThreadID current;
+#endif
 
 		int inTheWild;
 		tSafeLem<T> *firstLem;
-		boost::mutex dataMutex;
-		boost::mutex wildLock;
-		boost::condition_variable sync;
+
+		#ifdef GT_THREADS
+			boost::mutex dataMutex;
+			boost::mutex wildLock;
+			boost::condition_variable sync;
+		#endif
 
 		void deadLemming(tSafeLem<T>* corpse);	//!<	If this is the last lemming for this thread, release the lock for next thread in queue.
 		void changedLem(const tSafeLem<T>* from, const tSafeLem<T>* to);	//!<
@@ -108,9 +129,9 @@ namespace gt{
 namespace gt{
 //-------------------------------------------------------------------------------------
 template<typename T>
-tSafeLem<T>::tSafeLem(tMrSafety<T> &mr) :
+tSafeLem<T>::tSafeLem(tMrSafety<T> *mr) :
 	requested(false),
-	mParent(&mr)
+	mParent(mr)
 {
 }
 
@@ -138,12 +159,14 @@ tSafeLem<T>::get () {
 	return mParent->getLockData(this);
 }
 
-template<typename T> T*
+template<typename T>
+T*
 tSafeLem<T>::operator -> () {
 	return get();
 }
 
-template<typename T> tSafeLem<T>&
+template<typename T>
+tSafeLem<T>&
 tSafeLem<T>::operator = (tSafeLem &copy){
 	if(&copy != this){
 		mParent = copy.mParent;
@@ -151,10 +174,6 @@ tSafeLem<T>::operator = (tSafeLem &copy){
 		copy.mParent = NULL;
 	}
 	return *this;
-}
-
-template<typename T>
-tSafeLem<T>::tSafeLem(tMrSafety<T> *mr) : mParent(mr) {
 }
 
 
@@ -171,20 +190,26 @@ tMrSafety<T>::tMrSafety() :
 template<typename T>
 tMrSafety<T>::~tMrSafety()
 {
+#ifdef GT_THREADS
 	sync.notify_all();
 	dataMutex.unlock();
 	delete mData;
 	wildLock.unlock();
+#else
+	delete mData;
+#endif
 }
 
-template<typename T> void
+template<typename T>
+void
 tMrSafety<T>::take(T* takeMe) {
 	tSafeLem<T> internal(this);
 	getLockData(&internal);
 	mData = takeMe;
 }
 
-template<typename T> void
+template<typename T>
+void
 tMrSafety<T>::cleanup() {
 	tSafeLem<T> internal(this);
 	getLockData(&internal);
@@ -192,14 +217,16 @@ tMrSafety<T>::cleanup() {
 	mData = NULL;
 }
 
-template<typename T> void
+template<typename T>
+void
 tMrSafety<T>::drop() {
 	tSafeLem<T> internal(this);
 	getLockData(&internal);
 	mData = NULL;
 }
 
-template<typename T> void
+template<typename T>
+void
 tMrSafety<T>::set(const T& data) {
 	tSafeLem<T> internal(this);
 	delete getLockData(&internal);
@@ -207,16 +234,25 @@ tMrSafety<T>::set(const T& data) {
 	*mData = data;
 }
 
-template<typename T> tSafeLem<T>
+template<typename T>
+tSafeLem<T>
 tMrSafety<T>::get() {
-	tSafeLem<T> temp(*this);
+	tSafeLem<T> temp(this);
 	return temp;
 }
 
+template<typename T>
+tSafeLem<T>
+tMrSafety<T>::operator -> (){
+	tSafeLem<T> temp = tMrSafety<T>::get();
+	return temp;
+}
 
-template<typename T> void
+template<typename T>
+void
 tMrSafety<T>::deadLemming(tSafeLem<T>* corpse){
 	if(isMultithreading::yes()){
+#ifdef GT_THREADS
 		wildLock.lock();
 		--inTheWild;
 		if(inTheWild==0){
@@ -224,19 +260,23 @@ tMrSafety<T>::deadLemming(tSafeLem<T>* corpse){
 			corpse->myLock.unlock();
 			sync.notify_one();
 		}
-		wildLock.unlock();
+		wildLock. unlock();
+#endif
 	}else{
 		--inTheWild;
 	}
 }
 
-template<typename T> void
+template<typename T>
+void
 tMrSafety<T>::changedLem(const tSafeLem<T>* from, const tSafeLem<T>* to){
 }
 
-template<typename T> T*
+template<typename T>
+T*
 tMrSafety<T>::getLockData(tSafeLem<T>* requester){
 	if(isMultithreading::yes()){
+#ifdef GT_THREADS
 		wildLock.lock();
 
 		if(inTheWild==0){	//- There are no other requests waiting for this data.
@@ -259,6 +299,7 @@ tMrSafety<T>::getLockData(tSafeLem<T>* requester){
 				++inTheWild;
 			wildLock.unlock();
 		}
+#endif
 	}else{
 		++inTheWild;
 	}
@@ -266,12 +307,17 @@ tMrSafety<T>::getLockData(tSafeLem<T>* requester){
 	return mData;
 }
 
-template<typename T> bool
+template<typename T>
+bool
 tMrSafety<T>::isSameThread(){
+#ifdef GT_THREADS
 	if(isMultithreading::yes())
 		return (inTheWild > 0 && current == boost::this_thread::get_id());
 
 	return (inTheWild > 0);
+#else
+	return true;
+#endif
 }
 
 }

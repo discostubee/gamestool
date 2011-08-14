@@ -43,7 +43,7 @@ namespace gt{
 			eNotMyBag = uNotMyBag,
 			eSave,
 			eLoad,
-			eSwitchEnd,
+			eSwitchEnd
 		};
 
 		//-----------------------------

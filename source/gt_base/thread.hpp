@@ -35,7 +35,9 @@ namespace gt{
 	//!			unknown amount of time to finish.
 	class cThread: public cFigment, public tOutline<cThread>{
 	public:
+#ifdef GT_THREADS
 		typedef boost::unique_lock<boost::mutex> dLock;
+#endif
 
 		static const cPlugTag*	xPT_fig;	//!< The figment to link.
 		static const cCommand*	xLinkFig;	//!< Link figment to run in the separate thread.
@@ -56,14 +58,16 @@ namespace gt{
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 	protected:
-		bool firstRun;
 		tPlug<ptrFig> link;
+
+#ifdef GT_THREADS
 		boost::thread myThread;
 		boost::mutex syncMu;
 		boost::condition_variable sync;		//!< sync the thread to the calling of the run function.
 		bool threadStop;					//!< Stops the thread loop.
+		bool firstRun;
 		boost::mutex finishMu;				//!< The destructor must wait for the thread to finish.
-
+#endif
 
 		static void runThread(cThread *me, cContext* pCon);
 	};

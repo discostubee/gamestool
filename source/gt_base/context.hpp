@@ -120,7 +120,10 @@ namespace gt{
 		bool isBlocked();
 
 	private:
-		const dThreadID mThreadID;
+		#ifdef GT_THREADS
+			const dThreadID mThreadID;
+		#endif
+
 		dProgramStack mStack;		//!< This is the entire stack of figments in the order that they were added in.
 		dFigSigCount mTimesStacked;	//!<
 		dPancakes mPlateOPancakes;	//!< Maps types to a stack, so you can tell what the most recent object of a certain type is.
@@ -148,8 +151,11 @@ namespace gt{
 
 	private:
 		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
-		boost::condition_variable conSync;
-		boost::mutex conMu;
+
+		#ifdef GT_THREADS
+			boost::condition_variable conSync;
+			boost::mutex conMu;
+		#endif
 	};
 }
 

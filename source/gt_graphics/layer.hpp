@@ -9,14 +9,8 @@
 #include "windowFrame.hpp"
 
 namespace gt{
-	//!\brief	A frame is a 2D window you can render into
+	//!\brief	A frame is a 2D portion of a window you can render into. A stack of layers can also be blended together.
 	class cLayer: public cFigment, private tOutline<cLayer>{
-	protected:
-		tPlug<ptrFig>	mRoot;	//!< Run everything linked by this root.
-
-		//-------------------
-		virtual void setDim(dUnitPix pX, dUnitPix pY, dUnitPix pW, dUnitPix pH){ }	//!< Sets dimensions of frame.
-
 	public:
 
 		//- Statics and defines
@@ -46,6 +40,12 @@ namespace gt{
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer *pBuff, dReloadMap *pReloads);
 		virtual void getLinks(std::list<ptrFig> *pOutLinks);
+
+	protected:
+		tPlug<ptrFig>	mRoot;	//!< Run everything linked by this root.
+
+		//-------------------
+		virtual void setDim(dUnitPix pX, dUnitPix pY, dUnitPix pW, dUnitPix pH){ }	//!< Sets dimensions of frame.
 	};
 }
 #endif

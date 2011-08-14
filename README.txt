@@ -16,7 +16,7 @@ another way, this stuff should work on these platforms. As well as
 the gamestool running on these OSs, there is also a list of supported
 IDEs.
 
-Windows XP/7: Eclipse, Visual C++ 9
+Windows 7: Visual Studio Express 2010.
 Ubuntu 9->11L: Eclipse
 OS X 10.6: Eclipse
 
@@ -28,12 +28,21 @@ Rational
 ----------------------------------------------------
 There's no clear goal for the gamestool, because I have to be honest with
 myself and just say that it's all done for the lolz. The only direction I
-can really offer is to say: I wanna make an engine that lets you write once, in a graphical kinda way, and run anywhere. Oh, and support and
+can really offer is to say: I wanna make an engine that lets you write once, 
+in a graphical kinda way, and run anywhere. Oh, and support and
 engine that generates procedural graphics.
 
 But we already have a write once, run anywhere language you retort! It's
 called Java, Ruby, Mr fantastics do anything language. Well, you sir don't
 understand the zen of lolz do you!
+
+Jumping in
+----------------------------------------------------
+Check out the example app project. This should be 
+easier to compile and run than the unit tests or
+any of the multi-threaded apps because you wont
+need to compile the google test library or the boost
+library.
 
 
 Directories

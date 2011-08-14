@@ -2,7 +2,9 @@
 
 using namespace gt;
 
-bool isMultithreading::xThreading = false;
+#ifdef GT_THREADS
+	bool isMultithreading::xThreading = false;
+#endif
 
 ////////////////////////////////////////////////////////////
 // Tests
@@ -52,7 +54,7 @@ namespace demo{
 }
 #endif
 
-#ifdef GTUT
+#if defined(GTUT) && defined(GT_THREADS)
 
 	GTUT_START(testMrSafety, dataHandling){
 		tMrSafety<int> safetyTest;

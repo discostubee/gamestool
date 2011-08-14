@@ -55,7 +55,6 @@ namespace gt{
 
 		virtual const dNatChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cAddon>::hash(); }
-
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 	protected:

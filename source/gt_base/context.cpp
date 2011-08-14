@@ -5,9 +5,16 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
+
+#ifdef GT_THREADS
 cContext::cContext() :
-	mThreadID(boost::this_thread::get_id())
+		mThreadID(boost::this_thread::get_id())
 {}
+#else
+cContext::cContext()
+{}
+#endif
+
 
 cContext::cContext(const cContext & copyMe) :
 	mStack(copyMe.mStack),
@@ -141,15 +148,19 @@ cFigContext::~cFigContext(){
 void
 cFigContext::start(cContext *con){
 	PROFILE;
-	boost::unique_lock<boost::mutex> lock(conMu);
+	#ifdef GT_THREADS
+		boost::unique_lock<boost::mutex> lock(conMu);
+	#endif
 	if(con->isStacked(this))
 		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
 
 	con->add(this);
 
-	if(currentCon != NULL){
-		conSync.wait(lock);
-	}
+	#ifdef GT_THREADS
+		if(currentCon != NULL){
+			conSync.wait(lock);
+		}
+	#endif
 
 	currentCon = con;
 }
@@ -157,8 +168,12 @@ cFigContext::start(cContext *con){
 void
 cFigContext::stop(cContext *con){
 	PROFILE;
-	boost::unique_lock<boost::mutex> lock(conMu);
+	#ifdef GT_THREADS
+		boost::unique_lock<boost::mutex> lock(conMu);
+	#endif
 	currentCon = NULL;
 	con->finished(this);
-	conSync.notify_one();
+	#ifdef GT_THREADS
+		conSync.notify_one();
+	#endif
 }

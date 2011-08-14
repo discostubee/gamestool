@@ -19,6 +19,8 @@ namespace showoff{
 		PROFILE;
 		DBUG_LO("showing off addons.");
 
+		cContext fake;
+
 		//- Need to draft all the objects we want to use first:
 		tOutline<cRunList>::draft();
 		tOutline<cFigment>::draft();
@@ -32,40 +34,16 @@ namespace showoff{
 			tOutline<cAddon_win>::draft();
 		#endif
 
-		cPlug<ptrFig> stuff = gWorld->makeFig(makeHash("run list"));
+		tPlug<ptrFig> stuff = gWorld.get()->makeFig(makeHash("run list"));
 
 		{
-			ptrFig testAddon = gWorld->makeFig(getHash<cAddon>());
-			ptrLead loadTestAddon = gWorld->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID);
-			cPlug<dStr> addonName;
+			ptrFig testAddon = gWorld.get()->makeFig(getHash<cAddon>());
+			ptrLead loadTestAddon = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID, &fake);
+			tPlug<dStr> addonName;
 
-			addonName.mD = "addonLogic";
-			loadTestAddon->add(&addonName, cAddon::xPT_addonName);
-			testAddon->jack(loadTestAddon);
 
-			{
-				cPlug<ptrFig> testLogic = gWorld->makeFig(makeHash("Logic input"));
-				ptrLead addInput = gWorld->makeLead(makeHash("Logic input"), makeHash("add inputs"));
-				cPlug<int> funNum;
-
-				funNum = 1;
-				addInput->add(&funNum, gWorld->getPlugTag(makeHash("Logic input"), makeHash("input lead")));
-				testLogic.mD->jack(addInput);
-
-				{
-					ptrLead addStuff = gWorld->makeLead(getHash<cRunList>(), cRunList::xAdd->mID);
-					cPlug<ptrFig> partyPooper = gWorld->makeFig(makeHash("world shutoff"));
-
-					addStuff->addToPile(&testLogic);
-					addStuff->addToPile(&partyPooper);
-
-					stuff.mD->jack(addStuff);
-				}
-				
-			}
-
-			gWorld->setRoot(stuff.mD);
-			gWorld->loop();
+			gWorld.get()->setRoot(stuff.mD);
+			gWorld.get()->loop();
 		}
 	}
 }
