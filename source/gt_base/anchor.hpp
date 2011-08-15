@@ -26,7 +26,7 @@ namespace gt{ //gamestool
 		enum{
 			eSetRoot = cFigment::eSwitchEnd,
 			eGetRoot,
-			eSwitchEnd,
+			eSwitchEnd
 		};
 
 		cAnchor();

@@ -61,18 +61,13 @@ main(
 
 		gWorld->flushLines();
 
-		{	// output the profile report to a file.
-			// ... somehow.
-			//gWorld->makeProfileReport(std::cout);
-		}
 
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
 
 	gWorld->flushLines();
-	SAFEDEL(gWorld);
-
+	
 	cTracker::makeReport(std::cout);
 
 	return 0;

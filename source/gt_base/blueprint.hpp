@@ -52,7 +52,7 @@ namespace gt{
 	template<typename T>
 	class tOutline{
 	public:
-		static void draft();
+		static void draft();	//!< Adds your figment to the world library.
 		static void removeFromWorld();
 
 		static const cCommand* makeCommand(

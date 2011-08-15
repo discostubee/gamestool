@@ -32,15 +32,15 @@ cLayer::~cLayer(){
 }
 
 void
-cLayer::jack(ptrLead pLead, cContext *pCon){
+cLayer::jack(ptrLead pLead, cContext* pCon){
 	try{
 		switch(pLead->mCom->getSwitch<cLayer>()){
 			case eSetDim:{
 				tPlug<dUnitPix> w, h, x, y;
-				try{ w = *pLead->getD(xPT_width); }catch(excep::base_error){}
-				try{ h = *pLead->getD(xPT_height); }catch(excep::base_error){}
-				try{ x = *pLead->getD(xPT_posX); }catch(excep::base_error){}
-				try{ y = *pLead->getD(xPT_posY); }catch(excep::base_error){}
+				try{ w = *pLead->getPlug(xPT_width, pCon); }catch(excep::base_error){}
+				try{ h = *pLead->getPlug(xPT_height, pCon); }catch(excep::base_error){}
+				try{ x = *pLead->getPlug(xPT_posX, pCon); }catch(excep::base_error){}
+				try{ y = *pLead->getPlug(xPT_posY, pCon); }catch(excep::base_error){}
 
 				setDim(x.mD, y.mD, w.mD, h.mD);
 			}break;

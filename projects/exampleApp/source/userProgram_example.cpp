@@ -20,19 +20,21 @@ namespace showoff{
 		using namespace gt;
 
 		try{
-			ptrLead loadAnk(new cLead(cFigment::xLoad));
-			ptrLead readFile(new cLead(cBase_fileIO::xRead));
-			ptrFig anchor = gWorld->makeFig( getHash<cAnchor>() );
+			cContext fake;
+			ptrLead loadAnk(new cLead(cFigment::xLoad, &fake));
+			ptrLead readFile(new cLead(cBase_fileIO::xRead, &fake));
+			ptrFig anchor = gWorld.get()->makeFig( getHash<cAnchor>() );
 
-			aFile->jack(readFile); //read the entire file.
+			aFile->jack(readFile, &fake); //read the entire file.
 
 			loadAnk->add(
 				readFile->getD(cBase_fileIO::xPT_buffer),
-				cFigment::xPT_buffer
+				cFigment::xPT_buffer,
+				&fake
 			);
-			anchor->jack(loadAnk);
+			anchor->jack(loadAnk, &fake);
 
-			gWorld->setRoot(anchor);
+			gWorld.get()->setRoot(anchor);
 
 		}catch(excep::base_error &e){
 			WARN(e);
@@ -42,35 +44,37 @@ namespace showoff{
 	inline void save(gt::ptrFig aFile){
 		using namespace gt;
 
+		cContext fake;
+
 		//- Lets setup a really basic program, using example instances
-		cPlug<ptrFig> anchorExam( gWorld->makeFig( getHash<cAnchor>() ) );
-		cPlug<ptrFig> runlistExam( gWorld->makeFig( getHash<cRunList>() ) );
-		cPlug<ptrFig> textExam( gWorld->makeFig( getHash<cTextFig>() ) );
-		cPlug<ptrFig> endProgram( gWorld->makeFig( getHash<cWorldShutoff>() ) );
+		cPlug<ptrFig> anchorExam( gWorld.get()->makeFig( getHash<cAnchor>() ) );
+		cPlug<ptrFig> runlistExam( gWorld.get()->makeFig( getHash<cRunList>() ) );
+		cPlug<ptrFig> textExam( gWorld.get()->makeFig( getHash<cTextFig>() ) );
+		cPlug<ptrFig> endProgram( gWorld.get()->makeFig( getHash<cWorldShutoff>() ) );
 
 		{
-			ptrLead setText(new cLead(cTextFig::xSetText));
-			cPlug<dStr> text;
+			ptrLead setText(new cLead(cTextFig::xSetText, &fake));
+			tPlug<dStr> text;
 
 			text = "I am error ;)";
-			setText->add(&text, cTextFig::xPT_text);
-			textExam.mD->jack(setText);
+			setText->add(&text, cTextFig::xPT_text, &fake);
+			textExam.mD->jack(setText, &fake);
 		}
 
 		{
 			ptrLead addToList = gWorld->makeLead(getHash<cRunList>(), makeHash("add"));
 
-			addToList->addToPile(&textExam);
-			addToList->addToPile(&endProgram);
-			runlistExam.mD->jack(addToList);
+			addToList->addToPile(&textExam, &fake);
+			addToList->addToPile(&endProgram, &fake);
+			runlistExam.mD->jack(addToList, &fake);
 		}
 
 		//- Now we make the run list the root of the anchor.
 		{
-			ptrLead setRoot = gWorld->makeLead(getHash<cAnchor>(), makeHash("set root"));
+			ptrLead setRoot = gWorld.get()->makeLead(getHash<cAnchor>(), makeHash("set root"));
 
-			setRoot->add(&runlistExam, cAnchor::xPT_root);
-			anchorExam.mD->jack(setRoot);
+			setRoot->add(&runlistExam, cAnchor::xPT_root, &fake);
+			anchorExam.mD->jack(setRoot, &fake);
 		}
 
 		//- Save the anchor
@@ -78,15 +82,17 @@ namespace showoff{
 			ptrLead saveAnchor(new cLead(cFigment::xSave));
 			ptrLead writeFile(new cLead(cBase_fileIO::xWrite));
 
-			anchorExam.mD->jack(saveAnchor);
-			writeFile->add( saveAnchor->getD(cFigment::xPT_buffer), cBase_fileIO::xPT_buffer );
-			aFile->jack(writeFile);
+			anchorExam.mD->jack(saveAnchor, &fake);
+			writeFile->add( saveAnchor->getD(cFigment::xPT_buffer), cBase_fileIO::xPT_buffer, &fake );
+			aFile->jack(writeFile, &fake);
 		}
 	}
 
 	inline void programming(){
 
 		using namespace gt;
+
+		cContext fake;
 
 		tOutline<cFigment>::draft();
 		tOutline<cWorldShutoff>::draft();
@@ -105,18 +111,17 @@ namespace showoff{
 
 		{
 			//- Next lets setup the file for loading and saving.
-			ptrFig file = gWorld->makeFig( getHash<cBase_fileIO>() );
-
-			ptrLead setPath(new cLead(cBase_fileIO::xSetPath));
-			cPlug<std::string> path( "testfile" );
+			ptrFig file = gWorld.get()->makeFig( getHash<cBase_fileIO>() );
+			ptrLead setPath(new cLead(cBase_fileIO::xSetPath, &fake));
+			tPlug<std::string> path( "testfile" );
 
 			DBUG_LO("Showing off user programming.");
 
-			setPath->addToPile(&path);
-			file->jack(setPath);
+			setPath->addToPile(&path, &fake);
+			file->jack(setPath, &fake);
 
 			showoff::save(file);
-			showoff::load(file);	
+			showoff::load(file);
 
 			gWorld->loop();
 		}

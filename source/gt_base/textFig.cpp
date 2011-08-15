@@ -27,30 +27,35 @@ cTextFig::~cTextFig(){
 
 void
 cTextFig::run(cContext* pCon){
-	CON_START(pCon);
+	start(pCon);
 	DBUG_LO("text figment = " << mText.mD);
-	CON_STOP(pCon);
+	stop(pCon);
 }
 
 void
 cTextFig::jack(ptrLead pLead, cContext* pCon){
+	PROFILE;
+
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cTextFig>() ){
 			case eSetText:
-				mText = *pLead->getD(cTextFig::xPT_text);
+				mText = pLead->getPlug(cTextFig::xPT_text, pCon);
 				break;
 
 			case eGetText:
-				pLead->add( &mText, cTextFig::xPT_text );
+				pLead->setPlug( &mText, cTextFig::xPT_text, pCon );
 				break;
 
 			default:
+				stop(pCon);
 				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 cByteBuffer&

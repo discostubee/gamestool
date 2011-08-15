@@ -20,7 +20,29 @@ cPostman::~cPostman(){
 }
 
 void cPostman::run(cContext* pCon){
+	PROFILE;
+	start(pCon);
+	cContext jackCon;
+	mTarget.mD->jack(mLead.mD, &jackCon);
+	stop(pCon);
 }
 
-void cPostman::jack(ptrLead cLead, cContext* pCon){
+void cPostman::jack(ptrLead pLead, cContext* pCon){
+	PROFILE;
+	start(pCon);
+	try{
+		switch( pLead->mCom->getSwitch<cPostman>() ){
+			case eSetup:
+
+				break;
+
+			default:
+				stop(pCon);
+				cFigment::jack(pLead, pCon);
+				break;
+		}
+	}catch(excep::base_error &e){
+		WARN(e);
+	}
+	stop(pCon);
 }

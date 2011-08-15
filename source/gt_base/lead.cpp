@@ -4,8 +4,9 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-cLead::cLead(const cCommand* pCom):
-	mCom( const_cast<cCommand*>(pCom) )
+cLead::cLead(const cCommand* pCom, dConSig aConx):
+	mCom( const_cast<cCommand*>(pCom) ),
+	mConx(aConx)
 {
 	DBUG_TRACK_START(mCom->mName.c_str());
 	DBUG_VERBOSE_LO("Lead " << mCom->mName << " made");
@@ -23,8 +24,11 @@ cLead::~cLead(){
 }
 
 void
-cLead::add(cBase_plug* pData, const cPlugTag* pTag){
+cLead::add(cBase_plug* pData, const cPlugTag* pTag, dConSig aCon){
 	PROFILE;
+
+	if(aCon != mConx)
+		return;
 
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr != mTaggedData.end()){
@@ -42,56 +46,23 @@ cLead::add(cBase_plug* pData, const cPlugTag* pTag){
 }
 
 void
-cLead::addToPile(cBase_plug* pData){
+cLead::addToPile(cBase_plug* pData, dConSig aCon){
 	PROFILE;
+
+	if(aCon != mConx)
+		throw excep::badContext(__FILE__, __LINE__);
 
 	mDataPile.push_back(pData);
 	pData->linkLead(this);
 }
 
-void
-cLead::take(cBase_plug* pData, const cPlugTag* pTag){
-	PROFILE;
-
-	if(!mCom->usesTag(pTag))
-		throw excep::base_error("This command does not use that tag", __FILE__, __LINE__);
-
-	scrTDataItr = mTaggedData.find(pTag->mID);
-	if(scrTDataItr != mTaggedData.end()){
-		scrTCleanItr = mTaggedCleanup.find(scrTDataItr);
-		if(scrTCleanItr != mTaggedCleanup.end()){
-			delete scrTDataItr->second;
-		}else{ // Something was tagged perviously, but it's not managed by the lead.
-			scrTDataItr->second->unlinkLead(this);
-			mTaggedCleanup.insert(scrTDataItr);
-		}
-		scrTDataItr->second = pData;
-	}else{
-		mTaggedData.insert(	dDataMap::value_type(pTag->mID, pData) );
-	}
-
-
-	//- Don't bother linking, because the plug is destroyed with the lead.
-}
-
-void
-cLead::takeToPile(cBase_plug* pData){
-	PROFILE;
-
-	mDataPile.push_back(pData);
-
-	//!\todo Ugly solution, need to fix.
-	scrPDataItr = mDataPile.begin();
-	for(unsigned int i=0; i < mDataPile.size(); ++i)
-		++scrPDataItr;
-
-	mPileCleanup.insert(scrPDataItr);
-
-	//- Don't bother linking, because the plug is destroyed with the lead.
-}
-
 cBase_plug*
-cLead::getD(const cPlugTag* pTag){
+cLead::getPlug(const cPlugTag* pTag, dConSig aCon){
+	PROFILE;
+
+	if(aCon != mConx)
+		throw excep::badContext(__FILE__, __LINE__);
+
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr == mTaggedData.end())
 		throw excep::notFound(pTag->mName.c_str(), __FILE__, __LINE__);
@@ -100,8 +71,45 @@ cLead::getD(const cPlugTag* pTag){
 }
 
 cLead::cPileItr
-cLead::getPiledDItr(){
+cLead::getPiledDItr(dConSig aCon){
+	if(aCon != mConx)
+		throw excep::badContext(__FILE__, __LINE__);
+
 	return cPileItr(&mDataPile);
+}
+
+
+void
+cLead::setPlug(cBase_plug *aPlug, const cPlugTag *aTag, dConSig aCon){
+	*getPlug(aTag, aCon) = *aPlug;
+}
+
+void
+cLead::clear(){
+	PROFILE;
+
+	//- Shouldn't have to set to null as map.clear should call destructor on a pointer.
+	for(scrTCleanItr = mTaggedCleanup.begin(); scrTCleanItr != mTaggedCleanup.end(); ++scrTCleanItr){
+		delete (*scrTCleanItr)->second;
+		mTaggedData.erase(*scrTCleanItr);
+	}
+
+	for(scrPCleanItr = mPileCleanup.begin(); scrPCleanItr != mPileCleanup.end(); ++scrPCleanItr){
+		delete *(*scrPCleanItr);
+		mDataPile.erase(*scrPCleanItr);
+	}
+
+	//- Unlink remaining plugs.
+	for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
+		scrTDataItr->second->unlinkLead(this);
+	}
+
+	for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
+		(*scrPDataItr)->unlinkLead(this);
+	}
+
+	mTaggedCleanup.clear();
+	mDataPile.clear();
 }
 
 void
@@ -147,40 +155,45 @@ cLead::unplug(cBase_plug* pPlug){
 
 }
 
-void
-cLead::clear(){
-	PROFILE;
-
-	//- Shouldn't have to set to null as map.clear should call destructor on a pointer.
-	for(scrTCleanItr = mTaggedCleanup.begin(); scrTCleanItr != mTaggedCleanup.end(); ++scrTCleanItr){
-		delete (*scrTCleanItr)->second;
-		mTaggedData.erase(*scrTCleanItr);
-	}
-
-	for(scrPCleanItr = mPileCleanup.begin(); scrPCleanItr != mPileCleanup.end(); ++scrPCleanItr){
-		delete *(*scrPCleanItr);
-		mDataPile.erase(*scrPCleanItr);
-	}
-
-	//- Unlink remaining plugs.
-	for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
-		scrTDataItr->second->unlinkLead(this);
-	}	
-
-	for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-		(*scrPDataItr)->unlinkLead(this);
-	}
-
-	mTaggedCleanup.clear();
-	mDataPile.clear();
-}
-
 ////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
 
-GTUT_START(testLead, plugLinking){
+using namespace gt;
+
+GTUT_START(testLead, addByTag){
+	cContext fake;
+	cCommand dontCare(0, "", 0, 0);
+	cPlugTag tag("tag");
+	cLead testMe(&dontCare, &fake);
+	tPlug<int> number;
+	tPlug<int> target;
+
+	number = 42;
+
+	testMe.add(&number, &tag, &fake);
+	target = testMe.getPlug(&tag, &fake);
+	GTUT_ASRT(target.mD==42, "Lead didn't give back the right data.");
 }GTUT_END;
 
+GTUT_START(testLead, pile){
+}GTUT_END;
+
+GTUT_START(testLead, setPlug){
+	cContext fake;
+	cCommand dontCare(0, "", 0, 0);
+	cPlugTag tag("tag");
+	cLead testMe(&dontCare, &fake);
+	tPlug<int> number;
+	tPlug<int> target;
+
+	number = 42;
+	testMe.add(&target, &tag, &fake);
+	testMe.setPlug(&number, &tag, &fake);
+	GTUT_ASRT(target.mD==42, "Lead didn't give back the right data.");
+}GTUT_END;
+
+GTUT_START(testLead, stopBadContext){
+}GTUT_END;
 
 #endif

@@ -115,9 +115,6 @@
     <ClCompile Include="..\..\..\source\gt_base\utils.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\world.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\shared\VS10e\everyGTProject.props" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -2,7 +2,7 @@
 
 using namespace gt;
 
-std::vector<cAddon::ptrStr> cAddon::xOpenAddons;
+cAddon::dTimesOpened cAddon::xOpenAddons;
 
 const char* cAddon::xDraftAllFooStr = "draftAll";
 const char* cAddon::xCloseAddonFooStr = "closeLib";
@@ -16,28 +16,16 @@ const cCommand* cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
 	NULL
 );
 
-cAddon::cAddon():
-	mAddonName(ptrStr(new dStr))
-{
-}
+cAddon::cAddon()
+{}
 
 cAddon::~cAddon(){
 	try{
-		for(
-			std::vector<ptrStr>::iterator itr = xOpenAddons.begin();
-			itr != xOpenAddons.end();
-			++itr
-		){
-			if(itr->use_count()==1){
-				std::vector<ptrStr>::iterator afterDel = itr;
-				++afterDel;
-				xOpenAddons.erase(itr);
-				if(afterDel == xOpenAddons.end()){
-					break;
-				}else{
-					itr = afterDel;
-				}
-			}
+		dTimesOpened::iterator found = xOpenAddons.find(mAddonHash);
+		if(found != xOpenAddons.end()){
+			--found->second;
+			if(found->second <= 0)
+				closeAddon();
 		}
 	}catch(...){
 	}
@@ -46,42 +34,36 @@ cAddon::~cAddon(){
 void
 cAddon::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
+
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cAddon>() ){
 
 			case eLoadAddon:{
-				if(mAddonName->empty()){
-					std::vector<ptrStr>::iterator itr;
+				if(mAddonName.mD.empty()){
+					dTimesOpened::iterator found;
 
-					mAddonName = pLead->getD(cAddon::xPT_addonName)->getMDCopy<ptrStr>();
-
-					for(
-						itr = xOpenAddons.begin();
-						itr != xOpenAddons.end();
-						++itr
-					){
-						if( mAddonName->compare(*itr->get())==0 ){
-							mAddonName = *itr;
-						}
-					}
-
-					if(itr == xOpenAddons.end()){
-						draftAddon(*mAddonName);
-						xOpenAddons.push_back(mAddonName);
+					mAddonName = pLead->getPlug(cAddon::xPT_addonName, pCon)->getCopy<dStr>();
+					mAddonHash = makeHash(mAddonName.mD.c_str());
+					found = xOpenAddons.find(mAddonHash);
+					if(found != xOpenAddons.end()){
+						++found->second;
 					}else{
-						DBUG_LO("That library is already open.");
+						++xOpenAddons[mAddonHash];
+						draftAddon(mAddonName.mD);
 					}
 				}
 			}break;
 
 			default:
+				stop(pCon);
 				return cFigment::jack(pLead, pCon);
-
 				break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 

@@ -27,7 +27,7 @@ cPolyMesh::jack(ptrLead pLead, cContext *pCon){
 				PROFILE;
 				promiseLazy();
 				mLazyMesh->mVertexes.push_back(
-					pLead->getD(cPolyMesh::xPT_Vert)->getMDCopy<sVertex>()
+					pLead->getPlug(cPolyMesh::xPT_Vert, pCon)->getCopy<sVertex>()
 				);
 			}break;
 
@@ -35,14 +35,12 @@ cPolyMesh::jack(ptrLead pLead, cContext *pCon){
 				PROFILE;
 				promiseLazy();
 				mLazyMesh->mPolys.push_back(
-					pLead->getD(cPolyMesh::xPT_Poly)->getMDCopy<sPoly>()
+					pLead->getPlug(cPolyMesh::xPT_Poly, pCon)->getCopy<sPoly>()
 				);
 			}break;
 
 			default:
-			case eNotMyBag:
-				cFigment::jack(pLead, pCon);
-			break;
+			case eNotMyBag:{ DBUG_LO("not my bag"); }break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);

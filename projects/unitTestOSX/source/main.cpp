@@ -15,21 +15,21 @@ main(int argc, char **argv){
 	int result = EXIT_SUCCESS;
 	std::cout << "Running gamestool tests for OSX. Version 0.1" << std::endl;
 
-	gWorld = new cOSXWorld();
+	gWorld.take( new cOSXWorld() );
 
 	tOutline<cRunList>::draft();
 	tOutline<cFigment>::draft();
 	tOutline<cAddon>::draft();
 	tOutline<cAddon_OSX>::draft();
 
-	gWorld->flushLines();
+	gWorld.get()->flushLines();
 #ifdef GTUT_GOOGLE
 	::testing::InitGoogleTest(&argc, argv);
 	result = RUN_ALL_TESTS();
-	gWorld->flushLines();
+	gWorld.get()->flushLines();
 #endif
 
-	delete gt::gWorld;
+	gt::gWorld.cleanup();
 
 	std::cout << "Tests over." << std::endl;
 
@@ -37,49 +37,50 @@ main(int argc, char **argv){
 }
 
 #ifdef GTUT
-
-	GTUT_START(OSX, load){
+namespace gt{
+	GTUT_START(testOSX, load){
+		cContext fake;
 		ptrFig elements;
-		cPlug<ptrFig> addonGL;
-		cPlug<ptrFig> window;
-		ptrLead setPath = gWorld->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID);
-		cPlug<dStr> path = cPlug<dStr>("X11GL");
-		ptrLead addElements = gWorld->makeLead(getHash<cRunList>(), cRunList::xAdd->mID);
+		tPlug<ptrFig> addonGL;
+		tPlug<ptrFig> window;
+		ptrLead setPath = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID, &fake);
+		tPlug<dStr> path("X11GL");
+		ptrLead addElements = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd->mID, &fake);
 
-		elements = gWorld->makeFig(getHash<cRunList>());
+		elements = gWorld.get()->makeFig(getHash<cRunList>());
 
-		addonGL.mD = gWorld->makeFig(getHash<cAddon>());
-		setPath->add(&path, cAddon::xPT_addonName);
-		addonGL.mD->jack(setPath);
+		addonGL.mD = gWorld.get()->makeFig(getHash<cAddon>());
+		setPath->add(&path, cAddon::xPT_addonName, &fake);
+		addonGL.mD->jack(setPath, &fake);
 
-		window.mD = gWorld->makeFig(getHash<cWindowFrame>());
+		window.mD = gWorld.get()->makeFig(getHash<cWindowFrame>());
 
-		addElements->addToPile(&addonGL);
-		addElements->addToPile(&window);
-		elements->jack(addElements);
+		addElements->addToPile(&addonGL, &fake);
+		addElements->addToPile(&window, &fake);
+		elements->jack(addElements, &fake);
 
-		gWorld->setRoot(elements);
+		gWorld.get()->setRoot(elements);
 	}GTUT_END;
 
-	GTUT_START(OSX, unload){
+	GTUT_START(testOSX, unload){
 		bool addonBlueprintRemoved = false;
 
-		gWorld->setRoot(gWorld->getEmptyFig());	// Will take out everything.
+		gWorld.get()->setRoot(gWorld.get()->getEmptyFig());	// Will take out everything.
 		try{
-			gWorld->getBlueprint(getHash<cAddon_OSX>());
+			gWorld.get()->getBlueprint(getHash<cAddon_OSX>());
 		}catch(excep::base_error){
 			DBUG_LO("removed the OSX addon blueprint.");
 			addonBlueprintRemoved = true;
 		}
 		try{
-			gWorld->getBlueprint(getHash<cWindowFrame>());
+			gWorld.get()->getBlueprint(getHash<cWindowFrame>());
 		}catch(excep::base_error){
 			DBUG_LO("removed the x11 window frame blueprint.");
 			addonBlueprintRemoved = true;
 		}
 		GTUT_ASRT(addonBlueprintRemoved, "didn't remove blueprints.");
 
-		TRYME(gWorld->getBlueprint(getHash<cAddon>()));	// Check the base addon was restored.
+		TRYME(gWorld.get()->getBlueprint(getHash<cAddon>()));	// Check the base addon was restored.
 	}GTUT_END;
-
+}
 #endif

@@ -233,7 +233,7 @@ cWorld::copyWorld(cWorld* pWorld){
 }
 
 ptrLead
-cWorld::makeLead(dNameHash pFigHash, dNameHash pComHash){
+cWorld::makeLead(dNameHash pFigHash, dNameHash pComHash, dConSig pConx){
 	PROFILE;
 
 	mScrBMapItr =  mBlueprints.find(pFigHash);
@@ -241,7 +241,7 @@ cWorld::makeLead(dNameHash pFigHash, dNameHash pComHash){
 	if(mScrBMapItr == mBlueprints.end())
 		throw excep::base_error("bad name hash", __FILE__, __LINE__);
 
-	return ptrLead(new cLead(mScrBMapItr->second.mBlueprint->getCom(pComHash)));
+	return ptrLead(new cLead( mScrBMapItr->second.mBlueprint->getCom(pComHash), pConx ));
 }
 
 const cPlugTag* 
@@ -277,7 +277,7 @@ ptrFig
 cWorld::getEmptyFig(){
 	if(mBicycleSetup == false){
 		if(mBlueprints.find(getHash<cEmptyFig>()) == mBlueprints.end()){
-			tOutline<cEmptyFig>::draft();			
+			tOutline<cEmptyFig>::draft();
 		}
 		mBicycleSetup = true;
 	}

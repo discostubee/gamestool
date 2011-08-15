@@ -8,7 +8,7 @@
 #include "addonX11GL.hpp"
 
 DYN_LIB_DEF(void)
-draftAll(gt::cWorld* pWorld){
+draftAll(gt::cWorld *pWorld){
 	try{
 		gt::redirectWorld(pWorld);
 
@@ -36,7 +36,6 @@ closeLib(){
 		gt::tOutline<gt::cLayer>::removeFromWorld();
 
 		DBUG_LO("closed x11 addon.");
-		gt::gWorld->flushLines();
 
 		gt::redirectWorld(NULL);
 

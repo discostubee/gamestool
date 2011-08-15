@@ -19,7 +19,7 @@ void
 cRunList::run(cContext* pCon){
 	PROFILE;
 
-	CON_START(pCon);
+	start(pCon);
 
 	for(
 		std::vector< tPlug<ptrFig> >::iterator i = mList.begin();
@@ -29,33 +29,34 @@ cRunList::run(cContext* pCon){
 		(*i).mD->run(pCon);
 	}
 
-	CON_STOP(pCon);
+	stop(pCon);
 }
 
 void
 cRunList::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cRunList>() ){
 			case eAdd: {
-				tPlug<ptrFig> temp;
 
-				for(cLead::cPileItr itr = pLead->getPiledDItr(); !itr.atEnd(); ++itr){
-					temp = *itr.getPlug();
-					mList.push_back(temp);
-					DBUG_LO("	RunList added a " << temp.mD->name() );
+				for(cLead::cPileItr itr = pLead->getPiledDItr(pCon); !itr.atEnd(); ++itr){
+					mList.push_back( itr.getPlug()->getCopy<ptrFig>() );
+					DBUG_VERBOSE_LO("	RunList added a " << temp.mD->name() );
 				};
 
 			}break;
 
 			default:{
+				stop(pCon);
 				cFigment::jack(pLead, pCon);
 			}break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 void
@@ -122,7 +123,7 @@ void
 cValves::run(cContext* pCon){
 	PROFILE;
 
-	ASRT_NOTNULL(pCon);
+	start(pCon);
 
 	if(pCon->isStacked(this))
 		return;
@@ -137,29 +138,20 @@ cValves::run(cContext* pCon){
 		if( mStates[itr].mD )
 			(*itr).mD->run(pCon);
 	}
-	pCon->finished(this);
+
+	stop(pCon);
 }
 
 void
 cValves::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cValves>() ){
-			case eAdd:{
-				tPlug<ptrFig> temp;
-
-				for(cLead::cPileItr itr = pLead->getPiledDItr(); !itr.atEnd(); ++itr ){
-					temp = *itr.getPlug();
-					mList.push_back(temp);
-					mStates[mList.end() -1] = false;
-					DBUG_LO("	Valves added a " << temp.mD->name() );
-				};
-			}break;
 
 			case eSetState:{
-				dListItr tempItr = mList.begin() + pLead->getD(xPT_valveIdx)->getMDCopy<unsigned int>();
-				mStates[ tempItr ] = pLead->getD(xPT_state)->getMDCopy<bool>();
+
 			}break;
 
 			default:{
@@ -169,6 +161,7 @@ cValves::jack(ptrLead pLead, cContext* pCon){
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 void

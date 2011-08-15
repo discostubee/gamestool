@@ -31,7 +31,7 @@ namespace gt{
 	//-------------------------------------------------------------------------------------
 	//!\brief	A figment of your imagination! More specifically, it's the base class type
 	//!			for all the funky new stuff you'll make.
-	class cFigment: public iFigment, private tOutline<cFigment>{
+	class cFigment: public cFigContext, private tOutline<cFigment>{
 	public:
 		//-----------------------------
 		// Defines
@@ -43,7 +43,7 @@ namespace gt{
 			eNotMyBag = uNotMyBag,
 			eSave,
 			eLoad,
-			eSwitchEnd,
+			eSwitchEnd
 		};
 
 		//-----------------------------
@@ -166,7 +166,7 @@ namespace gt{
 			return *this;
 		}
 
-		virtual cBase_plug& operator= (ptrFig pA){ mD = pA; return *this; }
+		cBase_plug& operator= (ptrFig pA){ mD = pA; return *this; }
 
 		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;
@@ -186,14 +186,14 @@ namespace gt{
 
 				dReloadMap::iterator itr = pReloads->find(saveSig);
 
-				if(itr == pReloads->end())
+				if(itr == pReloads->end());
 					throw excep::notFound("reloaded figment", __FILE__, __LINE__);
 
 				mD = itr->second->fig;
 			}
 		}
 
-		virtual void reset(){
+		virtual void reset(cContext* context){
 			mD = gWorld.get()->getEmptyFig();
 		}
 	};

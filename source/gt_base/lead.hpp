@@ -2,25 +2,13 @@
  * !\file	lead.hpp
  * !\brief
  *
- * cSomething	A class name.
- * sSomething	A structure name.
- * eSomething	an enum, for both the scope and the values.
- * mSomething	Variable data stored in a class or structure, otherwise known as a member variable.
- * pSomething	A parameter passed into a function call.
- * nSomething	A name space.
- * uSomething	Constant and constant static data where the u stands for unchanging. Not to replace p when constant data is passed to a function.
- * tSomething	A template class or struct.
- * xSomething	Static data as either a class member or a function variable.
- * dSomething	A type definition.
- * SOMETHING	A pre-processor macro or value.
- * gSomething	A global variable.
- *
  */
 
 #ifndef	LEAD_HPP
 #define LEAD_HPP
 
 #include "plug.hpp"
+#include "context.hpp"
 #include <boost/smart_ptr.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -28,18 +16,19 @@
 namespace gt{
 
 	//--------------------------------------------------------------------------------------------------------
-	//!\brief	Figments are designed to have a generic interface, where calls to it can be saved as part of
+	//!\brief	Figments are designed to have a generic interface, where calls to manipulate it can be saved as part of
 	//!			a users program. In order to do this, an interface call (known as jacking) uses a messenger
 	//!			class, in this case it's called a lead. A lead must have a command so the figment getting
 	//!			jacked knows what to do with it. A lead then has multiple plugs, some are labeled/tagged, while
-	//!			others are in an ordered pile. Leads do offer a 2 way connection to plugs it has, but because
-	//!			all plugs are mutex lockable, this shouldn't be a problem.
+	//!			others are in an ordered pile. In order to avoid deadlocks and handle multithreading, the lead
+	//!			is context aware. That way, only plugs from the same context can be added.
 	//!\todo	rename piled data to series.
 	class cLead{
 	public:
 		typedef std::map<unsigned int, cBase_plug*> dDataMap;
 		typedef std::list<cBase_plug*> dPiledData;
 
+		//!\brief	Used for piled data.
 		class cPileItr{
 		private:
 			const dPiledData* mPile;
@@ -70,40 +59,49 @@ namespace gt{
 			}
 		};
 
-		const cCommand*	mCom;
+		const cCommand *mCom;	//!< The command for this lead.
+		dConSig mConx;			//!< A lead can only let you play with it if you're from the same context.
 
-		cLead(const cCommand* pCom);
+		//!\param	aCom	Link to the command we want this plug to use.
+		//!\param	aCon	To avoid deadlocks and having to mutex lock stuff all the time,
+		//!					a lead can only add plugs from the same context.
+		cLead(const cCommand *aCom, dConSig aConx);
+
 		~cLead();
 
-		//!\fn		void add(cBase_plug* pData, const cPlugTag &pTag)
 		//!\brief	Add a reference to a plug and assign it a label
-		void add(cBase_plug* pData, const cPlugTag* pTag);
+		//!\param	aPlug	The plug we want.
+		//!\param	aTag	This is what the plug is known as in this lead.
+		//!\param	aCon	To avoid deadlocks and having to mutex lock stuff all the time,
+		//!					a lead can only add plugs from the same context.
+		void add(cBase_plug *aPlug, const cPlugTag *aTag, dConSig aCon);
 
-		//!\fn		void addToPile(cBase_plug* pData)
-		//!\brief	Chunk a plug into the pile of other plugs.
-		void addToPile(cBase_plug* pData);
+		//!\brief	Chuck a plug into the pile of other plugs.
+		//!\param	aPlug	The plug we want.
+		//!\param	aCon	Same as the add foo above, we need to know the context.
+		void addToPile(cBase_plug *aData, dConSig aCon);
 
-		//!\fn		void take(cBase_plug** pData, const cPlugTag &pTag)
-		//!\brief	Use this function if you want the lead to manage the plug instead of using a reference.
-		//!\param	pData	Change to auto pointer
-		//!\param	pTag	The tag to give this data.
-		void take(cBase_plug* pData, const cPlugTag* pTag);
+		//!\brief	Lets you play with another figments plug, but only if you're from the same
+		//!			context, and only if you play nice.
+		cBase_plug* getPlug(const cPlugTag *aTag, dConSig aCon);
 
-		//!\todo change to auto pointer.
-		void takeToPile(cBase_plug* pData);
+		//!\brief	Lets you go through all the piled data.
+		cPileItr getPiledDItr(dConSig aCon);
 
-		//!\todo change to reference return.
-		cBase_plug* getD(const cPlugTag* pTag);	//!< Get data by its tag.
+		//!\brief	An easy way to set the plug
+		void setPlug(cBase_plug *aPlug, const cPlugTag *aTag, dConSig aCon);
 
-		cPileItr getPiledDItr();
+		//!\brief	Clears only the linked plugs. The command link and context remains the same
+		void clear();
 
-		//!\fn		void unplug(cBase_plug* pPlug)
+	protected:
+
 		//!\brief	When a plug dies, it must let the lead know it is no longer valid.
 		//!\note	Does not tell the plug that this lead has been unplugged, because we should be
 		//!		be able to assume the plug already knows.
 		void unplug(cBase_plug* pPlug);
 
-		void clear();
+	friend class cBase_plug;
 
 	private:
 
@@ -139,6 +137,17 @@ namespace gt{
 		dPiledData::iterator scrPDataItr;
 		dTagCleanup::iterator scrTCleanItr;
 		dPileCleanup::iterator scrPCleanItr;
+	};
+}
+
+namespace excep{
+	class badContext : public base_error{
+	public:
+		badContext(const dNatChar* pFile, const unsigned int pLine) :
+			base_error(pFile, pLine)
+		{ addInfo("bad context"); }
+
+		virtual ~badContext() throw() {}
 	};
 }
 

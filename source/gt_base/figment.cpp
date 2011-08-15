@@ -34,28 +34,28 @@ void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cFigment>() ){
-			case eSave:{
-				tPlug<cByteBuffer>* saveBuff = new tPlug<cByteBuffer>;
-				save(&saveBuff->mD);
-				pLead->take(saveBuff, cFigment::xPT_buffer );
-			}break;
+			case eSave:
+				save( pLead->getPlug(cFigment::xPT_buffer, pCon)->getPtr<cByteBuffer>() );
+			break;
 
-			case eLoad:{
-				loadEat( pLead->getD(cFigment::xPT_buffer)->getMDPtr<cByteBuffer>() );
-			}break;
+			case eLoad:
+				loadEat( pLead->getPlug(cFigment::xPT_buffer, pCon)->getPtr<cByteBuffer>() );
+			break;
 
 			default:
-			case eNotMyBag:{
+			case eNotMyBag:
 				DBUG_LO("not my bag");
-			}break;
+			break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);
 	}catch(...){
 		UNKNOWN_ERROR;
 	}
+	stop(pCon);
 }
 
 
@@ -85,7 +85,10 @@ cWorldShutoff::~cWorldShutoff(){
 
 void
 cWorldShutoff::run(cContext* pCon){
+	start(pCon);
 	gWorld.get()->mKeepLooping = false;
+	stop(pCon);
+
 }
 
 ////////////////////////////////////////////////////////////
@@ -129,12 +132,13 @@ GTUT_START(figment, givesSave){
 	tOutline<cFigment>::draft();
 
 	cContext fake;
-	ptrLead save = gWorld.get()->makeLead(getHash<cFigment>(), cFigment::xSave->mID);
+	ptrLead save = gWorld.get()->makeLead(getHash<cFigment>(), cFigment::xSave->mID, &fake);
 	ptrFig testMe = gWorld.get()->makeFig(getHash<cFigment>());
 
+	tPlug<cByteBuffer> saveBuff;
+	save->add(&saveBuff, cFigment::xPT_buffer, &fake);
 	testMe->jack(save, &fake);
-	cBase_plug *saveBuff = save->getD(cFigment::xPT_buffer);
-	saveBuff->getMDPtr<cByteBuffer>();
+
 
 }GTUT_END;
 
