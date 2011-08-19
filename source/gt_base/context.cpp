@@ -63,9 +63,8 @@ cContext::finished(dFigConSig pFig){
 
 	//DBUG_LO("Context finishes hash " << pancakeHash);
 
-	if(mStack.back() != pFig){
+	if(mStack.empty() || mStack.back() != pFig)
 		throw excep::stackFault(mStack, "", __FUNCTION__, __LINE__);
-	}
 
 	figSigItr = mTimesStacked.find(pFig);
 	if(figSigItr != mTimesStacked.end()){
@@ -138,7 +137,8 @@ cContext::isBlocked(){
 
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
-	currentCon(NULL)
+	currentCon(NULL),
+	alreadyPopped(false)
 {}
 
 cFigContext::~cFigContext(){
@@ -166,13 +166,27 @@ cFigContext::start(cContext *con){
 }
 
 void
-cFigContext::stop(cContext *con){
+cFigContext::stop(cContext *con, bool nestedStop){
 	PROFILE;
 	#ifdef GT_THREADS
 		boost::unique_lock<boost::mutex> lock(conMu);
 	#endif
+	if(nestedStop && alreadyPopped)
+		throw excep::base_error( "Can't pop twice", __FUNCTION__, __LINE__);
+
+	if(alreadyPopped)
+		return;
+
+	if(con != currentCon)
+		throw excep::base_error("can't stop a context that isn't yours", __FUNCTION__, __LINE__);
+
+	if(!alreadyPopped)
+		con->finished(this);
+
+	if(nestedStop)
+		alreadyPopped = true;
+
 	currentCon = NULL;
-	con->finished(this);
 	#ifdef GT_THREADS
 		conSync.notify_one();
 	#endif

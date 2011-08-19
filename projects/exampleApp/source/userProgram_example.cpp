@@ -25,13 +25,11 @@ namespace showoff{
 			ptrLead readFile(new cLead(cBase_fileIO::xRead, &fake));
 			ptrFig anchor = gWorld.get()->makeFig( getHash<cAnchor>() );
 
+			tPlug<cByteBuffer> buff;
+			readFile->add(&buff, cBase_fileIO::xPT_buffer, &fake);
 			aFile->jack(readFile, &fake); //read the entire file.
 
-			loadAnk->add(
-				readFile->getD(cBase_fileIO::xPT_buffer),
-				cFigment::xPT_buffer,
-				&fake
-			);
+			loadAnk->add( &buff, cFigment::xPT_buffer, &fake );
 			anchor->jack(loadAnk, &fake);
 
 			gWorld.get()->setRoot(anchor);
@@ -47,10 +45,10 @@ namespace showoff{
 		cContext fake;
 
 		//- Lets setup a really basic program, using example instances
-		cPlug<ptrFig> anchorExam( gWorld.get()->makeFig( getHash<cAnchor>() ) );
-		cPlug<ptrFig> runlistExam( gWorld.get()->makeFig( getHash<cRunList>() ) );
-		cPlug<ptrFig> textExam( gWorld.get()->makeFig( getHash<cTextFig>() ) );
-		cPlug<ptrFig> endProgram( gWorld.get()->makeFig( getHash<cWorldShutoff>() ) );
+		tPlug<ptrFig> anchorExam( gWorld.get()->makeFig( getHash<cAnchor>() ) );
+		tPlug<ptrFig> runlistExam( gWorld.get()->makeFig( getHash<cRunList>() ) );
+		tPlug<ptrFig> textExam( gWorld.get()->makeFig( getHash<cTextFig>() ) );
+		tPlug<ptrFig> endProgram( gWorld.get()->makeFig( getHash<cWorldShutoff>() ) );
 
 		{
 			ptrLead setText(new cLead(cTextFig::xSetText, &fake));
@@ -62,7 +60,7 @@ namespace showoff{
 		}
 
 		{
-			ptrLead addToList = gWorld->makeLead(getHash<cRunList>(), makeHash("add"));
+			ptrLead addToList = gWorld.get()->makeLead(getHash<cRunList>(), makeHash("add"), &fake);
 
 			addToList->addToPile(&textExam, &fake);
 			addToList->addToPile(&endProgram, &fake);
@@ -71,7 +69,7 @@ namespace showoff{
 
 		//- Now we make the run list the root of the anchor.
 		{
-			ptrLead setRoot = gWorld.get()->makeLead(getHash<cAnchor>(), makeHash("set root"));
+			ptrLead setRoot = gWorld.get()->makeLead(getHash<cAnchor>(), makeHash("set root"), &fake);
 
 			setRoot->add(&runlistExam, cAnchor::xPT_root, &fake);
 			anchorExam.mD->jack(setRoot, &fake);
@@ -79,11 +77,14 @@ namespace showoff{
 
 		//- Save the anchor
 		{
-			ptrLead saveAnchor(new cLead(cFigment::xSave));
-			ptrLead writeFile(new cLead(cBase_fileIO::xWrite));
+			ptrLead saveAnchor(new cLead(cFigment::xSave, &fake));
+			ptrLead writeFile(new cLead(cBase_fileIO::xWrite, &fake));
 
+			tPlug<cByteBuffer> buff;
+			saveAnchor->add(&buff, cFigment::xPT_buffer, &fake);
 			anchorExam.mD->jack(saveAnchor, &fake);
-			writeFile->add( saveAnchor->getD(cFigment::xPT_buffer), cBase_fileIO::xPT_buffer, &fake );
+
+			writeFile->add( &buff, cBase_fileIO::xPT_buffer, &fake );
 			aFile->jack(writeFile, &fake);
 		}
 	}
@@ -109,22 +110,26 @@ namespace showoff{
 		tOutline<cWin_fileIO>::draft();
 #endif
 
+
+		DBUG_LO("Showing off user programming.");
+
 		{
-			//- Next lets setup the file for loading and saving.
 			ptrFig file = gWorld.get()->makeFig( getHash<cBase_fileIO>() );
 			ptrLead setPath(new cLead(cBase_fileIO::xSetPath, &fake));
 			tPlug<std::string> path( "testfile" );
-
-			DBUG_LO("Showing off user programming.");
-
-			setPath->addToPile(&path, &fake);
+			setPath->add(&path, cBase_fileIO::xPT_filePath, &fake);
 			file->jack(setPath, &fake);
-
 			showoff::save(file);
-			showoff::load(file);
-
-			gWorld->loop();
 		}
+		{
+			ptrFig file = gWorld.get()->makeFig( getHash<cBase_fileIO>() );
+			ptrLead setPath(new cLead(cBase_fileIO::xSetPath, &fake));
+			tPlug<std::string> path( "testfile" );
+			setPath->add(&path, cBase_fileIO::xPT_filePath, &fake);
+			file->jack(setPath, &fake);
+			showoff::load(file);
+		}
+		gWorld.get()->loop();
 	}
 }
 

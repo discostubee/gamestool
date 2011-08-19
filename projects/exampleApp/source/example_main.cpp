@@ -30,13 +30,13 @@ using namespace gt;
 
 int
 main(void){
-	gWorld = new cOSXWorld();
+	gWorld.take( new cOSXWorld() );
 
 #elif defined LINUX
 
 int
 main(void){
-	gWorld = new cLinuxWorld();
+	gWorld.take( new cLinuxWorld() );
 
 #elif defined WIN32
 
@@ -48,18 +48,14 @@ main(
     int pWinShow
 ){
 
-	gWorld = new cWinWorld(pInstance);
+	gWorld.take( new cWinWorld(pInstance) );
 #endif
 
 	try{
 		DBUG_LO("Example collection. Version 2.");
 
-		//showoff::context();
 		showoff::programming();
-		//showoff::addons();		
 		//showoff::graphics();
-
-		gWorld->flushLines();
 
 		{	// output the profile report to a file.
 			// ... somehow.
@@ -70,8 +66,8 @@ main(
 		WARN(e);
 	}
 
-	gWorld->flushLines();
-	SAFEDEL(gWorld);
+	gWorld.get()->flushLines();
+	gWorld.cleanup();
 
 	cTracker::makeReport(std::cout);
 
