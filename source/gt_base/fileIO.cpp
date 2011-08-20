@@ -76,10 +76,16 @@ cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 
 				DBUG_LO("reading");
 
-				*pLead->getPlug(xPT_buffer, pCon) = read(
-					pLead->getPlug(xPT_startSpot, pCon)->getCopy<dFilePoint>(),
-					pLead->getPlug(xPT_readSize, pCon)->getCopy<size_t>()
-				);
+				size_t readSize = 0;
+				size_t readStart = 0;
+				try{
+					readStart = pLead->getPlug(xPT_readSize, pCon)->getCopy<dFilePoint>();
+				}catch(excep::base_error &e){}
+				try{
+					readSize = pLead->getPlug(xPT_startSpot, pCon)->getCopy<dFilePoint>();
+				}catch(excep::base_error &e){}
+
+				*pLead->getPlug(xPT_buffer, pCon) = read( readSize, readStart );
 
 			}break;
 
@@ -91,10 +97,12 @@ cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 			case eInsert:{
 				PROFILE;
 
-				insert(
-					pLead->getPlug(xPT_buffer, pCon)->getPtr<cByteBuffer>(),
-					pLead->getPlug(xPT_startSpot, pCon)->getCopy<size_t>()
-				);
+				size_t startSpot = 0;
+				try{
+					startSpot = pLead->getPlug(xPT_startSpot, pCon)->getCopy<dFilePoint>();
+				}catch(excep::base_error &e){}
+
+				insert( pLead->getPlug(xPT_buffer, pCon)->getPtr<cByteBuffer>(), startSpot );
 			}break;
 
 			case eDeleteFile:
@@ -103,12 +111,12 @@ cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 
 			case eGetSize:{
 				PROFILE;
-				mFileSize.mD = getFileSize();
+				mFileSize = getFileSize();
 				pLead->setPlug(&mFileSize, xPT_fileSize, pCon);
 			}break;
 
 			default:
-				stop(pCon);
+				stop(pCon, true);
 				cFigment::jack(pLead, pCon);
 				break;
 		}

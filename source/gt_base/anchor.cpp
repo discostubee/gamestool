@@ -64,8 +64,6 @@ cAnchor::save(cByteBuffer* pAddHere){
 			PROFILE;
 			cByteBuffer	chunkSave;
 
-			DBUG_LO("	saving a " << (*i)->name());
-
 			//- Get the hash for this figment's parent, not its own. That way, when we reload this file the native replacements are used.
 			chunkHash = (*i)->getReplacement();
 			if( chunkHash == uDoesntReplace ){
@@ -80,6 +78,8 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 			chunkSize = sizeof(dNameHash) + sizeof(dFigSaveSig) + chunkSave.size(); // We are counting the hash as part of the chunk size as a kind of check against corruption.
 
+			DBUG_LO("	saving a " << (*i)->name());
+
 			chunkSig = *i;
 
 			//- Add it to the buffer. The process below must happen in exactly the same way when loading.
@@ -89,7 +89,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 			if(chunkSave.size() > 0)
 				pAddHere->add(chunkSave);
 		}
-		
+
 	}catch(...){
 		delete branches;
 		delete prev;
@@ -115,7 +115,6 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	static const size_t BLOCK_SIZE = sizeof(size_t) + sizeof(dNameHash) + sizeof(dFigSaveSig);
 
 	ASRT_NOTNULL(pBuff);
-	ASRT_NOTNULL(pReloads);
 
 	try{
 		DBUG_LO(":) anchor loading");
@@ -125,7 +124,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 		readSpot += sizeof(rootSig);
 
 		//- Now lets read in all the chunks.
-		while(readSpot + BLOCK_SIZE < pBuff->size()){
+		while(readSpot + BLOCK_SIZE <= pBuff->size()){
 			pBuff->fill(&chunkSize, readSpot); //- First, let's get the size of this entire chunk.
 			readSpot += sizeof(chunkSize);
 
@@ -137,7 +136,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 			chunkSize -= (sizeof(tempHash)+sizeof(reloadSig));
 
-			if(chunkSize>0){	//- lastly, lets make the figment and save its additional data.
+			if(chunkSize>0){	//- lastly, lets make the figment and store its additional data for later.
 				reloads[reloadSig] = new cReload(
 					ptrFig(gWorld.get()->makeFig(tempHash)),
 					pBuff->get(readSpot),
@@ -186,6 +185,7 @@ cAnchor::run(cContext* pCon) {
 
 void
 cAnchor::jack(ptrLead pLead, cContext* pCon) {
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cAnchor>() ){
 			case eSetRoot:
@@ -197,13 +197,14 @@ cAnchor::jack(ptrLead pLead, cContext* pCon) {
 				break;
 
 			default:
-				stop(pCon);
+				stop(pCon, true);
 				cFigment::jack(pLead, pCon);
 				break;
 		}
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 ////////////////////////////////////////////////////////////

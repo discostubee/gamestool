@@ -39,7 +39,7 @@ namespace gt{
 
 		virtual void run(cContext* pCon);				//!< Temp code to display text in console.
 		virtual void jack(ptrLead pLead, cContext* pCon);
-		virtual cByteBuffer& save();
+		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 	};
 }

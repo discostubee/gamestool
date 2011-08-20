@@ -96,7 +96,6 @@ namespace gt{
 		void drop(); 				//!< Don't manage this anymore. Doesn't cleanup. Waits to acquire lock.
 		void set(const T& data);	//!< Set containing data and deletes any old data. Requires lock.
 		tSafeLem<T> get();
-		tSafeLem<T> operator -> ();
 
 	protected:
 #ifdef GT_THREADS
@@ -239,13 +238,7 @@ tSafeLem<T>
 tMrSafety<T>::get() {
 	tSafeLem<T> temp(this);
 	return temp;
-}
-
-template<typename T>
-tSafeLem<T>
-tMrSafety<T>::operator -> (){
-	tSafeLem<T> temp = tMrSafety<T>::get();
-	return temp;
+	//return tSafeLem<T>(this);
 }
 
 template<typename T>

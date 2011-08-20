@@ -203,7 +203,7 @@ namespace gt{
 		// Get references
 		
 		//!\note	Slow. Intended for ease of reading.
-		const cPlugTag* gecPlugTag(dNameHash pFigHash, dNameHash pPTHash);
+		const cPlugTag* getPlugTag(dNameHash pFigHash, dNameHash pPTHash);
 
 		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
 		//!			bicycle.

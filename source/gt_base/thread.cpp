@@ -99,7 +99,7 @@ cThread::jack(ptrLead pLead, cContext* pCon){
 				break;
 
 			default:
-				stop(pCon);
+				stop(pCon, true);
 				cFigment::jack(pLead, pCon);
 				break;
 		}

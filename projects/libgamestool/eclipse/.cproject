@@ -1696,7 +1696,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}\..\..\..\source&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.preprocessor.def.1230617664" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+								<option id="gnu.cpp.compiler.option.preprocessor.def.1230617664" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="GT_THREAD"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1322482082" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -1707,7 +1707,7 @@
 								<option id="gnu.c.compiler.option.include.paths.408436147" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 								</option>
-								<option id="gnu.c.compiler.option.preprocessor.def.symbols.13207865" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.13207865" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="GT_THREAD"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.569543271" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>

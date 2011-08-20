@@ -312,13 +312,13 @@ namespace gt{
 			const size_t totalSize = length+sizeof(size_t);	// each character should only be 1 byte in size.
 			dByte* temp = new dByte[totalSize];
 
-			::memcpy( temp, &length, sizeof(size_t) );
-			for(size_t idx=0; idx < length; ++idx){
-				//!\todo make a more sophisticated conversion.
-				temp[idx+sizeof(size_t)] = mD.at(idx);
-			}
-
 			try{
+				::memcpy( temp, &length, sizeof(size_t) );
+				for(size_t idx=0; idx < length; ++idx){
+					//!\todo make a more sophisticated conversion.
+					temp[idx+sizeof(size_t)] = mD.at(idx);
+				}
+
 				pAddHere->add(temp, totalSize);
 			}catch(...){
 				delete [] temp; throw;
@@ -344,7 +344,7 @@ namespace gt{
 
 			for(size_t idx=0; idx< length; ++idx){
 				//!\todo make more sophisticated conversion.
-				mD.push_back( *pBuff->get(sizeof(size_t)+idx) );
+				mD.push_back( *pBuff->get(sizeof(size_t)+(idx * sizeof(dNatChar)) ) );
 			}
 
 			pBuff->trimHead(sizeof(size_t)+length);
