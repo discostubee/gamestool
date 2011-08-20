@@ -33,46 +33,50 @@ inline void graphics(){
 #endif
 
 	{
-		ptrFig prettyAddon = gWorld->makeFig(getHash<cAddon>());
+		ptrFig prettyAddon = gWorld.get()->makeFig(getHash<cAddon>());
+		cContext fake;
 
 		{
-			ptrLead loadAddon = gWorld->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID);
-			cPlug<dStr> addonName;
+			ptrLead loadAddon = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID, &fake);
+			tPlug<dStr> addonName;
 
-		#ifdef	LINUX
+		#if		defined	__APPLE__
 			addonName.mD = "addonX11GL";
-		#elif	WIN32
+		#elif	defined	LINUX
+			addonName.mD = "addonX11GL";
+		#elif	defined	WIN32
 			addonName.mD = "addonWinGL";
 		#endif
 
-			loadAddon->add(&addonName, cAddon::xPT_addonName);
-			prettyAddon->jack(loadAddon);
+			loadAddon->add(&addonName, cAddon::xPT_addonName, &fake);
+			prettyAddon->jack(loadAddon, &fake);
 		}
 		{
-			cPlug<ptrFig> stuff = gWorld->makeFig(makeHash("run list"));
-			cPlug<ptrFig> shiney = gWorld->makeFig(makeHash("window frame"));
+			tPlug<ptrFig> stuff = gWorld.get()->makeFig(makeHash("run list"));
+			tPlug<ptrFig> shiney = gWorld.get()->makeFig(makeHash("window frame"));
 
 			{
-				cPlug<ptrFig> partyPooper = gWorld->makeFig(makeHash("world shutoff"));
-				ptrLead setCloser = gWorld->makeLead(makeHash("window frame"), makeHash("link closer"));
+				tPlug<ptrFig> partyPooper = gWorld.get()->makeFig(makeHash("world shutoff"));
+				ptrLead setCloser = gWorld.get()->makeLead(makeHash("window frame"), makeHash("link closer"), &fake);
 
 				setCloser->add(
 					&partyPooper,
-					gWorld->getPlugTag(makeHash("window frame"), makeHash("closer"))
+					gWorld.get()->getPlugTag(makeHash("window frame"), makeHash("closer")),
+					&fake
 				);
 
-				shiney.mD->jack(setCloser);
+				shiney.mD->jack(setCloser, &fake);
 			}
 			{
-				ptrLead addStuff = gWorld->makeLead(getHash<cRunList>(), cRunList::xAdd->mID);
+				ptrLead addStuff = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd->mID, &fake);
 
-				addStuff->addToPile(&shiney);
+				addStuff->addToPile(&shiney, &fake);
 
-				stuff.mD->jack(addStuff);
+				stuff.mD->jack(addStuff, &fake);
 			}
 
-			gWorld->setRoot(stuff.mD);
-			gWorld->loop();
+			gWorld.get()->setRoot(stuff.mD);
+			gWorld.get()->loop();
 		}
 	}
 }

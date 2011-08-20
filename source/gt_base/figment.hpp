@@ -174,6 +174,8 @@ namespace gt{
 			//- Using the pointer as a unique number to identify the referenced figment.
 			dFigSaveSig saveSig = static_cast<dFigSaveSig>( mD.get() );
 			pAddHere->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
+
+			//DBUG_LO("	Saved as" << reinterpret_cast<unsigned long>(saveSig));
 		}
 
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
@@ -186,7 +188,7 @@ namespace gt{
 
 				dReloadMap::iterator itr = pReloads->find(saveSig);
 
-				if(itr == pReloads->end());
+				if(itr == pReloads->end())
 					throw excep::notFound("reloaded figment", __FILE__, __LINE__);
 
 				mD = itr->second->fig;

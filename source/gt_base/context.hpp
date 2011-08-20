@@ -4,7 +4,7 @@
  * !		the design of the context drives the strategy for multithreading figments.
  * !		The exact objectives are:
  * !		- Prevent circular runs as soon as a run command encounters itself in the context.
- * !		- Do the same as running as we do for jacking. Jacking uses a different context to running.
+ * !		- Do the same for running as we do for jacking. Jacking uses a different context to running.
  * !		- Cause a thread to wait if it tries to run or jack into a figment that is currently working with another thread.
  * !		- Unwind if a figment tries to run or jack into another that is currently waiting. In other words, prevent deadlocks.
  *
@@ -142,15 +142,20 @@ namespace gt{
 	protected:
 
 		//!\brief	Puts this figment onto the stack. If this thread is already on the stack,
-		//!			if it's already in use by another thread, stackFault_selfReference is thrown.
-		//!			If this figment is in use by another thread, it is blocked and wait for it to be free. But if
-		//!			the context is already blocked, something is thrown to avoid deadlocks.
-		//!\todo	avoid using exceptions.
+		//!			 stackFault_selfReference is thrown.
+		//!			If this figment is in use by another thread, it is blocked and waits for it to be free.
+		//!			But if the context is already blocked, something is thrown to avoid deadlocks.
 		void start(cContext *con);
-		void stop(cContext *con);
+
+		//!\brief	If the top context is the same as this argument, it is removed. If it isn't,
+		//!			a stack fault is thrown. If you stop because you're going to call a parent
+		//!			run or jack function, use the nested remove argument to avoid double removes.
+		//!			However, if you use nestedStop a second time, something is thrown.
+		void stop(cContext *con, bool nestedStop = false);
 
 	private:
 		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
+		bool alreadyPopped;		//!< Used to allow you to call stop twice without error.
 
 		#ifdef GT_THREADS
 			boost::condition_variable conSync;

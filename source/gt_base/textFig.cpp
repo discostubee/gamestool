@@ -48,7 +48,7 @@ cTextFig::jack(ptrLead pLead, cContext* pCon){
 				break;
 
 			default:
-				stop(pCon);
+				stop(pCon, true);
 				cFigment::jack(pLead, pCon);
 				break;
 		}
@@ -58,11 +58,9 @@ cTextFig::jack(ptrLead pLead, cContext* pCon){
 	stop(pCon);
 }
 
-cByteBuffer&
-cTextFig::save(){
-	cByteBuffer* rtBuff =  new cByteBuffer();
-	mText.save(rtBuff);
-	return *rtBuff;
+void
+cTextFig::save(cByteBuffer* pAddHere){
+	mText.save(pAddHere);
 }
 
 void

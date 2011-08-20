@@ -245,7 +245,7 @@ cWorld::makeLead(dNameHash pFigHash, dNameHash pComHash, dConSig pConx){
 }
 
 const cPlugTag* 
-cWorld::gecPlugTag(dNameHash pFigHash, dNameHash pPTHash){
+cWorld::getPlugTag(dNameHash pFigHash, dNameHash pPTHash){
 	PROFILE;
 
 	mScrBMapItr =  mBlueprints.find(pFigHash);
