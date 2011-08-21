@@ -80,10 +80,10 @@ cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 				size_t readStart = 0;
 				try{
 					readStart = pLead->getPlug(xPT_readSize, pCon)->getCopy<dFilePoint>();
-				}catch(excep::base_error &e){}
+				}catch(excep::base_error){}
 				try{
 					readSize = pLead->getPlug(xPT_startSpot, pCon)->getCopy<dFilePoint>();
-				}catch(excep::base_error &e){}
+				}catch(excep::base_error){}
 
 				*pLead->getPlug(xPT_buffer, pCon) = read( readSize, readStart );
 
@@ -100,7 +100,7 @@ cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
 				size_t startSpot = 0;
 				try{
 					startSpot = pLead->getPlug(xPT_startSpot, pCon)->getCopy<dFilePoint>();
-				}catch(excep::base_error &e){}
+				}catch(excep::base_error){}
 
 				insert( pLead->getPlug(xPT_buffer, pCon)->getPtr<cByteBuffer>(), startSpot );
 			}break;

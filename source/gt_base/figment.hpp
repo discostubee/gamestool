@@ -66,10 +66,10 @@ namespace gt{
 		// standard interface. These are all optional in later classes.
 
 		virtual void jack(ptrLead pLead, cContext* pCon);		//!< Jack is the interface used to get and set various members in a super generic fashion.
-		virtual void run(cContext* pCon){}						//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
+		virtual void run(cContext* pCon);						//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
 		virtual void save(cByteBuffer* pAddHere);				//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL){}				//!< Called load eat because the head of the buffer is consume by the load function.
-		virtual void getLinks(std::list<ptrFig>* pOutLinks){}	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);				//!< Called load eat because the head of the buffer is consume by the load function.
+		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
@@ -196,6 +196,7 @@ namespace gt{
 		}
 
 		virtual void reset(cContext* context){
+			DUMB_REF_ARG(context);
 			mD = gWorld.get()->getEmptyFig();
 		}
 	};

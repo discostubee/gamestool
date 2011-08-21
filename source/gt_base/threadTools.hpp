@@ -27,6 +27,7 @@
 //#define GT_THREADS
 
 #include "ptrTools.hpp"
+#include "utils.hpp"
 
 #ifdef GT_THREADS
 	#include <boost/thread/locks.hpp>
@@ -144,7 +145,7 @@ tSafeLem<T>::tSafeLem(tSafeLem<T> &lem) :
 }
 
 template<typename T>
-tSafeLem<T>::~tSafeLem<T>() {
+tSafeLem<T>::~tSafeLem(){
 	if(mParent!=NULL)
 		mParent->deadLemming(this);
 }
@@ -254,6 +255,8 @@ tMrSafety<T>::deadLemming(tSafeLem<T>* corpse){
 			sync.notify_one();
 		}
 		wildLock. unlock();
+#else
+		DUMB_REF_ARG(corpse);
 #endif
 	}else{
 		--inTheWild;
@@ -263,6 +266,7 @@ tMrSafety<T>::deadLemming(tSafeLem<T>* corpse){
 template<typename T>
 void
 tMrSafety<T>::changedLem(const tSafeLem<T>* from, const tSafeLem<T>* to){
+	DUMB_REF_ARG(from); DUMB_REF_ARG(to);
 }
 
 template<typename T>

@@ -57,6 +57,9 @@ namespace gt{
 
 		~cPlugTag()
 		{}
+
+	private:
+		cPlugTag& operator = (const cPlugTag&){ return *this; }
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -74,10 +77,10 @@ namespace gt{
 		template<typename T> T* getPtr();
 
 		virtual	cBase_plug&	operator= (const cBase_plug &pD)
-			{	DONT_USE_THIS; return *this; }
+			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
 
 		virtual	cBase_plug& operator= (const cBase_plug *pD)
-			{	DONT_USE_THIS; return *this; }
+			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
 
 		template<typename T>	cBase_plug& operator= (const T &pT);
 
@@ -254,6 +257,7 @@ namespace gt{
 	template<typename A>
 	void
 	tPlug<A>::loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
+		DUMB_REF_ARG(pReloads);
 		if(pChewToy->size() < sizeof(mD))
 			throw cByteBuffer::excepUnderFlow(__FILE__, __LINE__);
 
@@ -327,6 +331,7 @@ namespace gt{
 		}
 
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
+			DUMB_REF_ARG(pReloads);
 
 			if(pBuff->size() < sizeof(size_t))
 				throw cByteBuffer::excepUnderFlow(__FILE__, __LINE__);

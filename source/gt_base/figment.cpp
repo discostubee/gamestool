@@ -59,8 +59,24 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 }
 
 
+void 
+cFigment::run(cContext* pCon){
+	DUMB_REF_ARG(pCon);
+}
+
 void
 cFigment::save(cByteBuffer* pAddHere){
+	DUMB_REF_ARG(pAddHere);
+}
+
+void 
+cFigment::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
+	DUMB_REF_ARG(pBuff); DUMB_REF_ARG(pReloads);
+}
+
+void 
+cFigment::getLinks(std::list<ptrFig>* pOutLinks){
+	DUMB_REF_ARG(pOutLinks);
 }
 
 ////////////////////////////////////////////////////////////

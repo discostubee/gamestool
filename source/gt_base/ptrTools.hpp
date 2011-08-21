@@ -237,12 +237,12 @@ namespace gt{
 
 	template<typename T> void
 	tSpitLemming<T>::deadLemming(const tLemming<T>* corpse) {
-
+		DUMB_REF_ARG(corpse);
 	}
 
 	template<typename T> void
 	tSpitLemming<T>::lemmingChange(const tLemming<T>* lem) {
-
+		DUMB_REF_ARG(lem);
 	}
 
 	template<typename T> void

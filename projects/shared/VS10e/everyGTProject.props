@@ -9,6 +9,9 @@
     <ClCompile>
       <AdditionalIncludeDirectories>C:\workspace\gamestool_hg\source;C:\include\boost_1_46_1</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\..\includes;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>
