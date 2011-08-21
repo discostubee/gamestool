@@ -65,6 +65,9 @@ cWin_fileIO::write(const cByteBuffer* pBuff){
 
 	try{
 		DBUG_LO("writing");
+		if(mPath.mD.empty())
+			throw excep::base_error("Path can't be empty. But it is.", __FILE__, __LINE__);
+
 		stream.open(mPath.mD.c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc );
 		stream.write( pBuff->get(), pBuff->size() );
 

@@ -26,19 +26,19 @@
 
 using namespace gt;
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
 
 int
 main(void){
 	gWorld = new cOSXWorld();
 
-#elif defined LINUX
+#elif defined(LINUX)
 
 int
 main(void){
 	gWorld = new cLinuxWorld();
 
-#elif defined WIN32
+#elif defined(WIN32)
 
 int
 main(
@@ -48,7 +48,7 @@ main(
     int pWinShow
 ){
 
-	gWorld = new cWinWorld(pInstance);
+	gWorld.take(new cWinWorld(pInstance));
 #endif
 
 	try{
@@ -59,14 +59,13 @@ main(
 		//showoff::addons();		
 		//showoff::graphics();
 
-		gWorld->flushLines();
-
+		gWorld.get()->flushLines();
 
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
 
-	gWorld->flushLines();
+	gWorld.get()->flushLines();
 	
 	cTracker::makeReport(std::cout);
 

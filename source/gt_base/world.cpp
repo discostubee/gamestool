@@ -263,7 +263,7 @@ cWorld::setRoot(ptrFig pNewRoot){
 
 void
 cWorld::makeProfileReport(std::ostream &log){
-
+	xProfiler->flushThatLog(log);
 }
 
 void
