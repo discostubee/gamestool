@@ -2,7 +2,9 @@
 #ifndef GRAPHICS_EXAMPLE_HPP
 #define GRAPHICS_EXAMPLE_HPP
 
-#if defined(LINUX)
+#if defined(__APPLE__)
+	#include <gt_OSX/OSX_addon.hpp>
+#elif defined(LINUX)
 	#include <gt_linux/linux_addon.hpp>
 #elif defined(WIN32)
 	#include <gt_win7/win_addon.hpp>
@@ -26,9 +28,11 @@ inline void graphics(){
 	tOutline<cAddon>::draft();
 	tOutline<cRunList>::draft();
 
-#ifdef	LINUX
+#if defined(__APPLE__)
+	tOutline<cAddon_OSX>::draft();
+#elif defined(LINUX)
 	tOutline<cAddon_linux>::draft();
-#elif	WIN32
+#elif	defined(WIN32)
 	tOutline<cAddon_win>::draft();
 #endif
 
@@ -41,11 +45,11 @@ inline void graphics(){
 			tPlug<dStr> addonName;
 
 		#if		defined	__APPLE__
-			addonName.mD = "addonX11GL";
+			addonName.mD = "X11GL";
 		#elif	defined	LINUX
-			addonName.mD = "addonX11GL";
+			addonName.mD = "X11GL";
 		#elif	defined	WIN32
-			addonName.mD = "addonWinGL";
+			addonName.mD = "WinGL";
 		#endif
 
 			loadAddon->add(&addonName, cAddon::xPT_addonName, &fake);
@@ -78,6 +82,7 @@ inline void graphics(){
 			gWorld.get()->setRoot(stuff.mD);
 			gWorld.get()->loop();
 		}
+		gWorld.get()->setRoot(gWorld.get()->getEmptyFig());
 	}
 }
 

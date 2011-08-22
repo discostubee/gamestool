@@ -113,6 +113,7 @@ namespace gt{
 	//!			class to get the low down on what all these methods mean.
 	class iFigment{
 	public:
+		virtual ~iFigment() {}
 		virtual const dNatChar* name() const =0;
 		virtual dNameHash hash() const =0;
 
@@ -160,7 +161,7 @@ namespace gt{
 		//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
 		void warnError(excep::base_error &pE, const dNatChar* pFile, const unsigned int pLine);
 
-		//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
+		//!\todo	Make threadsafe.
 		static void makeProfileReport(std::ostream &log);
 
 		//--------------------------------------------------------
@@ -196,7 +197,7 @@ namespace gt{
 		//!\param	pCommandID
 		ptrLead makeLead(dNameHash pFigHash, dNameHash pComHash, dConSig pConx);
 
-		//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
+		//!\todo	Make threadsafe.
 		static cProfiler::cToken makeProfileToken(const dNatChar* pFile, unsigned int pLine);
 
 		//--------------------------------------------------------

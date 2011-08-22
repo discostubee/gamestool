@@ -30,7 +30,7 @@ using namespace gt;
 
 int
 main(void){
-	gWorld = new cOSXWorld();
+	gWorld.take( new cOSXWorld() );
 
 #elif defined(LINUX)
 
@@ -55,9 +55,9 @@ main(
 		DBUG_LO("Example collection. Version 2.");
 
 		//showoff::context();
-		showoff::programming();
+		//showoff::programming();
 		//showoff::addons();		
-		//showoff::graphics();
+		showoff::graphics();
 
 		gWorld.get()->flushLines();
 
@@ -65,8 +65,8 @@ main(
 		WARN(e);
 	}
 
-	gWorld.get()->flushLines();
-	
+	gWorld.cleanup();
+
 	cTracker::makeReport(std::cout);
 
 	return 0;

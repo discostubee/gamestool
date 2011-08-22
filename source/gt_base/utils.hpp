@@ -120,7 +120,8 @@ isIn(const T &pFindMe, const vector<T> &pFindIn){
 
 
 //------------------------------------------------------------------------------------------
-//!\brief Useage tracker. Helpful for tracing possibly memory leaks.
+//!\brief	Useage tracker. Helpful for tracing possibly memory leaks.
+//!\todo	Make this threadsafe.
 class cTracker{
 public:
 	static void start(const dNatChar* pName);
