@@ -137,7 +137,7 @@ namespace gt{
 	class cFigContext : public iFigment{
 	public:
 		cFigContext();
-		~cFigContext();
+		virtual ~cFigContext();
 
 	protected:
 

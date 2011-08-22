@@ -24,8 +24,10 @@ cAddon::~cAddon(){
 		dTimesOpened::iterator found = xOpenAddons.find(mAddonHash);
 		if(found != xOpenAddons.end()){
 			--found->second;
-			if(found->second <= 0)
+			if(found->second <= 0){
 				closeAddon();
+				xOpenAddons.erase(found);
+			}
 		}
 	}catch(...){
 	}
@@ -43,14 +45,19 @@ cAddon::jack(ptrLead pLead, cContext* pCon){
 				if(mAddonName.mD.empty()){
 					dTimesOpened::iterator found;
 
-					mAddonName = pLead->getPlug(cAddon::xPT_addonName, pCon)->getCopy<dStr>();
+					mAddonName = pLead->getPlug(cAddon::xPT_addonName, pCon);
+
+					if(mAddonName.mD.empty())
+						throw excep::base_error("No name given for loading addon", __FILE__, __LINE__);
+
 					mAddonHash = makeHash(mAddonName.mD.c_str());
+
 					found = xOpenAddons.find(mAddonHash);
 					if(found != xOpenAddons.end()){
 						++found->second;
 					}else{
-						++xOpenAddons[mAddonHash];
 						draftAddon(mAddonName.mD);
+						++xOpenAddons[mAddonHash];
 					}
 				}
 			}break;

@@ -95,7 +95,7 @@ cWorld::~cWorld(){
 
 	delete xProfiler;
 
-	lo(""); //- Ensure it exists.
+	lo("end of the world"); //- Ensure it exists.
 	flushLines();
 	delete xLines;
 }
@@ -310,7 +310,7 @@ gt::redirectWorld(cWorld* pWorldNew){
 		cWorld::xProfiler = pWorldNew->mProfiles;
 		gWorld.take(pWorldNew);
 	}else{
-		gWorld.cleanup();
+		gWorld.drop();
 	}
 
 }

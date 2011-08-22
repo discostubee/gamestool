@@ -130,6 +130,7 @@ namespace showoff{
 			showoff::load(file);
 		}
 		gWorld.get()->loop();
+		gWorld.get()->setRoot(gWorld.get()->getEmptyFig());
 	}
 }
 

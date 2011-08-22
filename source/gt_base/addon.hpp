@@ -63,8 +63,8 @@ namespace gt{
 
 		static dTimesOpened xOpenAddons;	//!< We want to track all open addons, so we use a hash of the name to search for it, and also keep track of how many figments require that addon.
 
-		virtual void draftAddon(const dStr &pName){}	//!< draft all the blueprints contained in an external addon.
-		virtual void closeAddon(){}
+		virtual void draftAddon(const dStr &pName){ DONT_USE_THIS; }	//!< draft all the blueprints contained in an external addon.
+		virtual void closeAddon(){ DONT_USE_THIS; }
 
 		tPlug<dStr> mAddonName;	//!< Stores the name of the addon we want.
 		dNameHash mAddonHash;
