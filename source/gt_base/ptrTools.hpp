@@ -21,6 +21,7 @@
 #ifndef PTRTOOLS_HPP
 #define PTRTOOLS_HPP
 
+#include "utils.hpp"
 #include "exceptions.hpp"
 #include <memory>
 

@@ -5,7 +5,13 @@ using namespace gt;
 void
 cAddon_OSX::draftAddon(const std::string &pName){
 	if( mLibHandle == NULL ){
-		mLibPath = "addon" + pName + ".dylib";
+		#if defined(DEBUG) && defined(GT_THREADS)
+			mLibPath = "addon" + pName + "_dt.dylib";
+		#elif defined(DEBUG)
+			mLibPath = "addon" + pName + "_d.dylib";
+		#else
+			mLibPath = "addon" + pName + ".dylib";
+		#endif
 
 		DBUG_LO("using OSX to load shared library " << pName);
 

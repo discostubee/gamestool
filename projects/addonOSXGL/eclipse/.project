@@ -5,6 +5,7 @@
 	<projects>
 		<project>libgamestool</project>
 		<project>libgraphics</project>
+		<project>libOSX</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

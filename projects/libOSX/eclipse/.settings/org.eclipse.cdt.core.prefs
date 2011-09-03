@@ -1,5 +1,10 @@
-#Sun May 01 00:08:56 BST 2011
+#Sat Sep 03 16:12:11 BST 2011
 eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.723909878.1740984416/CPATH/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.723909878.1740984416/CPATH/operation=replace
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.723909878.1740984416/CPATH/value=/Developer/SDKs/boost_1_46_0
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.723909878.1740984416/append=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.723909878.1740984416/appendContributed=true
 environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.723909878/CPATH/delimiter=\:
 environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.723909878/CPATH/operation=replace
 environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.723909878/CPATH/value=/Developer/SDKs/boost_1_46_0
