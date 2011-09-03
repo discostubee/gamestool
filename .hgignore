@@ -163,3 +163,8 @@ projects/unitTests/VS10e/unitTest.sdf
 projects/unitTests/VS10e/unitTest.suo
 projects/unitTests/VS10e/unitTest.vcxproj.filters
 projects/unitTests/VS10e/unitTest.vcxproj.user
+# stuff I added
+*.d
+*.o
+.DS_Store
+*.mk

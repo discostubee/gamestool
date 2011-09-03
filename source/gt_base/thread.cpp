@@ -38,7 +38,7 @@ cThread::runThread(cThread *me, cContext* pCon){
 
 #ifdef GT_THREADS
 cThread::cThread() :
-	firstRun(true), threadStop(true)
+	threadStop(true), firstRun(true)
 {}
 #else
 cThread::cThread()
