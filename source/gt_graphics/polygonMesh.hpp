@@ -32,6 +32,7 @@ namespace gt{
 		::s3DVec normA, normB, normC;
 
 		sPoly() : a(0), b(0), c(0) {}
+		sPoly(dIdxVert aA, dIdxVert aB, dIdxVert aC) : a(aA), b(aB), c(aC) {}
 	};
 
 	//!\brief	Used to pass a mesh in an abstract manner.
@@ -40,15 +41,16 @@ namespace gt{
 		std::vector<sPoly> mPolys;
 	};
 
+	//!\brief	This class is meant to be a frontend for a native version, that takes a generic mesh format and creates a more efficient native version.
+	//!			The generic version is then deleted to save memory.
+	//!			When run, this figment should render a polygon mesh.
 	class cPolyMesh: public cFigment, private tOutline<cPolyMesh>{
 	public:
 		//-----------------------------
-		const static cPlugTag* xPT_Vert;	// Expects the sVertex struct.
-		const static cPlugTag* xPT_Poly;	// Expects the sPoly struct.
 		const static cPlugTag* xPT_Mesh;	// Expects the sMesh struct.
-		const static cCommand* xAddVert;	//
-		const static cCommand* xAddPoly;	//
-		const static cCommand* xGetMesh;	// Returns an sMesh instance.
+		const static cCommand* xAddVert;	//!< Adds vertexes as a pile.
+		const static cCommand* xAddPoly;	//!< Adds polygons as a pile.
+		const static cCommand* xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
 
 		enum{
 			eAddVert = cFigment::eSwitchEnd + 1,
@@ -77,7 +79,7 @@ namespace gt{
 		void promiseLazy();	//!< Make sure the lazy mesh is there.
 		void cleanLazy();	//!< Just a little something to remind you you have to manage the lazy mesh.
 
-		virtual sMesh getCurrentMesh();	//!< Should return the native mesh, ignoring any lazy mesh. Or, the lazy mesh if there is no native mesh.
+		virtual sMesh getCurrentMesh();	//!< Returns a generic mesh.
 	};
 }
 
@@ -86,20 +88,48 @@ namespace gt{
 namespace gt{
 
 	//!\brief	sMesh requires a special plug in order to work.
+	//!\todo	Everything.
 	template<>
 	class tPlug<sMesh>: public cBase_plug{
 	public:
 		sMesh mD;
 
 		tPlug() : cBase_plug(typeid(sMesh)){}
+
 		tPlug(const sMesh& pMesh) : cBase_plug(typeid(sMesh)), mD(pMesh){}
+
 		virtual ~tPlug(){}
 
-		virtual cBase_plug& operator= (const cBase_plug &pD){ if(&pD != this){} return *this;}
-		virtual void operator= (const sMesh& pA){}
+		virtual cBase_plug& operator= (const cBase_plug &pD){
+			return operator=(&pD);
+		}
 
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){}
-		virtual void reset(){ mD = sMesh();}
+		virtual cBase_plug& operator= (const cBase_plug *pD){
+			if(pD != this){
+				if(mType != pD->mType)
+					PLUG_CANT_COPY_ID(pD->mType);
+
+				mD = dynamic_cast< tPlug<sMesh>* >( const_cast<cBase_plug*>(pD) )->mD;
+			}
+			return *this;
+		}
+
+		void operator= (const sMesh& pA){
+			mD = pA;
+		}
+
+		void save(cByteBuffer* pAddHere){
+			//!\todo
+		}
+
+		void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
+			//!\todo
+		}
+
+		void reset(){
+			mD = sMesh();
+		}
+
 	};
 }
 

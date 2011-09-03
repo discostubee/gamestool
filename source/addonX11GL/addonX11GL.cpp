@@ -16,6 +16,8 @@ draftAll(gt::cWorld *pWorld){
 		gt::tOutline<gt::cWindowFrame_X11GL>::draft();
 		gt::tOutline<gt::cLayer>::draft();
 		gt::tOutline<gt::cLayer_X11GL>::draft();
+		gt::tOutline<gt::cPolyMesh>::draft();
+		gt::tOutline<gt::cPolyMesh_GL>::draft();
 
 		DBUG_LO("x11 addon open.");
 

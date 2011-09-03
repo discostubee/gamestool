@@ -20,6 +20,7 @@ cLayer_X11GL::~cLayer_X11GL(){
 
 void
 cLayer_X11GL::run(cContext* pCon){
+	start(pCon);
 	try{
 		(void)pCon->getLastOfType(getHash<cWindowFrame>());
 	}catch(...){
@@ -40,7 +41,6 @@ cLayer_X11GL::run(cContext* pCon){
 	gluPerspective(45.0f, (mWidth.mD / mHeight.mD), 0.1f, 100.0f);
 	glMatrixMode(GL_MODELVIEW);
 
-	pCon->add(this);
 	mRoot.mD->run(pCon);
-	pCon->finished(this);
+	stop(pCon);
 }

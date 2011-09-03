@@ -2,24 +2,8 @@
 
 using namespace gt;
 
-void
-cWindowFrame_X11GL::setDim(dUnitPix pX, dUnitPix pY, dUnitPix pW, dUnitPix pH){
-	if(pW==0 || pH==0)
-		return;
-
-	glViewport(0, 0, static_cast<GLdouble>(pW), static_cast<GLdouble>(pH));
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(
-		45.0,	// Field of view.
-		static_cast<GLdouble>(pW / pH), // aspect ratio.
-		0.1, // z near clip.
-		100.0 // z far clip.
-	);
-}
-
 cWindowFrame_X11GL::cWindowFrame_X11GL():
-	mX(0), mY(0), mWidth(100), mHeight(100), mDepth(0)
+	mDepth(0), mInternalDimRefresh(true)
 {
 
 	int attrListDoubleBuff[] = {
@@ -105,8 +89,8 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
 		for (int i = 0; i < modeNum; i++)
 		{
 			if (
-				modes[i]->hdisplay == mWidth
-				&& modes[i]->vdisplay == mHeight
+				modes[i]->hdisplay == static_cast<unsigned int>(mWidth.mD)
+				&& modes[i]->vdisplay == static_cast<unsigned int>(mHeight.mD)
 				&& XF86VidModeValidateModeLine(mDisplay, 0, modes[i])==0/*MODE_OK*/
 			)
 				bestMode = i;
@@ -155,7 +139,9 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         mWindow = XCreateWindow(
         	mDisplay,
         	RootWindow(mDisplay, vi->screen),
-            0, 0, mWidth, mHeight, 0,
+            0, 0,
+            static_cast<unsigned int>(mWidth.mD), static_cast<unsigned int>(mHeight.mD),
+            0,
             vi->depth,
             InputOutput,
             vi->visual,
@@ -179,28 +165,14 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         );
 
         XMapRaised(mDisplay, mWindow);
-        DBUG_LO("window created ("<<mWidth<<","<<mHeight<<")");
+        DBUG_LO("window created ("<<mWidth.mD<<","<<mHeight.mD<<") gl = "<<GL_VERSION);
     }
 
     glXMakeCurrent(mDisplay, mWindow, mContext);
 
 	if(glXIsDirect(mDisplay, mContext)){ DBUG_LO("DRI enabled"); }else{ DBUG_LO("no DRI available"); }
 
-    setDim(0, 0, mWidth, mHeight);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-    glShadeModel(GL_SMOOTH);
-
-    glEnable(GL_CULL_FACE);
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glDisable(GL_DITHER);
-
-	glDepthFunc(GL_LEQUAL);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    refreshDim();
 
     if(modes) XFree(modes);
     XFlush(mDisplay);
@@ -228,6 +200,8 @@ cWindowFrame_X11GL::~cWindowFrame_X11GL(){
 void
 cWindowFrame_X11GL::run(cContext* pCon){
 
+	start(pCon);
+
 	// handle the events in the queue
 	for(int run=0; run < xEventsPerRun && XPending(mDisplay) > 0; ++run){
 		XNextEvent(mDisplay, &mEvent);
@@ -242,12 +216,12 @@ cWindowFrame_X11GL::run(cContext* pCon){
 				break;*/
 
 			case ConfigureNotify:
-				if (
-					static_cast<unsigned int>(mEvent.xconfigure.width) != mWidth ||
-					static_cast<unsigned int>(mEvent.xconfigure.height) != mHeight
-				){
-					setDim(0, 0, mEvent.xconfigure.width, mEvent.xconfigure.height);
-				}
+				mInternalDimRefresh = false;
+				mWidth = static_cast<dUnitPix>(mEvent.xconfigure.width);
+				mHeight = static_cast<dUnitPix>(mEvent.xconfigure.height);
+				refreshDim();
+				//DBUG_LO("configure notify"<<mWidth.mD<<","<<mHeight.mD);
+				mInternalDimRefresh = true;
 				break;
 
 			case ButtonPress:
@@ -273,6 +247,22 @@ cWindowFrame_X11GL::run(cContext* pCon){
 		}
 	}
 
+    glEnable(GL_CULL_FACE);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glDisable(GL_DITHER);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearDepth(1.0f);
+	glShadeModel(GL_SMOOTH);
+
+	glDepthFunc(GL_LEQUAL);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -287,6 +277,8 @@ cWindowFrame_X11GL::run(cContext* pCon){
     }
 
 	if(mDoubleBuffered) glXSwapBuffers(mDisplay, mWindow); else glFlush();
+
+	stop(pCon);
 }
 
 
@@ -304,6 +296,36 @@ cWindowFrame_X11GL::isDestroyWindowAtom(const ::Atom& pAtom){
 		return true;
 
 	return false;
+}
+
+void
+cWindowFrame_X11GL::refreshDim(){
+	if(mWidth.mD==0 || mHeight.mD==0)
+		return;
+
+	glViewport(0, 0, static_cast<GLdouble>(mWidth.mD), static_cast<GLdouble>(mHeight.mD));
+
+	//!\todo needs to be moved into a camera class.
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(
+		45.0,	// Field of view.
+		static_cast<GLdouble>(mWidth.mD / mHeight.mD), // aspect ratio.
+		0.1, // z near clip.
+		100.0 // z far clip.
+	);
+	//todo
+
+	if(mInternalDimRefresh){
+
+		XMoveResizeWindow(
+			mDisplay, mWindow,
+			static_cast<int>(mX.mD), static_cast<int>(mY.mD),
+			static_cast<unsigned int>(mWidth.mD), static_cast<unsigned int>(mHeight.mD)
+		);
+
+		//DBUG_LO("refresh "<<mWidth.mD<<","<<mHeight.mD);
+	}
 }
 
 

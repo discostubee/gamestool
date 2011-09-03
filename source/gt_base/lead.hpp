@@ -76,6 +76,9 @@ namespace gt{
 		//!					a lead can only add plugs from the same context.
 		void add(cBase_plug *aPlug, const cPlugTag *aTag, dConSig aCon);
 
+		//!\brief	Allows you to add a plug using the tag's unique ID.
+		void add(cBase_plug *aPlug, cPlugTag::dUID ID, dConSig aCon);
+
 		//!\brief	Chuck a plug into the pile of other plugs.
 		//!\param	aPlug	The plug we want.
 		//!\param	aCon	Same as the add foo above, we need to know the context.

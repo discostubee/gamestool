@@ -268,7 +268,7 @@ namespace gt{
 // Macros
 #ifdef DEBUG
 	#define PROFILE	//cProfiler::cToken profileToken = gt::gWorld.get()->makeProfileToken(__FILE__, __LINE__)
-	#define DBUG_LO(x) std::cout << x << std::endl; //{ std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 	
 #else
 	#define PROFILE

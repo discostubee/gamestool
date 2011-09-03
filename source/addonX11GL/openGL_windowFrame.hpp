@@ -20,7 +20,6 @@
  */
 #include <X11/extensions/xf86vmode.h>
 
-//- On apple, these point to the x11 library.
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
@@ -28,29 +27,6 @@
 namespace gt{
 
 class cWindowFrame_X11GL: public cWindowFrame, private tOutline<cWindowFrame_X11GL>{
-private:
-    bool isDestroyWindowAtom(const ::Atom& pAtom);
-
-protected:
-	static const unsigned short xEventsPerRun = 3;
-
-	Display               * mDisplay;
-	int                     mScreen;
-	Window                  mWindow;
-	GLXContext              mContext;
-	XSetWindowAttributes    mWinAttr;
-	Bool                    mFullscreen;
-	Bool                    mDoubleBuffered;
-	XF86VidModeModeInfo     mDesktopMode;
-	int                     mX, mY;
-	unsigned int            mWidth, mHeight;
-	unsigned int            mDepth;
-    XEvent					mEvent;
-	Atom 					mDeleteMessage;
-
-    virtual void setDim(dUnitPix pX, dUnitPix pY, dUnitPix pW, dUnitPix pH);
-
-    void testPattern();	//!< Draw a test pattern.
 
 public:
 	static const char* identify(){ return "window frame X11GL"; }
@@ -65,7 +41,28 @@ public:
 
 	virtual void run(cContext* pCon);
 
+protected:
+	static const unsigned short xEventsPerRun = 3;
 
+	Display               * mDisplay;
+	int                     mScreen;
+	Window                  mWindow;
+	GLXContext              mContext;
+	XSetWindowAttributes    mWinAttr;
+	Bool                    mFullscreen;
+	Bool                    mDoubleBuffered;
+	XF86VidModeModeInfo     mDesktopMode;
+	unsigned int            mDepth;
+    XEvent					mEvent;
+	Atom 					mDeleteMessage;
+	bool					mInternalDimRefresh;	//!< Used to prevent circular refresh.
+
+	virtual void refreshDim();
+
+    void testPattern();	//!< Draw a test pattern.
+
+private:
+    bool isDestroyWindowAtom(const ::Atom& pAtom);
 };
 
 }
