@@ -24,13 +24,18 @@ cLead::~cLead(){
 }
 
 void
-cLead::add(cBase_plug* pData, const cPlugTag* pTag, dConSig aCon){
+cLead::add(cBase_plug* aPlug, const cPlugTag* pTag, dConSig aCon){
+	add(aPlug, pTag->mID, aCon);
+}
+
+void
+cLead::add(cBase_plug *aPlug, cPlugTag::dUID ID, dConSig aCon){
 	PROFILE;
 
 	if(aCon != mConx)
 		return;
 
-	scrTDataItr = mTaggedData.find(pTag->mID);
+	scrTDataItr = mTaggedData.find(ID);
 	if(scrTDataItr != mTaggedData.end()){
 		scrTCleanItr = mTaggedCleanup.find(scrTDataItr);
 		if(scrTCleanItr != mTaggedCleanup.end()){
@@ -38,11 +43,11 @@ cLead::add(cBase_plug* pData, const cPlugTag* pTag, dConSig aCon){
 			mTaggedCleanup.erase(scrTCleanItr);
 		}
 		scrTDataItr->second->unlinkLead(this);
-		scrTDataItr->second = pData;
+		scrTDataItr->second = aPlug;
 	}else{
-		mTaggedData[pTag->mID] = pData;
+		mTaggedData[ID] = aPlug;
 	}
-	pData->linkLead(this);
+	aPlug->linkLead(this);
 }
 
 void

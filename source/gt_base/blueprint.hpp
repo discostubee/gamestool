@@ -58,7 +58,7 @@ namespace gt{
 		static const cCommand* makeCommand(
 			const dNatChar* pName,
 			unsigned int pSwitch,
-			const cPlugTag* pTags,
+			const cPlugTag* pTags = NULL,
 			...
 		);
 
@@ -299,7 +299,7 @@ namespace gt{
 		itrCom = xCommands->find(pHash);
 
 		if(itrCom == xCommands->end())
-			throw excep::notFound("can't find command", __FILE__, __LINE__);
+			throw excep::notFound("command", __FILE__, __LINE__);
 
 		return &itrCom->second;
 	}

@@ -117,7 +117,7 @@ namespace gt{
 		virtual ~tPlug();
 
 		//!\brief
-		virtual void save(cByteBuffer* pAddHere);
+		void save(cByteBuffer* pAddHere);
 
 		//!\brief	Allows you to pass this plug a buffer for it try and load from.
 		//!\param	pChewToy	Eats the buffer you pass it in order to load. This way, memory is conserved. It is up to the byte
@@ -126,10 +126,10 @@ namespace gt{
 		//!						process.
 		//!\param	pReloads	This needs to be renamed to something like 'party' or something, because the reload map reflects only the figments
 		//!\					that are visible to the reload process.
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads);
+		void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads);
 
 		//!\brief	reset back to a default. Whatever that may be.
-		virtual void reset();
+		void reset();
 
 		virtual cBase_plug& operator= (const cBase_plug &pD);
 
@@ -180,12 +180,12 @@ namespace gt{
 	template< template<typename> class plug, typename T>
 	cBase_plug& 
 	cBase_plug::operator= (plug<T> &pT){
-		
-		if(mType != pT.mType)
-			PLUG_CANT_COPY_ID(pT.mType);
+		if(this != &pT){
+			if(mType != pT.mType)
+				PLUG_CANT_COPY_ID(pT.mType);
 
-		dynamic_cast< tPlug<T>* >(this)->mD = pT.mD;
-
+			dynamic_cast< tPlug<T>* >(this)->mD = pT.mD;
+		}
 		return *this;
 	}
 
@@ -310,7 +310,7 @@ namespace gt{
 
 		void operator= (dStr pA){ mD = pA; }
 
-		virtual void save(cByteBuffer* pAddHere){
+		void save(cByteBuffer* pAddHere){
 			//!\todo	Avoid temporary buffer.
 			const size_t length = mD.size();
 			const size_t totalSize = length+sizeof(size_t);	// each character should only be 1 byte in size.
@@ -330,7 +330,7 @@ namespace gt{
 			delete [] temp;
 		}
 
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
+		void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 			DUMB_REF_ARG(pReloads);
 
 			if(pBuff->size() < sizeof(size_t))
@@ -355,7 +355,7 @@ namespace gt{
 			pBuff->trimHead(sizeof(size_t)+length);
 		}
 
-		virtual void reset(){
+		void reset(){
 			mD.clear();
 		}
 	};

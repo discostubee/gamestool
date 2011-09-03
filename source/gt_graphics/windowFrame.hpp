@@ -54,7 +54,7 @@ namespace gt{
 		tPlug<dUnitPix>	mX, mY, mHeight, mWidth;
 
 		//-------------------
-		virtual void refreshDim(){ }	//!< Sets dimensions of frame.
+		virtual void refreshDim(){}	//!< Sets dimensions of frame.
 	};
 
 }

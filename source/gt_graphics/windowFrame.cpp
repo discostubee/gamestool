@@ -2,7 +2,7 @@
 
 using namespace gt;
 
-const cPlugTag* cWindowFrame::xPT_content = tOutline<cWindowFrame>::makePlugTag("addon name");
+const cPlugTag* cWindowFrame::xPT_content = tOutline<cWindowFrame>::makePlugTag("content");
 const cPlugTag* cWindowFrame::xPT_closer = tOutline<cWindowFrame>::makePlugTag("closer");
 const cPlugTag* cWindowFrame::xPT_x = tOutline<cWindowFrame>::makePlugTag("x pos");
 const cPlugTag* cWindowFrame::xPT_y = tOutline<cWindowFrame>::makePlugTag("y pos");
@@ -36,8 +36,8 @@ const cCommand* cWindowFrame::xSetDim = tOutline<cWindowFrame>::makeCommand(
 cWindowFrame::cWindowFrame(){
 	mX = 10;
 	mY = 10;
-	mWidth = 256;
-	mHeight = 256;
+	mWidth = 100;
+	mHeight = 100;
 }
 
 cWindowFrame::~cWindowFrame(){
@@ -47,6 +47,7 @@ void
 cWindowFrame::jack(ptrLead pLead, cContext *pCon){
 	PROFILE;
 
+	start(pCon);
 	try{
 		switch( pLead->mCom->getSwitch<cWindowFrame>() ){
 			case eLinkContent:
@@ -65,6 +66,7 @@ cWindowFrame::jack(ptrLead pLead, cContext *pCon){
 					refreshDim();
 				}break;
 			default:
+				stop(pCon, true);
 				cFigment::jack(pLead, pCon);
 				break;
 		}
@@ -73,4 +75,5 @@ cWindowFrame::jack(ptrLead pLead, cContext *pCon){
 	}catch(...){
 		UNKNOWN_ERROR;
 	}
+	stop(pCon);
 }
