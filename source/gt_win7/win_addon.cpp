@@ -5,25 +5,34 @@ using namespace gt;
 void
 cAddon_win::draftAddon(const dStr &pName){
 	if(mLibHand == NULL){
-		TCHAR exeDir[512];
+		TCHAR addonPath[512];
 		dPtrDraftAll tempPtrDraftAll = NULL;
 		size_t pointless=0;
 
-		::GetCurrentDirectory(512 - pName.length()-5, exeDir);
+		CHECK_WIN_ERR;
 
-		::wcscat_s(exeDir, L"\\");
+		::GetCurrentDirectory(512 - pName.length()-5, addonPath);
+
+		::wcscat_s(addonPath, L"\\addon");
 		::mbstowcs_s(
 			&pointless, 
-			&exeDir[win::MSStrLen(exeDir)], 
+			&addonPath[win::MSStrLen(addonPath)], 
 			pName.length()+1, 
 			pName.c_str(),
 			512
 		);
-		::wcscat_s(exeDir, L".dll");		
-		
-		DBUG_LO("using windows to load dynamic link library " << pName);
 
-		mLibHand = ::LoadLibrary( exeDir );
+#if defined(DEBUG) && defined(GT_THREADS)
+		::wcscat_s(addonPath, L"_dt.dll");
+#elif defined(DEBUG)
+		::wcscat_s(addonPath, L"_d.dll");
+#else
+		::wcscat_s(addonPath, L".dll");
+#endif
+
+		DBUG_LO("using windows to load dynamic link library " << pName);
+		
+		mLibHand = ::LoadLibrary( addonPath );
 		CHECK_WIN_ERR;
 
 		tempPtrDraftAll = reinterpret_cast<dPtrDraftAll>(

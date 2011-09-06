@@ -83,11 +83,11 @@ cFigment::getLinks(std::list<ptrFig>* pOutLinks){
 using namespace gt;
 
 cEmptyFig::cEmptyFig(){
-	DBUG_LO("empty fig made @ " << reinterpret_cast<unsigned long>(this));
+	//DBUG_LO("empty fig made @ " << reinterpret_cast<unsigned long>(this));
 }
 
 cEmptyFig::~cEmptyFig(){
-	DBUG_LO("empty fig destroyed @ " << reinterpret_cast<unsigned long>(this));
+	//DBUG_LO("empty fig destroyed @ " << reinterpret_cast<unsigned long>(this));
 }
 
 ////////////////////////////////////////////////////////////

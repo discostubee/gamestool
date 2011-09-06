@@ -91,8 +91,9 @@ cWorld::cWorld():
 }
 
 cWorld::~cWorld(){
+	mRoot.redirect(NULL);
+	mVillageBicycle.redirect(NULL);
 	makeProfileToken("", 0); //- Ensure it exists.
-
 	delete xProfiler;
 
 	lo("end of the world"); //- Ensure it exists.
