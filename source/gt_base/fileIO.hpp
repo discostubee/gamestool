@@ -53,7 +53,7 @@ namespace gt{
 		virtual dNameHash hash() const{ return tOutline<cBase_fileIO>::hash(); }
 
 		virtual void jack(ptrLead pLead, cContext* pCon);
-		virtual void run(cContext* pCon){};
+		virtual void run(cContext* pCon){ DUMB_REF_ARG(pCon); };
 
 	protected:
 		tPlug<dStr> mPath; //!< This is the path to the file.

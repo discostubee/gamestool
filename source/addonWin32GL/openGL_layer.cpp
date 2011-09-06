@@ -12,7 +12,7 @@ void
 cLayer_winGL::run(cContext* pCon){
 	ASRT_NOTNULL(pCon);
 
-	pCon->add(this);
+	start(pCon);
 	mRoot.mD->run(pCon);
-	pCon->finished(this);
+	stop(pCon);
 }

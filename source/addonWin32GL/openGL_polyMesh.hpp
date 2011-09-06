@@ -3,7 +3,7 @@
 #define OPENGL_POLYMESH
 
 #include "openGL_layer.hpp"
-#include <gt_graphics/polymesh.hpp>
+#include <gt_graphics/polygonMesh.hpp>
 
 namespace gt{
 

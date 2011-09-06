@@ -33,6 +33,8 @@ cThread::runThread(cThread *me, cContext* pCon){
 	}catch(...){
 		std::cout << "unknown error in thread" << std::endl;	//!!!
 	}
+#else
+	DUMB_REF_ARG(me); DUMB_REF_ARG(pCon);
 #endif
 }
 
