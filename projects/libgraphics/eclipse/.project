@@ -97,6 +97,16 @@
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/bitmap.hpp</locationURI>
 		</link>
 		<link>
+			<name>gt_graphics/camera.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/camera.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/camera.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/camera.hpp</locationURI>
+		</link>
+		<link>
 			<name>gt_graphics/layer.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/layer.cpp</locationURI>
@@ -115,6 +125,11 @@
 			<name>gt_graphics/polygonMesh.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/polygonMesh.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_graphics/primitives.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/primitives.hpp</locationURI>
 		</link>
 		<link>
 			<name>gt_graphics/windowFrame.cpp</name>

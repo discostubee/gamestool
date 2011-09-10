@@ -6,15 +6,15 @@
 #ifndef POLYGONMESH_HPP
 #define POLYGONMESH_HPP
 
-#include <gt_base/figment.hpp>
+#include "windowFrame.hpp"
 
 namespace gt{
 	typedef unsigned int dIdxVert;
 
 	struct sVertex{
-		dUnitVD x, y, z;
+		dUnitVDis x, y, z;
 		sVertex() : x(0.0), y(0.0), z(0.0) {}
-		sVertex(dUnitVD pX, dUnitVD pY, dUnitVD pZ) : x(pX), y(pY), z(pZ) {}
+		sVertex(dUnitVDis pX, dUnitVDis pY, dUnitVDis pZ) : x(pX), y(pY), z(pZ) {}
 		~sVertex(){}
 	};
 
@@ -23,13 +23,12 @@ namespace gt{
 		sLine() : a(0), b(0) {}
 		sLine( dIdxVert pA, dIdxVert pB ) : a(pA), b(pB) {}
 		~sLine(){}
-
 	};
 
 	struct sPoly{
 		dIdxVert a, b, c;
-		::s3DVec surfNorm;
-		::s3DVec normA, normB, normC;
+		s3DVec surfNorm;
+		s3DVec normA, normB, normC;
 
 		sPoly() : a(0), b(0), c(0) {}
 		sPoly(dIdxVert aA, dIdxVert aB, dIdxVert aC) : a(aA), b(aB), c(aC) {}

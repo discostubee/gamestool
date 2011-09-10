@@ -16,6 +16,44 @@ namespace gt{
 	typedef std::map<dNameHash, cPlugTag> dPTagContainer;
 
 	//---------------------------------------------------------------------------------------------------
+	//!\brief	Selectah! Not so much about the rewind, but it is about selecting modes.
+	//!			Allows enumerated types to be understood by figments external to the class they're used in.
+	//!			In other words, you can use enums from classes which are in an addon without including
+	//!			their header. This also allows enums to be seen and labeled by things like the editor.
+	class cSelectah{
+	public:
+		typedef unsigned int dModeID;
+
+		struct sMode{
+			dStr name;
+			dModeID ID;
+		};
+
+		cSelectah();
+		~cSelectah();
+
+		dModeID makeMode(dNameHash figOwner, const dStr &aName);	//!< Adds internal refernce and ads to global store of all modes.
+		void set(dModeID);
+		dModeID current();	//!< Get the current mode of this selectah.
+		bool has(dModeID);	//!< Does this selectah use this mode?
+
+		static sMode &getModeFromAll(const dStr &aName);	//!< Get any mode from any selectah. !\note must be threadsafe.
+		static void cleanupAll();							//!< Cleans up the global collection.
+
+	private:
+		typedef std::map<dNameHash, dModeID> mapStrID;
+		typedef std::map<dModeID, sMode*> mapIDMode;
+
+		static mapStrID xSHLookup;	//!< String hash lookup.
+		static std::vector<sMode> xAllModes;
+
+		mapIDMode myModes;
+		mapIDMode::iterator currentMode;
+		mapIDMode::iterator tmpItr;
+
+	};
+
+	//---------------------------------------------------------------------------------------------------
 	//!\brief	Blueprint for a figment
 	class cBlueprint{
 	public:
