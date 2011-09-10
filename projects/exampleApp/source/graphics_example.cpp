@@ -63,7 +63,10 @@ inline void graphics(){
 		{
 			tPlug<ptrFig> stuff = gWorld.get()->makeFig(makeHash("run list"));
 			tPlug<ptrFig> shiney = gWorld.get()->makeFig(makeHash("window frame"));
+			tPlug<ptrFig> layer = gWorld.get()->makeFig(makeHash("layer"));
 			tPlug<ptrFig> mesh = gWorld.get()->makeFig(makeHash("polygon mesh"));
+			tPlug<ptrFig> drawlist = gWorld.get()->makeFig(makeHash("run list"));
+			//tPlug<ptrFig> camera = gWorld.get()->makeFig(makeHash("camera"));
 
 			{
 				tPlug<ptrFig> partyPooper = gWorld.get()->makeFig(makeHash("world shutoff"));
@@ -78,7 +81,7 @@ inline void graphics(){
 				shiney.mD->jack(setCloser, &fake);
 			}
 			{
-				tPlug<dUnitPix> width, height;
+				tPlug<dUnitPix32> width, height;
 				ptrLead setWinDim = gWorld.get()->makeLead(makeHash("window frame"), makeHash("set dimensions"), &fake);
 
 				width = 300; height = 300;
@@ -95,13 +98,15 @@ inline void graphics(){
 				);
 
 				shiney.mD->jack(setWinDim, &fake);
-
+			}
+			{
+				ptrLead addLayerToWindow = gWorld.get()->makeLead(makeHash("layer"), makeHash("link content"), &fake);
+				addLayerToWindow->add(&layer, makeHash("content"), &fake);
+				shiney.mD->jack(addLayerToWindow, &fake);
 			}
 			{
 				ptrLead addStuff = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd->mID, &fake);
-
 				addStuff->addToPile(&shiney, &fake);
-
 				stuff.mD->jack(addStuff, &fake);
 			}
 			{
@@ -123,11 +128,11 @@ inline void graphics(){
 				mesh.mD->jack(polyData, &fake);
 			}
 			{
-				ptrLead addMeshToWindow = gWorld.get()->makeLead(makeHash("window frame"), makeHash("link content"), &fake);
+				ptrLead addToList = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd->mID, &fake);
+				ptrLead addToLayer = gWorld.get()->makeLead(makeHash("layer"), makeHash("link content"), &fake);
 
-				addMeshToWindow->add(&mesh, makeHash("content"), &fake);
-
-				shiney.mD->jack(addMeshToWindow, &fake);
+				//addToList->addToPile(&camera, &fake);
+				addToList->addToPile(&mesh, &fake);
 			}
 
 			gWorld.get()->setRoot(stuff.mD);

@@ -2,26 +2,40 @@
 
 using namespace gt;
 
-const cPlugTag* cLayer::xPT_root = tOutline<cLayer>::makePlugTag("root");
-const cPlugTag* cLayer::xPT_width = tOutline<cLayer>::makePlugTag("width");
-const cPlugTag* cLayer::xPT_height = tOutline<cLayer>::makePlugTag("height");
-const cPlugTag* cLayer::xPT_posX = tOutline<cLayer>::makePlugTag("position X");
-const cPlugTag* cLayer::xPT_posY = tOutline<cLayer>::makePlugTag("position Y");
+const cPlugTag* cLayer::xPT_content = tOutline<cLayer>::makePlugTag("content");
+const cPlugTag*	cLayer::xPT_size = tOutline<cLayer>::makePlugTag("size");
+const cPlugTag*	cLayer::xPT_point = tOutline<cLayer>::makePlugTag("point");
+const cPlugTag*	cLayer::xPT_rectangle = tOutline<cLayer>::makePlugTag("rectangle");
+const cPlugTag*	cLayer::xPT_arrangement = tOutline<cLayer>::makePlugTag("arrangement");
+const cPlugTag*	cLayer::xPT_cropStyle = tOutline<cLayer>::makePlugTag("cropStyle");
 
-const cCommand* cLayer::xSetDim = tOutline<cLayer>::makeCommand(
-	"set dimensions",
-	cLayer::eSetDim,
-	xPT_width,
-	xPT_height,
-	xPT_posX,
-	xPT_posY,
+const cCommand* cLayer::xLinkContent = tOutline<cLayer>::makeCommand(
+	"link content",
+	cLayer::eLinkContent,
+	xPT_content,
 	NULL
 );
 
-const cCommand* cLayer::xSetRoot = tOutline<cLayer>::makeCommand(
-	"set root",
-	cLayer::eSetRoot,
-	xPT_root,
+const cCommand*	cLayer::xSetSize = tOutline<cLayer>::makeCommand(
+	"set size",
+	cLayer::eSetSize,
+	xPT_size,
+	NULL
+);
+
+const cCommand*	cLayer::xSetPos = tOutline<cLayer>::makeCommand(
+	"set pos",
+	cLayer::eSetPos,
+	xPT_point,
+	xPT_arrangement,
+	NULL
+);
+
+const cCommand*	cLayer::xSetCrop = tOutline<cLayer>::makeCommand(
+	"set crop",
+	cLayer::eSetCrop,
+	xPT_rectangle,
+	xPT_cropStyle,
 	NULL
 );
 
@@ -33,16 +47,12 @@ cLayer::~cLayer(){
 
 void
 cLayer::jack(ptrLead pLead, cContext* pCon){
+	start(pCon);
 	try{
 		switch(pLead->mCom->getSwitch<cLayer>()){
-			case eSetDim:{
-				tPlug<dUnitPix> w, h, x, y;
-				try{ w = *pLead->getPlug(xPT_width, pCon); }catch(excep::base_error){}
-				try{ h = *pLead->getPlug(xPT_height, pCon); }catch(excep::base_error){}
-				try{ x = *pLead->getPlug(xPT_posX, pCon); }catch(excep::base_error){}
-				try{ y = *pLead->getPlug(xPT_posY, pCon); }catch(excep::base_error){}
 
-				setDim(x.mD, y.mD, w.mD, h.mD);
+			case eLinkContent:{
+				mLink = pLead->getPlug(xPT_content, pCon);
 			}break;
 
 			default:
@@ -52,21 +62,44 @@ cLayer::jack(ptrLead pLead, cContext* pCon){
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+	stop(pCon);
 }
 
 void
 cLayer::save(cByteBuffer* pAddHere){
-	mRoot.save(pAddHere);
+	tPlug< sWH<dUnitVDis> > size;
+	tPlug< sPoint2D<dUnitVDis> > pos;
+	tPlug< shape::rectangle<dUnitPix32> > crop;
+
+	size = getSize();
+	pos = getPos();
+	crop = getCrop();
+
+	//- The order of these saves must be the same in load.
+	mLink.save(pAddHere);
+	size.save(pAddHere);
+	pos.save(pAddHere);
+	crop.save(pAddHere);
 }
 
 void
 cLayer::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
-	mRoot.loadEat(pBuff, pReloads);
+	tPlug< sWH<dUnitVDis> > size;
+	tPlug< sPoint2D<dUnitVDis> > pos;
+	tPlug< shape::rectangle<dUnitPix32> > crop;
+
+	mLink.loadEat(pBuff, pReloads);
+	size.loadEat(pBuff, pReloads);
+	pos.loadEat(pBuff, pReloads);
+	crop.loadEat(pBuff, pReloads);
+
+	setSize(size.mD);
+	setPos(pos.mD);
+	setCrop(crop.mD);
 }
 
 void
 cLayer::getLinks(std::list<ptrFig>* pOutLinks){
-	if(mRoot.mD->hash() != getHash<cEmptyFig>() ){
-		pOutLinks->push_back(mRoot.mD);
-	}
+	if(mLink.mD->hash() != getHash<cEmptyFig>() )
+		pOutLinks->push_back(mLink.mD);
 }

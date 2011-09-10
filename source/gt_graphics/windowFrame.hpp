@@ -7,17 +7,12 @@
 #define WINDOWFRAME_HPP
 
 #include <gt_base/figment.hpp>
-
-//- Base graphic data types
-namespace gt{
-	typedef int dUnitPix;	//!< Measurement of 1 pixel.
-}
+#include "primitives.hpp"
 
 namespace gt{
 	//!\class	cWindow
-	//!\brief	The window class provides a typical interface with the usual 3 buttons and some resizing.
-	//!			When you use the close button on the frame, the figment dies as well as everything that depended on it.
-	//!\note	Yet to do anything about dimension changes.
+	//!\brief	The window class provides a typical window interface we see in most OSs.
+	//!\note	Runs the linked figment when you close this window.
 	class cWindowFrame: public cFigment, private tOutline<cWindowFrame>{
 	public:
 		static const cPlugTag*	xPT_content;
@@ -49,12 +44,12 @@ namespace gt{
 		virtual void jack(ptrLead pLead, cContext *pCon);
 
 	protected:
-		tPlug<ptrFig>	mContent;
-		tPlug<ptrFig>	mClosing;
-		tPlug<dUnitPix>	mX, mY, mHeight, mWidth;
+		tPlug<ptrFig>		mContent;	//!< Things to render in this window.
+		tPlug<ptrFig>		mClosing;	//!< The object to run when this window is closed.
+		tPlug<dUnitPix32>	mX, mY, mHeight, mWidth;
 
 		//-------------------
-		virtual void refreshDim(){}	//!< Sets dimensions of frame.
+		virtual void refreshDim(){}		//!< Sets dimensions of frame.
 	};
 
 }

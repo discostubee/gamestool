@@ -217,8 +217,8 @@ cWindowFrame_X11GL::run(cContext* pCon){
 
 			case ConfigureNotify:
 				mInternalDimRefresh = false;
-				mWidth = static_cast<dUnitPix>(mEvent.xconfigure.width);
-				mHeight = static_cast<dUnitPix>(mEvent.xconfigure.height);
+				mWidth = static_cast<dUnitPix32>(mEvent.xconfigure.width);
+				mHeight = static_cast<dUnitPix32>(mEvent.xconfigure.height);
 				refreshDim();
 				//DBUG_LO("configure notify"<<mWidth.mD<<","<<mHeight.mD);
 				mInternalDimRefresh = true;

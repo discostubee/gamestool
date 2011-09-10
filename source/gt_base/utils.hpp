@@ -45,18 +45,6 @@ typedef unsigned int	dMillisec;
 dNameHash makeHash(const dNatChar* pString);
 
 //------------------------------------------------------------------------------------------
-// Dimension stuff. Should go in its own source file.
-
-typedef float dUnitVD;	//!< Virtual distance measurement.
-typedef float dUnitVA;	//!< Virtual angle measurement.
-
-//!\brief Three Dimensional vector
-struct s3DVec{
-	dUnitVD	scaler;
-	dUnitVA u, v, w;	//!< Rotation angle from parent axis.
-};
-
-//------------------------------------------------------------------------------------------
 // Handy if you don't want to expose the container, but you
 // want access to its elements.
 
