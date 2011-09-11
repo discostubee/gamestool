@@ -60,10 +60,12 @@ main(
 		showoff::graphics();
 
 		gWorld.get()->flushLines();
+		gWorld.get()->makeProfileReport(std::cout);
 
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
+
 
 	gWorld.cleanup();
 

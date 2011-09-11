@@ -19,6 +19,5 @@ cLayer_X11GL::run(cContext* pCon){
 	}
 
 	mLink.mD->run(pCon);
-
 	stop(pCon);
 }

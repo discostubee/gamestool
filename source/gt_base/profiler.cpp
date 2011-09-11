@@ -100,6 +100,8 @@ cProfiler::flushThatLog(std::ostream &log){
 			<< i->second.mAveTime << ": "
 			<< i->second.mMaxTime << std::endl;
 	}
+	mEntries.clear();
+	mEntryLookup.clear();
 }
 
 cProfiler&

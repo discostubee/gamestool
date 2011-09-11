@@ -238,14 +238,21 @@ namespace gt{
 
 		typedef std::map<dNameHash, sBlueprintHeader> dBlueprintMap;
 
+		#ifdef GT_THREADS
+			static boost::recursive_mutex *xProfileGuard;
+			static boost::recursive_mutex *xLineGuard;
+			boost::recursive_mutex *mProfileGuard;
+			boost::recursive_mutex *mLineGuard;
+		#endif
+
+		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).
+
 		dBlueprintMap mBlueprints; //!< Blueprint library is static because we only every want 1 blueprint library.
 		dBlueprintMap mBlueArchive; //!< Archives a blueprint here when it is replaced.
 		std::vector<const cCommand*> mCommands;
 		dBlueprintMap::iterator mScrBMapItr;	//!< scratch variable for iterating over blueprint library.
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
 		bool mBicycleSetup;	//!< Faster than looking for it in the library every time.
-
-		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).
 
 	};
 
@@ -267,7 +274,7 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Macros
 #ifdef DEBUG
-	#define PROFILE	//cProfiler::cToken profileToken = gt::gWorld.get()->makeProfileToken(__FILE__, __LINE__)
+	#define PROFILE	cProfiler::cToken profileToken = gt::gWorld.get()->makeProfileToken(__FILE__, __LINE__)
 	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 	
 #else

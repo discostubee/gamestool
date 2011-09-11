@@ -133,6 +133,13 @@ inline void graphics(){
 
 				//addToList->addToPile(&camera, &fake);
 				addToList->addToPile(&mesh, &fake);
+				drawlist.mD->jack(addToList, &fake);
+
+				addToLayer->add(&drawlist, makeHash("content"), &fake);
+				layer.mD->jack(addToLayer, &fake);
+			}
+			{
+
 			}
 
 			gWorld.get()->setRoot(stuff.mD);
