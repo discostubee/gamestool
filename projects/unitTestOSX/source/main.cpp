@@ -29,9 +29,8 @@ main(int argc, char **argv){
 	gWorld.get()->flushLines();
 #endif
 
+	gt::gWorld.get()->makeProfileReport(std::cout);
 	gt::gWorld.cleanup();
-
-	std::cout << "Tests over." << std::endl;
 
 	return result;
 }

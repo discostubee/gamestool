@@ -1,6 +1,6 @@
 /*
  * !\file	figment.hpp
- * !\brief
+ * !\brief	Contains both the base implementation of the figment, and the two other basic figment types: empty figment and the world ender.
  *
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -100,6 +100,7 @@ namespace gt{
 	//!\brief	Use this object to cause the program to no longer loop, and so exit. However,
 	//!			this is not an instant shutdown because the program must still finish the loop
 	//!			it is on. Simply run it to shutoff the loop.
+	//!\note	Should be called Unicron.
 	class cWorldShutoff: public cFigment, private tOutline<cWorldShutoff>{
 	public:
 		static const dNatChar* identify(){ return "world shutoff"; }

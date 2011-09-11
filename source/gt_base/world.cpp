@@ -13,6 +13,11 @@ tMrSafety<cWorld> gt::gWorld;
 cWorld::dLines* cWorld::xLines;
 cProfiler* cWorld::xProfiler;
 
+#ifdef GT_THREADS
+	boost::recursive_mutex *cWorld::xProfileGuard;
+	boost::recursive_mutex *cWorld::xLineGuard;
+#endif
+
 bool cWorld::thereCanBeOnlyOne = false;
 
 ////////////////////////////////////////////////////////////
@@ -51,13 +56,17 @@ using namespace gt;
 
 void
 cWorld::lo(const dStr& pLine){
-	PROFILE;
-
 	static bool linesSetup = false;
 	if(!linesSetup){
 		linesSetup = true;
 		xLines = new dLines();
+		#ifdef GT_THREADS
+			xLineGuard = new boost::recursive_mutex();
+		#endif
 	}
+#ifdef GT_THREADS
+	boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+#endif
 	xLines->push_back(pLine);
 }
 
@@ -67,7 +76,13 @@ cWorld::makeProfileToken(const dNatChar* pFile, unsigned int pLine){
 	if(!profileSetup){
 		profileSetup = true;
 		xProfiler = new cProfiler();
+		#ifdef GT_THREADS
+			xProfileGuard = new boost::recursive_mutex();
+		#endif
 	}
+#ifdef GT_THREADS
+	boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+#endif
 	return xProfiler->makeToken(pFile, pLine);
 }
 
@@ -83,22 +98,32 @@ cWorld::cWorld():
 	mVillageBicycle = ptrFig(new cEmptyFig());
 	mRoot = ptrFig(new cWorldShutoff());
 
-	makeProfileToken("", 0); //- Ensure it exists.
+	(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
 	mProfiles = xProfiler;
 
 	lo("World created."); //- Ensure it exists.
 	mLines = xLines;
+
+	#ifdef GT_THREADS
+		//- Used so external modules can use the location
+		mProfileGuard = xProfileGuard;
+		mLineGuard = xLineGuard;
+	#endif
 }
 
 cWorld::~cWorld(){
-	mRoot.redirect(NULL);
-	mVillageBicycle.redirect(NULL);
-	makeProfileToken("", 0); //- Ensure it exists.
+	{
+		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
+	}
 	delete xProfiler;
 
+	//- Be super careful that we don't try and profile anything anymore.
 	lo("end of the world"); //- Ensure it exists.
 	flushLines();
 	delete xLines;
+
+	mRoot.redirect(NULL);
+	mVillageBicycle.redirect(NULL);
 }
 
 void
@@ -231,6 +256,13 @@ cWorld::copyWorld(cWorld* pWorld){
 		mLines->splice(mLines->end(), *pWorld->mLines);
 
 	*mProfiles += *pWorld->mProfiles;
+
+	#ifdef GT_THREADS
+		mProfileGuard = pWorld->mProfileGuard;
+		mLineGuard = pWorld->mLineGuard;
+		xProfileGuard = pWorld->mProfileGuard;
+		xLineGuard = pWorld->mLineGuard;
+	#endif
 }
 
 ptrLead

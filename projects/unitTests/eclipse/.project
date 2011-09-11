@@ -252,6 +252,16 @@
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/runList.hpp</locationURI>
 		</link>
 		<link>
+			<name>selectah.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/selectah.cpp</locationURI>
+		</link>
+		<link>
+			<name>selectah.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/selectah.hpp</locationURI>
+		</link>
+		<link>
 			<name>textFig.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/textFig.cpp</locationURI>
