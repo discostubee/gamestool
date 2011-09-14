@@ -57,6 +57,7 @@
 #include <deque>
 
 ///////////////////////////////////////////////////////////////////////////////////
+// Forward decs
 namespace gt{
 	class cFigContext;
 }
@@ -66,8 +67,7 @@ namespace gt{
 namespace gt{
 	typedef cFigContext* dFigConSig;						//!< A figments context signature.
 	typedef std::deque<dFigConSig> dProgramStack;			//!< This is the entire stack of figments. The pancake map below doesn't copy this stack (in case you're wondering).
-	typedef std::map<dFigConSig, int> dFigSigCount;			//!<
-	typedef std::map<dNameHash, dProgramStack> dPancakes;	//!< There are many different kinds of pancakes, and each plate can have any number of that kind on it.
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -80,10 +80,8 @@ namespace excep{
 			const std::string &pMoreInfo,
 			const char* pFile,
 			unsigned int pLine
-		): base_error(pFile, pLine){
-			addInfo( dStr("stack fault: ") + pMoreInfo );
-		}
-		virtual ~stackFault() throw() {}
+		);
+		virtual ~stackFault() throw();
 	};
 
 	class stackFault_selfReference: public stackFault{
@@ -112,24 +110,32 @@ namespace gt{
 		cContext(const cContext & copyMe);
 		~cContext();
 
-		void add(dFigConSig pFig);				//!< Adds a figment reference to the stack.
-		void finished(dFigConSig pFig);			//!< Removes a figment reference from the stack. You can try to remove the same figment a few times without problem.
-		bool isStacked(dFigConSig pFig);		//!< Determines if the figment is stacked.
-		refFig getLastOfType(dNameHash pType);
-		dProgramStack makeStackDump();			//!< Spits out a copy of the program stack.
+		void add(dFigConSig pFig, dNameHash pClassID);				//!< Adds a figment reference to the stack. Using the name hash to determine if we are calling a parents run/jack function or not.
+		void finished(dFigConSig pFig);								//!< Removes a figment reference from the stack. You can try to remove the same figment a few times without problem.
+		bool isStacked(dFigConSig pFig, dNameHash pClassID = 0);	//!< Determines if the figment is stacked. It is optional to check the ID type as well.
+		dProgramStack makeStackDump();								//!< Spits out a copy of the program stack.
 		bool isBlocked();
+		void printStack();
 
 	private:
+		struct sInfo{
+			unsigned int timesStacked;
+			dNameHash realID;	//!< Lets you determine what sort of class is on the stack.
+
+			sInfo(unsigned int pTime, dNameHash pID) : timesStacked(pTime), realID(pID) {}
+			sInfo() : timesStacked(0), realID(0) {}
+		};
+
+		typedef std::map<dFigConSig, sInfo> dMapInfo;		//!<
+
 		#ifdef GT_THREADS
 			const dThreadID mThreadID;
 		#endif
 
-		dProgramStack mStack;		//!< This is the entire stack of figments in the order that they were added in.
-		dFigSigCount mTimesStacked;	//!<
-		dPancakes mPlateOPancakes;	//!< Maps types to a stack, so you can tell what the most recent object of a certain type is.
+		dProgramStack mStack;	//!< This is the entire stack of figments in the order that they were added in.
+		dMapInfo mSigInfo;	//!< Stores more info about different items on the stack.
 
-		dFigSigCount::iterator figSigItr;
-		dPancakes::iterator cakeItr;
+		dMapInfo::iterator itrInfo;
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -141,21 +147,14 @@ namespace gt{
 
 	protected:
 
-		//!\brief	Puts this figment onto the stack. If this thread is already on the stack,
-		//!			 stackFault_selfReference is thrown.
-		//!			If this figment is in use by another thread, it is blocked and waits for it to be free.
-		//!			But if the context is already blocked, something is thrown to avoid deadlocks.
+		//!\brief	Puts this figment onto the stack.
 		void start(cContext *con);
 
-		//!\brief	If the top context is the same as this argument, it is removed. If it isn't,
-		//!			a stack fault is thrown. If you stop because you're going to call a parent
-		//!			run or jack function, use the nested remove argument to avoid double removes.
-		//!			However, if you use nestedStop a second time, something is thrown.
-		void stop(cContext *con, bool nestedStop = false);
+		//!\brief
+		void stop(cContext *con);
 
 	private:
 		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
-		bool alreadyPopped;		//!< Used to allow you to call stop twice without error.
 
 		#ifdef GT_THREADS
 			boost::condition_variable conSync;

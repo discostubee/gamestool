@@ -199,6 +199,7 @@ cWindowFrame_X11GL::~cWindowFrame_X11GL(){
 
 void
 cWindowFrame_X11GL::run(cContext* pCon){
+	PROFILE;
 
 	start(pCon);
 
@@ -236,9 +237,7 @@ cWindowFrame_X11GL::run(cContext* pCon){
 				DBUG_LO("client message " << XGetAtomName( mDisplay, mEvent.xclient.message_type ));
 				if( isDestroyWindowAtom(mEvent.xclient.message_type) ){
 					DBUG_LO("destroy message. Calling " << mClosing.mD->name());
-					pCon->add(this);
 					mClosing.mD->run(pCon);
-					pCon->finished(this);
 				}
 			}break;
 
@@ -271,9 +270,7 @@ cWindowFrame_X11GL::run(cContext* pCon){
     if(mContent.mD->hash()==getHash<cEmptyFig>()){
     	testPattern();
     }else{
-		pCon->add(this);
 		mContent.mD->run(pCon);
-		pCon->finished(this);
     }
 
 	if(mDoubleBuffered) glXSwapBuffers(mDisplay, mWindow); else glFlush();

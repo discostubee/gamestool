@@ -1,6 +1,28 @@
 
 #include "figment.hpp"	// So we get figment.
 
+////////////////////////////////////////////////////////////
+using namespace excep;
+
+stackFault::stackFault(
+	gt::dProgramStack pBadStack,
+	const std::string &pMoreInfo,
+	const char* pFile,
+	unsigned int pLine
+): base_error(pFile, pLine){
+	try{
+		std::stringstream ss;
+		ss << "stack fault: (stack dump below) " << std::endl;
+		for(gt::dProgramStack::reverse_iterator itr = pBadStack.rbegin(); itr != pBadStack.rend(); ++itr){
+			ss << "   -" << (*itr)->name() << std::endl;
+		}
+		ss << "   More info: " << pMoreInfo;
+		addInfo( ss.str() );
+	}catch(...){}
+}
+
+stackFault::~stackFault() throw() {}
+
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
@@ -18,37 +40,25 @@ cContext::cContext()
 
 cContext::cContext(const cContext & copyMe) :
 	mStack(copyMe.mStack),
-	mTimesStacked(copyMe.mTimesStacked),
-	mPlateOPancakes(copyMe.mPlateOPancakes)
+	mSigInfo(copyMe.mSigInfo)
 {}
 
 cContext::~cContext(){
 }
 
 void
-cContext::add(dFigConSig pFig){
+cContext::add(dFigConSig pFig, dNameHash pClassID){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
 
-	dNameHash pancakeHash = pFig->getReplacement() == uDoesntReplace ? pFig->hash() : pFig->getReplacement();
-
-	//DBUG_LO("Context adds "<< pFig->name());
-
 	mStack.push_back(pFig);
 
-	figSigItr = mTimesStacked.find(pFig);
-	if(figSigItr == mTimesStacked.end()){
-		mTimesStacked[pFig] = 1;
+	itrInfo = mSigInfo.find(pFig);
+	if(itrInfo == mSigInfo.end()){
+		mSigInfo[pFig] = sInfo(1, pClassID);
 	}else{
-		++figSigItr->second;
-	}
-
-	cakeItr = mPlateOPancakes.find(pancakeHash);
-	if(cakeItr == mPlateOPancakes.end()){
-		mPlateOPancakes[pancakeHash].push_back(pFig);
-	}else{
-		cakeItr->second.push_back(pFig);
+		++itrInfo->second.timesStacked;
 	}
 }
 
@@ -58,72 +68,37 @@ cContext::finished(dFigConSig pFig){
 
 	ASRT_NOTNULL(pFig);
 
-	//!\todo	Update this so that it there can be a deep nest of replaced figments.
-	dNameHash pancakeHash = pFig->getReplacement() == uDoesntReplace ? pFig->hash() : pFig->getReplacement();
+	if(mStack.empty())
+		throw excep::stackFault(mStack, "tried to pop a figment when the stack was empty", __FILE__, __LINE__);
 
-	//DBUG_LO("Context finishes hash " << pancakeHash);
+	if(mStack.back() != pFig)
+		throw excep::stackFault(mStack, "the last figment on the type stack isn't the one we expected", __FILE__, __LINE__);
 
-	if(mStack.empty() || mStack.back() != pFig)
-		throw excep::stackFault(mStack, "", __FUNCTION__, __LINE__);
+	itrInfo = mSigInfo.find(pFig);
+	if(itrInfo == mSigInfo.end())
+		throw excep::stackFault(mStack, "Expected to find signature on info map", __FILE__, __LINE__);
 
-	figSigItr = mTimesStacked.find(pFig);
-	if(figSigItr != mTimesStacked.end()){
-
-		--figSigItr->second;
-		if(figSigItr->second == 0){
-			mTimesStacked.erase(figSigItr);
-		}
-	}
-
-	cakeItr = mPlateOPancakes.find(pancakeHash);
-	if(cakeItr != mPlateOPancakes.end()){
-
-		if( cakeItr->second.back() != pFig ){
-			throw excep::stackFault(mStack, "the last figment on the type stack isn't the one we expected", __FUNCTION__, __LINE__);
-		}
-		cakeItr->second.pop_back();
-
-		if(cakeItr->second.empty()){
-			mPlateOPancakes.erase(cakeItr);
-		}
+	--itrInfo->second.timesStacked;
+	if(itrInfo->second.timesStacked == 0){
+		mSigInfo.erase(itrInfo);
 	}
 
 	(void)mStack.pop_back();
 }
 
 bool
-cContext::isStacked(dFigConSig pFig){
+cContext::isStacked(dFigConSig pFig, dNameHash pID){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
 
-	figSigItr = mTimesStacked.find(pFig);
-	if(figSigItr != mTimesStacked.end())
+	itrInfo = mSigInfo.find(pFig);
+	if(itrInfo != mSigInfo.end() && itrInfo->second.realID == pID)
 		return true;
 
 	return false;
 }
 
-refFig
-cContext::getLastOfType(dNameHash pType){
-	PROFILE;
-
-	// We need to get the base type.
-	//!\todo make this deal with deep nests of blueprints.
-	dNameHash pancakeHash = gWorld.get()->getBlueprint(pType)->replace();
-
-	if (pancakeHash == uDoesntReplace)
-		pancakeHash = pType;
-
-	//DBUG_LO("Context gets hash " << pancakeHash);
-
-	cakeItr = mPlateOPancakes.find(pancakeHash);
-
-	if(cakeItr == mPlateOPancakes.end())
-		throw excep::notFound("name hash", __FILE__, __LINE__);
-
-	return refFig(cakeItr->second.back());
-}
 
 dProgramStack
 cContext::makeStackDump(){
@@ -135,10 +110,17 @@ cContext::isBlocked(){
 	return false;
 }
 
+void
+cContext::printStack(){
+	std::cout << "(stack dump below) " << std::endl;
+	for(gt::dProgramStack::reverse_iterator itr = mStack.rbegin(); itr != mStack.rend(); ++itr){
+		std::cout << "   -" << (*itr)->name() << std::endl;
+	}
+}
+
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
-	currentCon(NULL),
-	alreadyPopped(false)
+	currentCon(NULL)
 {}
 
 cFigContext::~cFigContext(){
@@ -151,10 +133,10 @@ cFigContext::start(cContext *con){
 	#ifdef GT_THREADS
 		boost::unique_lock<boost::mutex> lock(conMu);
 	#endif
-	if(con->isStacked(this))
+	if(con->isStacked(this, hash()))
 		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
 
-	con->add(this);
+	con->add(this, hash());
 
 	#ifdef GT_THREADS
 		if(currentCon != NULL){
@@ -166,28 +148,22 @@ cFigContext::start(cContext *con){
 }
 
 void
-cFigContext::stop(cContext *con, bool nestedStop){
+cFigContext::stop(cContext *con){
 	PROFILE;
 	#ifdef GT_THREADS
 		boost::unique_lock<boost::mutex> lock(conMu);
 	#endif
-	if(nestedStop && alreadyPopped)
-		throw excep::base_error( "Can't pop twice", __FUNCTION__, __LINE__);
-
-	if(alreadyPopped)
-		return;
 
 	if(con != currentCon)
-		throw excep::base_error("can't stop a context that isn't yours", __FUNCTION__, __LINE__);
+		throw excep::base_error("can't stop a context that isn't yours", __FILE__, __LINE__);
 
-	if(!alreadyPopped)
-		con->finished(this);
+	con->finished(this);
 
-	if(nestedStop)
-		alreadyPopped = true;
+	if(!con->isStacked(this)){
+		currentCon = NULL;
 
-	currentCon = NULL;
-	#ifdef GT_THREADS
-		conSync.notify_one();
-	#endif
+		#ifdef GT_THREADS
+			conSync.notify_one();
+		#endif
+	}
 }

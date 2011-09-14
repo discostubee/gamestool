@@ -19,7 +19,7 @@ cThread::runThread(cThread *me, cContext* pCon){
 		dLock syncLock(me->syncMu);
 		dLock lockFinish(me->finishMu);
 		cContext newContext(*pCon);
-		newContext.add(me);
+		newContext.add(me, me->hash());
 		me->sync.notify_one();	// let the figment know we're ready.
 
 		while(!me->threadStop){
@@ -101,7 +101,6 @@ cThread::jack(ptrLead pLead, cContext* pCon){
 				break;
 
 			default:
-				stop(pCon, true);
 				cFigment::jack(pLead, pCon);
 				break;
 		}
