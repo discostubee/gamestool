@@ -100,7 +100,7 @@ inline void graphics(){
 				shiney.mD->jack(setWinDim, &fake);
 			}
 			{
-				ptrLead addLayerToWindow = gWorld.get()->makeLead(makeHash("layer"), makeHash("link content"), &fake);
+				ptrLead addLayerToWindow = gWorld.get()->makeLead(makeHash("window frame"), makeHash("link content"), &fake);
 				addLayerToWindow->add(&layer, makeHash("content"), &fake);
 				shiney.mD->jack(addLayerToWindow, &fake);
 			}
@@ -137,9 +137,6 @@ inline void graphics(){
 
 				addToLayer->add(&drawlist, makeHash("content"), &fake);
 				layer.mD->jack(addToLayer, &fake);
-			}
-			{
-
 			}
 
 			gWorld.get()->setRoot(stuff.mD);

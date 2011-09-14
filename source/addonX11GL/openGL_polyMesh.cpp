@@ -17,6 +17,8 @@ cPolyMesh_GL::~cPolyMesh_GL(){
 
 void
 cPolyMesh_GL::run(cContext *pCon){
+	PROFILE;
+
 	start(pCon);
 
 	if(mLazyMesh)
@@ -38,16 +40,6 @@ cPolyMesh_GL::run(cContext *pCon){
 
 		glDrawArrays(GL_TRIANGLES, 0, vertCount);	//glDrawElements(GL_TRIANGLES, polyCount, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
 
-		//!!! test code
-		/*glBegin(GL_TRIANGLES);
-		for(size_t i = 0; i < vertCount; i+=3){
-			glVertex3f(vbuff[i  ].x, vbuff[i  ].y, vbuff[i  ].z);
-			glVertex3f(vbuff[i+1].x, vbuff[i+1].y, vbuff[i+1].z);
-			glVertex3f(vbuff[i+2].x, vbuff[i+2].y, vbuff[i+2].z);
-		}
-		glEnd();*/
-		//!!!
-
 	glPopMatrix();
 
 	stop(pCon);
@@ -55,6 +47,7 @@ cPolyMesh_GL::run(cContext *pCon){
 
 void
 cPolyMesh_GL::formatGLMesh(){
+	PROFILE;
 
 	if(mLazyMesh->mVertexes.empty())
 		throw excep::base_error("lazy mesh has no vertexes", __FILE__, __LINE__);

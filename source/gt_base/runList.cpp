@@ -17,9 +17,8 @@ cRunList::~cRunList(){
 
 void
 cRunList::run(cContext* pCon){
-	PROFILE;
-
 	start(pCon);
+	PROFILE;
 
 	for(
 		std::vector< tPlug<ptrFig> >::iterator i = mList.begin();
@@ -49,7 +48,6 @@ cRunList::jack(ptrLead pLead, cContext* pCon){
 			}break;
 
 			default:{
-				stop(pCon, true);
 				cFigment::jack(pLead, pCon);
 			}break;
 		}
@@ -124,11 +122,6 @@ cValves::run(cContext* pCon){
 	PROFILE;
 
 	start(pCon);
-
-	if(pCon->isStacked(this))
-		return;
-
-	pCon->add(this);
 
 	for(
 		std::vector< tPlug<ptrFig> >::iterator itr = mList.begin();

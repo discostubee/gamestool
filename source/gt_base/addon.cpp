@@ -63,7 +63,6 @@ cAddon::jack(ptrLead pLead, cContext* pCon){
 			}break;
 
 			default:
-				stop(pCon, true);
 				return cFigment::jack(pLead, pCon);
 				break;
 		}

@@ -66,7 +66,6 @@ cWindowFrame::jack(ptrLead pLead, cContext *pCon){
 					refreshDim();
 				}break;
 			default:
-				stop(pCon, true);
 				cFigment::jack(pLead, pCon);
 				break;
 		}

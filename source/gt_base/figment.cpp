@@ -111,7 +111,7 @@ cWorldShutoff::run(cContext* pCon){
 
 #ifdef GTUT
 
-GTUT_START(figment, polymorphNames){
+GTUT_START(test_figment, polymorphNames){
 	tOutline<cFigment>::draft();
 	tOutline<cEmptyFig>::draft();
 	tOutline<cWorldShutoff>::draft();
@@ -137,14 +137,14 @@ GTUT_START(figment, polymorphNames){
 
 }GTUT_END;
 
-GTUT_START(figment, hashes){
+GTUT_START(test_figment, hashes){
 	tOutline<cFigment>::draft();
 	cFigment test;
 
 	GTUT_ASRT(getHash<cFigment>()==test.hash(), "hashes don't match");
 }GTUT_END;
 
-GTUT_START(figment, givesSave){
+GTUT_START(test_figment, givesSave){
 	tOutline<cFigment>::draft();
 
 	cContext fake;
@@ -154,8 +154,37 @@ GTUT_START(figment, givesSave){
 	tPlug<cByteBuffer> saveBuff;
 	save->add(&saveBuff, cFigment::xPT_buffer, &fake);
 	testMe->jack(save, &fake);
+}GTUT_END;
 
 
+//!\brief	Really basic class for testing out the context.
+class testContextFigment: public cFigment{
+public:
+	testContextFigment *refOther;
+
+	testContextFigment() : refOther(NULL) {}
+	virtual ~testContextFigment() {}
+
+	static const dNatChar* identify(){ return "test context figment"; }
+	virtual const dNatChar* name() const { return identify(); }
+	virtual dNameHash hash() const { return getHash<testContextFigment>(); }
+
+	virtual void run(cContext *pCon){
+		start(pCon);
+		if(refOther) refOther->run(pCon);
+		stop(pCon);
+	}
+};
+
+GTUT_START(test_context, preventSelfReference){
+	cContext testMe;
+	bool caughtLikeABoss = false;
+	testContextFigment A, B;
+
+	A.refOther = &B;
+	B.refOther = &A;
+	try{ A.run(&testMe); }catch(excep::stackFault_selfReference){ caughtLikeABoss = true; }
+	GTUT_ASRT(caughtLikeABoss, "context: Not the boss");
 }GTUT_END;
 
 #endif
