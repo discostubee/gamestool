@@ -9,23 +9,20 @@ const cPlugTag* cWindowFrame::xPT_y = tOutline<cWindowFrame>::makePlugTag("y pos
 const cPlugTag* cWindowFrame::xPT_width = tOutline<cWindowFrame>::makePlugTag("width");
 const cPlugTag* cWindowFrame::xPT_height = tOutline<cWindowFrame>::makePlugTag("height");
 
-const cCommand* cWindowFrame::xLinkContent = tOutline<cWindowFrame>::makeCommand(
-	"link content",
-	cWindowFrame::eLinkContent,
+const cCommand::dUID cWindowFrame::xLinkContent = tOutline<cWindowFrame>::makeCommand(
+	"link content", &cWindowFrame::patLink,
 	cWindowFrame::xPT_content,
 	NULL
 );
 
-const cCommand* cWindowFrame::xSetCloser = tOutline<cWindowFrame>::makeCommand(
-	"link closer",
-	cWindowFrame::eLinkCloseFig,
+const cCommand::dUID cWindowFrame::xSetCloser = tOutline<cWindowFrame>::makeCommand(
+	"link closer", &cWindowFrame::patSetCloser,
 	cWindowFrame::xPT_closer,
 	NULL
 );
 
-const cCommand* cWindowFrame::xSetDim = tOutline<cWindowFrame>::makeCommand(
-	"set dimensions",
-	cWindowFrame::eChangeDim,
+const cCommand::dUID cWindowFrame::xSetDim = tOutline<cWindowFrame>::makeCommand(
+	"set dimensions", &cWindowFrame::patSetDim,
 	cWindowFrame::xPT_x,
 	cWindowFrame::xPT_y,
 	cWindowFrame::xPT_height,
@@ -43,36 +40,24 @@ cWindowFrame::cWindowFrame(){
 cWindowFrame::~cWindowFrame(){
 }
 
-void 
-cWindowFrame::jack(ptrLead pLead, cContext *pCon){
-	PROFILE;
-
-	start(pCon);
-	try{
-		switch( pLead->mCom->getSwitch<cWindowFrame>() ){
-			case eLinkContent:
-				mContent = *pLead->getPlug(cWindowFrame::xPT_content, pCon);
-				break;
-			case eLinkCloseFig:
-				mClosing = *pLead->getPlug(cWindowFrame::xPT_closer, pCon);
-				DBUG_LO("The closer is now " << mClosing.mD->name());
-				break;
-			case eChangeDim:{
-					try{ mX = *pLead->getPlug(xPT_x, pCon); }catch(excep::base_error){}
-					try{ mY = *pLead->getPlug(xPT_y, pCon); }catch(excep::base_error){}
-					try{ mWidth = *pLead->getPlug(xPT_width, pCon); }catch(excep::base_error){}
-					try{ mHeight = *pLead->getPlug(xPT_height, pCon); }catch(excep::base_error){}
-					
-					refreshDim();
-				}break;
-			default:
-				cFigment::jack(pLead, pCon);
-				break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}catch(...){
-		UNKNOWN_ERROR;
-	}
-	stop(pCon);
+void
+cWindowFrame::patLink(cLead *aLead){
+	mContent = aLead->getPlug(cWindowFrame::xPT_content, currentCon);
 }
+
+void
+cWindowFrame::patSetCloser(cLead *aLead){
+	mClosing = aLead->getPlug(cWindowFrame::xPT_closer, currentCon);
+	DBUG_LO("The closer is now " << mClosing.mD->name());
+}
+
+void
+cWindowFrame::patSetDim(cLead *aLead){
+	try{ mX = aLead->getPlug(xPT_x, currentCon); }catch(excep::base_error){}
+	try{ mY = aLead->getPlug(xPT_y, currentCon); }catch(excep::base_error){}
+	try{ mWidth = aLead->getPlug(xPT_width, currentCon); }catch(excep::base_error){}
+	try{ mHeight = aLead->getPlug(xPT_height, currentCon); }catch(excep::base_error){}
+	refreshDim();
+}
+
+

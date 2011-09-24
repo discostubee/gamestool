@@ -26,14 +26,14 @@ using namespace gt;
 
 //!\brief	Used to keep track of the things which may have been replaced by this blueprint.
 struct cWorld::sBlueprintHeader{
-	const cBlueprint* mBlueprint;
+	cBlueprint* mBlueprint;
 	dNameHash mReplaced;
 
 	sBlueprintHeader():
 		mReplaced(uDoesntReplace)
 	{}
 
-	sBlueprintHeader(const cBlueprint* pBlue, dNameHash pName):
+	sBlueprintHeader(cBlueprint* pBlue, dNameHash pName):
 		mBlueprint(pBlue), mReplaced(pName)
 	{}
 
@@ -71,7 +71,7 @@ cWorld::lo(const dStr& pLine){
 }
 
 cProfiler::cToken
-cWorld::makeProfileToken(const dNatChar* pFile, unsigned int pLine){
+cWorld::makeProfileToken(const char* pFile, unsigned int pLine){
 	static bool profileSetup = false;
 	if(!profileSetup){
 		profileSetup = true;
@@ -127,7 +127,7 @@ cWorld::~cWorld(){
 }
 
 void
-cWorld::addBlueprint(const cBlueprint* pAddMe){
+cWorld::addBlueprint(cBlueprint* pAddMe){
 	PROFILE;
 
 	// Archive the old blueprint being replaced.
@@ -266,7 +266,7 @@ cWorld::copyWorld(cWorld* pWorld){
 }
 
 ptrLead
-cWorld::makeLead(dNameHash pFigHash, dNameHash pComHash, dConSig pConx){
+cWorld::makeLead(dNameHash pFigHash, cCommand::dUID pComID, dConSig pConx){
 	PROFILE;
 
 	mScrBMapItr =  mBlueprints.find(pFigHash);
@@ -274,7 +274,7 @@ cWorld::makeLead(dNameHash pFigHash, dNameHash pComHash, dConSig pConx){
 	if(mScrBMapItr == mBlueprints.end())
 		throw excep::base_error("bad name hash", __FILE__, __LINE__);
 
-	return ptrLead(new cLead( mScrBMapItr->second.mBlueprint->getCom(pComHash), pConx ));
+	return ptrLead(new cLead( pComID, pConx ));
 }
 
 const cPlugTag* 
@@ -286,7 +286,7 @@ cWorld::getPlugTag(dNameHash pFigHash, dNameHash pPTHash){
 	if(mScrBMapItr == mBlueprints.end())
 		throw excep::base_error("bad name hash", __FILE__, __LINE__);
 
-	return mScrBMapItr->second.mBlueprint->gecPlugTag(pPTHash);
+	return mScrBMapItr->second.mBlueprint->getPlugTag(pPTHash);
 }
 
 void
@@ -300,7 +300,7 @@ cWorld::makeProfileReport(std::ostream &log){
 }
 
 void
-cWorld::warnError(excep::base_error &pE, const dNatChar* pFile, const unsigned int pLine){
+cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
 	std::stringstream ss;
 	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << pE.what();
 	lo(ss.str());
@@ -347,3 +347,84 @@ gt::redirectWorld(cWorld* pWorldNew){
 	}
 
 }
+
+////////////////////////////////////////////////////////////
+
+#ifdef GTUT
+
+//- A basic class to test out some functions of the world.
+class testDraftParent: public cFigContext, private tOutline<testDraftParent>{
+public:
+	static const cPlugTag*	xPT_A;
+	static const cCommand::dUID	xCommandA;
+
+	static const char* identify(){ return "test draft parent"; }
+	virtual const char* name() const { return identify(); };
+
+	virtual dNameHash hash() const { return getHash<testDraftParent>(); };
+
+	static dNameHash replaces(){ return uDoesntReplace; }
+	virtual dNameHash getReplacement() const { return replaces(); };
+
+	static dNameHash extends(){ return uDoesntExtend; }
+	virtual dNameHash getExtension() const { return extends(); }
+
+	virtual void jack(ptrLead pLead, cContext* pCon) {};
+	virtual void run(cContext* pCon) {};
+	virtual void save(cByteBuffer* pAddHere) {};
+	virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL) {};
+	virtual void getLinks(std::list<ptrFig>* pOutLinks) {};
+
+	void patA(cLead *aLead){
+
+	}
+};
+
+const cPlugTag*	testDraftParent::xPT_A = tOutline<testDraftParent>::makePlugTag("A");
+const cCommand::dUID testDraftParent::xCommandA = tOutline<testDraftParent>::makeCommand(
+	"command A", &testDraftParent::patA, testDraftParent::xPT_A,
+	NULL
+);
+
+//- Just extends the parent.
+class testDraftChild: public testDraftParent, private tOutline<testDraftChild>{
+public:
+	static const char* identify(){ return "test draft child"; }
+	virtual const char* name() const { return identify(); };
+
+	virtual dNameHash hash() const { return getHash<testDraftChild>(); };
+
+	static dNameHash extends(){ return getHash<testDraftParent>(); }
+	virtual dNameHash getExtension() const { return extends(); }
+};
+
+class testDraftReplace: public testDraftParent, private tOutline<testDraftReplace>{
+public:
+	static const char* identify(){ return "test draft replace"; }
+	virtual const char* name() const { return identify(); };
+	virtual dNameHash hash() const { return getHash<testDraftReplace>(); };
+	static dNameHash replaces(){ return getHash<testDraftParent>(); }
+	virtual dNameHash getReplacement() const { return replaces(); };
+};
+
+GTUT_START(test_world, drafting){
+	tOutline<testDraftParent>::draft();
+	tOutline<testDraftChild>::draft();
+	GTUT_ASRT(gWorld.get()->makeFig(getHash<testDraftParent>())->hash() == getHash<testDraftParent>(), "didn't make the right figment");
+	GTUT_ASRT(gWorld.get()->makeFig(getHash<testDraftChild>())->hash() == getHash<testDraftChild>(), "didn't make the right figment");
+
+	tOutline<testDraftReplace>::draft();
+	GTUT_ASRT(gWorld.get()->makeFig(getHash<testDraftReplace>())->hash() == getHash<testDraftReplace>(), "didn't make the right figment");
+	GTUT_ASRT(gWorld.get()->makeFig(getHash<testDraftParent>())->hash() == getHash<testDraftReplace>(), "didn't make the right figment");
+}GTUT_END;
+
+GTUT_START(test_world, extend_commands){
+	gWorld.get()->getBlueprint(getHash<testDraftChild>())->getCom(testDraftParent::xCommandA);
+}GTUT_END;
+
+GTUT_START(test_world, extend_plugTags){
+
+}GTUT_END;
+
+#endif
+

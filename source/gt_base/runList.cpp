@@ -3,9 +3,8 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cCommand* cRunList::xAdd = tOutline<cRunList>::makeCommand(
-	"add",
-	cRunList::eAdd,
+const cCommand::dUID cRunList::xAdd = tOutline<cRunList>::makeCommand(
+	"add", &cRunList::patAdd,
 	NULL
 );
 
@@ -28,32 +27,6 @@ cRunList::run(cContext* pCon){
 		(*i).mD->run(pCon);
 	}
 
-	stop(pCon);
-}
-
-void
-cRunList::jack(ptrLead pLead, cContext* pCon){
-	PROFILE;
-
-	start(pCon);
-	try{
-		switch( pLead->mCom->getSwitch<cRunList>() ){
-			case eAdd: {
-
-				for(cLead::cPileItr itr = pLead->getPiledDItr(pCon); !itr.atEnd(); ++itr){
-					mList.push_back( itr.getPlug()->getCopy<ptrFig>() );
-					DBUG_VERBOSE_LO("	RunList added a " << temp.mD->name() );
-				};
-
-			}break;
-
-			default:{
-				cFigment::jack(pLead, pCon);
-			}break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}
 	stop(pCon);
 }
 
@@ -99,15 +72,23 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 	}
 }
 
+void
+cRunList::patAdd(cLead* aLead){
+	for(cLead::cPileItr itr = aLead->getPiledDItr(currentCon); !itr.atEnd(); ++itr){
+		mList.push_back( itr.getPlug()->getCopy<ptrFig>() );
+		DBUG_VERBOSE_LO("	RunList added a " << temp.mD->name() );
+	};
+}
+
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
 const cPlugTag* cValves::xPT_state = tOutline<cValves>::makePlugTag("valve state");
 const cPlugTag* cValves::xPT_valveIdx = tOutline<cValves>::makePlugTag("Valve index");
 
-const cCommand* cValves::xSetState = tOutline<cValves>::makeCommand(
-	"add",
-	cValves::eSetState,
+const cCommand::dUID cValves::xSetState = tOutline<cValves>::makeCommand(
+	"set valve",
+	&cValves::patSetValve,
 	NULL
 );
 
@@ -136,28 +117,6 @@ cValves::run(cContext* pCon){
 }
 
 void
-cValves::jack(ptrLead pLead, cContext* pCon){
-	PROFILE;
-
-	start(pCon);
-	try{
-		switch( pLead->mCom->getSwitch<cValves>() ){
-
-			case eSetState:{
-
-			}break;
-
-			default:{
-				cFigment::jack(pLead, pCon);
-			}break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}
-	stop(pCon);
-}
-
-void
 cValves::save(cByteBuffer* pAddHere){
 	//!\todo add saves for each valve
 	cRunList::save(pAddHere);
@@ -169,5 +128,9 @@ cValves::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	//!\todo, add in your stuff here.
 
 	cRunList::loadEat(pBuff, pReloads);
+}
+
+void
+cValves::patSetValve(cLead *pLead){
 }
 

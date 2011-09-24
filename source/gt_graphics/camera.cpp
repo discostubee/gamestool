@@ -2,36 +2,14 @@
 
 using namespace gt;
 
-const cPlugTag *cCamera::xPT_mode = tOutline<cCamera>::makePlugTag("mode");
-const cCommand *cCamera::xSetDMode = tOutline<cCamera>::makeCommand(
-	"set mode",
-	cCamera::eSetDMode,
-	xPT_mode,
-	NULL
-);
-
-cCamera::cCamera(){
+c2DCamera::c2DCamera(){
 }
 
-cCamera::~cCamera(){
+c2DCamera::~c2DCamera(){
 }
 
-void
-cCamera::jack(ptrLead pLead, cContext *pCon){
-	start(pCon);
-	try{
-		switch(pLead->mCom->getSwitch<cCamera>()){
+c3DCamera::c3DCamera(){
+}
 
-			case eSetDMode:{
-
-			}break;
-
-			default:
-				cFigment::jack(pLead, pCon);
-				break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}
-	stop(pCon);
+c3DCamera::~c3DCamera(){
 }

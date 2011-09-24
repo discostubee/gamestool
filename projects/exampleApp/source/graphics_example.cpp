@@ -46,7 +46,7 @@ inline void graphics(){
 		cContext fake;
 
 		{
-			ptrLead loadAddon = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID, &fake);
+			ptrLead loadAddon = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon, &fake);
 			tPlug<dStr> addonName;
 
 		#if		defined	__APPLE__
@@ -105,7 +105,7 @@ inline void graphics(){
 				shiney.mD->jack(addLayerToWindow, &fake);
 			}
 			{
-				ptrLead addStuff = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd->mID, &fake);
+				ptrLead addStuff = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd, &fake);
 				addStuff->addToPile(&shiney, &fake);
 				stuff.mD->jack(addStuff, &fake);
 			}
@@ -128,7 +128,7 @@ inline void graphics(){
 				mesh.mD->jack(polyData, &fake);
 			}
 			{
-				ptrLead addToList = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd->mID, &fake);
+				ptrLead addToList = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd, &fake);
 				ptrLead addToLayer = gWorld.get()->makeLead(makeHash("layer"), makeHash("link content"), &fake);
 
 				//addToList->addToPile(&camera, &fake);

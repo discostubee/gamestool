@@ -14,34 +14,30 @@ namespace gt{ //gamestool
 	//-----------------------------------------------------------------------------------------------
 	//!\brief	When you run this figment, you also run every figment in its list.
 	class cRunList: public cFigment, private tOutline<cRunList>{
+	public:
+		static const cCommand::dUID	xAdd;
+
+		cRunList();
+		virtual ~cRunList();
+
+		//- Required
+		static const char* identify(){ return "run list"; }
+		virtual const char* name() const{ return identify(); }
+		virtual dNameHash hash() const{ return tOutline<cRunList>::hash(); }
+
+		//- Optional
+		virtual void run(cContext* pCon);				//!< runs every element in the list
+		virtual void save(cByteBuffer* pAddHere);
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
+		virtual void getLinks(std::list<ptrFig>* pOutLinks);
+
 	protected:
 		typedef std::vector< tPlug<ptrFig> > dList;
 		typedef dList::iterator dListItr;
 
 		dList mList;
 
-	public:
-		static const cCommand*	xAdd;
-
-		enum{
-			eAdd = cFigment::eSwitchEnd,
-			eSwitchEnd,
-		};
-
-		cRunList();
-		virtual ~cRunList();
-
-		//- Required
-		static const dNatChar* identify(){ return "run list"; }
-		virtual const dNatChar* name() const{ return identify(); }
-		virtual dNameHash hash() const{ return tOutline<cRunList>::hash(); }
-
-		//- Optional
-		virtual void run(cContext* pCon);				//!< runs every element in the list
-		virtual void jack(ptrLead pLead, cContext* pCon);
-		virtual void save(cByteBuffer* pAddHere);
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
-		virtual void getLinks(std::list<ptrFig>* pOutLinks);
+		void patAdd(cLead *aLead);
 	};
 
 	//-----------------------------------------------------------------------------------------------
@@ -56,26 +52,26 @@ namespace gt{ //gamestool
 		static const cPlugTag*	xPT_state;		//!< Turn turns valve on.
 		static const cPlugTag*	xPT_valveIdx;	//!< The numeric index for the valve.
 
-		static const cCommand*	xSetState;
-
-		enum{
-			eSetState = cRunList::eSwitchEnd +1,
-			eSwitchEnd
-		};
+		static const cCommand::dUID	xSetState;
 
 		cValves();
 		virtual ~cValves();
 
 		//- Required
-		static const dNatChar* identify(){ return "run list"; }
-		virtual const dNatChar* name() const { return identify(); }
+		static const char* identify(){ return "valve station"; }
+		virtual const char* name() const { return identify(); }
 		virtual dNameHash hash() const { return tOutline<cValves>::hash(); }
 
 		//- Optional
 		virtual void run(cContext* pCon);				//!< runs every element in the list
-		virtual void jack(ptrLead pLead, cContext* pCon);
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
+
+		static dNameHash extends(){ return getHash<cRunList>(); }
+		virtual dNameHash getExtension() const { return extends(); }
+
+	protected:
+		void patSetValve(cLead *pLead);
 	};
 }
 

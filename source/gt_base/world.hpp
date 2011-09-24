@@ -1,7 +1,6 @@
 /*
  *!\file	world.hpp
  *!\brief	This is the starting point for the source code dependency (ignoring some included utility source).
- *!\todo	Make world access thread safe.
  *
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -31,8 +30,9 @@
  *! gSomething		A global variable.
  *! ptrSomething	A managed pointer.
  *! fPtrSomething	A function pointer.
+ *! patSomething	A patch through function used with commands.
  *
- *\note		A little bit about some of the terms used around the place. This isn't shorthand exactly, so it get's it's own note coz it's special.
+ *!\note		A little bit about some of the terms used around the place. This isn't shorthand exactly, so it get's it's own note coz it's special.
  *! set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.
  *! copy	Copy a stream/buffer
  *! get		Return a primitive by copy, return a stream/buffer copy, return a reference to an object
@@ -42,7 +42,16 @@
  *! clear	Empty something so that it doesn't contain any data.
  *! blank	Change a link to being a blank or dead end (terminator) object.
  *! take	The function will clean up the memory it is being passed. The object becomes the custodian of this memory.
+ *
+ *!\note	Some notes about the terminology for the jack interface
+ *!	When manipulating a figment, we use the jack function, which reads a command, which contains plugs, which are wrappers to data. In a sense
+ *!	jacking can easily be thought of as the same as using old style AV cables (using the term lead because it's 2 characters less), the ones
+ *!	with red/white and yellow plugs. We say that not because every lead has only 3 plugs, but because those cables were single leads with
+ *!	multiple independent plugs on the end.
  *!
+ *!	When the jack interface is used, it uses the command's function pointer to call a method within the figment. The functions pointed to by the
+ *!	command are known as a patcher (as in, patching through with a lead), and abbreviated to 'pat' IE patSomething. A patch through function can
+ *!	handle the command all by itself, or it can pass it onto another function and take advantage of standard polymorphism.
  */
 
 #ifndef	WORLD_HPP
@@ -114,15 +123,25 @@ namespace gt{
 	class iFigment{
 	public:
 		virtual ~iFigment() {}
-		virtual const dNatChar* name() const =0;
+		virtual const char* name() const =0;
 		virtual dNameHash hash() const =0;
 
-		virtual dNameHash getReplacement() const =0;
 		virtual void jack(ptrLead pLead, cContext* pCon)=0;
 		virtual void run(cContext* pCon)=0;
 		virtual void save(cByteBuffer* pAddHere)=0;
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL)=0;
 		virtual void getLinks(std::list<ptrFig>* pOutLinks)=0;
+
+		//static dNameHash replaces(){ return uDoesntReplace; }	// You will need these static class in your figment if you replace.
+		virtual dNameHash getReplacement() const =0;
+
+		//static dNameHash extends(){ return uDoesntExtend; }	// You will need this static class in your figment if you extend.
+		virtual dNameHash getExtension() const =0;
+
+	protected:
+		cBlueprint* mBlueprint;
+
+	friend class cBlueprint;
 	};
 }
 
@@ -159,7 +178,7 @@ namespace gt{
 		static void lo(const dStr& pLine);
 
 		//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
-		void warnError(excep::base_error &pE, const dNatChar* pFile, const unsigned int pLine);
+		void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
 
 		//!\todo	Make threadsafe.
 		static void makeProfileReport(std::ostream &log);
@@ -177,7 +196,7 @@ namespace gt{
 		// Blueprint stuff
 
 		//!\brief	Adds a blueprint to the library. Will replace a blueprint if the new ones say to.
-		void addBlueprint(const cBlueprint* pAddMe);
+		void addBlueprint(cBlueprint* pAddMe);
 
 		const cBlueprint* getBlueprint(dNameHash pNameHash);
 
@@ -195,10 +214,10 @@ namespace gt{
 		//!\brief	Makes a new lead that is managed by a smart pointer.
 		//!\param	pFigNameHash
 		//!\param	pCommandID
-		ptrLead makeLead(dNameHash pFigHash, dNameHash pComHash, dConSig pConx);
+		ptrLead makeLead(dNameHash pFigHash, unsigned int pComID, dConSig pConx);
 
 		//!\todo	Make threadsafe.
-		static cProfiler::cToken makeProfileToken(const dNatChar* pFile, unsigned int pLine);
+		static cProfiler::cToken makeProfileToken(const char* pFile, unsigned int pLine);
 
 		//--------------------------------------------------------
 		// Get references

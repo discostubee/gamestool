@@ -19,24 +19,15 @@ namespace gt{
 
 		//- Statics and defines
 		static const cPlugTag*	xPT_content;
-		static const cPlugTag*	xPT_size;
-		static const cPlugTag*	xPT_point;
-		static const cPlugTag*	xPT_rectangle;
+		static const cPlugTag*	xPT_size;			//!< The size of the layer in pixels. Taken from the top left to the bottom right.
+		static const cPlugTag*	xPT_point;			//!< The position of the layer, needs a point and an arrangement type.
+		static const cPlugTag*	xPT_rectangle;		//!< Sets up cropping, requires a style and rectangle. Cropping doesn't effect where this layers top, left most corner is.
 		static const cPlugTag*	xPT_arrangement;	//!< How the layer is arranged.
 		static const cPlugTag*	xPT_cropStyle;		//!<
 
-		static const cCommand*	xLinkContent;	//!<
-		static const cCommand*	xSetSize;		//!< The size of the layer in pixels. Taken from the top left to the bottom right.
-		static const cCommand*	xSetPos;		//!< Sets the position of the layer, needs a point and an arrangement type.
-		static const cCommand*	xSetCrop;		//!< Sets up cropping, requires a style and rectangle. Cropping doesn't effect where this layers top, left most corner is.
-
-		enum{
-			eLinkContent = cFigment::eSwitchEnd + 1,
-			eSetSize,
-			eSetPos,
-			eSetCrop,
-			eSwitchEnd
-		};
+		static const cCommand::dUID	xLinkContent;	//!<
+		static const cCommand::dUID xSetLayout;		//!< sets as much of the layout data (size, position ect) as there are plugs to do it with.
+		static const cCommand::dUID xGetLayout;		//!< returns all the layout data.
 
 		//!\todo	This is the first class where enums are being used to set internal states. This is a problem because they can't be easily used
 		//!			by the eventual visual language. Also, these enums won't be visibile to the base engine because they are part of an addon.
@@ -60,7 +51,6 @@ namespace gt{
 		cLayer();
 		virtual ~cLayer();
 
-		virtual void jack(ptrLead pLead, cContext *pCon);
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer *pBuff, dReloadMap *pReloads);
 		virtual void getLinks(std::list<ptrFig> *pOutLinks);
@@ -70,9 +60,13 @@ namespace gt{
 		tPlug<eArrange>		mArrangement;	//!< It's OK to have this here, because it's not a unit.
 		tPlug<eCropStyle>	mCropStyle;		//!< Same as arrangement.
 
+		void patSetLink(cLead *aLead);
+		void patSetLayout(cLead *aLead);
+		void patGetLayout(cLead *aLead);
+
 		//-------------------
 		virtual void setSize(const sWH<dUnitVDis> &size){ DUMB_REF_ARG(size); }					//!< Sets the size of the layer.
-		virtual void setPos(const sPoint2D<dUnitVDis> &pos){ DUMB_REF_ARG(pos); }							//!< Sets the position.
+		virtual void setPos(const sPoint2D<dUnitVDis> &pos){ DUMB_REF_ARG(pos); }				//!< Sets the position.
 		virtual void setCrop(const shape::rectangle<dUnitPix32> &area){ DUMB_REF_ARG(area); }	//!< Sets the cropping dimensions.
 		virtual sWH<dUnitVDis>& getSize(){ DONT_USE_THIS; }
 		virtual sPoint2D<dUnitVDis>& getPos(){ DONT_USE_THIS; }

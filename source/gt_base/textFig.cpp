@@ -5,16 +5,14 @@ using namespace gt;
 
 const cPlugTag* cTextFig::xPT_text = tOutline<cTextFig>::makePlugTag("text");
 
-const cCommand* cTextFig::xSetText = tOutline<cTextFig>::makeCommand(
-	"set text",
-	cTextFig::eSetText,
+const cCommand::dUID cTextFig::xSetText = tOutline<cTextFig>::makeCommand(
+	"set text", &cTextFig::patSetText,
 	cTextFig::xPT_text,
 	NULL
 );
 
-const cCommand* cTextFig::xGetText = tOutline<cTextFig>::makeCommand(
-	"get text",
-	cTextFig::eGetText,
+const cCommand::dUID cTextFig::xGetText = tOutline<cTextFig>::makeCommand(
+	"get text", &cTextFig::patGetText,
 	cTextFig::xPT_text,
 	NULL
 );
@@ -33,28 +31,13 @@ cTextFig::run(cContext* pCon){
 }
 
 void
-cTextFig::jack(ptrLead pLead, cContext* pCon){
-	PROFILE;
+cTextFig::patSetText(cLead *aLead){
+	aLead->setPlug(&mText, xPT_text, currentCon);
+}
 
-	start(pCon);
-	try{
-		switch( pLead->mCom->getSwitch<cTextFig>() ){
-			case eSetText:
-				mText = pLead->getPlug(cTextFig::xPT_text, pCon);
-				break;
-
-			case eGetText:
-				pLead->setPlug( &mText, cTextFig::xPT_text, pCon );
-				break;
-
-			default:
-				cFigment::jack(pLead, pCon);
-				break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}
-	stop(pCon);
+void
+cTextFig::patGetText(cLead *aLead){
+	mText = aLead->getPlug(xPT_text, currentCon);
 }
 
 void

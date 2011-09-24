@@ -28,13 +28,6 @@
 namespace gt{
 
 	class cOSX_fileIO: public cBase_fileIO, private tOutline<cOSX_fileIO>{
-	protected:
-		virtual cByteBuffer& read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 );
-		virtual void write(const cByteBuffer* pBuff);
-		virtual void insert(const cByteBuffer* pBuff, dFilePoint pStartPoint);
-		virtual void deleteFile();
-		virtual size_t getFileSize();
-
 	public:
 		static const char* identify(){ return "OSX file IO"; }
 		static dNameHash replaces(){ return getHash<cBase_fileIO>(); }
@@ -45,6 +38,13 @@ namespace gt{
 		virtual const char* name() const{ return cOSX_fileIO::identify(); }
 		virtual dNameHash getReplacement() const{ return replaces(); }
 		virtual dNameHash hash() const{ return tOutline<cOSX_fileIO>::hash(); }
+
+	protected:
+		virtual cByteBuffer& read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 );
+		virtual void write(const cByteBuffer* pBuff);
+		virtual void insert(const cByteBuffer* pBuff, dFilePoint pStartPoint);
+		virtual void deleteFile();
+		virtual size_t getFileSize();
 	};
 }
 

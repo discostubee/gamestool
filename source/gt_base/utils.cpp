@@ -8,16 +8,22 @@
 #include "utils.hpp"
 
 dNameHash 
-makeHash(const dNatChar* pString)
+makeHash(const char* pString)
 {
 	dNameHash hash = 0;
-	int c;
+	size_t platStrLen = strlen(pString);
 
-	while((c = *pString++))
-	{
-		/* hash = hash * 33 ^ c */
-		hash = ((hash << 5) + hash) ^ c;
-	}
+	if(platStrLen == 0)
+		return 0;
+
+	dNatChar* utf16str = new dNatChar[platStrLen];
+
+	PStrToNStr(pString, utf16str, platStrLen);
+	for(size_t utfIdx = 0; utfIdx < platStrLen; ++utfIdx)
+		hash = ((hash << 5) + hash) ^ utf16str[utfIdx];
+
+	delete [] utf16str;
+
 	return hash;
 }
 
@@ -84,13 +90,11 @@ cTracker::makeReport(std::ostream &report){
 // Tests
 #ifdef GTUT
 
-GTUT_START(testName, testArgs)
-{
-	int i=0;
-	GTUT_ASRT(i==0, "i is not zero");
-	//GTUT_ASRT(i!=0, "i is zero");	//use to see a fail.
-}
-GTUT_END;
+
+GTUT_START(test_makehash, consistency){
+	const char *quhzks = "quhzks";
+	GTUT_ASRT(makeHash(quhzks) == makeHash(quhzks), "mask hash isn't consistent");
+}GTUT_END;
 
 GTUT_START(TestingFind, something)
 {

@@ -19,37 +19,39 @@ namespace gt{
 namespace gt{
 
 	//----------------------------------------------------------------------------
-	//!\brief	A command defines what input/output functions a class can use.
+	//!\brief	A command defines how the generic jack interface is used by a figment.
+	//!			That means linking to the callback function, defining what figment
+	//!			uses it, as well as what tagged data this command uses.
 	class cCommand{
 	public:
 		typedef unsigned int dUID;	//!< unique command ID
+		typedef void (iFigment::*fooPtr)(cLead *aLead);	//!< Pointer to our jack function.
 
 		const dUID	mID;
 		const dStr	mName;
+		const dNameHash mParent;	//!< Used to determine which figment this command belongs too.
+		fooPtr myFoo;
 
 		cCommand(
 			const dUID pID,
-			const dNatChar* pName,
+			const char* pName,
 			const dNameHash pParentHash,
-			unsigned int pSwitch
+			fooPtr aFoo
 		);
 
-		~cCommand();
-
-		template<typename T>
-		unsigned int getSwitch() const;	//!< Gives you the switch, but only if you are the figment it is looking for.
+		virtual ~cCommand();
 
 		bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
 		void addTag(const cPlugTag* pTag);
 
+		void use(iFigment *aFig, cLead *aLead) const;
+
 		cCommand& operator=(const cCommand& pCom);
 
 	private:
-		const dNameHash mParent;	//!< Used to determine which figment this command belongs too.
-		const unsigned int mSwitch;
-
 		std::set<const cPlugTag*> mDataTags;
 	};
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -65,20 +67,6 @@ namespace gt{
 			name = ::makeHash(T::identify());
 		}
 		return name;
-	}
-}
-
-////////////////////////////////////////////////////////////////////
-// Template methods
-namespace gt{
-
-	template<typename T>
-	unsigned int
-	cCommand::getSwitch() const{
-		if (mParent == getHash<T>())
-			return mSwitch;
-		else
-			return uNotMyBag;
 	}
 }
 

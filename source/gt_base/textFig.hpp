@@ -15,32 +15,28 @@ namespace gt{
 	//!\note	Stores string types in a format that is most efficient to this compilation of gamestool.
 	//!			When saving, it is converted into a string format that is consistent across all compilations.
 	class cTextFig: public cFigment, private tOutline<cTextFig>{
-	private:
-		tPlug<dStr> mText;
-
 	public:
 		static const cPlugTag* xPT_text;
-		static const cCommand* xSetText;
-		static const cCommand* xGetText;
-
-		enum{
-			eSetText = cFigment::eSwitchEnd,
-			eGetText,
-			eSwitchEnd
-		};
-
-		static const dNatChar* identify(){ return "text fig"; }
+		static const cCommand::dUID xSetText;
+		static const cCommand::dUID xGetText;
 
 		cTextFig();
 		virtual ~cTextFig();
 
-		virtual const dNatChar* name() const{ return cTextFig::identify(); }
+		static const char* identify(){ return "text fig"; }
+		virtual const char* name() const{ return cTextFig::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cTextFig>::hash(); }
 
 		virtual void run(cContext* pCon);				//!< Temp code to display text in console.
-		virtual void jack(ptrLead pLead, cContext* pCon);
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
+
+	protected:
+		void patSetText(cLead *aLead);
+		void patGetText(cLead *aLead);
+
+	private:
+		tPlug<std::string> mText;
 	};
 }
 

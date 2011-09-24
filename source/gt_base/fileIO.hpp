@@ -21,43 +21,41 @@ namespace gt{
 
 
 	public:
-		enum{
-			eSetPath = cFigment::eSwitchEnd +1,
-			eRead,
-			eWrite,
-			eInsert,
-			eDeleteFile,
-			eGetSize,
-			eSwitchEnd
-		};
 
 		static const unsigned int ENDOF_FILE = static_cast<unsigned int>(-1);	//!< special identifier used mostly by insert function.
+
 		static const cPlugTag*	xPT_buffer;
 		static const cPlugTag*	xPT_startSpot;
 		static const cPlugTag*	xPT_readSize;
 		static const cPlugTag*	xPT_fileSize;
 		static const cPlugTag*	xPT_filePath;
 
-		static const cCommand*	xSetPath;	//!< set the path to the file you want to manipulate.
-		static const cCommand*	xRead;		//!< write to the file specified with set path.
-		static const cCommand*	xWrite;
-		static const cCommand*	xInsert;
-		static const cCommand*	xDeleteFile;
-		static const cCommand*	xGetSize;
+		static const cCommand::dUID	xSetPath;	//!< set the path to the file you want to manipulate.
+		static const cCommand::dUID	xRead;		//!< write to the file specified with set path.
+		static const cCommand::dUID	xWrite;
+		static const cCommand::dUID	xInsert;
+		static const cCommand::dUID	xDeleteFile;
+		static const cCommand::dUID	xGetSize;
 
 		cBase_fileIO();
 		virtual ~cBase_fileIO();
 
-		static const dNatChar* identify(){ return "base file IO"; }
-		virtual const dNatChar* name() const { return identify(); }		//!<
+		static const char* identify(){ return "base file IO"; }
+		virtual const char* name() const { return identify(); }		//!<
 		virtual dNameHash hash() const{ return tOutline<cBase_fileIO>::hash(); }
 
-		virtual void jack(ptrLead pLead, cContext* pCon);
 		virtual void run(cContext* pCon){ DUMB_REF_ARG(pCon); };
 
 	protected:
 		tPlug<dStr> mPath; //!< This is the path to the file.
 		tPlug<size_t> mFileSize;
+
+		void patSetPath(cLead *aLead);
+		void patRead(cLead *aLead);
+		void patWrite(cLead *aLead);
+		void patInsert(cLead *aLead);
+		void patDelFile(cLead *aLead);
+		void patGetFileSize(cLead *aLead);
 
 		//!\fn		virtual cByteBuffer read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 )
 		//!\brief	Returns a buffer containing what was loaded from a file.

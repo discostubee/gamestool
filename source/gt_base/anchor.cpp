@@ -5,16 +5,16 @@ using namespace gt;
 
 const cPlugTag* cAnchor::xPT_root = tOutline<cAnchor>::makePlugTag("root");
 
-const cCommand* cAnchor::xSetRoot = tOutline<cAnchor>::makeCommand(
+const cCommand::dUID cAnchor::xSetRoot = tOutline<cAnchor>::makeCommand(
 	"set root",
-	cAnchor::eSetRoot,
+	&cAnchor::patSetRoot,
 	cAnchor::xPT_root,
 	NULL
 );
 
-const cCommand* cAnchor::xGetRoot = tOutline<cAnchor>::makeCommand(
+const cCommand::dUID cAnchor::xGetRoot = tOutline<cAnchor>::makeCommand(
 	"get root",
-	cAnchor::eGetRoot,
+	&cAnchor::patGetRoot,
 	cAnchor::xPT_root,
 	NULL
 );
@@ -184,27 +184,15 @@ cAnchor::run(cContext* pCon) {
 }
 
 void
-cAnchor::jack(ptrLead pLead, cContext* pCon) {
-	start(pCon);
-	try{
-		switch( pLead->mCom->getSwitch<cAnchor>() ){
-			case eSetRoot:
-				mRoot = pLead->getPlug(cAnchor::xPT_root, pCon);
-				break;
-
-			case eGetRoot:
-				pLead->add(&mRoot, cAnchor::xPT_root, pCon);
-				break;
-
-			default:
-				cFigment::jack(pLead, pCon);
-				break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}
-	stop(pCon);
+cAnchor::patSetRoot(cLead *aLead){
+	mRoot = aLead->getPlug(cAnchor::xPT_root, currentCon);
 }
+
+void
+cAnchor::patGetRoot(cLead *aLead){
+	aLead->add(&mRoot, cAnchor::xPT_root, currentCon);
+}
+
 
 ////////////////////////////////////////////////////////////
 
@@ -213,19 +201,15 @@ cAnchor::jack(ptrLead pLead, cContext* pCon) {
 
 class cSaveTester: public cFigment, private tOutline<cSaveTester>{
 public:
-	static const cCommand*	xGetMyStr;
+	static const cCommand::dUID	xGetMyStr;
 
 	cSaveTester(){}
 	cSaveTester(const char* inStr) : myStr(dStr(inStr)), myNum(42) {}
 	virtual ~cSaveTester(){}
 
-	static const dNatChar* identify(){ return "save tester"; }
-	virtual const dNatChar* name() const{ return cSaveTester::identify(); }
+	static const char* identify(){ return "save tester"; }
+	virtual const char* name() const{ return cSaveTester::identify(); }
 	virtual dNameHash hash() const{ return tOutline<cSaveTester>::hash(); }
-
-	virtual void jack(ptrLead pLead, cContext* pCon){
-		pLead->addToPile(&myStr, pCon); pLead->addToPile(&myNum, pCon);
-	}
 
 	virtual void save(cByteBuffer* pAddHere) {
 		myStr.save(pAddHere); myNum.save(pAddHere);
@@ -237,37 +221,49 @@ public:
 private:
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
+
+	void patGetStr(cLead *aLead);
 };
 
-const cCommand*	cSaveTester::xGetMyStr = tOutline<cSaveTester>::makeCommand( "get my string", cFigment::eNotMyBag, NULL);
+const cCommand::dUID	cSaveTester::xGetMyStr = tOutline<cSaveTester>::makeCommand(
+	"get my string", &cSaveTester::patGetStr,
+	NULL
+);
+
+void
+cSaveTester::patGetStr(cLead *aLead){
+	aLead->addToPile(&myStr, currentCon); aLead->addToPile(&myNum, currentCon);
+}
+
 
 cByteBuffer buff;
 const char *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
 	tOutline<cSaveTester>::draft();
+	tOutline<cAnchor>::draft();
 	cContext fakeCon;
-	cAnchor ank;
+	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
 	ptrLead add(new cLead(cAnchor::xSetRoot, &fakeCon));
 
 	add->add(&tester, cAnchor::xPT_root, &fakeCon);
-	ank.jack(add, &fakeCon);
+	ank->jack(add, &fakeCon);
 
 	buff.clear();
-	ank.save(&buff);
+	ank->save(&buff);
 }GTUT_END;
 
 GTUT_START(testAnchor, basicLoad){
-	cAnchor ank;
+	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	cContext fake;
 
 	ptrLead load(new cLead(cAnchor::xLoad, &fake));
 	dReloadMap dontcare;
-	ank.loadEat(&buff, &dontcare);
+	ank->loadEat(&buff, &dontcare);
 
 	ptrLead root(new cLead(cAnchor::xGetRoot, &fake));
-	ank.jack(root, &fake);
+	ank->jack(root, &fake);
 	tPlug<ptrFig> reload;
 	reload = root->getPlug(cAnchor::xPT_root, &fake);
 

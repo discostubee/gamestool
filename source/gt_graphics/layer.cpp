@@ -9,32 +9,28 @@ const cPlugTag*	cLayer::xPT_rectangle = tOutline<cLayer>::makePlugTag("rectangle
 const cPlugTag*	cLayer::xPT_arrangement = tOutline<cLayer>::makePlugTag("arrangement");
 const cPlugTag*	cLayer::xPT_cropStyle = tOutline<cLayer>::makePlugTag("cropStyle");
 
-const cCommand* cLayer::xLinkContent = tOutline<cLayer>::makeCommand(
-	"link content",
-	cLayer::eLinkContent,
+const cCommand::dUID cLayer::xLinkContent = tOutline<cLayer>::makeCommand(
+	"link content", &cLayer::patSetLink,
 	xPT_content,
 	NULL
 );
 
-const cCommand*	cLayer::xSetSize = tOutline<cLayer>::makeCommand(
-	"set size",
-	cLayer::eSetSize,
+const cCommand::dUID cLayer::xSetLayout = tOutline<cLayer>::makeCommand(
+	"set layout", &cLayer::patSetLayout,
 	xPT_size,
-	NULL
-);
-
-const cCommand*	cLayer::xSetPos = tOutline<cLayer>::makeCommand(
-	"set pos",
-	cLayer::eSetPos,
 	xPT_point,
+	xPT_rectangle,
 	xPT_arrangement,
+	xPT_cropStyle,
 	NULL
 );
 
-const cCommand*	cLayer::xSetCrop = tOutline<cLayer>::makeCommand(
-	"set crop",
-	cLayer::eSetCrop,
+const cCommand::dUID cLayer::xGetLayout = tOutline<cLayer>::makeCommand(
+	"getLayout", &cLayer::patGetLayout,
+	xPT_size,
+	xPT_point,
 	xPT_rectangle,
+	xPT_arrangement,
 	xPT_cropStyle,
 	NULL
 );
@@ -43,26 +39,6 @@ cLayer::cLayer(){
 }
 
 cLayer::~cLayer(){
-}
-
-void
-cLayer::jack(ptrLead pLead, cContext* pCon){
-	start(pCon);
-	try{
-		switch(pLead->mCom->getSwitch<cLayer>()){
-
-			case eLinkContent:{
-				mLink = pLead->getPlug(xPT_content, pCon);
-			}break;
-
-			default:
-				cFigment::jack(pLead, pCon);
-				break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}
-	stop(pCon);
 }
 
 void
@@ -102,4 +78,19 @@ void
 cLayer::getLinks(std::list<ptrFig>* pOutLinks){
 	if(mLink.mD->hash() != getHash<cEmptyFig>() )
 		pOutLinks->push_back(mLink.mD);
+}
+
+void
+cLayer::patSetLink(cLead *aLead){
+	mLink = aLead->getPlug(xPT_content, currentCon);
+}
+
+void
+cLayer::patSetLayout(cLead *aLead){
+
+}
+
+void
+cLayer::patGetLayout(cLead *aLead){
+
 }
