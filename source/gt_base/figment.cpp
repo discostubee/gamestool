@@ -4,19 +4,15 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag* cFigment::xPT_buffer = tOutline<cFigment>::makePlugTag("buffer");
+const cPlugTag* cFigment::xPT_saveData = tOutline<cFigment>::makePlugTag("save data");
 
-const cCommand* cFigment::xSave = tOutline<cFigment>::makeCommand(
-	"save",
-	cFigment::eSave,
-	cFigment::xPT_buffer,
+const cCommand::dUID cFigment::xSave = tOutline<cFigment>::makeCommand(
+	"save", &cFigment::patSave, cFigment::xPT_saveData,
 	NULL
 );
 
-const cCommand* cFigment::xLoad = tOutline<cFigment>::makeCommand(
-	"load",
-	cFigment::eLoad,
-	cFigment::xPT_buffer,
+const cCommand::dUID cFigment::xLoad = tOutline<cFigment>::makeCommand(
+	"load", &cFigment::patLoad, cFigment::xPT_saveData,
 	NULL
 );
 
@@ -31,25 +27,22 @@ cFigment::~cFigment(){
 }
 
 void
+cFigment::patSave(cLead *aLead){
+	save( aLead->getPlug(xPT_saveData, currentCon)->getPtr<cByteBuffer>() );
+}
+
+void
+cFigment::patLoad(cLead *aLead){
+	loadEat( aLead->getPlug(xPT_saveData, currentCon)->getPtr<cByteBuffer>() );
+}
+
+void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
 	start(pCon);
 	try{
-		switch( pLead->mCom->getSwitch<cFigment>() ){
-			case eSave:
-				save( pLead->getPlug(cFigment::xPT_buffer, pCon)->getPtr<cByteBuffer>() );
-			break;
-
-			case eLoad:
-				loadEat( pLead->getPlug(cFigment::xPT_buffer, pCon)->getPtr<cByteBuffer>() );
-			break;
-
-			default:
-			case eNotMyBag:
-				DBUG_LO("not my bag");
-			break;
-		}
+		mBlueprint->getCom(pLead->mCom)->use(this, pLead.get());
 	}catch(excep::base_error &e){
 		WARN(e);
 	}catch(...){
@@ -121,17 +114,17 @@ GTUT_START(test_figment, polymorphNames){
 	ptrFig shutoff = gWorld.get()->makeFig(getHash<cWorldShutoff>());
 
 	GTUT_ASRT(
-		strncmp(stdFig->name(), cFigment::identify(), 10)==0,
+		strncmp(stdFig->name(), cFigment::identify(), 20)==0,
 		"figment names don't match."
 	);
 
 	GTUT_ASRT(
-		strncmp(emptyFig->name(), cEmptyFig::identify(), 10)==0,
+		strncmp(emptyFig->name(), cEmptyFig::identify(), 20)==0,
 		"Empty figment names don't match."
 	);
 
 	GTUT_ASRT(
-		strncmp(shutoff->name(), cWorldShutoff::identify(), 10)==0,
+		strncmp(shutoff->name(), cWorldShutoff::identify(), 20)==0,
 		"World shutoff names don't match."
 	);
 
@@ -148,11 +141,11 @@ GTUT_START(test_figment, givesSave){
 	tOutline<cFigment>::draft();
 
 	cContext fake;
-	ptrLead save = gWorld.get()->makeLead(getHash<cFigment>(), cFigment::xSave->mID, &fake);
+	ptrLead save = gWorld.get()->makeLead(getHash<cFigment>(), cFigment::xSave, &fake);
 	ptrFig testMe = gWorld.get()->makeFig(getHash<cFigment>());
 
 	tPlug<cByteBuffer> saveBuff;
-	save->add(&saveBuff, cFigment::xPT_buffer, &fake);
+	save->add(&saveBuff, cFigment::xPT_saveData, &fake);
 	testMe->jack(save, &fake);
 }GTUT_END;
 
@@ -165,8 +158,8 @@ public:
 	testContextFigment() : refOther(NULL) {}
 	virtual ~testContextFigment() {}
 
-	static const dNatChar* identify(){ return "test context figment"; }
-	virtual const dNatChar* name() const { return identify(); }
+	static const char* identify(){ return "test context figment"; }
+	virtual const char* name() const { return identify(); }
 	virtual dNameHash hash() const { return getHash<testContextFigment>(); }
 
 	virtual void run(cContext *pCon){

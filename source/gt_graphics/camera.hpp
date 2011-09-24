@@ -11,26 +11,31 @@
 
 namespace gt{
 
-	class cCamera: public cFigment, private tOutline<cCamera>{
+	class c3DCamera: public cFigment, private tOutline<c3DCamera>{
 	public:
-		static const cPlugTag *xPT_mode;
-		static const cCommand *xSetDMode;	//!< 2D or 3D mode.
-
-		enum{
-			eSetDMode = cFigment::eSwitchEnd + 1,
-			eSwitchEnd
-		};
 
 		//--- Required
-		static const dNatChar* identify(){ return "camera"; }
+		static const dNatChar* identify(){ return "3D camera"; }
 		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<cCamera>::hash(); }
+		virtual dNameHash hash() const { return tOutline<c3DCamera>::hash(); }
 
 		//--- Standard
-		cCamera();
-		virtual ~cCamera();
+		c3DCamera();
+		virtual ~c3DCamera();
 
-		virtual void jack(ptrLead pLead, cContext *pCon);
+	};
+
+	class c2DCamera: public cFigment, private tOutline<c2DCamera>{
+	public:
+
+		//--- Required
+		static const dNatChar* identify(){ return "2D camera"; }
+		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		virtual dNameHash hash() const { return tOutline<c2DCamera>::hash(); }
+
+		//--- Standard
+		c2DCamera();
+		virtual ~c2DCamera();
 
 	};
 }

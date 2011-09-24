@@ -10,19 +10,22 @@ cBlueprint::cBlueprint():
 	mHash(0),
 	mReplaces(uDoesntReplace),
 	mFuncMake(NULL),
+	mGetName(NULL),
 	mGetCom(NULL),
 	mGecPlugTag(NULL),
-	mGetName(NULL)
+	mGetAllComs(NULL),
+	mGetAllTags(NULL)
 {}
 
 cBlueprint::~cBlueprint(){
 }
 
 ptrFig
-cBlueprint::make() const{
+cBlueprint::make(){
 	ASRT_NOTNULL(mFuncMake);
-
-	return mFuncMake();
+	ptrFig tmp = mFuncMake();
+	tmp->mBlueprint = this;
+	return tmp;
 }
 
 dNameHash
@@ -47,18 +50,21 @@ cBlueprint::getCom(dNameHash pHash) const{
 }
 
 const cPlugTag* 
-cBlueprint::gecPlugTag(dNameHash pPT) const{
+cBlueprint::getPlugTag(dNameHash pPT) const{
 	ASRT_NOTNULL(mGecPlugTag);
 	return mGecPlugTag(pPT);
 }
 
-void
-cBlueprint::addToGivenContainers(dComContainer* pComContain, dPTagContainer* pPTagContain) const{
-	ASRT_NOTNULL(mComContainRef);
-	ASRT_NOTNULL(mPTagContainRef);
+dListComs
+cBlueprint::getAllComs() const{
+	ASRT_NOTNULL(mGetAllComs);
+	return mGetAllComs();
+}
 
-	pComContain->insert(mComContainRef->begin(), mComContainRef->end());
-	pPTagContain->insert(mPTagContainRef->begin(), mPTagContainRef->end());
+dListPTags
+cBlueprint::getAllTags() const{
+	ASRT_NOTNULL(mGetAllTags);
+	return mGetAllTags();
 }
 
 const cBlueprint*
@@ -72,12 +78,10 @@ cBlueprint::operator = (const cBlueprint* pCopy){
 		mHash = pCopy->mHash;
 		mReplaces = pCopy->mReplaces;
 		mGecPlugTag = pCopy->mGecPlugTag;
-
-		//- Unsure if these need to be freed first.
 		mFuncMake = pCopy->mFuncMake;
 		mGetCom = pCopy->mGetCom;
-		mComContainRef = pCopy->mComContainRef;
-		mPTagContainRef = pCopy->mPTagContainRef;
+		mGetAllComs = pCopy->mGetAllComs;
+		mGetAllTags = pCopy->mGetAllTags;
 	}
 	return this;
 }

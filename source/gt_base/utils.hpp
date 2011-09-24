@@ -42,7 +42,7 @@ typedef unsigned int	dMillisec;
 //!\note	This should return the same hash for every platform, so
 //!			it has to use the portable char type.
 // !\note	Code taken from http://cboard.cprogramming.com/tech-board/114650-string-hashing-algorithm.html
-dNameHash makeHash(const dNatChar* pString);
+dNameHash makeHash(const char* pString);
 
 //------------------------------------------------------------------------------------------
 // Handy if you don't want to expose the container, but you
@@ -112,8 +112,8 @@ isIn(const T &pFindMe, const vector<T> &pFindIn){
 //!\todo	Make this threadsafe.
 class cTracker{
 public:
-	static void start(const dNatChar* pName);
-	static void stop(const dNatChar* pName);
+	static void start(const char* pName);
+	static void stop(const char* pName);
 	static void makeReport(std::ostream &report);
 
 protected:

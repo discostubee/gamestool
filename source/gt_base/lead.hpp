@@ -22,7 +22,6 @@ namespace gt{
 	//!			jacked knows what to do with it. A lead then has multiple plugs, some are labeled/tagged, while
 	//!			others are in an ordered pile. In order to avoid deadlocks and handle multithreading, the lead
 	//!			is context aware. That way, only plugs from the same context can be added.
-	//!\todo	rename piled data to series.
 	class cLead{
 	public:
 		typedef std::map<unsigned int, cBase_plug*> dDataMap;
@@ -59,13 +58,13 @@ namespace gt{
 			}
 		};
 
-		const cCommand *mCom;	//!< The command for this lead.
-		dConSig mConx;			//!< A lead can only let you play with it if you're from the same context.
+		const cCommand::dUID mCom;	//!< The command for this lead.
+		dConSig mConx;				//!< A lead can only let you play with it if you're from the same context.
 
 		//!\param	aCom	Link to the command we want this plug to use.
 		//!\param	aCon	To avoid deadlocks and having to mutex lock stuff all the time,
 		//!					a lead can only add plugs from the same context.
-		cLead(const cCommand *aCom, dConSig aConx);
+		cLead(cCommand::dUID aCom, dConSig aConx);
 
 		~cLead();
 
@@ -146,7 +145,7 @@ namespace gt{
 namespace excep{
 	class badContext : public base_error{
 	public:
-		badContext(const dNatChar* pFile, const unsigned int pLine) :
+		badContext(const char* pFile, const unsigned int pLine) :
 			base_error(pFile, pLine)
 		{ addInfo("bad context"); }
 

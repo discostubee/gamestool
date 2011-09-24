@@ -39,26 +39,24 @@ namespace gt{
 		typedef boost::unique_lock<boost::mutex> dLock;
 #endif
 
-		static const cPlugTag*	xPT_fig;	//!< The figment to link.
-		static const cCommand*	xLinkFig;	//!< Link figment to run in the separate thread.
+		static const cPlugTag*		xPT_fig;	//!< The figment to link.
+		static const cCommand::dUID	xLinkFig;	//!< Link figment to run in the separate thread.
 
-		static const dNatChar* identify(){ return "thread"; }
-
-		enum{
-			eLinkFig = cFigment::eSwitchEnd +1,
-			eSwitchEnd
-		};
 
 		cThread();
 		virtual ~cThread();
 
-		virtual const dNatChar* name() const{ return cThread::identify(); }
+		static const char* identify(){ return "thread"; }
+		virtual const char* name() const{ return cThread::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cThread>::hash(); }
+
+
 		virtual void run(cContext* pCon);
-		virtual void jack(ptrLead pLead, cContext* pCon);
 
 	protected:
 		tPlug<ptrFig> link;
+
+		void patLink(cLead *aLead);
 
 #ifdef GT_THREADS
 		boost::thread myThread;

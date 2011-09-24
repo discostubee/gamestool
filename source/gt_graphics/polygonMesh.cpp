@@ -3,9 +3,21 @@
 using namespace gt;
 
 const cPlugTag* cPolyMesh::xPT_Mesh = tOutline<cPolyMesh>::makePlugTag("mesh");
-const cCommand* cPolyMesh::xAddVert = tOutline<cPolyMesh>::makeCommand("add vertex", cPolyMesh::eAddVert);
-const cCommand* cPolyMesh::xAddPoly = tOutline<cPolyMesh>::makeCommand("add polygon", cPolyMesh::eAddPoly);
-const cCommand* cPolyMesh::xGetMesh = tOutline<cPolyMesh>::makeCommand("get mesh", cPolyMesh::eGetMesh);
+
+const cCommand::dUID cPolyMesh::xAddVert = tOutline<cPolyMesh>::makeCommand(
+	"add vertex", &cPolyMesh::patAddVert,
+	NULL
+);
+
+const cCommand::dUID cPolyMesh::xAddPoly = tOutline<cPolyMesh>::makeCommand(
+	"add polygon", &cPolyMesh::patAddPoly,
+	NULL
+);
+
+const cCommand::dUID cPolyMesh::xGetMesh = tOutline<cPolyMesh>::makeCommand(
+	"get mesh", &cPolyMesh::patGetMesh,
+	NULL
+);
 
 
 cPolyMesh::cPolyMesh(): mLazyMesh(NULL){
@@ -16,46 +28,28 @@ cPolyMesh::~cPolyMesh(){
 }
 
 void
-cPolyMesh::jack(ptrLead pLead, cContext *pCon){
-	PROFILE;
-
-	start(pCon);
-	try{
-		switch( pLead->mCom->getSwitch<cPolyMesh>() ){
-			case eAddVert:{
-				PROFILE;
-				promiseLazy();
-				for(cLead::cPileItr itr = pLead->getPiledDItr(pCon); !itr.atEnd(); ++itr){
-					mLazyMesh->mVertexes.push_back(
-						itr.getPlug()->getCopy<sVertex>()
-					);
-				}
-			}break;
-
-			case eAddPoly:{
-				PROFILE;
-				promiseLazy();
-				for(cLead::cPileItr itr = pLead->getPiledDItr(pCon); !itr.atEnd(); ++itr){
-					mLazyMesh->mPolys.push_back(
-						itr.getPlug()->getCopy<sPoly>()
-					);
-				}
-			}break;
-
-			case eGetMesh:{
-
-			}break;
-
-			default:
-				cFigment::jack(pLead, pCon);
-			break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}catch(...){
-		UNKNOWN_ERROR;
+cPolyMesh::patAddVert(cLead *aLead){
+	promiseLazy();
+	for(cLead::cPileItr itr = aLead->getPiledDItr(currentCon); !itr.atEnd(); ++itr){
+		mLazyMesh->mVertexes.push_back(
+			itr.getPlug()->getCopy<sVertex>()
+		);
 	}
-	stop(pCon);
+}
+
+void
+cPolyMesh::patAddPoly(cLead *aLead){
+	promiseLazy();
+	for(cLead::cPileItr itr = aLead->getPiledDItr(currentCon); !itr.atEnd(); ++itr){
+		mLazyMesh->mPolys.push_back(
+			itr.getPlug()->getCopy<sPoly>()
+		);
+	}
+}
+
+void
+cPolyMesh::patGetMesh(cLead *aLead){
+
 }
 
 void

@@ -146,6 +146,7 @@ namespace gt{
 		virtual ~cFigContext();
 
 	protected:
+		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
 
 		//!\brief	Puts this figment onto the stack.
 		void start(cContext *con);
@@ -154,7 +155,6 @@ namespace gt{
 		void stop(cContext *con);
 
 	private:
-		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
 
 		#ifdef GT_THREADS
 			boost::condition_variable conSync;

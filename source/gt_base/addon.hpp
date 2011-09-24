@@ -40,22 +40,16 @@ namespace gt{
 		static const char* xCloseAddonFooStr;
 
 		static const cPlugTag* xPT_addonName;
-		static const cCommand* xLoadAddon;
+		static const cCommand::dUID xLoadAddon;
 
-		enum{
-			eLoadAddon = cFigment::eSwitchEnd +1,
-			eSwitchEnd
-		};
-
-		static const dNatChar* identify(){ return "addon"; }
+		static const char* identify(){ return "addon"; }
 		static void requirements();
 
 		cAddon();
 		virtual ~cAddon();
 
-		virtual const dNatChar* name() const{ return identify(); }
+		virtual const char* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cAddon>::hash(); }
-		virtual void jack(ptrLead pLead, cContext* pCon);
 
 	protected:
 		typedef boost::shared_ptr<dStr> ptrStr;
@@ -63,11 +57,13 @@ namespace gt{
 
 		static dTimesOpened xOpenAddons;	//!< We want to track all open addons, so we use a hash of the name to search for it, and also keep track of how many figments require that addon.
 
+		tPlug<std::string> mAddonName;	//!< Stores the name of the addon we want.
+		dNameHash mAddonHash;
+
+		void patLoadAddon(cLead *aLead);
+
 		virtual void draftAddon(const dStr &pName){ DONT_USE_THIS; }	//!< draft all the blueprints contained in an external addon.
 		virtual void closeAddon(){ DONT_USE_THIS; }
-
-		tPlug<dStr> mAddonName;	//!< Stores the name of the addon we want.
-		dNameHash mAddonHash;
 	};
 
 	

@@ -20,28 +20,25 @@ namespace gt{ //gamestool
 	class cAnchor: public cFigment, private tOutline<cAnchor>{
 	public:
 		static const cPlugTag*	xPT_root;
-		static const cCommand*	xSetRoot;	//!\todo	Rename to linkRoot. Gotta keep the term link consistent.
-		static const cCommand*	xGetRoot;
-
-		enum{
-			eSetRoot = cFigment::eSwitchEnd,
-			eGetRoot,
-			eSwitchEnd
-		};
+		static const cCommand::dUID	xSetRoot;	//!\todo	Rename to linkRoot. Gotta keep the term link consistent.
+		static const cCommand::dUID	xGetRoot;
 
 		cAnchor();
 		virtual ~cAnchor();
 
 		//- Required
-		static const dNatChar* identify(){ return "anchor"; }
-		virtual const dNatChar* name() const { return identify(); }	//!<
+		static const char* identify(){ return "anchor"; }
+		virtual const char* name() const { return identify(); }	//!<
 		virtual dNameHash hash() const { return tOutline<cAnchor>::hash(); }
 
 		//- Optional
 		virtual void run(cContext* pCon);
-		virtual void jack(ptrLead pLead, cContext* pCon);
 		virtual void save(cByteBuffer* pAddHereb);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);
+
+	protected:
+		void patSetRoot(cLead *aLead);
+		void patGetRoot(cLead *aLead);
 
 	private:
 		tPlug<ptrFig>	mRoot;

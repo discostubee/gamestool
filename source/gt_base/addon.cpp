@@ -9,9 +9,9 @@ const char* cAddon::xCloseAddonFooStr = "closeLib";
 
 const cPlugTag* cAddon::xPT_addonName = tOutline<cAddon>::makePlugTag("addon name");
 
-const cCommand* cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
+const cCommand::dUID cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
 	"load addon",
-	cAddon::eLoadAddon,
+	&cAddon::patLoadAddon,
 	cAddon::xPT_addonName,
 	NULL
 );
@@ -33,43 +33,25 @@ cAddon::~cAddon(){
 	}
 }
 
-void
-cAddon::jack(ptrLead pLead, cContext* pCon){
-	PROFILE;
+void cAddon::patLoadAddon(cLead *aLead){
+	if(mAddonName.mD.empty()){
+		dTimesOpened::iterator found;
 
-	start(pCon);
-	try{
-		switch( pLead->mCom->getSwitch<cAddon>() ){
+		mAddonName = aLead->getPlug(xPT_addonName, currentCon);
 
-			case eLoadAddon:{
-				if(mAddonName.mD.empty()){
-					dTimesOpened::iterator found;
+		if(mAddonName.mD.empty())
+			throw excep::base_error("No name given for loading addon", __FILE__, __LINE__);
 
-					mAddonName = pLead->getPlug(cAddon::xPT_addonName, pCon);
+		mAddonHash = makeHash(mAddonName.mD.c_str());
 
-					if(mAddonName.mD.empty())
-						throw excep::base_error("No name given for loading addon", __FILE__, __LINE__);
-
-					mAddonHash = makeHash(mAddonName.mD.c_str());
-
-					found = xOpenAddons.find(mAddonHash);
-					if(found != xOpenAddons.end()){
-						++found->second;
-					}else{
-						draftAddon(mAddonName.mD);
-						++xOpenAddons[mAddonHash];
-					}
-				}
-			}break;
-
-			default:
-				return cFigment::jack(pLead, pCon);
-				break;
+		found = xOpenAddons.find(mAddonHash);
+		if(found != xOpenAddons.end()){
+			++found->second;
+		}else{
+			draftAddon(mAddonName.mD);
+			++xOpenAddons[mAddonHash];
 		}
-	}catch(excep::base_error &e){
-		WARN(e);
 	}
-	stop(pCon);
 }
 
 

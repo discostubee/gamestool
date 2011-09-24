@@ -47,16 +47,9 @@ namespace gt{
 	public:
 		//-----------------------------
 		const static cPlugTag* xPT_Mesh;	// Expects the sMesh struct.
-		const static cCommand* xAddVert;	//!< Adds vertexes as a pile.
-		const static cCommand* xAddPoly;	//!< Adds polygons as a pile.
-		const static cCommand* xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
-
-		enum{
-			eAddVert = cFigment::eSwitchEnd + 1,
-			eAddPoly,
-			eGetMesh,
-			eSwitchEnd
-		};
+		const static cCommand::dUID xAddVert;	//!< Adds vertexes as a pile.
+		const static cCommand::dUID xAddPoly;	//!< Adds polygons as a pile.
+		const static cCommand::dUID xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
 
 		//-----------------------------
 		// The stuff me must have.
@@ -69,11 +62,13 @@ namespace gt{
 		cPolyMesh();
 		virtual ~cPolyMesh();
 
-		virtual void jack(ptrLead pLead, cContext *pCon);
-
 	protected:
 		sMesh* mLazyMesh;	//!<	the idea here is that we fill the lazy mesh up with data, and then on its next run, we take that data and fill up
 							//!		native format mesh. Then we delete the lazy mesh.
+
+		void patAddVert(cLead *aLead);
+		void patAddPoly(cLead *aLead);
+		void patGetMesh(cLead *aLead);
 
 		void promiseLazy();	//!< Make sure the lazy mesh is there.
 		void cleanLazy();	//!< Just a little something to remind you you have to manage the lazy mesh.

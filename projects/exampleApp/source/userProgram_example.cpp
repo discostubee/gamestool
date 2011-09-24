@@ -26,10 +26,10 @@ namespace showoff{
 			ptrFig anchor = gWorld.get()->makeFig( getHash<cAnchor>() );
 
 			tPlug<cByteBuffer> buff;
-			readFile->add(&buff, cBase_fileIO::xPT_buffer, &fake);
+			readFile->add(&buff, cBase_fileIO::xPT_saveData, &fake);
 			aFile->jack(readFile, &fake); //read the entire file.
 
-			loadAnk->add( &buff, cFigment::xPT_buffer, &fake );
+			loadAnk->add( &buff, cFigment::xPT_saveData, &fake );
 			anchor->jack(loadAnk, &fake);
 
 			gWorld.get()->setRoot(anchor);
@@ -81,10 +81,10 @@ namespace showoff{
 			ptrLead writeFile(new cLead(cBase_fileIO::xWrite, &fake));
 
 			tPlug<cByteBuffer> buff;
-			saveAnchor->add(&buff, cFigment::xPT_buffer, &fake);
+			saveAnchor->add(&buff, cFigment::xPT_saveData, &fake);
 			anchorExam.mD->jack(saveAnchor, &fake);
 
-			writeFile->add( &buff, cBase_fileIO::xPT_buffer, &fake );
+			writeFile->add( &buff, cBase_fileIO::xPT_saveData, &fake );
 			aFile->jack(writeFile, &fake);
 		}
 	}

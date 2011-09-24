@@ -36,26 +36,23 @@ namespace gt{
 	public:
 		static const cPlugTag* xPT_target;
 		static const cPlugTag* xPT_lead;
-		static const cCommand* xSetupPostman;
+		static const cCommand::dUID xSetupPostman;
 
-		static const dNatChar* identify(){ return "postman"; }
-
-		enum{
-			eSetup = cFigment::eSwitchEnd +1,
-			eSwitchEnd
-		};
+		static const char* identify(){ return "postman"; }
 
 		cPostman();
 		virtual ~cPostman();
 
-		virtual const dNatChar* name() const{ return identify(); }
+		virtual const char* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cPostman>::hash(); }
 
 		virtual void run(cContext* pCon);
-		virtual void jack(ptrLead pLead, cContext* pCon);
+
 	private:
 		tPlug<ptrLead> mLead;
 		tPlug<ptrFig> mTarget;
+
+		void patSetup(cLead *aLead);
 	};
 }
 

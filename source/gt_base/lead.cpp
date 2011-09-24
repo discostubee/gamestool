@@ -4,18 +4,16 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-cLead::cLead(const cCommand* pCom, dConSig aConx):
-	mCom( const_cast<cCommand*>(pCom) ),
+cLead::cLead(cCommand::dUID aCom, dConSig aConx):
+	mCom( aCom ),
 	mConx(aConx)
 {
-	DBUG_TRACK_START(mCom->mName.c_str());
-	DBUG_VERBOSE_LO("Lead " << mCom->mName << " made");
+	DBUG_TRACK_START("lead");
 }
 
 cLead::~cLead(){
 	try{
-		DBUG_TRACK_END(mCom->mName.c_str());
-		DBUG_VERBOSE_LO("Lead destroyed " << reinterpret_cast<unsigned int>(this));
+		DBUG_TRACK_END("lead");
 		clear();
 	}catch(...){
 		excep::base_error e("Unknown error when destroying a lead", __FILE__, __LINE__);
@@ -168,9 +166,8 @@ using namespace gt;
 
 GTUT_START(testLead, addByTag){
 	cContext fake;
-	cCommand dontCare(0, "", 0, 0);
 	cPlugTag tag("tag");
-	cLead testMe(&dontCare, &fake);
+	cLead testMe(0, &fake);
 	tPlug<int> number;
 	tPlug<int> target;
 
@@ -186,9 +183,8 @@ GTUT_START(testLead, pile){
 
 GTUT_START(testLead, setPlug){
 	cContext fake;
-	cCommand dontCare(0, "", 0, 0);
 	cPlugTag tag("tag");
-	cLead testMe(&dontCare, &fake);
+	cLead testMe(0, &fake);
 	tPlug<int> number;
 	tPlug<int> target;
 

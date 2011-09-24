@@ -6,17 +6,16 @@ using namespace gt;
 
 cCommand::cCommand(
 	const dUID pID,
-	const dNatChar* pName,
+	const char* pName,
 	const dNameHash pParentHash,
-	unsigned int pSwitch
+	fooPtr aFoo
 ):
-	mID(pID), mName(pName), mParent(pParentHash), mSwitch(pSwitch)
+	mID(pID), mName(pName), mParent(pParentHash), myFoo(aFoo)
 {
 }
 
 cCommand::~cCommand(){
 }
-
 
 bool
 cCommand::usesTag(const cPlugTag* pTag) const{
@@ -39,6 +38,11 @@ cCommand::operator=(const cCommand& pCom){
 	//return *this;
 }
 
+void
+cCommand::use(iFigment *aFig, cLead *aLead) const {
+	( aFig->*myFoo )(aLead);
+}
+
 ////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
@@ -47,12 +51,7 @@ class cComTestFig: public cFigment, private tOutline<cComTestFig>{
 public:
 	static const cPlugTag* xPT_testTag;
 
-	static const dNatChar* identify(){ return "command test figment"; }
-
-	enum{
-		eTestSwitch = cFigment::eSwitchEnd +1,
-		eSwitchEnd
-	};
+	static const char* identify(){ return "command test figment"; }
 
 	cComTestFig(){}
 	~cComTestFig(){}
@@ -62,8 +61,7 @@ const cPlugTag* cComTestFig::xPT_testTag = tOutline<cComTestFig>::makePlugTag("t
 
 GTUT_START(command, nothing)
 {
-	const cCommand* A = tOutline<cComTestFig>::makeCommand("test command", cComTestFig::eTestSwitch, cComTestFig::xPT_testTag);
-	GTUT_ASRT( A->getSwitch<cComTestFig>() ==  cComTestFig::eTestSwitch, "command switch is not correct" );
+
 }
 GTUT_END;
 

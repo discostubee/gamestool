@@ -38,7 +38,7 @@ namespace showoff{
 
 		{
 			ptrFig testAddon = gWorld.get()->makeFig(getHash<cAddon>());
-			ptrLead loadTestAddon = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon->mID, &fake);
+			ptrLead loadTestAddon = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon, &fake);
 			tPlug<dStr> addonName;
 
 

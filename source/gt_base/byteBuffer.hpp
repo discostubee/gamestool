@@ -77,14 +77,14 @@ public:
 
 	class excepUnderFlow: public excep::base_error{
 	public:
-		excepUnderFlow(const dNatChar* pFunc, const unsigned int pLine) throw():
+		excepUnderFlow(const char* pFunc, const unsigned int pLine) throw():
             base_error(pFunc, pLine)
          { addInfo("buffer underflow"); }
 		virtual ~excepUnderFlow() throw(){}
 	};
 
 	class excepOverFlow: public excep::base_error{
-		excepOverFlow(const dNatChar* pFunc, const unsigned int pLine) throw():
+		excepOverFlow(const char* pFunc, const unsigned int pLine) throw():
 			base_error(pFunc, pLine)
 		 { addInfo("buffer overflow"); }
 		virtual ~excepOverFlow() throw(){}

@@ -34,21 +34,16 @@ namespace gt{
 	class cFigment: public cFigContext, private tOutline<cFigment>{
 	public:
 		//-----------------------------
-		// Defines
-		static const cPlugTag*	xPT_buffer;	//!< \todo rename to save buffer or something.
-		static const cCommand*	xSave;	//!< Serialization is a base level ability.
-		static const cCommand*	xLoad;	//!< Ditto above.
-
-		enum{
-			eNotMyBag = uNotMyBag,
-			eSave,
-			eLoad,
-			eSwitchEnd
-		};
+		// Commands and plug tags
+		static const cPlugTag*	xPT_saveData;	//!<
+		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability.
+		static const cCommand::dUID	xLoad;	//!< Ditto above.
 
 		//-----------------------------
 		cFigment();
 		virtual ~cFigment();
+
+		virtual void jack(ptrLead pLead, cContext* pCon);		//!< Jack is your interface for using data with this figment. You shouldn't need to override this.
 
 		//-----------------------------
 		// These things are REQUIRED for any figment class.
@@ -56,28 +51,41 @@ namespace gt{
 		//!\brief	Used to define the string name of this object. It is also hashed to give the unique number
 		//!			used to quickly compare objects.
 		//!\note	You MUST replace this to identify your own
-		static const dNatChar* identify(){ return "figment"; }
+		static const char* identify(){ return "figment"; }
 
 		//- Not sure how I could eliminate this. I should be able to.
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		virtual const char* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return tOutline<cFigment>::hash(); }
 
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
 
-		virtual void jack(ptrLead pLead, cContext* pCon);		//!< Jack is the interface used to get and set various members in a super generic fashion.
-		virtual void run(cContext* pCon);						//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
-		virtual void save(cByteBuffer* pAddHere);				//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);				//!< Called load eat because the head of the buffer is consume by the load function.
+		virtual void run(cContext* pCon);				//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
+		virtual void save(cByteBuffer* pAddHere);		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);			//!< Called load eat because the head of the buffer is consume by the load function.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
 		//!			specific version.
+		//!\note	You'll also need to specify the polymorphic function below as well.
 		static dNameHash replaces(){ return uDoesntReplace; }
 
 		//!\brief	You'll need to override this if you are replacing stuff.
 		virtual dNameHash getReplacement() const{ return cFigment::replaces(); }
+
+		//!\brief	If you want your figment to support the commands and tags from its parent, you'll need to extend from the parent.
+		//!\note	You don't need to extend if you have replaced a parent.
+		static dNameHash extends(){ return uDoesntExtend; }
+
+		//!\brief	Virtual version of the above.
+		virtual dNameHash getExtension() const { return extends(); }
+
+	protected:
+		//-----------------------------
+		// Patch through functions for use with command.
+		void patSave(cLead *aLead);	//!< Allows you to call the save function using jack
+		void patLoad(cLead *aLead);	//!< Same asa the patSave function above.
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -87,12 +95,12 @@ namespace gt{
 	//!			a new figment type class.
 	class cEmptyFig: public cFigment, private tOutline<cEmptyFig>{
 	public:
-		static const dNatChar* identify(){ return "empty figment"; }
+		static const char* identify(){ return "empty figment"; }
 
 		cEmptyFig();
 		virtual ~cEmptyFig();
 
-		virtual const dNatChar* name() const{ return cEmptyFig::identify(); }
+		virtual const char* name() const{ return cEmptyFig::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cEmptyFig>::hash(); }
 	};
 
@@ -103,12 +111,12 @@ namespace gt{
 	//!\note	Should be called Unicron.
 	class cWorldShutoff: public cFigment, private tOutline<cWorldShutoff>{
 	public:
-		static const dNatChar* identify(){ return "world shutoff"; }
+		static const char* identify(){ return "world shutoff"; }
 
 		cWorldShutoff();
 		virtual ~cWorldShutoff();
 
-		virtual const dNatChar* name() const{ return identify(); }
+		virtual const char* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cWorldShutoff>::hash(); }
 
 		virtual void run(cContext* pCon);

@@ -49,7 +49,7 @@ namespace gt{
 		const dStr	mName;
 
 		cPlugTag(
-			const dNatChar* pPlugName
+			const char* pPlugName
 		):
 			mID( makeHash(pPlugName) ),
 			mName( pPlugName )
@@ -275,8 +275,9 @@ namespace gt{
 namespace gt{
 
 	//--------------------------------------
+	//!\brief	Your program will store strings in whatever format it was built with. However, it will have and load using UTF16.
 	template<>
-	class tPlug<dStr>: public cBase_plug{
+	class tPlug<std::string>: public cBase_plug{
 	public:
 		dStr mD;
 
@@ -293,7 +294,7 @@ namespace gt{
 			if( mType != pD.mType )
 				PLUG_CANT_COPY_ID(pD.mType);
 
-				mD = dynamic_cast< const tPlug<dStr>* >( &pD )->mD;
+				mD = dynamic_cast< const tPlug<std::string>* >( &pD )->mD;
 
 			return *this;
 		}
@@ -349,7 +350,7 @@ namespace gt{
 
 			for(size_t idx=0; idx< length; ++idx){
 				//!\todo make more sophisticated conversion.
-				mD.push_back( *pBuff->get(sizeof(size_t)+(idx * sizeof(dNatChar)) ) );
+				mD.push_back( *pBuff->get(sizeof(size_t)+(idx * sizeof(char)) ) );
 			}
 
 			pBuff->trimHead(sizeof(size_t)+length);
@@ -359,6 +360,7 @@ namespace gt{
 			mD.clear();
 		}
 	};
+
 }
 
 
