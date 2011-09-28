@@ -37,7 +37,7 @@ void cAddon::patLoadAddon(cLead *aLead){
 	if(mAddonName.mD.empty()){
 		dTimesOpened::iterator found;
 
-		mAddonName = aLead->getPlug(xPT_addonName, currentCon);
+		mAddonName = aLead->getPlug(xPT_addonName);
 
 		if(mAddonName.mD.empty())
 			throw excep::base_error("No name given for loading addon", __FILE__, __LINE__);

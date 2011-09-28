@@ -31,19 +31,23 @@ using namespace gt;
 #ifdef GT_THREADS
 cContext::cContext() :
 		mThreadID(boost::this_thread::get_id())
-{}
 #else
 cContext::cContext()
-{}
 #endif
+{
+	mSig = gWorld.get()->regContext(this);
+}
 
 
 cContext::cContext(const cContext & copyMe) :
 	mStack(copyMe.mStack),
 	mSigInfo(copyMe.mSigInfo)
-{}
+{
+	mSig = gWorld.get()->regContext(this);
+}
 
 cContext::~cContext(){
+	gWorld.get()->unregContext(mSig);
 }
 
 void
@@ -105,65 +109,58 @@ cContext::makeStackDump(){
 	return mStack;
 }
 
-bool
-cContext::isBlocked(){
-	return false;
-}
-
-void
-cContext::printStack(){
-	std::cout << "(stack dump below) " << std::endl;
-	for(gt::dProgramStack::reverse_iterator itr = mStack.rbegin(); itr != mStack.rend(); ++itr){
-		std::cout << "   -" << (*itr)->name() << std::endl;
-	}
-}
-
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
 	currentCon(NULL)
 {}
 
 cFigContext::~cFigContext(){
-
+	#ifdef GT_THREADS
+		conMu.unlock();
+	#endif
 }
 
 void
 cFigContext::start(cContext *con){
 	PROFILE;
-	#ifdef GT_THREADS
-		boost::unique_lock<boost::mutex> lock(conMu);
-	#endif
-	if(con->isStacked(this, hash()))
+
+	//!\todo make safe with a different context.
+	if(currentCon != NULL && con->isStacked(this, hash()))
 		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
 
-	con->add(this, hash());
-
 	#ifdef GT_THREADS
-		if(currentCon != NULL){
-			conSync.wait(lock);
-		}
+		conMu.lock();
 	#endif
+
+	con->add(this, hash());
 
 	currentCon = con;
 }
 
 void
 cFigContext::stop(cContext *con){
-	PROFILE;
-	#ifdef GT_THREADS
-		boost::unique_lock<boost::mutex> lock(conMu);
-	#endif
 
-	if(con != currentCon)
-		throw excep::base_error("can't stop a context that isn't yours", __FILE__, __LINE__);
+	if(con == currentCon){
+		PROFILE;
 
-	con->finished(this);
+		//throw excep::base_error("can't stop a context that isn't yours", __FILE__, __LINE__);
 
-	if(!con->isStacked(this)){
-		currentCon = NULL;
+		con->finished(this);
 
-		#ifdef GT_THREADS
-			conSync.notify_one();
-		#endif
+		if(!con->isStacked(this)){
+			currentCon = NULL;
+		}
 	}
+
+	#ifdef GT_THREADS
+		conMu.unlock();
+	#endif
+}
+
+void
+cFigContext::kill(){
+	currentCon = NULL;
+	#ifdef GT_THREADS
+		conMu.unlock();
+	#endif
 }

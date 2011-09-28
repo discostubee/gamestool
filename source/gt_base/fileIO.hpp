@@ -58,10 +58,11 @@ namespace gt{
 		void patGetFileSize(cLead *aLead);
 
 		//!\fn		virtual cByteBuffer read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 )
-		//!\brief	Returns a buffer containing what was loaded from a file.
+		//!\brief	Fills the provided buffer with file contents.
+		//!\brief	aOutput
 		//!\param	pStartPoint		0 means starts at the beginning of the file.
 		//!\param	pReadAmount		0 means read the entire file.
-		virtual cByteBuffer& read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 )
+		virtual void read(cBase_plug* aOutput, const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 )
 			{ DUMB_REF_ARG(pStartPoint); DUMB_REF_ARG(pReadAmount); DONT_USE_THIS;  /*cByteBuffer *temp=NULL; return *temp;*/ }
 
 		virtual void write(const cByteBuffer* pBuff)

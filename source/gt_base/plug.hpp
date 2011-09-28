@@ -6,109 +6,74 @@
 #ifndef PLUG_HPP
 #define PLUG_HPP
 
-#include "command.hpp"
-#include "byteBuffer.hpp"
-
-
-#define USE_TYPEINFO	//!< Enable or disable typeID as the method used to identify plug types.
-
-#ifdef USE_TYPEINFO
-	#include <typeinfo>
-#endif
+#include "lead.hpp"
+#include <vector>
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Macros
-
-#ifdef USE_TYPEINFO
-	typedef const std::type_info & PLUG_TYPE_ID;
-	#define PLUG_TYPE_TO_ID(t) typeid(t)
-	#define PLUG_CANT_COPY(t) throw excep::cantCopy(mType.name(), typeid(t).name(), __FILE__, __LINE__)
-	#define PLUG_CANT_COPY_ID(t) throw excep::cantCopy(mType.name(), t.name(), __FILE__, __LINE__)
+#ifdef GT_THREADS
+	#define PLUGUP(plug) cUpdateLemming lem__LINE__ = plug.update()
 #else
-	typedef const gt::dNameHash PLUG_TYPE_ID;
-	#define PLUG_TYPE_TO_ID(t) nameHash(typeid(t).name())
-	#define PLUG_CANT_COPY(t) throw excep::cantCopy("", "", __FILE__, __LINE__)
-	#define PLUG_CANT_COPY_ID(t) throw excep::cantCopy("", "", __FILE__, __LINE__)
+	#define PLUGUP(plug) (void)plug
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Typedefs
-
-
-
-// Classes
+// Object types
 namespace gt{
 
-	//--------------------------------------------------------
-	//!\brief	this helps to identify what each plug is on a lead.
-	class cPlugTag{
-	public:
-		typedef unsigned int dUID;	//!< Unique ID.
+	template<typename A> class tPlug;
 
-		const dUID	mID;
-		const dStr	mName;
+	//----------------------------------------------------------------------------------------------------------------
+	template<typename A>
+	struct tShadow{
 
-		cPlugTag(
-			const char* pPlugName
-		):
-			mID( makeHash(pPlugName) ),
-			mName( pPlugName )
-		{}
-
-		~cPlugTag()
-		{}
-
-	private:
-		cPlugTag& operator = (const cPlugTag&){ return *this; }
+		eShadowMode mMode;
+		tPlug<A>* mData;	//!< If the shadow isn't used, this is null.
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	The interface for the plug template below.
-	class cBase_plug{
+	template<typename A>
+	class tPlugShadows: public cBase_plug{
 	public:
-		PLUG_TYPE_ID mType;	//!< Must be public so the tPlug templates can use it.
 
-		cBase_plug(PLUG_TYPE_ID pTI);
-		cBase_plug(const cBase_plug& pCopy);
-		virtual ~cBase_plug();
+		tPlugShadows(PLUG_TYPE_ID pTI);
+		virtual ~tPlugShadows();
 
-		template<typename T> T getCopy();
+		virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor);
 
-		template<typename T> T* getPtr();
+		virtual cUpdateLemming update();
 
-		virtual	cBase_plug&	operator= (const cBase_plug &pD)
-			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
+		void linkLead(cLead* pLead);
 
-		virtual	cBase_plug& operator= (const cBase_plug *pD)
-			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
-
-		template<typename T>	cBase_plug& operator= (const T &pT);
-
-		template< template<typename> class plug, typename T>	cBase_plug& operator= (plug<T> &pT);
-
-		//!\brief
-
+		void unlinkLead(cLead* pLead);
 
 	protected:
+		virtual A& getMD() =0;	//!< This is so the update can grab out tPlug data.
 
-		void linkLead(cLead* pLead); //!< Leads must let the plug know that they are linked in.
-		void unlinkLead(cLead* pLead); //!< When a plug is destroyed, it must let the lead know.
+		virtual void finishUpdate();
 
-	friend class cLead;
 	private:
-		std::set<cLead*> mLeadsConnected;
+		#ifdef GT_THREADS
+			typedef boost::unique_lock<boost::mutex> dMuLock;
+			boost::mutex muMap;
+		#endif
 
+		typedef std::vector<tShadow<A> > dVecShadow;
+
+		std::set<cLead*> mLeadsConnected;	//!< Lead connections are not copied.
+		dVecShadow mShadows;
+		std::set<cLead*>::iterator itrLead;	//!< handy.
+		typename dVecShadow::iterator itrShadow;	//!< handy.
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	A plug is a data container that a lead can connect too. The lead can then connect that data to another
 	//!			object via the jack function, as well as automatically disconnect itself from its linked leads when it
 	//!			dies. It is also designed for serialization using a byte buffer.
-	//!\note	You don't have to use plugs for all your figments stuff.
-	//!			Just for the things you want to save and reload or pass
-	//!			through a lead to another object.
+	//!\note	You don't have to use plugs for all your figments stuff.  Just for the things you want to save and
+	//!			reload or pass through a lead to another object.
 	template<typename A>
-	class tPlug: public cBase_plug{
+	class tPlug: public tPlugShadows<A>{
 	public:
 		A mD;	//!< Data: This is public so that the owner can have easy access to it.
 
@@ -137,6 +102,9 @@ namespace gt{
 
 		cBase_plug& operator= (const A& pA);
 
+	protected:
+		virtual A& getMD() { return mD; }
+
 	private:
 		void genericCopy(const cBase_plug* pD);
 	};
@@ -164,7 +132,7 @@ namespace gt{
 
 		return &dynamic_cast< tPlug<T>* >(this)->mD;
 	}
-
+/*
 	template<typename T>
 	cBase_plug&
 	cBase_plug::operator= (const T &pT){
@@ -176,10 +144,10 @@ namespace gt{
 
 		return *this;
 	}
-
+*/
 	template< template<typename> class plug, typename T>
 	cBase_plug& 
-	cBase_plug::operator= (plug<T> &pT){
+	cBase_plug::operator= (const plug<T> &pT){
 		if(this != &pT){
 			if(mType != pT.mType)
 				PLUG_CANT_COPY_ID(pT.mType);
@@ -189,17 +157,147 @@ namespace gt{
 		return *this;
 	}
 
+	//--------------------------------------
+	template<typename A>
+	tPlugShadows<A>::tPlugShadows(PLUG_TYPE_ID pTI) : cBase_plug(pTI){
+	}
+
+	template<typename A>
+	tPlugShadows<A>::~tPlugShadows(){
+		try{
+			#ifdef GT_THREADS
+				dMuLock lock(muMap);
+			#endif
+			PROFILE;
+			DBUG_VERBOSE_LO("destroying plug");
+
+			while( !mLeadsConnected.empty() ){
+					itrLead = mLeadsConnected.begin();
+					try{
+						(*itrLead)->unplug(this);
+					}catch(...){
+						//- carry on removing.
+					}
+					mLeadsConnected.erase(itrLead);
+
+					DBUG_VERBOSE_LO( "disconnected lead " << reinterpret_cast<unsigned int>(*mLeadsConnected.begin()) );
+			}
+
+			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
+				if(itrShadow->mData != NULL)
+					delete itrShadow->mData;
+			}
+
+		}catch(...){
+			excep::base_error e("Unknown error when destroying a plug", __FILE__, __LINE__);
+			WARN(e);
+		}
+	}
+
+	template<typename A>
+	cBase_plug*
+	tPlugShadows<A>::getShadow(dConSig aCon, eShadowMode whatFor){
+		//- It should be fine to not lock here because this data should be independant of the other threads, and the shadow list should only be updated when all leads are locked.
+		if(mShadows[aCon].mMode == eSM_read)	//- these operations should be quick as its a vector.
+			mShadows[aCon].mMode = whatFor;
+		return mShadows[aCon].mData;
+	}
+
+	template<typename A>
+	cUpdateLemming
+	tPlugShadows<A>::update(){
+		#ifdef GT_THREADS
+			muMap.lock();	//- lemming unlocks this when it dies and call finish.
+		#endif
+
+		PROFILE;
+
+		//- let any mutex throws go all the way and cause the program to exit.
+		for(itrLead = mLeadsConnected.begin(); itrLead != mLeadsConnected.end(); ++itrLead)
+			(*itrLead)->muLead.lock();
+
+		for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
+			if(itrShadow->mData != NULL){
+				if(itrShadow->mMode == eSM_write)
+					getMD() = itrShadow->mData->mD;
+			}
+		}
+
+		return cUpdateLemming(this);
+	}
+
+	template<typename A>
+	void
+	tPlugShadows<A>::finishUpdate(){
+
+		for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
+			if(itrShadow->mData != NULL){
+				itrShadow->mMode = eSM_read;
+				itrShadow->mData->mD = getMD();
+			}
+		}
+
+		for(itrLead = mLeadsConnected.begin(); itrLead != mLeadsConnected.end(); ++itrLead)
+			(*itrLead)->muLead.unlock();
+
+		#ifdef GT_THREADS
+			muMap.unlock();
+		#endif
+	}
+
+	template<typename A>
+	void
+	tPlugShadows<A>::linkLead(cLead* pLead){
+		#ifdef GT_THREADS
+			dMuLock lock(muMap);
+		#endif
+
+		PROFILE;
+		ASRT_NOTNULL(pLead);
+
+		DBUG_VERBOSE_LO("Connecting lead " << reinterpret_cast<unsigned int>(pLead) );
+		mLeadsConnected.insert(pLead);
+
+		if(mShadows.size() < pLead->mConx){
+			tShadow<A> stamp = { eSM_read, NULL };
+			mShadows.resize(pLead->mConx, stamp);
+		}
+
+		itrShadow = mShadows.begin() + pLead->mConx;
+
+
+	}
+
+	template<typename A>
+	void
+	tPlugShadows<A>::unlinkLead(cLead* pLead){
+		#ifdef GT_THREADS
+			dMuLock lock(muMap);
+		#endif
+
+		PROFILE;
+		ASRT_NOTNULL(pLead);
+
+		std::set<cLead*>::iterator tempI = mLeadsConnected.find(pLead);
+		if( tempI != mLeadsConnected.end() ){	// there should be no need for this check.
+			mLeadsConnected.erase( tempI );
+
+
+			DBUG_VERBOSE_LO( "disconnecting lead " << reinterpret_cast<unsigned int>(pLead) );
+		}
+	}
+
 
 	//--------------------------------------
 	template<typename A>
 	tPlug<A>::tPlug():
-		cBase_plug(typeid(A))
+		tPlugShadows<A>(typeid(A))
 	{
 	}
 
 	template<typename A>
 	tPlug<A>::tPlug(const A& pA):
-		cBase_plug(typeid(A)), mD(pA)
+		tPlugShadows<A>(typeid(A)), mD(pA)
 	{
 	}
 
@@ -215,7 +313,7 @@ namespace gt{
 		ASRT_NOTNULL(pD);
 		ASRT_NOTSELF(pD);
 
-		if( mType == pD->mType ){	// we can just cast
+		if( tPlugShadows<A>::mType == pD->mType ){	// we can just cast
 			mD = dynamic_cast< tPlug<A>* >( const_cast<cBase_plug*>(pD) )->mD;
 		}else{ // we need to see if there is an acceptable converter.
 			//!!! can do this with a map of maps (2D map). Map this thing's template version of the copy check to the targets. Then at the right location, check if there is a templated copy function.
@@ -277,14 +375,14 @@ namespace gt{
 	//--------------------------------------
 	//!\brief	Your program will store strings in whatever format it was built with. However, it will have and load using UTF16.
 	template<>
-	class tPlug<std::string>: public cBase_plug{
+	class tPlug<std::string>: public tPlugShadows<std::string>{
 	public:
-		dStr mD;
+		std::string mD;
 
-		tPlug(): cBase_plug(typeid(dStr)){
+		tPlug(): tPlugShadows<std::string>(typeid(dStr)){
 		}
 
-		tPlug(dStr pA): cBase_plug(typeid(dStr)), mD(pA){
+		tPlug(std::string pA): tPlugShadows<std::string>(typeid(dStr)), mD(pA){
 		}
 
 		virtual ~tPlug(){}
@@ -359,6 +457,9 @@ namespace gt{
 		void reset(){
 			mD.clear();
 		}
+
+	protected:
+		virtual std::string& getMD() { return mD; }
 	};
 
 }

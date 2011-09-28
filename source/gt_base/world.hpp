@@ -85,15 +85,17 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Typedefs
 namespace gt{
-	typedef const cContext* dConSig;	//!< This is the signature of a context.
+	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
 	typedef tDirPtr<iFigment> ptrFig;	//!< Smart pointer to a figment.
 	typedef boost::shared_ptr<cLead> ptrLead;	//!< Smart pointer to a lead.
 	typedef const void* dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time.
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-// figment interface along with with supporting classes
+
+////////////////////////////////////////////////////////////////////
+// Classes
 namespace gt{
+
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	helpful when loading.
@@ -116,6 +118,7 @@ namespace gt{
 	};
 
 	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
+
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	Figment interface, put here so we have a complete interface for the ptrFig type. Refer to the base implementation of this
@@ -143,14 +146,9 @@ namespace gt{
 
 	friend class cBlueprint;
 	};
-}
 
-////////////////////////////////////////////////////////////////////
-// Classes
-namespace gt{
 
 	//---------------------------------------------------------------------------------------------------
-	//!\class	cWorld
 	//!\brief	The world is a single object that ties the program together, as well as being the main 
 	//!			factory that creates figment-type objects. The world object is also a singleton that is 
 	//!			seen by every figment-type object and offers services to them. It also designed to 
@@ -165,6 +163,7 @@ namespace gt{
 		//--------------------------------------------------------
 		// New types.
 		typedef std::list<dStr> dLines;
+		typedef tShortLookup<cContext*> dContextLookup;
 
 		//--------------------------------------------------------
 		// Members
@@ -179,6 +178,9 @@ namespace gt{
 
 		//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
 		void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
+
+		//!\brief
+		void warnError(const char *msg, const char* pFile, const unsigned int pLine);
 
 		//!\todo	Make threadsafe.
 		static void makeProfileReport(std::ostream &log);
@@ -216,11 +218,25 @@ namespace gt{
 		//!\param	pCommandID
 		ptrLead makeLead(dNameHash pFigHash, unsigned int pComID, dConSig pConx);
 
-		//!\todo	Make threadsafe.
+		//!\brief	Makes a profile token using the profiler stored in this world.
+		//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
+		//!\todo	Make the death report threadsafe
 		static cProfiler::cToken makeProfileToken(const char* pFile, unsigned int pLine);
 
+
 		//--------------------------------------------------------
-		// Get references
+		// Register office
+
+		//!\brief	We need to keep track of the number of contexts so we can make a context lookup.
+		//!\note	Locks all contexts while the lookup table is changed.
+		dConSig regContext(cContext* aCon);
+
+		//!\brief	NEVER forget to do this. Locks all contexts while the table is updated. Previous context signatures
+		//!			(apart from the one being unregged) remain valid.
+		void unregContext(dConSig aConx);
+
+		//--------------------------------------------------------
+		// Get stuff
 		
 		//!\note	Slow. Intended for ease of reading.
 		const cPlugTag* getPlugTag(dNameHash pFigHash, dNameHash pPTHash);
@@ -228,6 +244,10 @@ namespace gt{
 		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
 		//!			bicycle.
 		ptrFig getEmptyFig();
+
+		//!\brief	Intended to be used by plugs so they can have quick access to the context lookup.
+		//!\note	This lookup table should not change unless all the contexts have first been locked.
+		const dContextLookup& getContextLookup();
 
 		//--------------------------------------------------------
 		// Polymorphs
@@ -272,7 +292,7 @@ namespace gt{
 		dBlueprintMap::iterator mScrBMapItr;	//!< scratch variable for iterating over blueprint library.
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
 		bool mBicycleSetup;	//!< Faster than looking for it in the library every time.
-
+		dContextLookup mContexts; //!< We keep track of all the contexts here in the world.
 	};
 
 	extern tMrSafety<cWorld> gWorld;	//!< Gives you threadsafe access to the world.

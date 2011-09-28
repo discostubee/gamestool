@@ -86,6 +86,16 @@ cWorld::makeProfileToken(const char* pFile, unsigned int pLine){
 	return xProfiler->makeToken(pFile, pLine);
 }
 
+dConSig
+cWorld::regContext(cContext* aCon){
+	return mContexts.add(aCon);
+}
+
+void
+cWorld::unregContext(dConSig aConx){
+	mContexts.del(aConx);
+}
+
 cWorld::cWorld():
 	mKeepLooping(true),
 	mBicycleSetup(false)
@@ -306,6 +316,13 @@ cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int p
 	lo(ss.str());
 }
 
+void
+cWorld::warnError(const char *msg, const char* pFile, const unsigned int pLine){
+	std::stringstream ss;
+	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << msg;
+	lo(ss.str());
+}
+
 ptrFig
 cWorld::getEmptyFig(){
 	if(mBicycleSetup == false){
@@ -316,6 +333,11 @@ cWorld::getEmptyFig(){
 	}
 
 	return mVillageBicycle;
+}
+
+const cWorld::dContextLookup&
+cWorld::getContextLookup(){
+	return mContexts;
 }
 
 void

@@ -30,6 +30,6 @@ cPostman::run(cContext* pCon){
 
 void
 cPostman::patSetup(cLead *aLead){
-	mLead = aLead->getPlug(xPT_target, currentCon);
-	mTarget = aLead->getPlug(xPT_lead, currentCon);
+	mLead = aLead->getPlug(xPT_target);
+	mTarget = aLead->getPlug(xPT_lead);
 }

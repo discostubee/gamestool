@@ -56,7 +56,7 @@ cBase_fileIO::~cBase_fileIO(){
 
 void
 cBase_fileIO::patSetPath(cLead *aLead){
-	mPath = aLead->getPlug(xPT_filePath, currentCon);
+	mPath = aLead->getPlug(xPT_filePath);
 }
 
 void
@@ -66,18 +66,18 @@ cBase_fileIO::patRead(cLead *aLead){
 
 	//!\todo	Used check instead of try.
 	try{
-		readStart = aLead->getPlug(xPT_readSize, currentCon)->getCopy<dFilePoint>();
+		readStart = aLead->getPlug(xPT_readSize)->getCopy<dFilePoint>();
 	}catch(excep::base_error){}
 	try{
-		readSize = aLead->getPlug(xPT_startSpot, currentCon)->getCopy<dFilePoint>();
+		readSize = aLead->getPlug(xPT_startSpot)->getCopy<dFilePoint>();
 	}catch(excep::base_error){}
 
-	*aLead->getPlug(xPT_buffer, currentCon) = read( readSize, readStart );
+	read(aLead->getPlug(xPT_buffer), readSize, readStart );
 }
 
 void
 cBase_fileIO::patWrite(cLead *aLead){
-	write( aLead->getPlug(xPT_buffer, currentCon)->getPtr<cByteBuffer>() );
+	write( aLead->getPlug(xPT_buffer)->getPtr<cByteBuffer>() );
 }
 
 void
@@ -86,10 +86,10 @@ cBase_fileIO::patInsert(cLead *aLead){
 
 	//!\todo	Use check instead of try
 	try{
-		startSpot = aLead->getPlug(xPT_startSpot, currentCon)->getCopy<dFilePoint>();
+		startSpot = aLead->getPlug(xPT_startSpot)->getCopy<dFilePoint>();
 	}catch(excep::base_error){}
 
-	insert( aLead->getPlug(xPT_buffer, currentCon)->getPtr<cByteBuffer>(), startSpot );
+	insert( aLead->getPlug(xPT_buffer)->getPtr<cByteBuffer>(), startSpot );
 }
 
 void
@@ -101,72 +101,6 @@ void
 cBase_fileIO::patGetFileSize(cLead *aLead){
 	PROFILE;
 	mFileSize = getFileSize();
-	aLead->setPlug(&mFileSize, xPT_fileSize, currentCon);
+	aLead->setPlug(&mFileSize, xPT_fileSize);
 }
 
-/*
-void
-cBase_fileIO::jack(ptrLead pLead, cContext* pCon){
-	PROFILE;
-
-	start(pCon);
-	try{
-		switch( pLead->mCom->getSwitch<cBase_fileIO>() ){
-			case eSetPath:
-				mPath = pLead->getPlug(xPT_filePath, pCon);
-				break;
-
-			case eRead:{
-				PROFILE;
-
-				DBUG_LO("reading");
-
-				size_t readSize = 0;
-				size_t readStart = 0;
-				try{
-					readStart = pLead->getPlug(xPT_readSize, pCon)->getCopy<dFilePoint>();
-				}catch(excep::base_error){}
-				try{
-					readSize = pLead->getPlug(xPT_startSpot, pCon)->getCopy<dFilePoint>();
-				}catch(excep::base_error){}
-
-				*pLead->getPlug(xPT_buffer, pCon) = read( readSize, readStart );
-
-			}break;
-
-			case eWrite:{
-				PROFILE;
-				write( pLead->getPlug(xPT_buffer, pCon)->getPtr<cByteBuffer>() );
-			}break;
-
-			case eInsert:{
-				PROFILE;
-
-				size_t startSpot = 0;
-				try{
-					startSpot = pLead->getPlug(xPT_startSpot, pCon)->getCopy<dFilePoint>();
-				}catch(excep::base_error){}
-
-				insert( pLead->getPlug(xPT_buffer, pCon)->getPtr<cByteBuffer>(), startSpot );
-			}break;
-
-			case eDeleteFile:
-				deleteFile();
-			break;
-
-			case eGetSize:{
-				PROFILE;
-				mFileSize = getFileSize();
-				pLead->setPlug(&mFileSize, xPT_fileSize, pCon);
-			}break;
-
-			default:
-				cFigment::jack(pLead, pCon);
-				break;
-		}
-	}catch(excep::base_error &e){
-		WARN(e);
-	}
-	stop(pCon);
-}
-*/

@@ -4,17 +4,41 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
+cUpdateLemming::cUpdateLemming(cBase_plug *callBack) : callMe(callBack)
+{}
+
+cUpdateLemming::~cUpdateLemming() {
+	callMe->finishUpdate();
+}
+
+////////////////////////////////////////////////////////////
+using namespace gt;
+
 cLead::cLead(cCommand::dUID aCom, dConSig aConx):
-	mCom( aCom ),
-	mConx(aConx)
+	mCom(aCom), mConx(aConx)
 {
 	DBUG_TRACK_START("lead");
 }
 
+cLead::cLead(const cLead &otherLead):
+	mCom(otherLead.mCom), mConx(otherLead.mConx)
+{}
+
 cLead::~cLead(){
 	try{
+		#ifdef GT_THREADS
+			dLockLead lock(muLead);
+		#endif
+
+		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
+			scrTDataItr->second->unlinkLead(this);
+		}
+
+		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
+			(*scrPDataItr)->unlinkLead(this);
+		}
+
 		DBUG_TRACK_END("lead");
-		clear();
 	}catch(...){
 		excep::base_error e("Unknown error when destroying a lead", __FILE__, __LINE__);
 		WARN(e);
@@ -22,24 +46,81 @@ cLead::~cLead(){
 }
 
 void
-cLead::add(cBase_plug* aPlug, const cPlugTag* pTag, dConSig aCon){
-	add(aPlug, pTag->mID, aCon);
+cLead::getPlug(cBase_plug* aOutPlug, const cPlugTag* pTag){
+	PROFILE;
+
+	scrTDataItr = mTaggedData.find(pTag->mID);
+	if(scrTDataItr != mTaggedData.end()){
+		*aOutPlug = scrTDataItr->second->getShadow(mConx, eSM_read);
+	}else{
+		WARN("can't find plug");
+	}
 }
 
 void
-cLead::add(cBase_plug *aPlug, cPlugTag::dUID ID, dConSig aCon){
+cLead::addPlug(cBase_plug *aPlug, const cPlugTag *aTag){
 	PROFILE;
 
-	if(aCon != mConx)
-		return;
+	scrTDataItr = mTaggedData.find(aTag->mID);
+	if(scrTDataItr != mTaggedData.end()){
+		scrTDataItr->second->unlinkLead(this);
+		scrTDataItr->second = aPlug;
+	}else{
+		mTaggedData[aTag->mID] = aPlug;
+	}
+	aPlug->linkLead(this);
+}
+
+void
+cLead::setPlug(cBase_plug *aPlug, const cPlugTag *aTag){
+	PROFILE;
+
+	scrTDataItr = mTaggedData.find(aTag->mID);
+	if(scrTDataItr != mTaggedData.end()){
+		*scrTDataItr->second->getShadow(mConx, eSM_write) = aPlug;
+	}else{
+		WARN("can't find plug");
+	}
+}
+
+void
+cLead::unplug(cBase_plug* pPlug){
+	#ifdef GT_THREADS
+		dLockLead lock(muLead);
+	#endif
+
+	PROFILE;
+
+	//- Search for plug.
+	if(!mTaggedData.empty()){
+		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
+			if(scrTDataItr->second == pPlug){
+				mTaggedData.erase(scrTDataItr);
+			}
+		}
+	}
+
+	if(!mDataPile.empty()){
+		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
+			if(*scrPDataItr == pPlug){
+				mDataPile.erase(scrPDataItr);
+			}
+		}
+	}
+}
+
+/*
+void
+cLead::add(cBase_plug* aPlug, const cPlugTag* pTag){
+	add(aPlug, pTag->mID);
+}
+
+void
+cLead::add(cBase_plug *aPlug, cPlugTag::dUID ID){
+	PROFILE;
 
 	scrTDataItr = mTaggedData.find(ID);
 	if(scrTDataItr != mTaggedData.end()){
-		scrTCleanItr = mTaggedCleanup.find(scrTDataItr);
-		if(scrTCleanItr != mTaggedCleanup.end()){
-			delete scrTDataItr->second;
-			mTaggedCleanup.erase(scrTCleanItr);
-		}
 		scrTDataItr->second->unlinkLead(this);
 		scrTDataItr->second = aPlug;
 	}else{
@@ -49,22 +130,16 @@ cLead::add(cBase_plug *aPlug, cPlugTag::dUID ID, dConSig aCon){
 }
 
 void
-cLead::addToPile(cBase_plug* pData, dConSig aCon){
+cLead::addToPile(cBase_plug* pData){
 	PROFILE;
-
-	if(aCon != mConx)
-		throw excep::badContext(__FILE__, __LINE__);
 
 	mDataPile.push_back(pData);
 	pData->linkLead(this);
 }
 
 cBase_plug*
-cLead::getPlug(const cPlugTag* pTag, dConSig aCon){
+cLead::getPlug(const cPlugTag* pTag){
 	PROFILE;
-
-	if(aCon != mConx)
-		throw excep::badContext(__FILE__, __LINE__);
 
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr == mTaggedData.end())
@@ -74,89 +149,25 @@ cLead::getPlug(const cPlugTag* pTag, dConSig aCon){
 }
 
 cLead::cPileItr
-cLead::getPiledDItr(dConSig aCon){
-	if(aCon != mConx)
-		throw excep::badContext(__FILE__, __LINE__);
-
+cLead::getPiledDItr(){
 	return cPileItr(&mDataPile);
 }
 
 
 void
-cLead::setPlug(cBase_plug *aPlug, const cPlugTag *aTag, dConSig aCon){
-	*getPlug(aTag, aCon) = *aPlug;
+cLead::setPlug(cBase_plug *aPlug, const cPlugTag *aTag){
+	*getPlug(aTag) = *aPlug;
 }
 
 void
-cLead::clear(){
-	PROFILE;
-
-	//- Shouldn't have to set to null as map.clear should call destructor on a pointer.
-	for(scrTCleanItr = mTaggedCleanup.begin(); scrTCleanItr != mTaggedCleanup.end(); ++scrTCleanItr){
-		delete (*scrTCleanItr)->second;
-		mTaggedData.erase(*scrTCleanItr);
-	}
-
-	for(scrPCleanItr = mPileCleanup.begin(); scrPCleanItr != mPileCleanup.end(); ++scrPCleanItr){
-		delete *(*scrPCleanItr);
-		mDataPile.erase(*scrPCleanItr);
-	}
-
-	//- Unlink remaining plugs.
-	for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
-		scrTDataItr->second->unlinkLead(this);
-	}
-
-	for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-		(*scrPDataItr)->unlinkLead(this);
-	}
-
-	mTaggedCleanup.clear();
-	mDataPile.clear();
+cLead::setPlug(cBase_plug &aPlug, const cPlugTag *aTag){
+	*getPlug(aTag) = aPlug;
 }
+*/
 
-void
-cLead::unplug(cBase_plug* pPlug){
-	PROFILE;
 
-	//- Search for plug.
-	if(!mTaggedData.empty()){
-		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
-			if(scrTDataItr->second == pPlug){
 
-				//- Check if we need to clean it up.
-				scrTCleanItr = mTaggedCleanup.find(scrTDataItr);
-				if(scrTCleanItr != mTaggedCleanup.end()){
-					delete scrTDataItr->second;
-					mTaggedCleanup.erase(scrTCleanItr); // This should not call the destructor on a pointer so we shouldn't have to set it to null.
-				}
 
-				//- This should not call the destructor on a pointer.
-				mTaggedData.erase(scrTDataItr);
-				return;
-			}
-		}
-	}
-
-	//- If it wasn't in the tagged data.
-	if(!mDataPile.empty()){
-		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-			if(*scrPDataItr == pPlug){
-
-				//- Check if we need to clean it up.
-				scrPCleanItr = mPileCleanup.find(scrPDataItr);
-				if(scrPCleanItr != mPileCleanup.end()){
-					delete *scrPDataItr;
-					mPileCleanup.erase(scrPCleanItr);
-				}
-
-				mDataPile.erase(scrPDataItr);
-				return;
-			}
-		}
-	}
-
-}
 
 ////////////////////////////////////////////////////////////
 // Tests
@@ -164,37 +175,12 @@ cLead::unplug(cBase_plug* pPlug){
 
 using namespace gt;
 
-GTUT_START(testLead, addByTag){
-	cContext fake;
-	cPlugTag tag("tag");
-	cLead testMe(0, &fake);
-	tPlug<int> number;
-	tPlug<int> target;
-
-	number = 42;
-
-	testMe.add(&number, &tag, &fake);
-	target = testMe.getPlug(&tag, &fake);
-	GTUT_ASRT(target.mD==42, "Lead didn't give back the right data.");
+GTUT_START(testLead, tagging){
 }GTUT_END;
 
-GTUT_START(testLead, pile){
+GTUT_START(testLead, piling){
 }GTUT_END;
 
-GTUT_START(testLead, setPlug){
-	cContext fake;
-	cPlugTag tag("tag");
-	cLead testMe(0, &fake);
-	tPlug<int> number;
-	tPlug<int> target;
 
-	number = 42;
-	testMe.add(&target, &tag, &fake);
-	testMe.setPlug(&number, &tag, &fake);
-	GTUT_ASRT(target.mD==42, "Lead didn't give back the right data.");
-}GTUT_END;
-
-GTUT_START(testLead, stopBadContext){
-}GTUT_END;
 
 #endif

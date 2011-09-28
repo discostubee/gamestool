@@ -185,12 +185,12 @@ cAnchor::run(cContext* pCon) {
 
 void
 cAnchor::patSetRoot(cLead *aLead){
-	mRoot = aLead->getPlug(cAnchor::xPT_root, currentCon);
+	mRoot = aLead->getPlug(cAnchor::xPT_root);
 }
 
 void
 cAnchor::patGetRoot(cLead *aLead){
-	aLead->add(&mRoot, cAnchor::xPT_root, currentCon);
+	aLead->add(&mRoot, cAnchor::xPT_root);
 }
 
 
@@ -232,7 +232,8 @@ const cCommand::dUID	cSaveTester::xGetMyStr = tOutline<cSaveTester>::makeCommand
 
 void
 cSaveTester::patGetStr(cLead *aLead){
-	aLead->addToPile(&myStr, currentCon); aLead->addToPile(&myNum, currentCon);
+	aLead->addToPile(&myStr);
+	aLead->addToPile(&myNum);
 }
 
 
@@ -245,9 +246,9 @@ GTUT_START(testAnchor, basicSave){
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
-	ptrLead add(new cLead(cAnchor::xSetRoot, &fakeCon));
+	ptrLead add(new cLead(cAnchor::xSetRoot, fakeCon.mSig));
 
-	add->add(&tester, cAnchor::xPT_root, &fakeCon);
+	add->add(&tester, cAnchor::xPT_root);
 	ank->jack(add, &fakeCon);
 
 	buff.clear();
@@ -258,20 +259,20 @@ GTUT_START(testAnchor, basicLoad){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	cContext fake;
 
-	ptrLead load(new cLead(cAnchor::xLoad, &fake));
+	ptrLead load(new cLead(cAnchor::xLoad, fake.mSig));
 	dReloadMap dontcare;
 	ank->loadEat(&buff, &dontcare);
 
-	ptrLead root(new cLead(cAnchor::xGetRoot, &fake));
+	ptrLead root(new cLead(cAnchor::xGetRoot, fake.mSig));
 	ank->jack(root, &fake);
 	tPlug<ptrFig> reload;
-	reload = root->getPlug(cAnchor::xPT_root, &fake);
+	reload = root->getPlug(cAnchor::xPT_root);
 
-	ptrLead checkStr(new cLead(cSaveTester::xGetMyStr, &fake));
+	ptrLead checkStr(new cLead(cSaveTester::xGetMyStr, fake.mSig));
 	reload.mD->jack(checkStr, &fake);
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
-	cLead::cPileItr itr = checkStr->getPiledDItr(&fake);
+	cLead::cPileItr itr = checkStr->getPiledDItr();
 	myStr = itr.getPlug();
 	++itr;
 	myNum = itr.getPlug();
