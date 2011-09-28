@@ -28,20 +28,27 @@ cFigment::~cFigment(){
 
 void
 cFigment::patSave(cLead *aLead){
-	save( aLead->getPlug(xPT_saveData, currentCon)->getPtr<cByteBuffer>() );
+	cByteBuffer buff;
+	save( &buff );
 }
 
 void
 cFigment::patLoad(cLead *aLead){
-	loadEat( aLead->getPlug(xPT_saveData, currentCon)->getPtr<cByteBuffer>() );
+	cByteBuffer buff;
+	loadEat( &buff );
 }
 
 void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
+	if(pLead->mConx != pCon->mSig)
+		throw excep::badContext(__FILE__, __LINE__);
+
 	start(pCon);
 	try{
+		cLead::dLockLead lock(pLead->muLead);
+		ASRT_NOTNULL(mBlueprint);
 		mBlueprint->getCom(pLead->mCom)->use(this, pLead.get());
 	}catch(excep::base_error &e){
 		WARN(e);
@@ -137,17 +144,7 @@ GTUT_START(test_figment, hashes){
 	GTUT_ASRT(getHash<cFigment>()==test.hash(), "hashes don't match");
 }GTUT_END;
 
-GTUT_START(test_figment, givesSave){
-	tOutline<cFigment>::draft();
 
-	cContext fake;
-	ptrLead save = gWorld.get()->makeLead(getHash<cFigment>(), cFigment::xSave, &fake);
-	ptrFig testMe = gWorld.get()->makeFig(getHash<cFigment>());
-
-	tPlug<cByteBuffer> saveBuff;
-	save->add(&saveBuff, cFigment::xPT_saveData, &fake);
-	testMe->jack(save, &fake);
-}GTUT_END;
 
 
 //!\brief	Really basic class for testing out the context.

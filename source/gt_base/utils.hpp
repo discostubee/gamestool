@@ -160,11 +160,153 @@ isPowerOf2(int i)
 {
 	return i > 0 && (i & (i - 1)) == 0;
 
-	//- Above is really, but it's cool because it takes advantage of && operator returning bool.
+	//- Above is the same, but it's cool because it takes advantage of && operator returning bool.
 	//	if(i>0 && (i & (i - 1)) == 0)
 	//		return true;
 	//	return false;
 }
+
+//------------------------------------------------------------------------------------------
+typedef unsigned short dIDSLookup;	//!< index into a short lookup table.
+
+//!\brief	Stores a smaller number of elements (65,535 which should be enough), and keeps track of holes, refilling them when needed.
+template<typename T>
+class tShortLookup{
+public:
+	tShortLookup();
+	~tShortLookup();
+
+	T get(dIDSLookup aID);
+
+	T* getRaw();	//!< Be careful with this. Intended for really fast lookups where we're sure we can't go out of bounds or use a free-ed slot.
+
+	dIDSLookup add(T &aData);
+
+	void del(dIDSLookup aID);
+
+private:
+	struct slot{
+		bool free;
+		T data;
+	};
+
+	slot* table;
+	slot* itr;
+	unsigned short size;
+	unsigned short numFree;
+};
+
+//------------------------------------------------------------------------------------------
+//!\brief	Has sole ownership of a pointer which it cleans up and allows child classes
+//!			to work with.
+template<typename T>
+class tPMorphJar{
+private:
+	T *data;
+
+public:
+	explicit tPMorphJar() : data(NULL){}
+
+	template<typename COPY> tPMorphJar(const COPY &copyMe){
+		data = new COPY();
+		*data = copyMe;
+	}
+
+	template<typename COPY> tPMorphJar(const tPMorphJar<COPY> &copyMe){
+		data = new COPY();
+		*data = *copyMe.data;
+	}
+
+	~tPMorphJar(){ delete data; }
+
+	tPMorphJar<T> & operator = (const tPMorphJar<T> &otherJar){
+		if(&otherJar != this){
+			*data = *otherJar.data;
+		}
+		return *this;
+	}
+
+	template<typename COPY> tPMorphJar<T> & operator = (const COPY &copyMe){
+		delete data;
+		data = new COPY();
+		*data = copyMe;
+		return *this;
+	}
+
+	T& get(){ return *data; }
+};
+
+////////////////////////////////////////////////////////////
+// Template definitions
+
+template<typename T>
+tShortLookup<T>::tShortLookup(): table(NULL), size(0), numFree(0){}
+
+template<typename T>
+tShortLookup<T>::~tShortLookup(){
+	delete [] table;
+}
+
+template<typename T>
+T
+tShortLookup<T>::get(dIDSLookup aID){
+	if(aID > size)
+		throw excep::base_error("ID outside range", __FILE__, __LINE__);
+
+	itr = &table[aID];
+
+	if(itr->free)
+		throw excep::base_error("trying to get a free slot", __FILE__, __LINE__);
+
+	return itr->data;
+}
+
+template<typename T>
+T*
+tShortLookup<T>::getRaw(){
+	return table;
+}
+
+template<typename T>
+dIDSLookup
+tShortLookup<T>::add(T &aData){
+	if(numFree == 0){
+		slot* tmp = new slot[size + 1];
+		::memcpy(tmp, table, size * sizeof(T));
+		delete [] table;
+		table = tmp;
+		itr = &table[size];
+		++size;
+
+		itr->free = false;
+		itr->data = aData;
+
+		return (size - 1);
+	}else{
+		for(dIDSLookup idx=0; idx < size; ++idx){
+			itr = &table[idx];
+			if(itr->free){
+				itr->data = aData;
+				itr->free = false;
+				--numFree;
+				return idx;
+			}
+		}
+		throw excep::base_error("no free slots when some were reported", __FILE__, __LINE__);	//- just in case
+	}
+
+}
+
+template<typename T>
+void
+tShortLookup<T>::del(dIDSLookup aID){
+	if(aID > size)
+		throw excep::base_error("ID outside range", __FILE__, __LINE__);
+
+	table[aID].free = true;
+	++numFree;
+}
+
 
 
 #endif

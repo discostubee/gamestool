@@ -47,6 +47,14 @@
  *  0   g<-----|
  *  0   g
  *
+ *
+ * Outline of how plugs works:
+ * Using a leads 'get plug' function returns a shadow plug. A shadow is unique for every context, and because every thread has a different context, threading
+ * shouldn't be a problem. Shadows can either be updated from the original, or the original is overwritten by the shadow depending on what the shadow has
+ * logged its use as. Plugs store their own shadows, so a figment can update their shadows every time they run. running the update causes the context that
+ * shadow belongs to to become locked. Once a context becomes locked it can't be used to use any more plugs until it unlocks.
+ *
+ *
  */
 
 #ifndef CONTEXT_HPP
@@ -106,18 +114,19 @@ namespace gt{
 	//!			block threads from running into each other.
 	class cContext{
 	public:
+		dConSig mSig;	//!< try not to modify it.
+
 		cContext();
 		cContext(const cContext & copyMe);
 		~cContext();
 
-		void add(dFigConSig pFig, dNameHash pClassID);				//!< Adds a figment reference to the stack. Using the name hash to determine if we are calling a parents run/jack function or not.
-		void finished(dFigConSig pFig);								//!< Removes a figment reference from the stack. You can try to remove the same figment a few times without problem.
+		void add(dFigConSig pFig, dNameHash pClassID);				//!< Adds a figment reference to the stack.
+		void finished(dFigConSig pFig);								//!< Removes a figment reference from the stack.
 		bool isStacked(dFigConSig pFig, dNameHash pClassID = 0);	//!< Determines if the figment is stacked. It is optional to check the ID type as well.
 		dProgramStack makeStackDump();								//!< Spits out a copy of the program stack.
-		bool isBlocked();
-		void printStack();
 
 	private:
+
 		struct sInfo{
 			unsigned int timesStacked;
 			dNameHash realID;	//!< Lets you determine what sort of class is on the stack.
@@ -154,11 +163,15 @@ namespace gt{
 		//!\brief
 		void stop(cContext *con);
 
+		//!\brief	Kills a zombie figment. Ensure this is only called when clearing the stack of zombies. Brains!
+		void kill();
+
 	private:
 
 		#ifdef GT_THREADS
-			boost::condition_variable conSync;
+			//boost::condition_variable conSync;
 			boost::mutex conMu;
+			//boost::unique_lock<boost::mutex> lock;
 		#endif
 	};
 }

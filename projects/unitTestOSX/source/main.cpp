@@ -26,7 +26,6 @@ main(int argc, char **argv){
 #ifdef GTUT_GOOGLE
 	::testing::InitGoogleTest(&argc, argv);
 	result = RUN_ALL_TESTS();
-	gWorld.get()->flushLines();
 #endif
 
 	gt::gWorld.get()->makeProfileReport(std::cout);

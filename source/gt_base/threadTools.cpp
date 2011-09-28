@@ -109,26 +109,26 @@ namespace demo{
 
 
 	GTUT_START(testMrSafety, onewayData){
-		/*
-		tMrSafety<testFooData> safetyTest;
-		std::string whatIGot;
-		char o = 0;
-		size_t idx=0;
+		{//for(int testNum=0; testNum < 10; ++testNum){
+			tMrSafety<testFooData> safetyTest;
+			std::string whatIGot;
+			char o = 0;
+			size_t idx=0;
 
-		safetyTest.take(new testFooData);
-		boost::thread myTestTread(testFooData::threadFoo, &safetyTest);
-		while(idx < testFooData::quote.size() && o != '?'){
-			do{
-				o = safetyTest.get()->testStr[idx];
-			}while(o==0);
-			std::cout << o;
-			whatIGot.append(1, o);
-			++idx;
+			safetyTest.take(new testFooData);
+			boost::thread myTestTread(testFooData::threadFoo, &safetyTest);
+			while(idx < testFooData::quote.size() && o != '?'){
+				do{
+					o = safetyTest.get()->testStr[idx];
+				}while(o==0);
+				std::cout << o;
+				whatIGot.append(1, o);
+				++idx;
+			}
+			myTestTread.join();
+
+			GTUT_ASRT(whatIGot.compare(testFooData::quote)==0, "");
 		}
-		myTestTread.join();
-
-		GTUT_ASRT(whatIGot.compare(testFooData::quote)==0, "");
-		*/
 	}GTUT_END;
 
 #endif

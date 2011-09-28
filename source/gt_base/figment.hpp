@@ -23,6 +23,7 @@
 
 #include "blueprint.hpp"
 #include "context.hpp"
+#include "plug.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // classes
@@ -61,9 +62,6 @@ namespace gt{
 		// standard interface. These are all optional in later classes.
 
 		virtual void run(cContext* pCon);				//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
-		virtual void save(cByteBuffer* pAddHere);		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);			//!< Called load eat because the head of the buffer is consume by the load function.
-		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
@@ -80,6 +78,11 @@ namespace gt{
 
 		//!\brief	Virtual version of the above.
 		virtual dNameHash getExtension() const { return extends(); }
+
+		//- These are currently not threadsafe.
+		virtual void save(cByteBuffer* pAddHere);		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);			//!< Called load-eat because the head of the buffer is consume by the load function.
+		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
 
 	protected:
 		//-----------------------------
@@ -129,14 +132,14 @@ namespace gt{
 
 	//--------------------------------------
 	template<>
-	class tPlug<ptrFig>: public cBase_plug{
+	class tPlug<ptrFig>: public tPlugShadows<ptrFig>{
 	public:
 		ptrFig mD;
 
-		tPlug() : cBase_plug(typeid(ptrFig)), mD(gWorld.get()->getEmptyFig()){
+		tPlug() : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(gWorld.get()->getEmptyFig()){
 		}
 
-		tPlug(ptrFig pA) : cBase_plug(typeid(ptrFig)), mD(pA){
+		tPlug(ptrFig pA) : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(pA){
 		}
 
 		virtual ~tPlug(){}
@@ -208,6 +211,9 @@ namespace gt{
 			DUMB_REF_ARG(context);
 			mD = gWorld.get()->getEmptyFig();
 		}
+
+	protected:
+		virtual ptrFig& getMD() { return mD; }
 	};
 
 }

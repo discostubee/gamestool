@@ -325,8 +325,6 @@ namespace gt{
 			xPlugTags->insert( dMapPTag::value_type(
 				tagUID,	cPlugTag(pName)
 			) );
-
-			itrTag = xPlugTags->find(tagUID);
 		}
 
 		return &itrTag->second;
