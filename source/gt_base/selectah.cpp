@@ -76,6 +76,8 @@ GTUT_START(testSelectah, setCurrent){
 	cSelectah selectA;
 	cSelectah::dModeID modeA = selectA.makeMode(makeHash("selectA"), "test mode A");
 	cSelectah::dModeID modeB = selectA.makeMode(makeHash("selectA"), "test mode B");
+	selectA.set(modeA);
+	GTUT_ASRT(selectA.current()==modeA, "mode not set.");
 	selectA.set(modeB);
 	GTUT_ASRT(selectA.current()==modeB, "mode not set.");
 }GTUT_END;

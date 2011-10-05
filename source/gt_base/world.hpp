@@ -86,9 +86,8 @@ namespace gt{
 // Typedefs
 namespace gt{
 	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
+	typedef long long dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
 	typedef tDirPtr<iFigment> ptrFig;	//!< Smart pointer to a figment.
-	typedef boost::shared_ptr<cLead> ptrLead;	//!< Smart pointer to a lead.
-	typedef const void* dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time.
 }
 
 
@@ -96,9 +95,8 @@ namespace gt{
 // Classes
 namespace gt{
 
-
 	//-------------------------------------------------------------------------------------
-	//!\brief	helpful when loading.
+	//!\brief	An individual entry for a figment.
 	class cReload{
 	public:
 		ptrFig		fig;
@@ -116,9 +114,7 @@ namespace gt{
 		//!\brief	Cleans up the data it has copied.
 		~cReload();
 	};
-
 	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
-
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	Figment interface, put here so we have a complete interface for the ptrFig type. Refer to the base implementation of this
@@ -129,10 +125,10 @@ namespace gt{
 		virtual const char* name() const =0;
 		virtual dNameHash hash() const =0;
 
-		virtual void jack(ptrLead pLead, cContext* pCon)=0;
+		virtual void jack(cLead *pLead, cContext* pCon)=0;
 		virtual void run(cContext* pCon)=0;
 		virtual void save(cByteBuffer* pAddHere)=0;
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL)=0;
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL)=0;
 		virtual void getLinks(std::list<ptrFig>* pOutLinks)=0;
 
 		//static dNameHash replaces(){ return uDoesntReplace; }	// You will need these static class in your figment if you replace.
@@ -146,7 +142,6 @@ namespace gt{
 
 	friend class cBlueprint;
 	};
-
 
 	//---------------------------------------------------------------------------------------------------
 	//!\brief	The world is a single object that ties the program together, as well as being the main 
@@ -214,9 +209,9 @@ namespace gt{
 		ptrFig makeFig(dNameHash pNameHash);
 
 		//!\brief	Makes a new lead that is managed by a smart pointer.
-		//!\param	pFigNameHash
+		//!\param	pFigNameHash	The name hash of the figment which has the command we're after.
 		//!\param	pCommandID
-		ptrLead makeLead(dNameHash pFigHash, unsigned int pComID, dConSig pConx);
+		cLead makeLead(unsigned int pComID, dConSig pConx);
 
 		//!\brief	Makes a profile token using the profiler stored in this world.
 		//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
@@ -330,7 +325,7 @@ namespace gt{
 #define WARN(x)	gt::gWorld.get()->warnError(x, __FILE__, __LINE__)
 
 // Handy for all those (...) catch blocks.
-#define UNKNOWN_ERROR	{ excep::unknownError temp(__FILE__, __LINE__); WARN(temp); }
+#define UNKNOWN_ERROR	WARN("unknown error")
 
 #ifdef GTUT
 	#undef GTUT_END

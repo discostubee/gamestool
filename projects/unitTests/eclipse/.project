@@ -82,6 +82,26 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>addon.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/addon.cpp</locationURI>
+		</link>
+		<link>
+			<name>addon.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/addon.hpp</locationURI>
+		</link>
+		<link>
+			<name>anchor.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.cpp</locationURI>
+		</link>
+		<link>
+			<name>anchor.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.hpp</locationURI>
+		</link>
+		<link>
 			<name>blueprint.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/blueprint.cpp</locationURI>
@@ -147,6 +167,16 @@
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/figment.hpp</locationURI>
 		</link>
 		<link>
+			<name>fileIO.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/fileIO.cpp</locationURI>
+		</link>
+		<link>
+			<name>fileIO.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/fileIO.hpp</locationURI>
+		</link>
+		<link>
 			<name>gt_string.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/gt_string.cpp</locationURI>
@@ -182,6 +212,16 @@
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/plug.hpp</locationURI>
 		</link>
 		<link>
+			<name>postman.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/postman.cpp</locationURI>
+		</link>
+		<link>
+			<name>postman.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/postman.hpp</locationURI>
+		</link>
+		<link>
 			<name>profiler.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/profiler.cpp</locationURI>
@@ -212,6 +252,16 @@
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/reflection.hpp</locationURI>
 		</link>
 		<link>
+			<name>runList.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/runList.cpp</locationURI>
+		</link>
+		<link>
+			<name>runList.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/runList.hpp</locationURI>
+		</link>
+		<link>
 			<name>selectah.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/selectah.cpp</locationURI>
@@ -220,6 +270,16 @@
 			<name>selectah.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/selectah.hpp</locationURI>
+		</link>
+		<link>
+			<name>textFig.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/textFig.cpp</locationURI>
+		</link>
+		<link>
+			<name>textFig.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/textFig.hpp</locationURI>
 		</link>
 		<link>
 			<name>thread.cpp</name>

@@ -24,7 +24,7 @@
 	#define TRACK_BUFF
 #endif
 
-//!\class	cByteBuffer
+
 //!\brief	8Bit buffer used for consistency across platforms and not for performance.
 //!\note	The gamestool byte buffer is always 8bits even if it is not effective for the system to process 8 bit buffers. This ensures that data files
 //!			are compatible across the different gamestool virtual machines.

@@ -74,10 +74,13 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 
 void
 cRunList::patAdd(cLead* aLead){
-	for(cLead::cPileItr itr = aLead->getPiledDItr(); !itr.atEnd(); ++itr){
-		mList.push_back( itr.getPlug()->getCopy< tPlug<ptrFig> >() );
-		DBUG_VERBOSE_LO("	RunList added a " << temp.mD->name() );
-	};
+	dList plugs;
+	aLead->getPile(&plugs);
+
+	//!\todo use append
+	for(dList::iterator itr = plugs.begin(); itr != plugs.end(); ++itr){
+		mList.push_back( *itr );
+	}
 }
 
 ////////////////////////////////////////////////////////////

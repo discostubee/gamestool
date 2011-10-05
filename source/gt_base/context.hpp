@@ -3,7 +3,7 @@
  * !\brief	The context and multithreaded figment provide mechanisms for figments to handle multi threading. In this regard,
  * !		the design of the context drives the strategy for multithreading figments.
  * !		The exact objectives are:
- * !		- Prevent circular runs as soon as a run command encounters itself in the context.
+ * !		- Prevent circular flow, as soon as a run command encounters itself in the context it throws.
  * !		- Do the same for running as we do for jacking. Jacking uses a different context to running.
  * !		- Cause a thread to wait if it tries to run or jack into a figment that is currently working with another thread.
  * !		- Unwind if a figment tries to run or jack into another that is currently waiting. In other words, prevent deadlocks.
@@ -65,16 +65,10 @@
 #include <deque>
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Forward decs
-namespace gt{
-	class cFigContext;
-}
-
-///////////////////////////////////////////////////////////////////////////////////
 // typedefs
 namespace gt{
-	typedef cFigContext* dFigConSig;						//!< A figments context signature.
-	typedef std::deque<dFigConSig> dProgramStack;			//!< This is the entire stack of figments. The pancake map below doesn't copy this stack (in case you're wondering).
+	typedef iFigment* dFigConSig;						//!< A figments context signature. Because this value doesn't need to be saved/loaded it should be fine whatever the byte size is.
+	typedef std::deque<dFigConSig> dProgramStack;	//!< This is the entire stack of figments. The pancake map below doesn't copy this stack (in case you're wondering).
 
 }
 

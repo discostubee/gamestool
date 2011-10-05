@@ -109,34 +109,7 @@ GTUT_START(TestingFind, something){
 	GTUT_ASRT( isIn(MagicNum, vecA) == true, "Couldn't find the magic number");
 }GTUT_END;
 
-struct pmorphParent {
-	int num;
-	virtual int magic(){ return 3; }
-};
 
-struct pmorphChild : public pmorphParent {
-	virtual int magic(){ return 42; }
-};
-
-GTUT_START(test_pmorph, something){
-	tPMorphJar<pmorphParent> jarA;
-
-	{
-		pmorphParent parent;
-		parent.num = 2;
-		jarA = parent;
-	}
-	GTUT_ASRT(jarA.get().num == 2, "jar didn't get int right");
-
-	{
-		pmorphChild child;
-		child.num = 5;
-		jarA = child;
-	}
-	GTUT_ASRT(jarA.get().num == 5, "jar didn't get int right");
-	GTUT_ASRT(jarA.get().magic() == 42, "jar didn't get polymorph right");
-
-}GTUT_END;
 
 #endif
 

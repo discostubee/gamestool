@@ -311,7 +311,7 @@ namespace gt{
 	template<typename T>
 	const cPlugTag*
 	tOutline<T>::makePlugTag(const char* pName){
-		dMapPTag::iterator itrTag;
+		dMapPTag::iterator itrTag = xPlugTags->end();
 
 		PROFILE;
 
@@ -325,6 +325,8 @@ namespace gt{
 			xPlugTags->insert( dMapPTag::value_type(
 				tagUID,	cPlugTag(pName)
 			) );
+
+			itrTag = xPlugTags->find(tagUID);
 		}
 
 		return &itrTag->second;

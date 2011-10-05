@@ -44,7 +44,7 @@ namespace gt{
 		bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
 		void addTag(const cPlugTag* pTag);
 
-		void use(iFigment *aFig, cLead *aLead) const;
+		void use(iFigment *aFig, cLead *aLead) const;	//!< Assumes you've already checked the figment and the command match up.
 
 		cCommand& operator=(const cCommand& pCom);
 

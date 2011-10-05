@@ -29,8 +29,10 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 	size_t				chunkSize = 0;
 	dNameHash			chunkHash = 0;
-	tPlug<size_t>		currentSpot = 0;
+	tPlug<size_t>		currentSpot;
 	dFigSaveSig			chunkSig = 0;
+
+	currentSpot.mD = 0;
 
 	try{
 		mRoot.mD->getLinks(branches);
@@ -57,7 +59,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 		DBUG_LO(":) anchor saving " << figs.size() << " figments" );
 
-		chunkSig = mRoot.mD.get();
+		chunkSig = reinterpret_cast<dFigSaveSig>(mRoot.mD.get());
 		pAddHere->add( &chunkSig ); // Save reference to the root.
 
 		for( std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i ){
@@ -80,7 +82,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 			DBUG_LO("	saving a " << (*i)->name());
 
-			chunkSig = *i;
+			chunkSig = reinterpret_cast<dFigSaveSig>(*i);
 
 			//- Add it to the buffer. The process below must happen in exactly the same way when loading.
 			pAddHere->add( &chunkSize );
@@ -190,7 +192,7 @@ cAnchor::patSetRoot(cLead *aLead){
 
 void
 cAnchor::patGetRoot(cLead *aLead){
-	aLead->add(&mRoot, cAnchor::xPT_root);
+	aLead->addPlug(&mRoot, cAnchor::xPT_root);
 }
 
 
@@ -198,10 +200,10 @@ cAnchor::patGetRoot(cLead *aLead){
 
 #ifdef GTUT
 
-
 class cSaveTester: public cFigment, private tOutline<cSaveTester>{
 public:
-	static const cCommand::dUID	xGetMyStr;
+	static const cPlugTag *xPT_str, *xPT_num;
+	static const cCommand::dUID	xGetData;
 
 	cSaveTester(){}
 	cSaveTester(const char* inStr) : myStr(dStr(inStr)), myNum(42) {}
@@ -222,16 +224,22 @@ private:
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
 
-	void patGetStr(cLead *aLead);
+	void patGetData(cLead *aLead);
 };
 
-const cCommand::dUID	cSaveTester::xGetMyStr = tOutline<cSaveTester>::makeCommand(
-	"get my string", &cSaveTester::patGetStr,
+const cPlugTag *cSaveTester::xPT_str = tOutline<cSaveTester>::makePlugTag("my str");
+
+const cPlugTag *cSaveTester::xPT_num = tOutline<cSaveTester>::makePlugTag("my num");
+
+const cCommand::dUID	cSaveTester::xGetData = tOutline<cSaveTester>::makeCommand(
+	"get my string", &cSaveTester::patGetData,
+	xPT_str,
+	xPT_num,
 	NULL
 );
 
 void
-cSaveTester::patGetStr(cLead *aLead){
+cSaveTester::patGetData(cLead *aLead){
 	aLead->addToPile(&myStr);
 	aLead->addToPile(&myNum);
 }
@@ -246,10 +254,10 @@ GTUT_START(testAnchor, basicSave){
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
-	ptrLead add(new cLead(cAnchor::xSetRoot, fakeCon.mSig));
+	cLead add(cAnchor::xSetRoot, fakeCon.mSig);
 
-	add->add(&tester, cAnchor::xPT_root);
-	ank->jack(add, &fakeCon);
+	add.addPlug(&tester, cAnchor::xPT_root);
+	ank->jack(&add, &fakeCon);
 
 	buff.clear();
 	ank->save(&buff);
@@ -259,23 +267,22 @@ GTUT_START(testAnchor, basicLoad){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	cContext fake;
 
-	ptrLead load(new cLead(cAnchor::xLoad, fake.mSig));
+	cLead load(cAnchor::xLoad, fake.mSig);
 	dReloadMap dontcare;
 	ank->loadEat(&buff, &dontcare);
 
-	ptrLead root(new cLead(cAnchor::xGetRoot, fake.mSig));
-	ank->jack(root, &fake);
+	cLead root(cAnchor::xGetRoot, fake.mSig);
+	ank->jack(&root, &fake);
 	tPlug<ptrFig> reload;
-	reload = root->getPlug(cAnchor::xPT_root);
+	reload = root.getPlug(cAnchor::xPT_root);
 
-	ptrLead checkStr(new cLead(cSaveTester::xGetMyStr, fake.mSig));
-	reload.mD->jack(checkStr, &fake);
+	cLead checkData(cSaveTester::xGetData, fake.mSig);
+	reload.mD->jack(&checkData, &fake);
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
-	cLead::cPileItr itr = checkStr->getPiledDItr();
-	myStr = itr.getPlug();
-	++itr;
-	myNum = itr.getPlug();
+
+	myStr = checkData.getPlug(cSaveTester::xPT_str);
+	myNum = checkData.getPlug(cSaveTester::xPT_num);
 
 	GTUT_ASRT(strncmp(myStr.mD.c_str(), testStr, strlen(testStr))==0, "saved strings are not the same");
 	GTUT_ASRT(myNum.mD==42, "saved numbers are not the same");
