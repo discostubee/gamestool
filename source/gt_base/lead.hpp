@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Classes
 namespace gt{
+	template<typename T> class tPlug;
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	this helps to identify what each plug is on a lead.
@@ -66,6 +67,7 @@ namespace gt{
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Used when updating a plug.
 	class cUpdateLemming{
 	private:
 		cBase_plug *callMe;
@@ -76,21 +78,27 @@ namespace gt{
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	The interface for the plug template below.
+	//!\brief	A plug is a data container that a lead can connect too. The lead can then connect that data to another
+	//!			object via the jack function, as well as automatically disconnect itself from its linked leads when it
+	//!			dies. It is also designed for serialization using a byte buffer.
+	//!\note	You don't have to use plugs for all your figments stuff, Just for the things you want to save and
+	//!			reload or pass through a lead to another object.
+	//!\note	Using assignment operators doesn't use the other plugs shadows. This is because shadows are only for
+	//!			leads, and shadows are meant to solve the issue of data access over different threads. Inter-thread
+	//!			access should only happen through leads.
+	//!\note	Plugs do not save their connections, this is the job of the reflection object.
 	class cBase_plug{
 	public:
-		PLUG_TYPE_ID mType;	//!< Must be public so the tPlug templates can use it.
+		const PLUG_TYPE_ID mType;	//!< Must be public so the tPlug templates can use it.
 
 		cBase_plug(PLUG_TYPE_ID pTI);
 		cBase_plug(const cBase_plug& pCopy);
 
-		//template<typename T>	cBase_plug& operator= (const T &pT);
-
 		template< template<typename> class plug, typename T>	cBase_plug& operator= (const plug<T> &pT);
 
-		template<typename T> T getCopy();
+		template<typename T> T* exposePtr();	//!< Be careful with this.
 
-		template<typename T> T* getPtr();
+		template<typename T> void copyInto(T *container, bool silentFail = false) const;
 
 		//--- Intended to be polymorphed by descendants.
 		virtual ~cBase_plug();
@@ -103,8 +111,8 @@ namespace gt{
 
 		virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor) =0; //!< Leads must always work with shadows.
 		virtual cUpdateLemming update() =0; //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
-		virtual void linkLead(cLead* pLead) =0; //!< Leads must let the plug know that they are linked in.
-		virtual void unlinkLead(cLead* pLead) =0; //!< When a plug is destroyed, it must let the lead know.
+		virtual void linkLead(cLead* pLead) =0; //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Must be threadsafe.
+		virtual void unlinkLead(cLead* pLead) =0; //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Must be threadsafe.
 
 	protected:
 		virtual void finishUpdate() =0; //!< used only by the update lemming.
@@ -118,49 +126,71 @@ namespace gt{
 	//!			class, in this case it's called a lead. A lead must have a command so the figment getting
 	//!			jacked knows what to do with it. A lead then has multiple plugs, some are labeled/tagged, while
 	//!			others are in an ordered pile.
-	//!\note	This 1 lead per context means that the number of shadows in a plug are conserved and the owner
-	//!			of a user of leads must explicitly setup more if they want to support a new context.
-	//!\todo	Speed this up by only allowing plugs which are used by the command.
+	//!\note	The ability to get and set plugs do not lock because they should only be used in the jack function
+	//!			which performs a single lock on the lead, which prevents the connected plugs from messing with it
+	//!			when they update or unlink.
+	//!\note	Leads can not be contained by a plug.
 	class cLead{
 	public:
-
 		const cCommand::dUID mCom;	//!< The command for this lead.
-		const dConSig mConx;		//!< You can only have 1 lead per context which must match when jacking.
+		dConSig mConx;			//!< You can only have 1 lead per context which must match when jacking.
 
 		//!\brief
 		//!\param	aCom	Link to the command we want this plug to use.
 		//!\param	aConx
-		cLead( cCommand::dUID aCom, dConSig aConx);
+		cLead(cCommand::dUID aCom, dConSig aConx);
 
 		//!\brief	Copies other lead.
 		cLead(const cLead &otherLead);
 
 		~cLead();
 
-		//!\brief	If it has the tagged plug, it makes the input data equal that of its plug. Otherwise the output is untouched.
-		//!\note	Doesn't lock because it should only be used within a jack which locks leads for you.
-		void getPlug(cBase_plug *aOutPlug, const cPlugTag* pTag);
+		//--- These things should only be used by the jack. Currently not protected so that unit tests can fudge use them.
 
-		//!\brief	Add a single tagged plug.
-		//!\note	Doesn't lock because it should only be used within a jack which locks leads for you.
+		//!\brief	If it has the tagged plug, it returns a pointer to it. Throws if the plug isn't found. Be careful not to store
+		//!			the pointer anywhere. Getting the plug this way is handier than passing the plug in as an argument.
+		cBase_plug * getPlug(const cPlugTag* pTag);
+
 		void addPlug(cBase_plug *aPlug, const cPlugTag *aTag);
 
-		//!\brief	sets the value of this leads plug to same as the incoming plug.
-		void setPlug(cBase_plug *aPlug, const cPlugTag *aTag);
+		void setPlug(cBase_plug *aPlug, const cPlugTag *aTag);	//!< \todo figure out if this should add the plug if it doesn't exist, or throw.
 
-		//!\brief	Appends another plug to the end of the pile.
 		void addToPile(cBase_plug *aPlug);
 
 		//!\brief	Clears target and copies the leads pile into it. Expects tPlug type
-		template<typename C> void getPile(std::vector< C > target){
-			target.clear();
-			target.reserve(mDataPile.size());
+		template<typename C> void getPile(std::vector< C > *target){
+			target->clear();
+			target->reserve(mDataPile.size());
 			for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-				target.push_back( *((*scrPDataItr)->getShadow(mConx, eSM_read)) );
+				target->push_back( C() );
+				#ifdef GT_THREADS
+
+					target->back() = (*scrPDataItr)->getShadow(mConx, eSM_read);
+				#else
+					target->back() = *scrPDataItr;
+				#endif
 			}
 		}
 
-		//--- Things for plugs.
+		//!\brief	Lets you use direct types instead of plugs. Does this by copying to the input.
+		//!\param	input	Pointer to where you want to copy the value.
+		//!\param	tag		tag for the plug you wish to copy a value from.
+		//!\param	silentFail	If set to true, this function won't throw if it can't find the plug or it can't copy it.
+		//!				Use this if you don't care if the value was set or not.
+		template<typename C> void getValue( C *input, const cPlugTag *tag, bool silentFail = false ){
+			scrTDataItr = mTaggedData.find(tag->mID);
+			if(scrTDataItr != mTaggedData.end()){
+				#ifdef GT_THREADS
+					scrTDataItr->second->getShadow(mConx, eSM_read)->copyInto(input);
+				#else
+					*input = scrTDataItr->second->copyInto(input);
+				#endif
+			}else if(!silentFail){
+				throw excep::notFound("plug", __FILE__, __LINE__);
+			}
+		}
+
+		//--- Things for plugs. not protected because there are a lot of templates that need them.
 		#ifdef GT_THREADS
 			typedef boost::unique_lock<boost::mutex> dLockLead;
 
@@ -171,7 +201,7 @@ namespace gt{
 		//!\note	Locks until finished because this can come from any thread at any time.
 		void unplug(cBase_plug* pPlug);
 
-	private:
+	protected:
 		typedef std::map<cPlugTag::dUID, cBase_plug*> dDataMap;
 		typedef std::list<cBase_plug*> dPiledData;
 
@@ -202,6 +232,10 @@ namespace gt{
 
 		dDataMap::iterator scrTDataItr;
 		dPiledData::iterator scrPDataItr;
+
+	private:
+		//!\brief	bad
+		cLead& operator = (const cLead &aOtherLead);
 	};
 }
 
@@ -215,5 +249,50 @@ namespace excep{
 		virtual ~badContext() throw() {}
 	};
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+// Templates
+namespace gt{
+
+
+	template<typename T>
+	T*
+	cBase_plug::exposePtr(){
+		if(mType != PLUG_TYPE_TO_ID(T))
+			PLUG_CANT_COPY(T);
+
+		return &dynamic_cast< tPlug<T>* >(this)->mD;
+	}
+
+	template<typename T>
+	void
+	cBase_plug::copyInto(T *container, bool silentFail) const{
+		if(mType != PLUG_TYPE_TO_ID(T)){
+			if(!silentFail)
+				PLUG_CANT_COPY(T);
+			else
+				return;
+		}
+
+		*container = dynamic_cast< const tPlug<T>* >(this)->mD;
+
+	}
+
+	template< template<typename> class plug, typename T>
+	cBase_plug&
+	cBase_plug::operator= (const plug<T> &pT){
+		if(this != &pT){
+			if(mType != pT.mType)
+				PLUG_CANT_COPY_ID(pT.mType);
+
+			dynamic_cast< tPlug<T>* >(this)->mD = pT.mD;
+		}else{
+			WARN("type mismatch when assigning");
+		}
+		return *this;
+	}
+
+}
+
 
 #endif

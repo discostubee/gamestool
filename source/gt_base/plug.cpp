@@ -44,11 +44,11 @@ GTUT_START(testPlug, copy){
 	A = 5;
 	TRYME( *B = A );
 
-	TRYME( C = B->getCopy<int>() );
+	TRYME( B->copyInto(&C) );
 	GTUT_ASRT(C == 5, "B didn't copy A");
 
 	try{
-		D = B->getCopy<int>();
+		B->copyInto(&D);
 	}catch(std::exception){
 		GTUT_ASRT(true, "");
 	}
@@ -66,6 +66,8 @@ GTUT_START(testPlug, saveLoad){
 	B.loadEat(&buff, &dontCare);
 	GTUT_ASRT(B.mD == A.mD, "A didn't save, or B didn't load, correctly.");
 }GTUT_END;
+
+
 
 
 #endif

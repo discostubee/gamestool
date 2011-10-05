@@ -64,32 +64,25 @@ cBase_fileIO::patRead(cLead *aLead){
 	size_t readSize = 0;
 	size_t readStart = 0;
 
-	//!\todo	Used check instead of try.
-	try{
-		readStart = aLead->getPlug(xPT_readSize)->getCopy<dFilePoint>();
-	}catch(excep::base_error){}
-	try{
-		readSize = aLead->getPlug(xPT_startSpot)->getCopy<dFilePoint>();
-	}catch(excep::base_error){}
+	aLead->getValue(&readStart, xPT_readSize, true);
+	aLead->getValue(&readSize, xPT_startSpot, true);
 
-	read(aLead->getPlug(xPT_buffer), readSize, readStart );
+	read( aLead->getPlug(xPT_buffer)->exposePtr<cByteBuffer>(), readSize, readStart );
 }
 
 void
 cBase_fileIO::patWrite(cLead *aLead){
-	write( aLead->getPlug(xPT_buffer)->getPtr<cByteBuffer>() );
+
+	write( aLead->getPlug(xPT_buffer)->exposePtr<cByteBuffer>() );
 }
 
 void
 cBase_fileIO::patInsert(cLead *aLead){
 	size_t startSpot = 0;
 
-	//!\todo	Use check instead of try
-	try{
-		startSpot = aLead->getPlug(xPT_startSpot)->getCopy<dFilePoint>();
-	}catch(excep::base_error){}
+	aLead->getValue(&startSpot, xPT_startSpot, true);
 
-	insert( aLead->getPlug(xPT_buffer)->getPtr<cByteBuffer>(), startSpot );
+	insert( aLead->getPlug(xPT_buffer)->exposePtr<cByteBuffer>(), startSpot );
 }
 
 void

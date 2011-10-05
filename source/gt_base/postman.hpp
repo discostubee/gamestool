@@ -32,10 +32,10 @@ namespace gt{
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	The postman jacks into another figment using the lead it has been given.
+	//!\todo	Postman needs a rethink.
 	class cPostman: public cFigment, private tOutline<cPostman>{
 	public:
 		static const cPlugTag* xPT_target;
-		static const cPlugTag* xPT_lead;
 		static const cCommand::dUID xSetupPostman;
 
 		static const char* identify(){ return "postman"; }
@@ -49,7 +49,6 @@ namespace gt{
 		virtual void run(cContext* pCon);
 
 	private:
-		tPlug<ptrLead> mLead;
 		tPlug<ptrFig> mTarget;
 
 		void patSetup(cLead *aLead);

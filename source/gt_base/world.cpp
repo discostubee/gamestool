@@ -275,16 +275,11 @@ cWorld::copyWorld(cWorld* pWorld){
 	#endif
 }
 
-ptrLead
-cWorld::makeLead(dNameHash pFigHash, cCommand::dUID pComID, dConSig pConx){
+cLead
+cWorld::makeLead(cCommand::dUID pComID, dConSig pConx){
 	PROFILE;
 
-	mScrBMapItr =  mBlueprints.find(pFigHash);
-
-	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("bad name hash", __FILE__, __LINE__);
-
-	return ptrLead(new cLead( pComID, pConx ));
+	return cLead( pComID, pConx );
 }
 
 const cPlugTag* 
@@ -381,21 +376,21 @@ public:
 	static const cCommand::dUID	xCommandA;
 
 	static const char* identify(){ return "test draft parent"; }
-	virtual const char* name() const { return identify(); };
+	virtual const char* name() const { return identify(); }
 
-	virtual dNameHash hash() const { return getHash<testDraftParent>(); };
+	virtual dNameHash hash() const { return getHash<testDraftParent>(); }
 
 	static dNameHash replaces(){ return uDoesntReplace; }
-	virtual dNameHash getReplacement() const { return replaces(); };
+	virtual dNameHash getReplacement() const { return replaces(); }
 
 	static dNameHash extends(){ return uDoesntExtend; }
 	virtual dNameHash getExtension() const { return extends(); }
 
-	virtual void jack(ptrLead pLead, cContext* pCon) {};
-	virtual void run(cContext* pCon) {};
-	virtual void save(cByteBuffer* pAddHere) {};
-	virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL) {};
-	virtual void getLinks(std::list<ptrFig>* pOutLinks) {};
+	virtual void jack(cLead *pLead, cContext* pCon) {}
+	virtual void run(cContext* pCon) {}
+	virtual void save(cByteBuffer* pAddHere) {}
+	virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL) {}
+	virtual void getLinks(std::list<ptrFig>* pOutLinks) {}
 
 	void patA(cLead *aLead){
 

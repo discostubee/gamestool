@@ -14,6 +14,7 @@ cUpdateLemming::~cUpdateLemming() {
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
+
 cLead::cLead(cCommand::dUID aCom, dConSig aConx):
 	mCom(aCom), mConx(aConx)
 {
@@ -22,7 +23,25 @@ cLead::cLead(cCommand::dUID aCom, dConSig aConx):
 
 cLead::cLead(const cLead &otherLead):
 	mCom(otherLead.mCom), mConx(otherLead.mConx)
-{}
+{
+	DBUG_TRACK_START("lead");
+
+	cLead *other = const_cast<cLead*>(&otherLead);
+	#ifdef GT_THREADS
+			dLockLead lockMe(muLead);
+			dLockLead lockOther(other->muLead);
+	#endif
+
+	for(dDataMap::iterator itr = other->mTaggedData.begin(); itr != other->mTaggedData.end(); ++itr){
+		mTaggedData[itr->first] = itr->second;
+		mTaggedData[itr->first]->linkLead(this);
+	}
+
+	for(dPiledData::iterator itr = other->mDataPile.begin(); itr != other->mDataPile.end(); ++itr){
+		mDataPile.push_back(*itr);
+		mDataPile.back()->linkLead(this);
+	}
+}
 
 cLead::~cLead(){
 	try{
@@ -45,16 +64,19 @@ cLead::~cLead(){
 	}
 }
 
-void
-cLead::getPlug(cBase_plug* aOutPlug, const cPlugTag* pTag){
+cBase_plug*
+cLead::getPlug(const cPlugTag* pTag){
 	PROFILE;
 
 	scrTDataItr = mTaggedData.find(pTag->mID);
-	if(scrTDataItr != mTaggedData.end()){
-		*aOutPlug = scrTDataItr->second->getShadow(mConx, eSM_read);
-	}else{
-		WARN("can't find plug");
-	}
+	if(scrTDataItr == mTaggedData.end())
+		throw excep::notFound("plug", __FILE__, __LINE__);
+
+	#ifdef GT_THREADS
+		return scrTDataItr->second->getShadow(mConx, eSM_read);
+	#else
+		return scrTDataItr->second;
+	#endif
 }
 
 void
@@ -66,6 +88,7 @@ cLead::addPlug(cBase_plug *aPlug, const cPlugTag *aTag){
 		scrTDataItr->second->unlinkLead(this);
 		scrTDataItr->second = aPlug;
 	}else{
+		//mTaggedData.insert( std::pair<cPlugTag::dUID, cBase_plug *>(aTag->mID, aPlug) );
 		mTaggedData[aTag->mID] = aPlug;
 	}
 	aPlug->linkLead(this);
@@ -78,13 +101,17 @@ cLead::setPlug(cBase_plug *aPlug, const cPlugTag *aTag){
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr != mTaggedData.end()){
 		*scrTDataItr->second->getShadow(mConx, eSM_write) = aPlug;
-	}else{
-		WARN("can't find plug");
 	}
 }
 
 void
-cLead::unplug(cBase_plug* pPlug){
+cLead::addToPile(cBase_plug *aPlug){
+	aPlug->linkLead(this);
+	mDataPile.push_back(aPlug);
+}
+
+void
+cLead::unplug(cBase_plug* aPlug){
 	#ifdef GT_THREADS
 		dLockLead lock(muLead);
 	#endif
@@ -94,7 +121,7 @@ cLead::unplug(cBase_plug* pPlug){
 	//- Search for plug.
 	if(!mTaggedData.empty()){
 		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
-			if(scrTDataItr->second == pPlug){
+			if(scrTDataItr->second == aPlug){
 				mTaggedData.erase(scrTDataItr);
 			}
 		}
@@ -102,12 +129,14 @@ cLead::unplug(cBase_plug* pPlug){
 
 	if(!mDataPile.empty()){
 		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-			if(*scrPDataItr == pPlug){
+			if(*scrPDataItr == aPlug){
 				mDataPile.erase(scrPDataItr);
 			}
 		}
 	}
 }
+
+
 
 /*
 void
@@ -176,11 +205,55 @@ cLead::setPlug(cBase_plug &aPlug, const cPlugTag *aTag){
 using namespace gt;
 
 GTUT_START(testLead, tagging){
+	cContext fakeConx;
+	cPlugTag tag("some tag");
+	cCommand fakeCom(0, "don't care", 0, NULL);
+
+	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
+
+	cLead lead(fakeCom.mID, fakeConx.mSig);
+
+	tPlug<int> numA, numB;
+	const int magic = 3;
+	lead.addPlug(&numA, &tag);
+	numA.mD = magic;
+	{
+		PLUGUP(numA);
+	}
+
+	numB = lead.getPlug(&tag);
+	GTUT_ASRT(numB.mD == magic, "B didn't get A's number");
+
 }GTUT_END;
 
 GTUT_START(testLead, piling){
 }GTUT_END;
 
+GTUT_START(testLead, shadowUpdate){
+	cContext conxA, conxB;
+	tPlug<int> numA, numB;
+	cCommand fakeCom(0, "don't care", 0, NULL);
+	cPlugTag tag("some tag");
+	cLead leadA(fakeCom.mID, conxA.mSig), leadB(fakeCom.mID, conxB.mSig);
+	const int magic = 3;
+	const int magicSquare = magic*magic;
 
+	GTUT_ASRT(conxA.mSig != conxB.mSig, "contexts have same signature");
+
+	numA.mD = 0;
+
+	leadA.addPlug(&numA, &tag);
+	leadB.addPlug(&numA, &tag);
+	numB.mD = magic;
+	leadA.setPlug(&numB, &tag);
+	{
+		PLUGUP(numA);
+		numA.mD *= numA.mD;
+	}
+	GTUT_ASRT(numA.mD == magicSquare, "A didn't get B's number");
+	numB = leadB.getPlug(&tag);
+	GTUT_ASRT(numB.mD == numA.mD, "something went wrong using multiple shadows");
+
+}GTUT_END;
 
 #endif

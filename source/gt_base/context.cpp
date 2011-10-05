@@ -112,7 +112,9 @@ cContext::makeStackDump(){
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
 	currentCon(NULL)
-{}
+{
+	mBlueprint = NULL;
+}
 
 cFigContext::~cFigContext(){
 	#ifdef GT_THREADS

@@ -17,12 +17,10 @@ const cCommand::dUID cFigment::xLoad = tOutline<cFigment>::makeCommand(
 );
 
 cFigment::cFigment(){
-	//DBUG_LO("...making figment " << reinterpret_cast<unsigned int>(this))
 	DBUG_TRACK_START("figment");
 }
 
 cFigment::~cFigment(){
-	//DBUG_LO("...destroying figment " << reinterpret_cast<unsigned int>(this))
 	DBUG_TRACK_END("figment");
 }
 
@@ -39,7 +37,7 @@ cFigment::patLoad(cLead *aLead){
 }
 
 void
-cFigment::jack(ptrLead pLead, cContext* pCon){
+cFigment::jack(cLead *pLead, cContext* pCon){
 	PROFILE;
 
 	if(pLead->mConx != pCon->mSig)
@@ -49,7 +47,7 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 	try{
 		cLead::dLockLead lock(pLead->muLead);
 		ASRT_NOTNULL(mBlueprint);
-		mBlueprint->getCom(pLead->mCom)->use(this, pLead.get());
+		mBlueprint->getCom(pLead->mCom)->use(this, pLead);
 	}catch(excep::base_error &e){
 		WARN(e);
 	}catch(...){
@@ -62,21 +60,27 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 void 
 cFigment::run(cContext* pCon){
 	DUMB_REF_ARG(pCon);
+	//start(pCon);
+	//stop(pCon);
 }
 
 void
 cFigment::save(cByteBuffer* pAddHere){
 	DUMB_REF_ARG(pAddHere);
+	//start(pCon);
+	//stop(pCon);
 }
 
 void 
-cFigment::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
-	DUMB_REF_ARG(pBuff); DUMB_REF_ARG(pReloads);
+cFigment::loadEat(cByteBuffer* pBuff, dReloadMap *aReloads){
+	DUMB_REF_ARG(pBuff); DUMB_REF_ARG(aReloads);
 }
 
 void 
 cFigment::getLinks(std::list<ptrFig>* pOutLinks){
 	DUMB_REF_ARG(pOutLinks);
+	//start(pCon);
+	//stop(pCon);
 }
 
 ////////////////////////////////////////////////////////////

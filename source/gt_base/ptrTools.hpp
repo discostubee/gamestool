@@ -116,7 +116,47 @@ namespace gt{
 	friend class tLemming<T>;
 	};
 
+	//------------------------------------------------------------------------------------------
+	//!\brief	Has sole ownership of a pointer which it cleans up and allows child classes
+	//!			to work with.
+	template<typename T>
+	class tPMorphJar{
+	private:
+		T *data;
+
+	public:
+		explicit tPMorphJar() : data(NULL){}
+
+		template<typename COPY> tPMorphJar(const COPY &copyMe){
+			data = new COPY();
+			*data = copyMe;
+		}
+
+		template<typename COPY> tPMorphJar(const tPMorphJar<COPY> &copyMe){
+			data = new COPY();
+			*data = *copyMe.data;
+		}
+
+		~tPMorphJar(){ delete data; }
+
+		tPMorphJar<T> & operator = (const tPMorphJar<T> &otherJar){
+			if(&otherJar != this){
+				*data = *otherJar.data;
+			}
+			return *this;
+		}
+
+		template<typename COPY> tPMorphJar<T> & operator = (const COPY &copyMe){
+			delete data;
+			data = new COPY();
+			*data = copyMe;
+			return *this;
+		}
+
+		T& get(){ return *data; }
+	};
 }
+
 
 ////////////////////////////////////////////////////////////
 namespace gt{

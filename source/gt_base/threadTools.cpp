@@ -109,7 +109,7 @@ namespace demo{
 
 
 	GTUT_START(testMrSafety, onewayData){
-		{//for(int testNum=0; testNum < 10; ++testNum){
+		for(int testNum=0; testNum < 10; ++testNum){
 			tMrSafety<testFooData> safetyTest;
 			std::string whatIGot;
 			char o = 0;

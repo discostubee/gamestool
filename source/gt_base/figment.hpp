@@ -44,7 +44,8 @@ namespace gt{
 		cFigment();
 		virtual ~cFigment();
 
-		virtual void jack(ptrLead pLead, cContext* pCon);		//!< Jack is your interface for using data with this figment. You shouldn't need to override this.
+		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this.
+		virtual void jack(cLead *pLead, cContext* pCon);
 
 		//-----------------------------
 		// These things are REQUIRED for any figment class.
@@ -61,30 +62,27 @@ namespace gt{
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
 
-		virtual void run(cContext* pCon);				//!< Gives the figment some runtime to do whatever it is that it normally does. Gets passed a reference to cContext so that it can see what important figments were run befor it.
+		virtual void run(cContext* pCon);				//!< Gives the figment some runtime to do whatever it is that it normally does. Uses context to ensure it doesn't run into itself or other threads.
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
 		//!			specific version.
 		//!\note	You'll also need to specify the polymorphic function below as well.
 		static dNameHash replaces(){ return uDoesntReplace; }
-
-		//!\brief	You'll need to override this if you are replacing stuff.
-		virtual dNameHash getReplacement() const{ return cFigment::replaces(); }
+		virtual dNameHash getReplacement() const{ return replaces(); }	//!<	You'll need to override this if you are replacing stuff.
 
 		//!\brief	If you want your figment to support the commands and tags from its parent, you'll need to extend from the parent.
 		//!\note	You don't need to extend if you have replaced a parent.
 		static dNameHash extends(){ return uDoesntExtend; }
-
-		//!\brief	Virtual version of the above.
-		virtual dNameHash getExtension() const { return extends(); }
+		virtual dNameHash getExtension() const { return extends(); }	//!\<	You'll need to override this if you are replacing stuff.
 
 		//- These are currently not threadsafe.
 		virtual void save(cByteBuffer* pAddHere);		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);			//!< Called load-eat because the head of the buffer is consume by the load function.
-		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figmentt pointers which form part of the program structure (which should be all of them).
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL);			//!< Called load-eat because the head of the buffer is consume by the load function.
+		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program.
 
 	protected:
+
 		//-----------------------------
 		// Patch through functions for use with command.
 		void patSave(cLead *aLead);	//!< Allows you to call the save function using jack
@@ -142,6 +140,9 @@ namespace gt{
 		tPlug(ptrFig pA) : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(pA){
 		}
 
+		tPlug(const tPlug<ptrFig> &other) : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(other.mD){
+		}
+
 		virtual ~tPlug(){}
 
 		virtual cBase_plug& operator= (const cBase_plug &pD){
@@ -180,31 +181,31 @@ namespace gt{
 
 		cBase_plug& operator= (ptrFig pA){ mD = pA; return *this; }
 
+		cBase_plug& operator= (const tPlug<ptrFig> &other){ if(this != &other) mD = other.mD; return *this; }
+
 		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;
 
 			//- Using the pointer as a unique number to identify the referenced figment.
-			dFigSaveSig saveSig = static_cast<dFigSaveSig>( mD.get() );
+			dFigSaveSig saveSig = reinterpret_cast<dFigSaveSig>( mD.get() );
 			pAddHere->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
 
 			//DBUG_LO("	Saved as" << reinterpret_cast<unsigned long>(saveSig));
 		}
 
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
 			PROFILE;
 
-			if(pReloads != NULL){
-				dFigSaveSig saveSig = 0;
-				pChewToy->fill(&saveSig);
-				pChewToy->trimHead(sizeof saveSig);
+			dFigSaveSig saveSig = 0;
+			pChewToy->fill(&saveSig);
+			pChewToy->trimHead(sizeof saveSig);
 
-				dReloadMap::iterator itr = pReloads->find(saveSig);
+			dReloadMap::iterator itr = aReloads->find(saveSig);
 
-				if(itr == pReloads->end())
-					throw excep::notFound("reloaded figment", __FILE__, __LINE__);
+			if(itr == aReloads->end())
+				throw excep::notFound("signature of reloaded figment", __FILE__, __LINE__);	//- figment remains empty.
 
-				mD = itr->second->fig;
-			}
+			mD = itr->second->fig;
 		}
 
 		virtual void reset(cContext* context){
@@ -213,7 +214,9 @@ namespace gt{
 		}
 
 	protected:
-		virtual ptrFig& getMD() { return mD; }
+		#ifdef GT_THREADS
+			virtual ptrFig& getMD() { return mD; }
+		#endif
 	};
 
 }
