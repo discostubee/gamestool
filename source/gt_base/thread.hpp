@@ -56,7 +56,7 @@ namespace gt{
 	protected:
 		tPlug<ptrFig> link;
 
-		void patLink(cLead *aLead);
+		void patLink(ptrLead aLead);
 
 #ifdef GT_THREADS
 		boost::thread myThread;

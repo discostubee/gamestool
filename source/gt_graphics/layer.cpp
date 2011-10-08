@@ -81,16 +81,16 @@ cLayer::getLinks(std::list<ptrFig>* pOutLinks){
 }
 
 void
-cLayer::patSetLink(cLead *aLead){
-	mLink = aLead->getPlug(xPT_content, currentCon);
+cLayer::patSetLink(ptrLead aLead){
+	mLink = aLead->getPlug(xPT_content);
 }
 
 void
-cLayer::patSetLayout(cLead *aLead){
+cLayer::patSetLayout(ptrLead aLead){
 
 }
 
 void
-cLayer::patGetLayout(cLead *aLead){
+cLayer::patGetLayout(ptrLead aLead){
 
 }

@@ -33,7 +33,7 @@ cAddon::~cAddon(){
 	}
 }
 
-void cAddon::patLoadAddon(cLead *aLead){
+void cAddon::patLoadAddon(ptrLead aLead){
 	if(mAddonName.mD.empty()){
 		dTimesOpened::iterator found;
 

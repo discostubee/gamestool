@@ -275,23 +275,42 @@ cWorld::copyWorld(cWorld* pWorld){
 	#endif
 }
 
-cLead
+ptrLead
 cWorld::makeLead(cCommand::dUID pComID, dConSig pConx){
 	PROFILE;
+	ptrLead rtnLead(new cLead( pComID, pConx ));
+	return rtnLead;
+}
 
-	return cLead( pComID, pConx );
+ptrLead
+cWorld::makeLead(const dNatChar *aFigName, const dNatChar *aComName, dConSig aConx){
+	dStr tmpStr = aFigName;
+	tmpStr.append(aComName);
+	dNameHash hash = makeHash(tmpStr.c_str());
+	ptrLead rtnLead(new cLead( hash, aConx ));
+	return rtnLead;
 }
 
 const cPlugTag* 
-cWorld::getPlugTag(dNameHash pFigHash, dNameHash pPTHash){
+cWorld::getPlugTag(dNameHash pFigHash, cPlugTag::dUID pPTHash){
 	PROFILE;
 
 	mScrBMapItr =  mBlueprints.find(pFigHash);
 
 	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("bad name hash", __FILE__, __LINE__);
+		throw excep::base_error("figment wasn't found", __FILE__, __LINE__);
 
 	return mScrBMapItr->second.mBlueprint->getPlugTag(pPTHash);
+}
+
+const cPlugTag*
+cWorld::getPlugTag(const dNatChar *figName, const dNatChar *tagName){
+	mScrBMapItr =  mBlueprints.find(makeHash(figName));
+
+	if(mScrBMapItr == mBlueprints.end())
+		throw excep::base_error("figment wasn't found", __FILE__, __LINE__);
+
+	return mScrBMapItr->second.mBlueprint->getPlugTag(makeHash(tagName));
 }
 
 void
@@ -386,13 +405,13 @@ public:
 	static dNameHash extends(){ return uDoesntExtend; }
 	virtual dNameHash getExtension() const { return extends(); }
 
-	virtual void jack(cLead *pLead, cContext* pCon) {}
+	virtual void jack(ptrLead pLead, cContext* pCon) {}
 	virtual void run(cContext* pCon) {}
 	virtual void save(cByteBuffer* pAddHere) {}
 	virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL) {}
 	virtual void getLinks(std::list<ptrFig>* pOutLinks) {}
 
-	void patA(cLead *aLead){
+	void patA(ptrLead aLead){
 
 	}
 };

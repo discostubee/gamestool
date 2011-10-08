@@ -73,7 +73,9 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 }
 
 void
-cRunList::patAdd(cLead* aLead){
+cRunList::patAdd(ptrLead aLead){
+	PROFILE;
+
 	dList plugs;
 	aLead->getPile(&plugs);
 
@@ -134,6 +136,6 @@ cValves::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 }
 
 void
-cValves::patSetValve(cLead *pLead){
+cValves::patSetValve(ptrLead pLead){
 }
 

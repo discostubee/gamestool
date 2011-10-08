@@ -39,7 +39,7 @@ cCommand::operator=(const cCommand& pCom){
 }
 
 void
-cCommand::use(iFigment *aFig, cLead *aLead) const {
+cCommand::use(iFigment *aFig, ptrLead aLead) const {
 	( aFig->*myFoo )(aLead);
 }
 

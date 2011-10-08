@@ -45,7 +45,7 @@ namespace gt{
 		virtual ~cFigment();
 
 		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this.
-		virtual void jack(cLead *pLead, cContext* pCon);
+		virtual void jack(ptrLead pLead, cContext* pCon);
 
 		//-----------------------------
 		// These things are REQUIRED for any figment class.
@@ -85,8 +85,8 @@ namespace gt{
 
 		//-----------------------------
 		// Patch through functions for use with command.
-		void patSave(cLead *aLead);	//!< Allows you to call the save function using jack
-		void patLoad(cLead *aLead);	//!< Same asa the patSave function above.
+		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
+		void patLoad(ptrLead aLead);	//!< Same asa the patSave function above.
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -156,7 +156,7 @@ namespace gt{
 					const_cast<cBase_plug*>(&pD)
 				)->mD;
 			}else{
-				PLUG_CANT_COPY_ID(pD.mType);
+				PLUG_CANT_COPY_ID(mType, pD.mType);
 			}
 
 			return *this;
@@ -173,7 +173,7 @@ namespace gt{
 					const_cast<cBase_plug*>(pD)
 				)->mD;
 			}else{
-				PLUG_CANT_COPY_ID(pD->mType);
+				PLUG_CANT_COPY_ID(mType, pD->mType);
 			}
 
 			return *this;

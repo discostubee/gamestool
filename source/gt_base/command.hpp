@@ -25,7 +25,7 @@ namespace gt{
 	class cCommand{
 	public:
 		typedef unsigned int dUID;	//!< unique command ID
-		typedef void (iFigment::*fooPtr)(cLead *aLead);	//!< Pointer to our jack function.
+		typedef void (iFigment::*fooPtr)(ptrLead aLead);	//!< Pointer to our jack function.
 
 		const dUID	mID;
 		const dStr	mName;
@@ -44,7 +44,7 @@ namespace gt{
 		bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
 		void addTag(const cPlugTag* pTag);
 
-		void use(iFigment *aFig, cLead *aLead) const;	//!< Assumes you've already checked the figment and the command match up.
+		void use(iFigment *aFig, ptrLead aLead) const;	//!< Assumes you've already checked the figment and the command match up.
 
 		cCommand& operator=(const cCommand& pCom);
 

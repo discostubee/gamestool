@@ -1,5 +1,6 @@
 #include "thread.hpp"
 
+
 using namespace gt;
 
 const cPlugTag*	cThread::xPT_fig = tOutline<cThread>::makePlugTag("figment");
@@ -90,7 +91,7 @@ cThread::run(cContext* pCon){
 }
 
 void
-cThread::patLink(cLead *aLead){
+cThread::patLink(ptrLead aLead){
 	link = aLead->getPlug(xPT_fig);
 }
 
@@ -119,25 +120,32 @@ namespace gt{
 
 	protected:
 		tPlug<std::string> chatter;
-		tPlug<size_t> hits;
+		tPlug<short> hits;
 
-		void patWrite(cLead *aLead){
+		void patWrite(ptrLead aLead){
 			chatter.mD.append( *aLead->getPlug(xPT_word)->exposePtr<std::string>() );
+			chatter.mD.append( "." );
+			++hits.mD;
+			#ifndef GTUTU_SPEEDTEST
+				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+			#endif
 		}
-		void patHits(cLead *aLead){
-			aLead->setPlug(&hits, xPT_hits);
+		void patHits(ptrLead aLead){
+			PLUGUP(hits);
+			aLead->addPlug(&hits, xPT_hits);
 		}
-		void patGetChatter(cLead *aLead){
-			aLead->setPlug(&chatter, xPT_chatter);
+		void patGetChatter(ptrLead aLead){
+			PLUGUP(chatter);
+			aLead->addPlug(&chatter, xPT_chatter);
 		}
 
 	};
 	const cPlugTag* cShareTarget::xPT_word = tOutline<cShareTarget>::makePlugTag("word");
 	const cPlugTag* cShareTarget::xPT_hits = tOutline<cShareTarget>::makePlugTag("hits");
 	const cPlugTag* cShareTarget::xPT_chatter = tOutline<cShareTarget>::makePlugTag("chatter");
-	const cCommand::dUID cShareTarget::xWrite = tOutline<cShareTarget>::makeCommand("write", &cShareTarget::patWrite, NULL);
-	const cCommand::dUID cShareTarget::xGetHits = tOutline<cShareTarget>::makeCommand("get hits", &cShareTarget::patHits, NULL);
-	const cCommand::dUID cShareTarget::xGetChatter = tOutline<cShareTarget>::makeCommand("get chatter", &cShareTarget::patHits, NULL);
+	const cCommand::dUID cShareTarget::xWrite = tOutline<cShareTarget>::makeCommand("write", &cShareTarget::patWrite, xPT_word, NULL);
+	const cCommand::dUID cShareTarget::xGetHits = tOutline<cShareTarget>::makeCommand("get hits", &cShareTarget::patHits, xPT_hits, NULL);
+	const cCommand::dUID cShareTarget::xGetChatter = tOutline<cShareTarget>::makeCommand("get chatter", &cShareTarget::patGetChatter, xPT_chatter, NULL);
 
 	//- The following are shallow test classes not meant for rugged use.
 	class cWriter : public cFigment, private tOutline<cWriter>{
@@ -157,9 +165,9 @@ namespace gt{
 			start(pCon);
 			{
 				//- Really inefficient, but who cares.
-				cLead writeLead(cShareTarget::xWrite, pCon->mSig);
-				writeLead.addPlug(&phrase, cShareTarget::xPT_word);
-				target.mD->jack(&writeLead, pCon);
+				ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite, pCon->mSig);
+				writeLead->addPlug(&phrase, cShareTarget::xPT_word);
+				target.mD->jack(writeLead, pCon);
 			}
 			stop(pCon);
 		}
@@ -168,7 +176,7 @@ namespace gt{
 		tPlug<ptrFig> target;
 		tPlug<std::string> phrase;
 
-		void patSetup(cLead *aLead){
+		void patSetup(ptrLead aLead){
 			target = aLead->getPlug(xPT_target);
 			phrase = aLead->getPlug(xPT_word);
 		}
@@ -180,13 +188,13 @@ namespace gt{
 		"setup", &cWriter::patSetup, xPT_word, xPT_target, NULL
 	);
 
-
 	GTUT_START(test_Thread, sharedData){
 		tOutline<cShareTarget>::draft();
 		tOutline<cWriter>::draft();
+		tOutline<cThread>::draft();
 
-		const short timeout = 1000;
-		const short testLength = 5;
+		const short timeout = 10000;
+		const short testLength = 20;
 		short testCount = 0;
 		short time = 0;
 		cContext fakeContext;
@@ -198,50 +206,57 @@ namespace gt{
 		tPlug<ptrFig> threadA = gWorld.get()->makeFig(getHash<cThread>());
 		tPlug<ptrFig> threadB = gWorld.get()->makeFig(getHash<cThread>());
 
-		AChatter = std::string("cat.");
-		BChatter = std::string("dog.");
+		AChatter = std::string("cat");
+		BChatter = std::string("dog");
 
 		GTUT_ASRT(AChatter.mD.length() == BChatter.mD.length(), "you didn't choose 2 strings of equal length.");
 		{
 			{
-				cLead setupA(cWriter::xSetup, fakeContext.mSig);
-				cLead setupB(cWriter::xSetup, fakeContext.mSig);
-				setupA.addPlug(&share, cWriter::xPT_target);
-				setupB.addPlug(&share, cWriter::xPT_target);
-				setupA.addPlug(&AChatter, cWriter::xPT_word);
-				setupB.addPlug(&BChatter, cWriter::xPT_word);
-				writerA.mD->jack(&setupA, &fakeContext);
-				writerB.mD->jack(&setupB, &fakeContext);
+				ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup, fakeContext.mSig);
+				ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup, fakeContext.mSig);
+				setupA->addPlug(&share, cWriter::xPT_target);
+				setupB->addPlug(&share, cWriter::xPT_target);
+				setupA->addPlug(&AChatter, cWriter::xPT_word);
+				setupB->addPlug(&BChatter, cWriter::xPT_word);
+				writerA.mD->jack(setupA, &fakeContext);
+				writerB.mD->jack(setupB, &fakeContext);
 			}
 			{
-				cLead linkTest(cThread::xLinkFig, fakeContext.mSig);
-				linkTest.addPlug(&writerA, cThread::xPT_fig);
-				threadA.mD->jack(&linkTest, &fakeContext);
+				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig, fakeContext.mSig);
+				linkTest->addPlug(&writerA, cThread::xPT_fig);
+				threadA.mD->jack(linkTest, &fakeContext);
 			}
 			{
-				cLead linkTest(cThread::xLinkFig, fakeContext.mSig);
-				linkTest.addPlug(&writerB, cThread::xPT_fig);
-				threadB.mD->jack(&linkTest, &fakeContext);
+				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig, fakeContext.mSig);
+				linkTest->addPlug(&writerB, cThread::xPT_fig);
+				threadB.mD->jack(linkTest, &fakeContext);
 			}
 
-			cLead getHits(cShareTarget::xGetHits, fakeContext.mSig);
+			ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits, fakeContext.mSig);
 			while(testCount < testLength){
 				threadA.mD->run(&fakeContext);
 				threadB.mD->run(&fakeContext);
-				share.mD->jack(&getHits, &fakeContext);
-				getHits.getValue(&testCount, cShareTarget::xPT_hits);
+				share.mD->jack(getHits, &fakeContext);
+				getHits->getValue(&testCount, cShareTarget::xPT_hits);
 				++time;
 				GTUT_ASRT(time < timeout, "timeout when running.");
 			}
 
 			{
-				cLead getChatter(cShareTarget::xGetChatter, fakeContext.mSig);
-				tPlug<std::string> chatter;
+				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter, fakeContext.mSig);
+				share.mD->jack(getChatter, &fakeContext);
+				const char* ptrChatter = getChatter->getPlug(cShareTarget::xPT_chatter)->exposePtr<std::string>()->c_str();
+				DBUG_LO("chatter='" << ptrChatter << "'");
 
-				getChatter.addPlug(&chatter, cShareTarget::xPT_chatter);
-				share.mD->jack(&getChatter, &fakeContext);
+				//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
+				std::stringstream ss(ptrChatter);
+				std::string token;
+				while( getline(ss, token, '.') ){
+					if(token.compare(AChatter.mD) != 0 && token.compare(BChatter.mD) != 0){
+						GTUT_ASRT(false, "found a corrupt token " << token);
+					}
+				}
 
-				DBUG_LO(chatter.mD);
 			}
 
 		}

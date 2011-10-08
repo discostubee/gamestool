@@ -41,22 +41,22 @@ cWindowFrame::~cWindowFrame(){
 }
 
 void
-cWindowFrame::patLink(cLead *aLead){
-	mContent = aLead->getPlug(cWindowFrame::xPT_content, currentCon);
+cWindowFrame::patLink(ptrLead aLead){
+	mContent = aLead->getPlug(cWindowFrame::xPT_content);
 }
 
 void
-cWindowFrame::patSetCloser(cLead *aLead){
-	mClosing = aLead->getPlug(cWindowFrame::xPT_closer, currentCon);
+cWindowFrame::patSetCloser(ptrLead aLead){
+	mClosing = aLead->getPlug(cWindowFrame::xPT_closer);
 	DBUG_LO("The closer is now " << mClosing.mD->name());
 }
 
 void
-cWindowFrame::patSetDim(cLead *aLead){
-	try{ mX = aLead->getPlug(xPT_x, currentCon); }catch(excep::base_error){}
-	try{ mY = aLead->getPlug(xPT_y, currentCon); }catch(excep::base_error){}
-	try{ mWidth = aLead->getPlug(xPT_width, currentCon); }catch(excep::base_error){}
-	try{ mHeight = aLead->getPlug(xPT_height, currentCon); }catch(excep::base_error){}
+cWindowFrame::patSetDim(ptrLead aLead){
+	aLead->setPlug(&mX, xPT_x, true);
+	aLead->setPlug(&mY, xPT_y, true);
+	aLead->setPlug(&mWidth, xPT_width, true);
+	aLead->setPlug(&mHeight, xPT_height, true);
 	refreshDim();
 }
 

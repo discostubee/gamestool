@@ -31,12 +31,12 @@ cTextFig::run(cContext* pCon){
 }
 
 void
-cTextFig::patSetText(cLead *aLead){
+cTextFig::patSetText(ptrLead aLead){
 	aLead->setPlug(&mText, xPT_text);
 }
 
 void
-cTextFig::patGetText(cLead *aLead){
+cTextFig::patGetText(ptrLead aLead){
 	mText = aLead->getPlug(xPT_text);
 }
 

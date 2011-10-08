@@ -88,6 +88,7 @@ namespace gt{
 	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
 	typedef long long dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
 	typedef tDirPtr<iFigment> ptrFig;	//!< Smart pointer to a figment.
+	typedef boost::shared_ptr<cLead> ptrLead;	//!<
 }
 
 
@@ -125,7 +126,7 @@ namespace gt{
 		virtual const char* name() const =0;
 		virtual dNameHash hash() const =0;
 
-		virtual void jack(cLead *pLead, cContext* pCon)=0;
+		virtual void jack(ptrLead pLead, cContext* pCon)=0;
 		virtual void run(cContext* pCon)=0;
 		virtual void save(cByteBuffer* pAddHere)=0;
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL)=0;
@@ -172,10 +173,10 @@ namespace gt{
 		static void lo(const dStr& pLine);
 
 		//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
-		void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
+		static void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
 
 		//!\brief
-		void warnError(const char *msg, const char* pFile, const unsigned int pLine);
+		static void warnError(const char *msg, const char* pFile, const unsigned int pLine);
 
 		//!\todo	Make threadsafe.
 		static void makeProfileReport(std::ostream &log);
@@ -211,7 +212,11 @@ namespace gt{
 		//!\brief	Makes a new lead that is managed by a smart pointer.
 		//!\param	pFigNameHash	The name hash of the figment which has the command we're after.
 		//!\param	pCommandID
-		cLead makeLead(unsigned int pComID, dConSig pConx);
+		ptrLead makeLead(unsigned int pComID, dConSig pConx);
+
+		//!\brief	If you don't have the context ID (possible because you're creating some kind of hard coded demo), you can still
+		//!			get a lead if you have the string name of the figment and the context it came from.
+		ptrLead makeLead(const dNatChar *aFigName, const dNatChar *aComName, dConSig aConx);
 
 		//!\brief	Makes a profile token using the profiler stored in this world.
 		//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
@@ -233,8 +238,11 @@ namespace gt{
 		//--------------------------------------------------------
 		// Get stuff
 		
-		//!\note	Slow. Intended for ease of reading.
-		const cPlugTag* getPlugTag(dNameHash pFigHash, dNameHash pPTHash);
+		//!\note	Slow.
+		const cPlugTag* getPlugTag(dNameHash pFigHash, unsigned int pPTHash);
+
+		//!\note	Useful when writing demos where you use are using addons and you don't want to include the headers
+		const cPlugTag* getPlugTag(const dNatChar *figName, const dNatChar *tagName);
 
 		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
 		//!			bicycle.
@@ -308,8 +316,9 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Macros
 #ifdef DEBUG
-	#define PROFILE	cProfiler::cToken profileToken = gt::gWorld.get()->makeProfileToken(__FILE__, __LINE__)
+	#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
 	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+	//#define DBUG_LO(x) { std::cout << x << std::endl; }
 	
 #else
 	#define PROFILE
@@ -322,7 +331,7 @@ namespace gt{
 	#define DBUG_VERBOSE_LO(x)
 #endif
 
-#define WARN(x)	gt::gWorld.get()->warnError(x, __FILE__, __LINE__)
+#define WARN(x)	gt::cWorld::warnError(x, __FILE__, __LINE__)
 
 // Handy for all those (...) catch blocks.
 #define UNKNOWN_ERROR	WARN("unknown error")

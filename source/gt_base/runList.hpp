@@ -37,7 +37,7 @@ namespace gt{ //gamestool
 
 		dList mList;
 
-		void patAdd(cLead *aLead);
+		void patAdd(ptrLead aLead);
 	};
 
 	//-----------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ namespace gt{ //gamestool
 		virtual dNameHash getExtension() const { return extends(); }
 
 	protected:
-		void patSetValve(cLead *pLead);
+		void patSetValve(ptrLead pLead);
 	};
 }
 

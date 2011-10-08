@@ -55,12 +55,12 @@ cBase_fileIO::~cBase_fileIO(){
 }
 
 void
-cBase_fileIO::patSetPath(cLead *aLead){
+cBase_fileIO::patSetPath(ptrLead aLead){
 	mPath = aLead->getPlug(xPT_filePath);
 }
 
 void
-cBase_fileIO::patRead(cLead *aLead){
+cBase_fileIO::patRead(ptrLead aLead){
 	size_t readSize = 0;
 	size_t readStart = 0;
 
@@ -71,13 +71,13 @@ cBase_fileIO::patRead(cLead *aLead){
 }
 
 void
-cBase_fileIO::patWrite(cLead *aLead){
+cBase_fileIO::patWrite(ptrLead aLead){
 
 	write( aLead->getPlug(xPT_buffer)->exposePtr<cByteBuffer>() );
 }
 
 void
-cBase_fileIO::patInsert(cLead *aLead){
+cBase_fileIO::patInsert(ptrLead aLead){
 	size_t startSpot = 0;
 
 	aLead->getValue(&startSpot, xPT_startSpot, true);
@@ -86,12 +86,12 @@ cBase_fileIO::patInsert(cLead *aLead){
 }
 
 void
-cBase_fileIO::patDelFile(cLead *aLead){
+cBase_fileIO::patDelFile(ptrLead aLead){
 	deleteFile();
 }
 
 void
-cBase_fileIO::patGetFileSize(cLead *aLead){
+cBase_fileIO::patGetFileSize(ptrLead aLead){
 	PROFILE;
 	mFileSize = getFileSize();
 	aLead->setPlug(&mFileSize, xPT_fileSize);

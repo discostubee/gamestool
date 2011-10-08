@@ -3,7 +3,10 @@
 #define UNITTEST_HPP
 
 	#ifdef DEBUG
-		//#define GTUT //!< Enable unit tests by putting this option into your compiler settings.
+		//#define GTUT //- Enable unit tests by putting this option into your compiler settings.
+
+		//!brief	Enable below if you wish to avoid any artificial slowdown normally used to test threading.
+		//#define GTUT_SPEEDTEST
 
 		#ifdef GTUT
 

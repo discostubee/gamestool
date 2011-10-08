@@ -66,9 +66,9 @@ namespace gt{
 		sMesh* mLazyMesh;	//!<	the idea here is that we fill the lazy mesh up with data, and then on its next run, we take that data and fill up
 							//!		native format mesh. Then we delete the lazy mesh.
 
-		void patAddVert(cLead *aLead);
-		void patAddPoly(cLead *aLead);
-		void patGetMesh(cLead *aLead);
+		void patAddVert(ptrLead aLead);
+		void patAddPoly(ptrLead aLead);
+		void patGetMesh(ptrLead aLead);
 
 		void promiseLazy();	//!< Make sure the lazy mesh is there.
 		void cleanLazy();	//!< Just a little something to remind you you have to manage the lazy mesh.
@@ -101,7 +101,7 @@ namespace gt{
 		virtual cBase_plug& operator= (const cBase_plug *pD){
 			if(pD != this){
 				if(mType != pD->mType)
-					PLUG_CANT_COPY_ID(pD->mType);
+				{	PLUG_CANT_COPY_ID(mType, pD->mType); }
 
 				mD = dynamic_cast< tPlug<sMesh>* >( const_cast<cBase_plug*>(pD) )->mD;
 			}

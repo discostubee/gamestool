@@ -40,9 +40,9 @@ namespace gt{
 		tPlug<ptrFig>		mClosing;	//!< The object to run when this window is closed.
 		tPlug<dUnitPix32>	mX, mY, mHeight, mWidth;
 
-		void patLink(cLead *aLead);
-		void patSetDim(cLead *aLead);
-		void patSetCloser(cLead *aLead);
+		void patLink(ptrLead aLead);
+		void patSetDim(ptrLead aLead);
+		void patSetCloser(ptrLead aLead);
 
 		//----- Stuff to override.
 		virtual void refreshDim(){}		//!< Sets dimensions of the frame.

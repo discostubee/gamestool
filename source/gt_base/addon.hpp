@@ -60,7 +60,7 @@ namespace gt{
 		tPlug<std::string> mAddonName;	//!< Stores the name of the addon we want.
 		dNameHash mAddonHash;
 
-		void patLoadAddon(cLead *aLead);
+		void patLoadAddon(ptrLead aLead);
 
 		virtual void draftAddon(const dStr &pName){ DONT_USE_THIS; }	//!< draft all the blueprints contained in an external addon.
 		virtual void closeAddon(){ DONT_USE_THIS; }

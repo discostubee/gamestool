@@ -28,27 +28,31 @@ cPolyMesh::~cPolyMesh(){
 }
 
 void
-cPolyMesh::patAddVert(cLead *aLead){
+cPolyMesh::patAddVert(ptrLead aLead){
+	PROFILE;
+
 	promiseLazy();
-	for(cLead::cPileItr itr = aLead->getPiledDItr(currentCon); !itr.atEnd(); ++itr){
-		mLazyMesh->mVertexes.push_back(
-			itr.getPlug()->getCopy<sVertex>()
-		);
+	std::vector< tPlug<sVertex> > verts;
+	aLead->getPile(&verts);
+	for(std::vector< tPlug<sVertex> >::iterator itr = verts.begin(); itr != verts.end(); ++itr){
+		mLazyMesh->mVertexes.push_back( itr->mD );
 	}
 }
 
 void
-cPolyMesh::patAddPoly(cLead *aLead){
+cPolyMesh::patAddPoly(ptrLead aLead){
+	PROFILE;
+
 	promiseLazy();
-	for(cLead::cPileItr itr = aLead->getPiledDItr(currentCon); !itr.atEnd(); ++itr){
-		mLazyMesh->mPolys.push_back(
-			itr.getPlug()->getCopy<sPoly>()
-		);
+	std::vector< tPlug<sPoly> > polys;
+	aLead->getPile(&polys);
+	for(std::vector< tPlug<sPoly> >::iterator itr = polys.begin(); itr != polys.end(); ++itr){
+		mLazyMesh->mPolys.push_back( itr->mD );
 	}
 }
 
 void
-cPolyMesh::patGetMesh(cLead *aLead){
+cPolyMesh::patGetMesh(ptrLead aLead){
 
 }
 

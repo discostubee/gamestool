@@ -32,8 +32,8 @@ namespace gt{
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 
 	protected:
-		void patSetText(cLead *aLead);
-		void patGetText(cLead *aLead);
+		void patSetText(ptrLead aLead);
+		void patGetText(ptrLead aLead);
 
 	private:
 		tPlug<std::string> mText;

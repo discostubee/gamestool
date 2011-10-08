@@ -82,62 +82,57 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>gt_graphics</name>
-			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
-			<name>gt_graphics/bitmap.cpp</name>
+			<name>bitmap.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/bitmap.cpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/bitmap.hpp</name>
+			<name>bitmap.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/bitmap.hpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/camera.cpp</name>
+			<name>camera.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/camera.cpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/camera.hpp</name>
+			<name>camera.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/camera.hpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/layer.cpp</name>
+			<name>layer.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/layer.cpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/layer.hpp</name>
+			<name>layer.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/layer.hpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/polygonMesh.cpp</name>
+			<name>polygonMesh.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/polygonMesh.cpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/polygonMesh.hpp</name>
+			<name>polygonMesh.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/polygonMesh.hpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/primitives.hpp</name>
+			<name>primitives.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/primitives.hpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/windowFrame.cpp</name>
+			<name>windowFrame.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/windowFrame.cpp</locationURI>
 		</link>
 		<link>
-			<name>gt_graphics/windowFrame.hpp</name>
+			<name>windowFrame.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_graphics/windowFrame.hpp</locationURI>
 		</link>

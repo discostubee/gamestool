@@ -21,15 +21,15 @@ namespace showoff{
 
 		try{
 			cContext fake;
-			ptrLead loadAnk(new cLead(cFigment::xLoad, &fake));
-			ptrLead readFile(new cLead(cBase_fileIO::xRead, &fake));
+			ptrLead loadAnk = gWorld.get()->makeLead(cFigment::xLoad, fake.mSig);
+			ptrLead readFile = gWorld.get()->makeLead(cBase_fileIO::xRead, fake.mSig);
 			ptrFig anchor = gWorld.get()->makeFig( getHash<cAnchor>() );
 
 			tPlug<cByteBuffer> buff;
-			readFile->add(&buff, cBase_fileIO::xPT_saveData, &fake);
+			readFile->addPlug(&buff, cBase_fileIO::xPT_saveData);
 			aFile->jack(readFile, &fake); //read the entire file.
 
-			loadAnk->add( &buff, cFigment::xPT_saveData, &fake );
+			loadAnk->addPlug(&buff, cFigment::xPT_saveData);
 			anchor->jack(loadAnk, &fake);
 
 			gWorld.get()->setRoot(anchor);
@@ -51,40 +51,40 @@ namespace showoff{
 		tPlug<ptrFig> endProgram( gWorld.get()->makeFig( getHash<cWorldShutoff>() ) );
 
 		{
-			ptrLead setText(new cLead(cTextFig::xSetText, &fake));
+			ptrLead setText = gWorld.get()->makeLead(cTextFig::xSetText, fake.mSig);
 			tPlug<dStr> text;
 
 			text = "I am error ;)";
-			setText->add(&text, cTextFig::xPT_text, &fake);
+			setText->addPlug(&text, cTextFig::xPT_text);
 			textExam.mD->jack(setText, &fake);
 		}
 
 		{
-			ptrLead addToList = gWorld.get()->makeLead(getHash<cRunList>(), makeHash("add"), &fake);
+			ptrLead addToList = gWorld.get()->makeLead(getHash<cRunList>(), makeHash("add"));
 
-			addToList->addToPile(&textExam, &fake);
-			addToList->addToPile(&endProgram, &fake);
+			addToList->addToPile(&textExam);
+			addToList->addToPile(&endProgram);
 			runlistExam.mD->jack(addToList, &fake);
 		}
 
 		//- Now we make the run list the root of the anchor.
 		{
-			ptrLead setRoot = gWorld.get()->makeLead(getHash<cAnchor>(), makeHash("set root"), &fake);
+			ptrLead setRoot = gWorld.get()->makeLead(getHash<cAnchor>(), makeHash("set root"));
 
-			setRoot->add(&runlistExam, cAnchor::xPT_root, &fake);
+			setRoot->addPlug(&runlistExam, cAnchor::xPT_root);
 			anchorExam.mD->jack(setRoot, &fake);
 		}
 
 		//- Save the anchor
 		{
-			ptrLead saveAnchor(new cLead(cFigment::xSave, &fake));
-			ptrLead writeFile(new cLead(cBase_fileIO::xWrite, &fake));
+			ptrLead saveAnchor = gWorld.get()->makeLead(cFigment::xSave, fake.mSig);
+			ptrLead writeFile = gWorld.get()->makeLead(cBase_fileIO::xWrite, fake.mSig);
 
 			tPlug<cByteBuffer> buff;
-			saveAnchor->add(&buff, cFigment::xPT_saveData, &fake);
+			saveAnchor->addPlug(&buff, cFigment::xPT_saveData);
 			anchorExam.mD->jack(saveAnchor, &fake);
 
-			writeFile->add( &buff, cBase_fileIO::xPT_saveData, &fake );
+			writeFile->addPlug( &buff, cBase_fileIO::xPT_saveData);
 			aFile->jack(writeFile, &fake);
 		}
 	}
@@ -115,17 +115,17 @@ namespace showoff{
 
 		{
 			ptrFig file = gWorld.get()->makeFig( getHash<cBase_fileIO>() );
-			ptrLead setPath(new cLead(cBase_fileIO::xSetPath, &fake));
+			ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath, fake.mSig);
 			tPlug<std::string> path( "testfile" );
-			setPath->add(&path, cBase_fileIO::xPT_filePath, &fake);
+			setPath->addPlug(&path, cBase_fileIO::xPT_filePath);
 			file->jack(setPath, &fake);
 			showoff::save(file);
 		}
 		{
 			ptrFig file = gWorld.get()->makeFig( getHash<cBase_fileIO>() );
-			ptrLead setPath(new cLead(cBase_fileIO::xSetPath, &fake));
+			ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath, fake.mSig);
 			tPlug<std::string> path( "testfile" );
-			setPath->add(&path, cBase_fileIO::xPT_filePath, &fake);
+			setPath->addPlug(&path, cBase_fileIO::xPT_filePath);
 			file->jack(setPath, &fake);
 			showoff::load(file);
 		}
