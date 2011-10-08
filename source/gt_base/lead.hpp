@@ -23,13 +23,13 @@
 #ifdef USE_TYPEINFO
 	typedef const std::type_info & PLUG_TYPE_ID;
 	#define PLUG_TYPE_TO_ID(t) typeid(t)
-	#define PLUG_CANT_COPY(t) throw excep::cantCopy("", typeid(t).name(), __FILE__, __LINE__)
-	#define PLUG_CANT_COPY_ID(t) throw excep::cantCopy("", t.name(), __FILE__, __LINE__)
+	#define PLUG_CANT_COPY(copier, copiee) throw excep::cantCopy(typeid(copier).name(), typeid(copiee).name(), __FILE__, __LINE__)
+	#define PLUG_CANT_COPY_ID(copier, copiee) throw excep::cantCopy(copier.name(), copiee.name(), __FILE__, __LINE__)
 #else
 	typedef const dNameHash PLUG_TYPE_ID;
 	#define PLUG_TYPE_TO_ID(t) nameHash(typeid(t).name())
-	#define PLUG_CANT_COPY(t) throw excep::cantCopy("", "", __FILE__, __LINE__)
-	#define PLUG_CANT_COPY_ID(t) throw excep::cantCopy("", "", __FILE__, __LINE__)
+	#define PLUG_CANT_COPY(copier, copiee) throw excep::cantCopy("", "", __FILE__, __LINE__)
+	#define PLUG_CANT_COPY_ID(copier, copiee) throw excep::cantCopy("", "", __FILE__, __LINE__)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -109,13 +109,18 @@ namespace gt{
 		virtual	cBase_plug& operator= (const cBase_plug *pD) //=0;	//- should be pure virtual
 			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
 
-		virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor) =0; //!< Leads must always work with shadows.
-		virtual cUpdateLemming update() =0; //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
+		#ifdef GT_THREADS
+			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor) =0; //!< Leads must always work with shadows.
+			virtual cUpdateLemming update() =0; //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
+		#endif
+
 		virtual void linkLead(cLead* pLead) =0; //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Must be threadsafe.
 		virtual void unlinkLead(cLead* pLead) =0; //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Must be threadsafe.
 
 	protected:
-		virtual void finishUpdate() =0; //!< used only by the update lemming.
+		#ifdef GT_THREADS
+			virtual void finishUpdate() =0; //!< used only by the update lemming.
+		#endif
 
 	friend class cUpdateLemming;
 	};
@@ -149,13 +154,15 @@ namespace gt{
 
 		//!\brief	If it has the tagged plug, it returns a pointer to it. Throws if the plug isn't found. Be careful not to store
 		//!			the pointer anywhere. Getting the plug this way is handier than passing the plug in as an argument.
+		//!\param	pTag	This is the tag we use to find out plug.
+		//!\note	Assumes you only want to read from the plug.
 		cBase_plug * getPlug(const cPlugTag* pTag);
 
-		void addPlug(cBase_plug *aPlug, const cPlugTag *aTag);
+		void addPlug(cBase_plug *addMe, const cPlugTag *aTag);
 
-		void setPlug(cBase_plug *aPlug, const cPlugTag *aTag);	//!< \todo figure out if this should add the plug if it doesn't exist, or throw.
+		void setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail = false);	//!< Assigns the value in this lead to the input input plug
 
-		void addToPile(cBase_plug *aPlug);
+		void addToPile(cBase_plug *addMe);
 
 		//!\brief	Clears target and copies the leads pile into it. Expects tPlug type
 		template<typename C> void getPile(std::vector< C > *target){
@@ -183,18 +190,20 @@ namespace gt{
 				#ifdef GT_THREADS
 					scrTDataItr->second->getShadow(mConx, eSM_read)->copyInto(input);
 				#else
-					*input = scrTDataItr->second->copyInto(input);
+					scrTDataItr->second->copyInto(input);
 				#endif
 			}else if(!silentFail){
-				throw excep::notFound("plug", __FILE__, __LINE__);
+				std::stringstream ss; ss << "plug " << tag->mName;
+				throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
 			}
 		}
 
 		//--- Things for plugs. not protected because there are a lot of templates that need them.
 		#ifdef GT_THREADS
-			typedef boost::unique_lock<boost::mutex> dLockLead;
+			typedef boost::lock_guard<boost::recursive_mutex> dLockLead;
 
-			boost::mutex muLead;	//!< Used by plugs and figment jacks to lock the lead.
+
+			boost::recursive_mutex muLead;	//!< Used by plugs and figment jacks to lock the lead.
 		#endif
 
 		//!\brief	When a plug dies, it must let the lead know it is no longer valid.
@@ -259,7 +268,7 @@ namespace gt{
 	T*
 	cBase_plug::exposePtr(){
 		if(mType != PLUG_TYPE_TO_ID(T))
-			PLUG_CANT_COPY(T);
+			PLUG_CANT_COPY_ID(mType, typeid(T));
 
 		return &dynamic_cast< tPlug<T>* >(this)->mD;
 	}
@@ -269,7 +278,7 @@ namespace gt{
 	cBase_plug::copyInto(T *container, bool silentFail) const{
 		if(mType != PLUG_TYPE_TO_ID(T)){
 			if(!silentFail)
-				PLUG_CANT_COPY(T);
+				PLUG_CANT_COPY_ID(mType, typeid(T));
 			else
 				return;
 		}
@@ -283,7 +292,7 @@ namespace gt{
 	cBase_plug::operator= (const plug<T> &pT){
 		if(this != &pT){
 			if(mType != pT.mType)
-				PLUG_CANT_COPY_ID(pT.mType);
+				PLUG_CANT_COPY_ID(mType, pT.mType);
 
 			dynamic_cast< tPlug<T>* >(this)->mD = pT.mD;
 		}else{

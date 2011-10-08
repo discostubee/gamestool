@@ -8,7 +8,9 @@ cUpdateLemming::cUpdateLemming(cBase_plug *callBack) : callMe(callBack)
 {}
 
 cUpdateLemming::~cUpdateLemming() {
-	callMe->finishUpdate();
+	#ifdef GT_THREADS
+		callMe->finishUpdate();
+	#endif
 }
 
 ////////////////////////////////////////////////////////////
@@ -69,8 +71,10 @@ cLead::getPlug(const cPlugTag* pTag){
 	PROFILE;
 
 	scrTDataItr = mTaggedData.find(pTag->mID);
-	if(scrTDataItr == mTaggedData.end())
-		throw excep::notFound("plug", __FILE__, __LINE__);
+	if(scrTDataItr == mTaggedData.end()){
+		std::stringstream ss; ss << "plug " << pTag->mName;
+		throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
+	}
 
 	#ifdef GT_THREADS
 		return scrTDataItr->second->getShadow(mConx, eSM_read);
@@ -80,34 +84,40 @@ cLead::getPlug(const cPlugTag* pTag){
 }
 
 void
-cLead::addPlug(cBase_plug *aPlug, const cPlugTag *aTag){
+cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 	PROFILE;
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr != mTaggedData.end()){
 		scrTDataItr->second->unlinkLead(this);
-		scrTDataItr->second = aPlug;
+		scrTDataItr->second = addMe;
 	}else{
 		//mTaggedData.insert( std::pair<cPlugTag::dUID, cBase_plug *>(aTag->mID, aPlug) );
-		mTaggedData[aTag->mID] = aPlug;
+		mTaggedData[aTag->mID] =addMe;
 	}
-	aPlug->linkLead(this);
+	addMe->linkLead(this);
 }
 
 void
-cLead::setPlug(cBase_plug *aPlug, const cPlugTag *aTag){
+cLead::setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
 	PROFILE;
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr != mTaggedData.end()){
-		*scrTDataItr->second->getShadow(mConx, eSM_write) = aPlug;
+		#ifdef GT_THREADS
+			*scrTDataItr->second->getShadow(mConx, eSM_write) = setMe;
+		#else
+			*scrTDataItr->second = setMe;
+		#endif
+	}else if(!silentFail){
+		throw excep::notFound("plug", __FILE__, __LINE__);
 	}
 }
 
 void
-cLead::addToPile(cBase_plug *aPlug){
-	aPlug->linkLead(this);
-	mDataPile.push_back(aPlug);
+cLead::addToPile(cBase_plug *addMe){
+	addMe->linkLead(this);
+	mDataPile.push_back(addMe);
 }
 
 void

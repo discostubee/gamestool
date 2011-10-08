@@ -83,7 +83,7 @@ namespace gt{
 	template<typename T>
 	class tOutline{
 	public:
-		typedef void (T::*ptrPatFoo)(cLead *alead);
+		typedef void (T::*ptrPatFoo)(ptrLead alead);
 		static void draft();				//!< Adds your figment to the world library.
 		static void removeFromWorld();
 
@@ -283,7 +283,12 @@ namespace gt{
 		readyCommands();
 
 		{	//- Using braces to ensure that the pointer to the command map is correct.
-			dNameHash comUID = makeHash(pName);
+			dNameHash comUID;
+			{
+				dStr totalString = T::identify();
+				totalString.append(pName);
+				comUID = makeHash(totalString.c_str());
+			}
 			dMapCom::iterator itrCom;
 			cPlugTag* param=const_cast<cPlugTag*>(pTags);
 			va_list params;
@@ -348,7 +353,10 @@ namespace gt{
 				try{ return (*itr)->getCom(pHash); }catch(excep::notFound){}
 			}
 
-			throw excep::notFound("command", __FILE__, __LINE__);
+			{
+				std::stringstream ss; ss << T::identify() << " command " << pHash;
+				throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
+			}
 		}
 
 		return itrCom->second;

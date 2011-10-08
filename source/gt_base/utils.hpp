@@ -42,7 +42,7 @@ typedef unsigned int	dMillisec;
 //!\note	This should return the same hash for every platform, so
 //!			it has to use the portable char type.
 // !\note	Code taken from http://cboard.cprogramming.com/tech-board/114650-string-hashing-algorithm.html
-dNameHash makeHash(const char* pString);
+dNameHash makeHash(const dNatChar* pString);
 
 //------------------------------------------------------------------------------------------
 // Handy if you don't want to expose the container, but you

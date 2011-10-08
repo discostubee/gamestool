@@ -50,12 +50,12 @@ namespace gt{
 		tPlug<dStr> mPath; //!< This is the path to the file.
 		tPlug<size_t> mFileSize;
 
-		void patSetPath(cLead *aLead);
-		void patRead(cLead *aLead);
-		void patWrite(cLead *aLead);
-		void patInsert(cLead *aLead);
-		void patDelFile(cLead *aLead);
-		void patGetFileSize(cLead *aLead);
+		void patSetPath(ptrLead aLead);
+		void patRead(ptrLead aLead);
+		void patWrite(ptrLead aLead);
+		void patInsert(ptrLead aLead);
+		void patDelFile(ptrLead aLead);
+		void patGetFileSize(ptrLead aLead);
 
 		//!\fn		virtual cByteBuffer read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 )
 		//!\brief	Fills the provided buffer with file contents.

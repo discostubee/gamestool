@@ -186,12 +186,12 @@ cAnchor::run(cContext* pCon) {
 }
 
 void
-cAnchor::patSetRoot(cLead *aLead){
+cAnchor::patSetRoot(ptrLead aLead){
 	mRoot = aLead->getPlug(cAnchor::xPT_root);
 }
 
 void
-cAnchor::patGetRoot(cLead *aLead){
+cAnchor::patGetRoot(ptrLead aLead){
 	aLead->addPlug(&mRoot, cAnchor::xPT_root);
 }
 
@@ -224,7 +224,7 @@ private:
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
 
-	void patGetData(cLead *aLead);
+	void patGetData(ptrLead aLead);
 };
 
 const cPlugTag *cSaveTester::xPT_str = tOutline<cSaveTester>::makePlugTag("my str");
@@ -239,9 +239,9 @@ const cCommand::dUID	cSaveTester::xGetData = tOutline<cSaveTester>::makeCommand(
 );
 
 void
-cSaveTester::patGetData(cLead *aLead){
-	aLead->addToPile(&myStr);
-	aLead->addToPile(&myNum);
+cSaveTester::patGetData(ptrLead aLead){
+	aLead->addPlug(&myStr, xPT_str);
+	aLead->addPlug(&myNum, xPT_num);
 }
 
 
@@ -254,10 +254,10 @@ GTUT_START(testAnchor, basicSave){
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
-	cLead add(cAnchor::xSetRoot, fakeCon.mSig);
+	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.mSig);
 
-	add.addPlug(&tester, cAnchor::xPT_root);
-	ank->jack(&add, &fakeCon);
+	add->addPlug(&tester, cAnchor::xPT_root);
+	ank->jack(add, &fakeCon);
 
 	buff.clear();
 	ank->save(&buff);
@@ -267,22 +267,22 @@ GTUT_START(testAnchor, basicLoad){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	cContext fake;
 
-	cLead load(cAnchor::xLoad, fake.mSig);
+	ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad, fake.mSig);
 	dReloadMap dontcare;
 	ank->loadEat(&buff, &dontcare);
 
-	cLead root(cAnchor::xGetRoot, fake.mSig);
-	ank->jack(&root, &fake);
+	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot, fake.mSig);
+	ank->jack(root, &fake);
 	tPlug<ptrFig> reload;
-	reload = root.getPlug(cAnchor::xPT_root);
+	reload = root->getPlug(cAnchor::xPT_root);
 
-	cLead checkData(cSaveTester::xGetData, fake.mSig);
-	reload.mD->jack(&checkData, &fake);
+	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData, fake.mSig);
+	reload.mD->jack(checkData, &fake);
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
 
-	myStr = checkData.getPlug(cSaveTester::xPT_str);
-	myNum = checkData.getPlug(cSaveTester::xPT_num);
+	myStr = checkData->getPlug(cSaveTester::xPT_str);
+	myNum = checkData->getPlug(cSaveTester::xPT_num);
 
 	GTUT_ASRT(strncmp(myStr.mD.c_str(), testStr, strlen(testStr))==0, "saved strings are not the same");
 	GTUT_ASRT(myNum.mD==42, "saved numbers are not the same");

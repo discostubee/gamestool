@@ -41,20 +41,20 @@ namespace gt{
 		ptrFig elements;
 		tPlug<ptrFig> addonGL;
 		tPlug<ptrFig> window;
-		ptrLead setPath = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon, &fake);
+		ptrLead setPath = gWorld.get()->makeLead(cAddon::xLoadAddon, fake.mSig);
 		tPlug<dStr> path("X11GL");
-		ptrLead addElements = gWorld.get()->makeLead(getHash<cRunList>(), cRunList::xAdd, &fake);
+		ptrLead addElements = gWorld.get()->makeLead(cRunList::xAdd, fake.mSig);
 
 		elements = gWorld.get()->makeFig(getHash<cRunList>());
 
 		addonGL.mD = gWorld.get()->makeFig(getHash<cAddon>());
-		setPath->add(&path, cAddon::xPT_addonName, &fake);
+		setPath->addPlug(&path, cAddon::xPT_addonName);
 		addonGL.mD->jack(setPath, &fake);
 
 		window.mD = gWorld.get()->makeFig(getHash<cWindowFrame>());
 
-		addElements->addToPile(&addonGL, &fake);
-		addElements->addToPile(&window, &fake);
+		addElements->addToPile(&addonGL);
+		addElements->addToPile(&window);
 		elements->jack(addElements, &fake);
 
 		gWorld.get()->setRoot(elements);

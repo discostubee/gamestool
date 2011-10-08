@@ -25,19 +25,19 @@ cFigment::~cFigment(){
 }
 
 void
-cFigment::patSave(cLead *aLead){
+cFigment::patSave(ptrLead aLead){
 	cByteBuffer buff;
 	save( &buff );
 }
 
 void
-cFigment::patLoad(cLead *aLead){
+cFigment::patLoad(ptrLead aLead){
 	cByteBuffer buff;
 	loadEat( &buff );
 }
 
 void
-cFigment::jack(cLead *pLead, cContext* pCon){
+cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
 	if(pLead->mConx != pCon->mSig)
@@ -45,11 +45,15 @@ cFigment::jack(cLead *pLead, cContext* pCon){
 
 	start(pCon);
 	try{
-		cLead::dLockLead lock(pLead->muLead);
+		#ifdef GT_THREADS
+			cLead::dLockLead lock(pLead->muLead);
+		#endif
 		ASRT_NOTNULL(mBlueprint);
 		mBlueprint->getCom(pLead->mCom)->use(this, pLead);
 	}catch(excep::base_error &e){
-		WARN(e);
+		std::stringstream ss;
+		ss << name() << e.what();
+		WARN(ss.str().c_str());
 	}catch(...){
 		UNKNOWN_ERROR;
 	}

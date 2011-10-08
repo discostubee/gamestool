@@ -8,7 +8,7 @@
 #include "utils.hpp"
 
 dNameHash 
-makeHash(const char* pString)
+makeHash(const dNatChar* pString)
 {
 	dNameHash hash = 0;
 	size_t platStrLen = strlen(pString);

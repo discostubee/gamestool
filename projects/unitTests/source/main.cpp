@@ -9,7 +9,7 @@ int
 main(int argc, char **argv){
 	int result = EXIT_FAILURE;
 
-	std::cout << "Running gamestool tests. Version 0.1" << std::endl;
+	std::cout << "Running gamestool tests. Version 0.2" << std::endl;
 
 	gt::gWorld.take( new gt::cWorld() );
 

@@ -42,9 +42,10 @@ namespace gt{
 		tPlugShadows(PLUG_TYPE_ID pTI);
 		virtual ~tPlugShadows();
 
-		virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor);
-
-		virtual cUpdateLemming update();
+		#ifdef GT_THREADS
+			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor);
+			virtual cUpdateLemming update();
+		#endif
 
 		void linkLead(cLead* pLead);
 		void unlinkLead(cLead* pLead);
@@ -57,10 +58,10 @@ namespace gt{
 		dMapLeads::iterator itrLead;	//!< handy.
 
 		#ifdef GT_THREADS
-			typedef boost::unique_lock<boost::mutex> dMuLock;
+			typedef boost::lock_guard<boost::recursive_mutex> dMuLock;
 			typedef std::vector<tShadow<A> > dVecShadow;
 
-			boost::mutex muMap;
+			boost::recursive_mutex muMap;
 
 			dVecShadow mShadows;
 			typename dVecShadow::iterator itrShadow;	//!< handy.
@@ -135,7 +136,6 @@ namespace gt{
 				dMuLock lock(muMap);
 			#endif
 			PROFILE;
-			DBUG_VERBOSE_LO("destroying plug");
 
 			for(dMapLeads::iterator itrLead = mLeadsConnected.begin(); itrLead != mLeadsConnected.end(); ++itrLead){
 				try{
@@ -147,10 +147,12 @@ namespace gt{
 				}
 			}
 
-			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
-				if(itrShadow->mData != NULL)
-					delete itrShadow->mData;
-			}
+			#ifdef GT_THREADS
+				for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
+					if(itrShadow->mData != NULL)
+						delete itrShadow->mData;
+				}
+			#endif
 
 		}catch(...){
 			excep::base_error e("Unknown error when destroying a plug", __FILE__, __LINE__);
@@ -158,55 +160,51 @@ namespace gt{
 		}
 	}
 
-	template<typename A>
-	cBase_plug*
-	tPlugShadows<A>::getShadow(dConSig aCon, eShadowMode whatFor){
-		//- It should be fine to not lock here because this data should be independent of the other threads, and the shadow list should only be updated when all leads are locked.
-		if(mShadows[aCon].mMode == eSM_read)	//- these operations should be quick as its a vector.
-			mShadows[aCon].mMode = whatFor;
-		return mShadows[aCon].mData;
-	}
+	#ifdef GT_THREADS
+		template<typename A>
+		cBase_plug*
+		tPlugShadows<A>::getShadow(dConSig aCon, eShadowMode whatFor){
+			//- It should be fine to not lock here because this data should be independent of the other threads, and the shadow list should only be updated when all leads are locked.
+			if(mShadows[aCon].mMode == eSM_read)	//- these operations should be quick as its a vector.
+				mShadows[aCon].mMode = whatFor;
+			return mShadows[aCon].mData;
+		}
 
-	template<typename A>
-	cUpdateLemming
-	tPlugShadows<A>::update(){
-		PROFILE;
-
-		#ifdef GT_THREADS
+		template<typename A>
+		cUpdateLemming
+		tPlugShadows<A>::update(){
+			PROFILE;
 			muMap.lock();	//- lemming unlocks this when it dies and call finish.
 
 			for(itrLead = mLeadsConnected.begin(); itrLead != mLeadsConnected.end(); ++itrLead)
 				itrLead->first->muLead.lock();	//- let any mutex throws go all the way and cause the program to exit.
-		#endif
 
-		for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
-			if(itrShadow->mData != NULL){
-				if(itrShadow->mMode == eSM_write)
-					getMD() = itrShadow->mData->mD;
+			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
+				if(itrShadow->mData != NULL){
+					if(itrShadow->mMode == eSM_write)
+						getMD() = itrShadow->mData->mD;
+				}
 			}
+
+			return cUpdateLemming(this);
 		}
 
-		return cUpdateLemming(this);
-	}
-
-	template<typename A>
-	void
-	tPlugShadows<A>::finishUpdate(){
-
-		for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
-			if(itrShadow->mData != NULL){
-				itrShadow->mMode = eSM_read;
-				itrShadow->mData->mD = getMD();
+		template<typename A>
+		void
+		tPlugShadows<A>::finishUpdate(){
+			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
+				if(itrShadow->mData != NULL){
+					itrShadow->mMode = eSM_read;
+					itrShadow->mData->mD = getMD();
+				}
 			}
-		}
 
-		#ifdef GT_THREADS
 			for(itrLead = mLeadsConnected.begin(); itrLead != mLeadsConnected.end(); ++itrLead)
 				itrLead->first->muLead.unlock();
 
 			muMap.unlock();
-		#endif
-	}
+		}
+	#endif
 
 	template<typename A>
 	void
@@ -225,14 +223,16 @@ namespace gt{
 			++itrLead->second;
 		}
 
-		if(mShadows.size() < pLead->mConx +1){
-			tShadow<A> stamp = { eSM_read, NULL };
-			mShadows.resize(pLead->mConx +1, stamp);
-		}
+		#ifdef GT_THREADS
+			if(mShadows.size() < pLead->mConx +1){
+				tShadow<A> stamp = { eSM_read, NULL };
+				mShadows.resize(pLead->mConx +1, stamp);
+			}
 
-		itrShadow = mShadows.begin() + pLead->mConx;
-		itrShadow->mData = new tPlug<A>;
-		itrShadow->mData->mD = getMD();
+			itrShadow = mShadows.begin() + pLead->mConx;
+			itrShadow->mData = new tPlug<A>;
+			itrShadow->mData->mD = getMD();
+		#endif
 	}
 
 	template<typename A>
@@ -291,7 +291,7 @@ namespace gt{
 		}else{ // we need to see if there is an acceptable converter.
 			//!!! can do this with a map of maps (2D map). Map this thing's template version of the copy check to the targets. Then at the right location, check if there is a templated copy function.
 			//!!! for now we just fail.
-			PLUG_CANT_COPY_ID(pD->mType);
+			PLUG_CANT_COPY(typeid(A), pD->mType);
 		}
 	}
 

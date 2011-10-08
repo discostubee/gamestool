@@ -4,6 +4,8 @@
 
 #if defined LINUX
 	#include <gt_linux/linux_addon.hpp>
+#elif defined __APPLE__
+	#include <gt_OSX/OSX_addon.hpp>
 #elif defined WIN32
 	#include <gt_win7/win_addon.hpp>
 #endif
@@ -34,15 +36,15 @@ namespace showoff{
 			tOutline<cAddon_win>::draft();
 		#endif
 
-		tPlug<ptrFig> stuff = gWorld.get()->makeFig(makeHash("run list"));
+		ptrFig stuff = gWorld.get()->makeFig(makeHash("run list"));
 
 		{
 			ptrFig testAddon = gWorld.get()->makeFig(getHash<cAddon>());
-			ptrLead loadTestAddon = gWorld.get()->makeLead(getHash<cAddon>(), cAddon::xLoadAddon, &fake);
+			ptrLead loadTestAddon = gWorld.get()->makeLead(cAddon::xLoadAddon, fake.mSig);
 			tPlug<dStr> addonName;
 
 
-			gWorld.get()->setRoot(stuff.mD);
+			gWorld.get()->setRoot(stuff);
 			gWorld.get()->loop();
 		}
 	}

@@ -37,8 +37,8 @@ namespace gt{ //gamestool
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);
 
 	protected:
-		void patSetRoot(cLead *aLead);
-		void patGetRoot(cLead *aLead);
+		void patSetRoot(ptrLead aLead);
+		void patGetRoot(ptrLead aLead);
 
 	private:
 		tPlug<ptrFig>	mRoot;

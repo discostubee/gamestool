@@ -60,9 +60,9 @@ namespace gt{
 		tPlug<eArrange>		mArrangement;	//!< It's OK to have this here, because it's not a unit.
 		tPlug<eCropStyle>	mCropStyle;		//!< Same as arrangement.
 
-		void patSetLink(cLead *aLead);
-		void patSetLayout(cLead *aLead);
-		void patGetLayout(cLead *aLead);
+		void patSetLink(ptrLead aLead);
+		void patSetLayout(ptrLead aLead);
+		void patGetLayout(ptrLead aLead);
 
 		//-------------------
 		virtual void setSize(const sWH<dUnitVDis> &size){ DUMB_REF_ARG(size); }					//!< Sets the size of the layer.
