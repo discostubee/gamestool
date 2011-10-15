@@ -37,8 +37,14 @@ namespace gt{
 		//-----------------------------
 		// Commands and plug tags
 		static const cPlugTag*	xPT_saveData;	//!<
+
 		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability.
 		static const cCommand::dUID	xLoad;	//!< Ditto above.
+
+		#if defined(DEBUG) && defined(GT_SPEED)
+			static const cCommand::dUID xTestJack;
+			static const cPlugTag* xPT_life;
+		#endif
 
 		//-----------------------------
 		cFigment();
@@ -87,6 +93,10 @@ namespace gt{
 		// Patch through functions for use with command.
 		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
 		void patLoad(ptrLead aLead);	//!< Same asa the patSave function above.
+
+		#if defined(DEBUG) && defined(GT_SPEED)
+			void patTestJack(ptrLead aLead);
+		#endif
 	};
 
 	//-------------------------------------------------------------------------------------

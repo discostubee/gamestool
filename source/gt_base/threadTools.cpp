@@ -35,7 +35,7 @@ using namespace gt;
 		static void threadFoo(tMrSafety<testFooData> *refData){
 			for(size_t idx=0; idx < quote.size(); ++idx){
 				refData->get()->testStr[idx] = quote.c_str()[idx];
-				#ifndef GTUTU_SPEEDTEST
+				#ifndef GT_SPEEDTEST
 					boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 				#endif
 			}
