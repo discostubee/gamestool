@@ -65,12 +65,12 @@ namespace gt{
 		void patGetLayout(ptrLead aLead);
 
 		//-------------------
-		virtual void setSize(const sWH<dUnitVDis> &size){ DUMB_REF_ARG(size); }					//!< Sets the size of the layer.
-		virtual void setPos(const sPoint2D<dUnitVDis> &pos){ DUMB_REF_ARG(pos); }				//!< Sets the position.
-		virtual void setCrop(const shape::rectangle<dUnitPix32> &area){ DUMB_REF_ARG(area); }	//!< Sets the cropping dimensions.
-		virtual sWH<dUnitVDis>& getSize(){ DONT_USE_THIS; }
-		virtual sPoint2D<dUnitVDis>& getPos(){ DONT_USE_THIS; }
-		virtual shape::rectangle<dUnitPix32>& getCrop(){ DONT_USE_THIS; }
+		virtual void setSize(const sWH<dUnitVDis> &size) =0;//{ DUMB_REF_ARG(size); }					//!< Sets the size of the layer.
+		virtual void setPos(const sPoint2D<dUnitVDis> &pos) =0;//{ DUMB_REF_ARG(pos); }				//!< Sets the position.
+		virtual void setCrop(const shape::rectangle<dUnitPix32> &area) =0;//{ DUMB_REF_ARG(area); }	//!< Sets the cropping dimensions.
+		virtual sWH<dUnitVDis>& getSize() =0;//{ DONT_USE_THIS; }
+		virtual sPoint2D<dUnitVDis>& getPos() =0;//{ DONT_USE_THIS; }
+		virtual shape::rectangle<dUnitPix32>& getCrop() =0;//{ DONT_USE_THIS; }
 
 	};
 }

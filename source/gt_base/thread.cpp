@@ -126,7 +126,7 @@ namespace gt{
 			chatter.mD.append( *aLead->getPlug(xPT_word)->exposePtr<std::string>() );
 			chatter.mD.append( "." );
 			++hits.mD;
-			#ifndef GTUTU_SPEEDTEST
+			#ifndef GT_SPEEDTEST
 				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 			#endif
 		}

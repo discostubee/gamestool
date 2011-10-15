@@ -16,6 +16,15 @@ const cCommand::dUID cFigment::xLoad = tOutline<cFigment>::makeCommand(
 	NULL
 );
 
+#if defined(DEBUG) && defined(GT_SPEED)
+	const cPlugTag* cFigment::xPT_life = tOutline<cFigment>::makePlugTag("life");
+	const cCommand::dUID cFigment::xTestJack = tOutline<cFigment>::makeCommand(
+		"test jack", &cFigment::patTestJack, cFigment::xPT_life,
+		NULL
+	);
+
+#endif
+
 cFigment::cFigment(){
 	DBUG_TRACK_START("figment");
 }
@@ -86,6 +95,15 @@ cFigment::getLinks(std::list<ptrFig>* pOutLinks){
 	//start(pCon);
 	//stop(pCon);
 }
+
+#if defined(DEBUG) && defined(GT_SPEED)
+	void cFigment::patTestJack(ptrLead aLead){
+		tPlug<int> gotIt;
+		gotIt = aLead->getPlug(xPT_life);
+		if(gotIt.mD != 42)
+			throw std::exception();
+	}
+#endif
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
