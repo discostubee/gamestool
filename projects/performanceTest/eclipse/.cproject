@@ -23,8 +23,11 @@
 							<builder buildPath="${workspace_loc:/performanceTest/Debug}" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.601199851" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug.142282671" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug.1481860162" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug">
-								<option id="macosx.cpp.link.option.paths.964198166" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
+								<option id="macosx.cpp.link.option.paths.964198166" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
+								</option>
+								<option id="macosx.cpp.link.option.libs.151106873" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="gtest_main"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.1694007548" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -50,6 +53,12 @@
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 								</option>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.1984566535" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="GTUT"/>
+									<listOptionValue builtIn="false" value="GT_SPEED"/>
+									<listOptionValue builtIn="false" value="GTUT_GOOGLE"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1144109162" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.1324377564" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug">
@@ -60,6 +69,12 @@
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
+								</option>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.482487976" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="GTUT"/>
+									<listOptionValue builtIn="false" value="GTUT_GOOGLE"/>
+									<listOptionValue builtIn="false" value="GT_SPEED"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1307673801" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -671,7 +686,7 @@
 							<builder buildPath="${workspace_loc:/performanceTest/Release}" id="cdt.managedbuild.target.gnu.builder.macosx.exe.release.969420689" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.release"/>
 							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.release.339165499" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.release"/>
 							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.release.1553529179" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.release">
-								<option id="macosx.cpp.link.option.paths.393847933" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
+								<option id="macosx.cpp.link.option.paths.393847933" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.217441198" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
@@ -708,6 +723,9 @@
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
+								</option>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.756500188" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="GTUT_GOOGLE"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1966523344" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
