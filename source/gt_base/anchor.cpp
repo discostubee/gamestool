@@ -254,7 +254,7 @@ GTUT_START(testAnchor, basicSave){
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
-	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.mSig);
+	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
 
 	add->addPlug(&tester, cAnchor::xPT_root);
 	ank->jack(add, &fakeCon);
@@ -267,16 +267,16 @@ GTUT_START(testAnchor, basicLoad){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	cContext fake;
 
-	ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad, fake.mSig);
+	ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad, fake.getSig());
 	dReloadMap dontcare;
 	ank->loadEat(&buff, &dontcare);
 
-	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot, fake.mSig);
+	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot, fake.getSig());
 	ank->jack(root, &fake);
 	tPlug<ptrFig> reload;
 	reload = root->getPlug(cAnchor::xPT_root);
 
-	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData, fake.mSig);
+	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData, fake.getSig());
 	reload.mD->jack(checkData, &fake);
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;

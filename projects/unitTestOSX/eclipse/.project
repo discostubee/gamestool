@@ -323,6 +323,11 @@
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/threadTools.hpp</locationURI>
 		</link>
 		<link>
+			<name>gt_base/unitTests.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTests.cpp</locationURI>
+		</link>
+		<link>
 			<name>gt_base/unitTests.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTests.hpp</locationURI>

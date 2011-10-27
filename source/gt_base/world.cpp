@@ -305,12 +305,18 @@ cWorld::getPlugTag(dNameHash pFigHash, cPlugTag::dUID pPTHash){
 
 const cPlugTag*
 cWorld::getPlugTag(const dNatChar *figName, const dNatChar *tagName){
-	mScrBMapItr =  mBlueprints.find(makeHash(figName));
+	return getPlugTag(makeHash(figName), makeHash(tagName));
+}
 
-	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("figment wasn't found", __FILE__, __LINE__);
+const cPlugTag*
+cWorld::getPlugTag(cPlugTag::dUID aID){
+	PROFILE;
 
-	return mScrBMapItr->second.mBlueprint->getPlugTag(makeHash(tagName));
+	for(dBlueprintMap::iterator bp = mBlueprints.begin(); bp != mBlueprints.end(); ++bp){
+		if( bp->second.mBlueprint->hasPlugTag(aID) )
+			return bp->second.mBlueprint->getPlugTag(aID);
+	}
+	throw excep::notFound("plug tag", __FILE__, __LINE__);
 }
 
 void

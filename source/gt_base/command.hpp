@@ -27,6 +27,8 @@ namespace gt{
 		typedef unsigned int dUID;	//!< unique command ID
 		typedef void (iFigment::*fooPtr)(ptrLead aLead);	//!< Pointer to our jack function.
 
+		static const dUID noID;
+
 		const dUID	mID;
 		const dStr	mName;
 		const dNameHash mParent;	//!< Used to determine which figment this command belongs too.

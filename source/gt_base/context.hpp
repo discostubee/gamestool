@@ -8,6 +8,20 @@
  * !		- Cause a thread to wait if it tries to run or jack into a figment that is currently working with another thread.
  * !		- Unwind if a figment tries to run or jack into another that is currently waiting. In other words, prevent deadlocks.
  *
+ * !\todo	Need to optimise both the context and the way it's used by figment plugs. Basically, the figment plug should have 2 special functions
+ * !		for nunning and jacking. These 2 functions inform the context how it's setup, and if that plug changes at all, the context or contexts
+ * !		are updated. That way, the context map is not built every we time we start and stop using a context. We need to still start and stop
+ * !		a context, so that we can tell if we are going to collide with ourselves.
+ *
+ * !\todo	Implement the zombie purge after something throws during a run. We should never throw out of a jack.
+ *
+ * !\note	Outline of how plugs works:
+ * !		Using a leads 'get plug' function returns a shadow plug. A shadow is unique for every context, and because every thread has a different
+ * !		context, threading shouldn't be a problem. Shadows can either be updated from the original, or the original is overwritten by the
+ * !		shadow depending on what the shadow has logged its use as. Plugs store their own shadows, so a figment can update their shadows every
+ * !		time they run. running the update causes the context that shadow belongs to to become locked.
+ *
+ *
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -24,37 +38,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *
- *
- * EXAMPLE A
- * Dealt with because when c encounters c again, it unwinds. b gets blocked
- * until c winds.
- *
- *	    a
- * 	    b-->c
- * 	    b   c
- * 	|-->0   c
- * 	|   c<--c
- *  |<--c
- *
- * EXAMPLE B
- *
- *  a
- *  b-->c
- *  b   d-->e
- *  b   0   e--|
- *  b          |
- *  f-->0      |
- *  0   g<-----|
- *  0   g
- *
- *
- * Outline of how plugs works:
- * Using a leads 'get plug' function returns a shadow plug. A shadow is unique for every context, and because every thread has a different context, threading
- * shouldn't be a problem. Shadows can either be updated from the original, or the original is overwritten by the shadow depending on what the shadow has
- * logged its use as. Plugs store their own shadows, so a figment can update their shadows every time they run. running the update causes the context that
- * shadow belongs to to become locked. Once a context becomes locked it can't be used to use any more plugs until it unlocks.
- *
- *
  */
 
 #ifndef CONTEXT_HPP
@@ -65,11 +48,11 @@
 #include <deque>
 
 ///////////////////////////////////////////////////////////////////////////////////
-// typedefs
+// typedefs and forward decs
 namespace gt{
-	typedef iFigment* dFigConSig;						//!< A figments context signature. Because this value doesn't need to be saved/loaded it should be fine whatever the byte size is.
-	typedef std::deque<dFigConSig> dProgramStack;	//!< This is the entire stack of figments. The pancake map below doesn't copy this stack (in case you're wondering).
+	class cFigContext;
 
+	typedef std::deque<cFigContext*> dProgramStack;	//!< This is the entire stack of figments. The pancake map below doesn't copy this stack (in case you're wondering).
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -106,35 +89,46 @@ namespace gt{
 	//-------------------------------------------------------------------------------------
 	//!\brief	A context is used to avoid circular references and to also create a way to
 	//!			block threads from running into each other.
+	//!\note	Things get a little confusing when you copy another figment. These other
+	//!			because when running a thread, the other context can finish with its figments
+	//!			and remove them. We still want to keep this stack because we still want to
+	//!			prevent circular references, we just don't want to force stop them when our
+	//!			context ends.
 	class cContext{
 	public:
-		dConSig mSig;	//!< try not to modify it.
-
 		cContext();
 		cContext(const cContext & copyMe);
 		~cContext();
 
-		void add(dFigConSig pFig, dNameHash pClassID);				//!< Adds a figment reference to the stack.
-		void finished(dFigConSig pFig);								//!< Removes a figment reference from the stack.
-		bool isStacked(dFigConSig pFig, dNameHash pClassID = 0);	//!< Determines if the figment is stacked. It is optional to check the ID type as well.
-		dProgramStack makeStackDump();								//!< Spits out a copy of the program stack.
+		bool isStacked(cFigContext *pFig);			//!< Determines if the figment is stacked.
+		dProgramStack makeStackDump();				//!< Spits out a copy of the program stack.
+		ptrFig getFirstOfType(dNameHash aType);		//!< Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment. \note is slow because we want all the operations to be as fast as possible.
+		dConSig getSig() const;						//!< Get unique signature.
+
+	protected:
+		void add(cFigContext *pFig);					//!< Adds a figment reference to the stack.
+		void finished(cFigContext *pFig);				//!< Removes a figment reference from the stack.
+
+		friend class cFigContext;
 
 	private:
 
 		struct sInfo{
 			unsigned int timesStacked;
 			dNameHash realID;	//!< Lets you determine what sort of class is on the stack.
+			bool fromOtherStack;	//!< We don't want to force stop figments that came from another stack.
 
-			sInfo(unsigned int pTime, dNameHash pID) : timesStacked(pTime), realID(pID) {}
-			sInfo() : timesStacked(0), realID(0) {}
+			sInfo(unsigned int pTime, dNameHash pID) : timesStacked(pTime), realID(pID), fromOtherStack(false) {}
+			sInfo() : timesStacked(0), realID(0), fromOtherStack(false) {}
 		};
 
-		typedef std::map<dFigConSig, sInfo> dMapInfo;		//!<
+		typedef std::map<const cFigContext*, sInfo> dMapInfo;		//!<
 
 		#ifdef GT_THREADS
 			const dThreadID mThreadID;
 		#endif
 
+		dConSig mSig;	//!<
 		dProgramStack mStack;	//!< This is the entire stack of figments in the order that they were added in.
 		dMapInfo mSigInfo;	//!< Stores more info about different items on the stack.
 
@@ -148,18 +142,15 @@ namespace gt{
 		cFigContext();
 		virtual ~cFigContext();
 
+		void start(cContext *con);	//!<	Puts this figment onto the given context stack, but only if it's not already using a context.
+		void stop(cContext *con);	//!<	Takes the figment off the stack.
+
 	protected:
 		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
 
-		//!\brief	Puts this figment onto the stack.
-		void start(cContext *con);
+		void emergencyStop();	//!<	Used by the context a forcibly removing figments from itself.
 
-		//!\brief
-		void stop(cContext *con);
-
-		//!\brief	Kills a zombie figment. Ensure this is only called when clearing the stack of zombies. Brains!
-		void kill();
-
+		friend class cContext;
 	private:
 
 		#ifdef GT_THREADS

@@ -5,13 +5,13 @@
 	#ifdef DEBUG
 		//#define GTUT //- Enable unit tests by putting this option into your compiler settings.
 
-		//!brief	Enable below if you wish to avoid any artificial slowdown normally used to test threading.
-		//#define GTUT_SPEEDTEST
-
 		#ifdef GTUT
 
 			//- Choose a testing framework
 			//#define GTUT_GOOGLE	//!< Google testing framework enabled. Put this option into your compiler settings.
+
+			//!brief	Enable below if you wish to avoid any artificial slowdown normally used to test threading.
+			//#define GTUT_SPEEDTEST
 
 		#endif
 

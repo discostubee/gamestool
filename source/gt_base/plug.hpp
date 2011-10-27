@@ -84,6 +84,7 @@ namespace gt{
 		tPlug();
 		tPlug(const A& pA);
 		tPlug(const tPlug<A> &other);
+		tPlug(const cBase_plug *other);
 		virtual ~tPlug();
 
 		//!\brief
@@ -273,6 +274,13 @@ namespace gt{
 	tPlug<A>::tPlug(const tPlug<A> &other) :
 		tPlugShadows<A>(typeid(A)), mD(other.mD)
 	{}
+
+	template<typename A>
+	tPlug<A>::tPlug(const cBase_plug *other) :
+		tPlugShadows<A>(other->mType)
+	{
+		genericCopy(other);
+	}
 
 	template<typename A>
 	tPlug<A>::~tPlug(){

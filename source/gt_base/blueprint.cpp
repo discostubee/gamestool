@@ -14,7 +14,8 @@ cBlueprint::cBlueprint():
 	mGetCom(NULL),
 	mGecPlugTag(NULL),
 	mGetAllComs(NULL),
-	mGetAllTags(NULL)
+	mGetAllTags(NULL),
+	mHasPlugTag(NULL)
 {}
 
 cBlueprint::~cBlueprint(){
@@ -67,6 +68,11 @@ cBlueprint::getAllTags() const{
 	return mGetAllTags();
 }
 
+bool cBlueprint::hasPlugTag(cPlugTag::dUID pPT) const{
+	ASRT_NOTNULL(mHasPlugTag);
+	return mHasPlugTag(pPT);
+}
+
 const cBlueprint*
 cBlueprint::operator = (const cBlueprint* pCopy){
 	PROFILE;
@@ -82,6 +88,7 @@ cBlueprint::operator = (const cBlueprint* pCopy){
 		mGetCom = pCopy->mGetCom;
 		mGetAllComs = pCopy->mGetAllComs;
 		mGetAllTags = pCopy->mGetAllTags;
+		mHasPlugTag = pCopy->mHasPlugTag;
 	}
 	return this;
 }
