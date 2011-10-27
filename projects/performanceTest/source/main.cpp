@@ -13,13 +13,16 @@ main(int argc, char **argv){
 
 	gt::gWorld.take( new gt::cOSXWorld() );
 
-#ifdef GTUT_GOOGLE
-	::testing::InitGoogleTest(&argc, argv);
-	result = RUN_ALL_TESTS();
-#endif
-
 	{
 		using namespace gt;
+
+	#ifdef GTUT_GOOGLE
+		::testing::InitGoogleTest(&argc, argv);
+		result = RUN_ALL_TESTS();
+	#endif
+
+		PROFILE;
+
 		cContext fakeConx;
 		for(int numTest=0; numTest<1000; ++numTest){
 			ptrFig fig = gWorld.get()->makeFig(getHash<cFigment>());
@@ -28,6 +31,7 @@ main(int argc, char **argv){
 
 			lead->addPlug(&life, cFigment::xPT_life);
 			fig->jack(lead, &fakeConx);
+			fig->run(&fakeConx);
 		}
 	}
 

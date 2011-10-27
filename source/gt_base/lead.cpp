@@ -70,6 +70,8 @@ cBase_plug*
 cLead::getPlug(const cPlugTag* pTag){
 	PROFILE;
 
+	ASRT_NOTNULL(pTag);
+
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr == mTaggedData.end()){
 		std::stringstream ss; ss << "plug " << pTag->mName;
@@ -87,6 +89,8 @@ void
 cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 	PROFILE;
 
+	ASRT_NOTNULL(addMe);	ASRT_NOTNULL(aTag);
+
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr != mTaggedData.end()){
 		scrTDataItr->second->unlinkLead(this);
@@ -101,6 +105,8 @@ cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 void
 cLead::setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
 	PROFILE;
+
+	ASRT_NOTNULL(setMe);	ASRT_NOTNULL(aTag);
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr != mTaggedData.end()){
@@ -221,7 +227,7 @@ GTUT_START(testLead, tagging){
 
 	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
 
-	cLead lead(fakeCom.mID, fakeConx.mSig);
+	cLead lead(fakeCom.mID, fakeConx.getSig());
 
 	tPlug<int> numA, numB;
 	const int magic = 3;
@@ -244,11 +250,11 @@ GTUT_START(testLead, shadowUpdate){
 	tPlug<int> numA, numB;
 	cCommand fakeCom(0, "don't care", 0, NULL);
 	cPlugTag tag("some tag");
-	cLead leadA(fakeCom.mID, conxA.mSig), leadB(fakeCom.mID, conxB.mSig);
+	cLead leadA(fakeCom.mID, conxA.getSig()), leadB(fakeCom.mID, conxB.getSig());
 	const int magic = 3;
 	const int magicSquare = magic*magic;
 
-	GTUT_ASRT(conxA.mSig != conxB.mSig, "contexts have same signature");
+	GTUT_ASRT(conxA.getSig() != conxB.getSig(), "contexts have same signature");
 
 	numA.mD = 0;
 

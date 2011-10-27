@@ -2,6 +2,7 @@
  *!\file	world.hpp
  *!\brief	This is the starting point for the source code dependency (ignoring some included utility source).
  *
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +16,11 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+ * Seeing as how it's our sort of, starting point: We'll add all the kind of info that's useful right here.
  *
- *!\note	This file, seeing as how it's our sort of, starting point: We'll add all the kind of info that's useful right here.
+ *!\todo	Need to change the terms used by a jack operation that returns a plug by reference. This should be called 'pass', rather than 'get'.
+ *
  *!\note	A little bit about the short hand being used in this project.
  *! oSomething		An object name, either a class or struct.
  *! eSomething		an enum, for both the scope and the values.
@@ -36,6 +40,7 @@
  *! set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.
  *! copy	Copy a stream/buffer
  *! get		Return a primitive by copy, return a stream/buffer copy, return a reference to an object
+ *! pass	Passes back something as a reference.
  *! link	Set a smart pointer to different, already existing, reference.
  *! make	Return a fresh new instance of an object from a factory.
  *! clone	Make a duplicate of an object instance and return a smart pointer to the new clone.
@@ -118,8 +123,8 @@ namespace gt{
 	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	Figment interface, put here so we have a complete interface for the ptrFig type. Refer to the base implementation of this
-	//!			class to get the low down on what all these methods mean.
+	//!\brief	Figment interface, put here so we have a complete interface for the ptrFig type. Refer to the implementations of this
+	//!			class to get the low down on what all these methods mean (cFigContext, cFigment).
 	class iFigment{
 	public:
 		virtual ~iFigment() {}
@@ -131,6 +136,8 @@ namespace gt{
 		virtual void save(cByteBuffer* pAddHere)=0;
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL)=0;
 		virtual void getLinks(std::list<ptrFig>* pOutLinks)=0;
+		virtual void start(cContext *con)=0;
+		virtual void stop(cContext *con)=0;
 
 		//static dNameHash replaces(){ return uDoesntReplace; }	// You will need these static class in your figment if you replace.
 		virtual dNameHash getReplacement() const =0;
@@ -238,11 +245,16 @@ namespace gt{
 		//--------------------------------------------------------
 		// Get stuff
 		
-		//!\note	Slow.
+		//!\brief	Use this is you know the hash of the figment and the ID of the plug tag.
+		//!\note	Throws if not found.
 		const cPlugTag* getPlugTag(dNameHash pFigHash, unsigned int pPTHash);
 
 		//!\note	Useful when writing demos where you use are using addons and you don't want to include the headers
 		const cPlugTag* getPlugTag(const dNatChar *figName, const dNatChar *tagName);
+
+		//!\breif	Tries to find a plug tag in all the current blueprints it has.
+		//!\note	Throws if not found.
+		const cPlugTag* getPlugTag(unsigned int aID);
 
 		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
 		//!			bicycle.

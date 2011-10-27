@@ -173,6 +173,8 @@ typedef unsigned int dIDSLookup;	//!< index into a short lookup table.
 template<typename T>
 class tShortLookup{
 public:
+	static const dIDSLookup noEntry = static_cast<unsigned int>(-1);
+
 	tShortLookup();
 	~tShortLookup();
 

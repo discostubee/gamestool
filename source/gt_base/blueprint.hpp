@@ -62,6 +62,7 @@ namespace gt{
 		const cPlugTag* getPlugTag(cPlugTag::dUID pPT) const;
 		dListComs getAllComs() const;
 		dListPTags getAllTags() const;
+		bool hasPlugTag(cPlugTag::dUID pPT) const;
 
 		const cBlueprint* operator = (const cBlueprint* pCopy);
 
@@ -74,6 +75,7 @@ namespace gt{
 		const cPlugTag* (*mGecPlugTag)(cPlugTag::dUID);
 		dListComs (*mGetAllComs)();
 		dListPTags (*mGetAllTags)();
+		bool (*mHasPlugTag)(cPlugTag::dUID);
 
 		template<typename T> static ptrFig maker();
 	};
@@ -99,6 +101,7 @@ namespace gt{
 		static const cPlugTag* getPlugTag(cPlugTag::dUID pPTagID);
 		static dListComs getAllCommands();
 		static dListPTags getAllTags();
+		static bool hasPlugTag(cPlugTag::dUID pPTID);
 
 	protected:
 		typedef std::map<cCommand::dUID, cCommand* > dMapCom;
@@ -152,6 +155,7 @@ namespace gt{
 		mGecPlugTag = &(tOutline<T>::getPlugTag);
 		mGetAllComs = &(tOutline<T>::getAllCommands);
 		mGetAllTags = &(tOutline<T>::getAllTags);
+		mHasPlugTag = &(tOutline<T>::hasPlugTag);
 
 		DBUG_LO("blueprint '" << T::identify() << "' defined.");
 	}
@@ -407,6 +411,15 @@ namespace gt{
 			rtnList.push_back(&itr->second);
 
 		return rtnList;
+	}
+
+	template<typename T>
+	bool
+	tOutline<T>::hasPlugTag(cPlugTag::dUID pPTID){
+		readyTags();
+
+		dMapPTag::iterator found = xPlugTags->find(pPTID);
+		return (found != xPlugTags->end());
 	}
 }
 

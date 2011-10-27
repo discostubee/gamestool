@@ -4,6 +4,8 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
+const cCommand::dUID cCommand::noID = static_cast<cCommand::dUID>(-1);
+
 cCommand::cCommand(
 	const dUID pID,
 	const char* pName,

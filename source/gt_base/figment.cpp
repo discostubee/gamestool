@@ -49,8 +49,9 @@ void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
-	if(pLead->mConx != pCon->mSig)
-		throw excep::badContext(__FILE__, __LINE__);
+	//- May not need this anymore.
+	//if(pLead->mConx != pCon->mSig)
+	//	throw excep::badContext(__FILE__, __LINE__);
 
 	start(pCon);
 	try{
@@ -177,8 +178,9 @@ GTUT_START(test_figment, hashes){
 class testContextFigment: public cFigment{
 public:
 	testContextFigment *refOther;
+	bool throwOnRun;
 
-	testContextFigment() : refOther(NULL) {}
+	testContextFigment() : refOther(NULL), throwOnRun(false) {}
 	virtual ~testContextFigment() {}
 
 	static const char* identify(){ return "test context figment"; }
@@ -187,9 +189,14 @@ public:
 
 	virtual void run(cContext *pCon){
 		start(pCon);
-		if(refOther) refOther->run(pCon);
+		if(throwOnRun)
+			throw excep::base_error(__FILE__, __LINE__);
+		else
+			if(refOther) refOther->run(pCon);
 		stop(pCon);
 	}
+
+	bool stillStacked(){ return currentCon != NULL; }
 };
 
 GTUT_START(test_context, preventSelfReference){
@@ -201,6 +208,16 @@ GTUT_START(test_context, preventSelfReference){
 	B.refOther = &A;
 	try{ A.run(&testMe); }catch(excep::stackFault_selfReference){ caughtLikeABoss = true; }
 	GTUT_ASRT(caughtLikeABoss, "context: Not the boss");
+}GTUT_END;
+
+GTUT_START(test_context, forceUnwind){
+	cContext testMe;
+	testContextFigment A, B;
+	A.refOther = &B;
+	B.throwOnRun = true;
+	try{ A.run(&testMe); }catch(excep::base_error){}
+	A.stop(&testMe);
+	GTUT_ASRT( !B.stillStacked(), "B is still stacked." );
 }GTUT_END;
 
 #endif
