@@ -29,7 +29,7 @@ Rational
 There's no clear goal for the gamestool, because I have to be honest with
 myself and just say that it's all done for the lolz. The only direction I
 can really offer is to say: I wanna make an engine that lets you write once, 
-in a graphical kinda way, and run anywhere. Oh, and support and
+in a graphical kinda way, and run anywhere. Oh, and support an
 engine that generates procedural graphics.
 
 But we already have a write once, run anywhere language you retort! It's
