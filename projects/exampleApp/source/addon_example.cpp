@@ -40,7 +40,7 @@ namespace showoff{
 
 		{
 			ptrFig testAddon = gWorld.get()->makeFig(getHash<cAddon>());
-			ptrLead loadTestAddon = gWorld.get()->makeLead(cAddon::xLoadAddon, fake.mSig);
+			ptrLead loadTestAddon = gWorld.get()->makeLead(cAddon::xLoadAddon, fake.getSig());
 			tPlug<dStr> addonName;
 
 

@@ -46,7 +46,7 @@ inline void graphics(){
 		cContext fake;
 
 		{
-			ptrLead loadAddon = gWorld.get()->makeLead(cAddon::xLoadAddon, fake.mSig);
+			ptrLead loadAddon = gWorld.get()->makeLead(cAddon::xLoadAddon, fake.getSig());
 			tPlug<dStr> addonName;
 
 		#if		defined	__APPLE__
@@ -70,7 +70,7 @@ inline void graphics(){
 
 			{
 				tPlug<ptrFig> partyPooper = gWorld.get()->makeFig(makeHash("world shutoff"));
-				ptrLead setCloser = gWorld.get()->makeLead("window frame", "link closer", fake.mSig);
+				ptrLead setCloser = gWorld.get()->makeLead("window frame", "link closer", fake.getSig());
 
 				setCloser->addPlug( &partyPooper, gWorld.get()->getPlugTag("window frame", "closer") );
 
@@ -78,7 +78,7 @@ inline void graphics(){
 			}
 			{
 				tPlug<dUnitPix32> width, height;
-				ptrLead setWinDim = gWorld.get()->makeLead("window frame", "set dimensions", fake.mSig);
+				ptrLead setWinDim = gWorld.get()->makeLead("window frame", "set dimensions", fake.getSig());
 
 				width = 300; height = 300;
 
@@ -89,18 +89,18 @@ inline void graphics(){
 			}
 			{
 				const cPlugTag *link = gWorld.get()->getPlugTag("window frame", "content");
-				ptrLead addLayerToWindow = gWorld.get()->makeLead("window frame", "link content", fake.mSig);
+				ptrLead addLayerToWindow = gWorld.get()->makeLead("window frame", "link content", fake.getSig());
 				addLayerToWindow->addPlug(&layer, link);
 				shiney.mD->jack(addLayerToWindow, &fake);
 			}
 			{
-				ptrLead addStuff = gWorld.get()->makeLead(cRunList::xAdd, fake.mSig);
+				ptrLead addStuff = gWorld.get()->makeLead(cRunList::xAdd, fake.getSig());
 				addStuff->addToPile(&shiney);
 				stuff.mD->jack(addStuff, &fake);
 			}
 			{
-				ptrLead vertData = gWorld.get()->makeLead("polygon mesh", "add vertex", fake.mSig);
-				ptrLead polyData = gWorld.get()->makeLead("polygon mesh", "add polygon", fake.mSig);
+				ptrLead vertData = gWorld.get()->makeLead("polygon mesh", "add vertex", fake.getSig());
+				ptrLead polyData = gWorld.get()->makeLead("polygon mesh", "add polygon", fake.getSig());
 				tPlug<sVertex> a(sVertex( 0.0f,  0.5f, 0.0f));
 				tPlug<sVertex> b(sVertex(-0.5f, -0.5f, 0.0f));
 				tPlug<sVertex> c(sVertex( 0.5f, -0.5f, 0.0f));
@@ -117,8 +117,8 @@ inline void graphics(){
 				mesh.mD->jack(polyData, &fake);
 			}
 			{
-				ptrLead addToList = gWorld.get()->makeLead(cRunList::xAdd, fake.mSig);
-				ptrLead addToLayer = gWorld.get()->makeLead("layer", "link content", fake.mSig);
+				ptrLead addToList = gWorld.get()->makeLead(cRunList::xAdd, fake.getSig());
+				ptrLead addToLayer = gWorld.get()->makeLead("layer", "link content", fake.getSig());
 				const cPlugTag *contentTag = gWorld.get()->getPlugTag("layer", "content");
 
 				//addToList->addToPile(&camera, &fake);

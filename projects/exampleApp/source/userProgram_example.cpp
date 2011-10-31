@@ -21,8 +21,8 @@ namespace showoff{
 
 		try{
 			cContext fake;
-			ptrLead loadAnk = gWorld.get()->makeLead(cFigment::xLoad, fake.mSig);
-			ptrLead readFile = gWorld.get()->makeLead(cBase_fileIO::xRead, fake.mSig);
+			ptrLead loadAnk = gWorld.get()->makeLead(cFigment::xLoad, fake.getSig());
+			ptrLead readFile = gWorld.get()->makeLead(cBase_fileIO::xRead, fake.getSig());
 			ptrFig anchor = gWorld.get()->makeFig( getHash<cAnchor>() );
 
 			tPlug<cByteBuffer> buff;
@@ -51,7 +51,7 @@ namespace showoff{
 		tPlug<ptrFig> endProgram( gWorld.get()->makeFig( getHash<cWorldShutoff>() ) );
 
 		{
-			ptrLead setText = gWorld.get()->makeLead(cTextFig::xSetText, fake.mSig);
+			ptrLead setText = gWorld.get()->makeLead(cTextFig::xSetText, fake.getSig());
 			tPlug<dStr> text;
 
 			text = "I am error ;)";
@@ -77,8 +77,8 @@ namespace showoff{
 
 		//- Save the anchor
 		{
-			ptrLead saveAnchor = gWorld.get()->makeLead(cFigment::xSave, fake.mSig);
-			ptrLead writeFile = gWorld.get()->makeLead(cBase_fileIO::xWrite, fake.mSig);
+			ptrLead saveAnchor = gWorld.get()->makeLead(cFigment::xSave, fake.getSig());
+			ptrLead writeFile = gWorld.get()->makeLead(cBase_fileIO::xWrite, fake.getSig());
 
 			tPlug<cByteBuffer> buff;
 			saveAnchor->addPlug(&buff, cFigment::xPT_saveData);
@@ -115,7 +115,7 @@ namespace showoff{
 
 		{
 			ptrFig file = gWorld.get()->makeFig( getHash<cBase_fileIO>() );
-			ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath, fake.mSig);
+			ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath, fake.getSig());
 			tPlug<std::string> path( "testfile" );
 			setPath->addPlug(&path, cBase_fileIO::xPT_filePath);
 			file->jack(setPath, &fake);
@@ -123,7 +123,7 @@ namespace showoff{
 		}
 		{
 			ptrFig file = gWorld.get()->makeFig( getHash<cBase_fileIO>() );
-			ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath, fake.mSig);
+			ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath, fake.getSig());
 			tPlug<std::string> path( "testfile" );
 			setPath->addPlug(&path, cBase_fileIO::xPT_filePath);
 			file->jack(setPath, &fake);
