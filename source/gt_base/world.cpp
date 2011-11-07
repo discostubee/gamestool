@@ -47,7 +47,84 @@ struct cWorld::sBlueprintHeader{
 	//}
 };
 
+////////////////////////////////////////////////////////////
 
+ptrFig::ptrFig() :
+	tDirPtr<iFigment>()
+{}
+
+ptrFig::ptrFig(iFigment* pFig):
+	tDirPtr<iFigment>(pFig)
+{}
+
+ptrFig::ptrFig(const ptrFig &pPtr) :
+	tDirPtr<iFigment>(pPtr)
+{}
+
+ptrFig::~ptrFig(){
+}
+
+ptrFig&
+ptrFig::operator=(ptrFig const &pPtr){
+	if(!pPtr.mDir)
+		return *this;
+
+	if(mDir == pPtr.mDir)	// Should also handle self reference.
+		return *this;
+
+	if(mDir){
+		if(unique())
+			delete mDir;
+		else
+			mDir->unlink();
+	}
+
+	mDir = pPtr.mDir;
+	mDir->link();
+
+	return *this;
+}
+
+bool
+ptrFig::operator==(ptrFig const &pPtr) const{
+	if(mDir==NULL){
+		if(pPtr.mDir==NULL) return true; else return false;
+	}else if(pPtr.mDir==NULL){
+		return false;
+	}
+	return mDir->get() == pPtr.mDir->get();
+}
+
+bool
+ptrFig::operator!=(ptrFig const &pPtr) const{
+	if(mDir==NULL){
+		if(pPtr.mDir==NULL) return false; else return true;
+	}else if(pPtr.mDir==NULL){
+		return true;
+	}
+	return mDir->get() != pPtr.mDir->get();
+}
+
+void
+ptrFig::linkDir(tDirector<iFigment> *aDirector){
+	if(mDir == NULL){
+		mDir = aDirector;
+		mDir->link();
+	}
+}
+
+tDirector<iFigment> *ptrFig::getDir(){
+	return mDir;
+}
+
+////////////////////////////////////////////////////////////
+ptrFig
+iFigment::getSmart(){
+	ASRT_NOTNULL(self);
+	ptrFig rtnFig;
+	rtnFig.linkDir(self);
+	return rtnFig;
+}
 
 ////////////////////////////////////////////////////////////
 // World
@@ -448,6 +525,14 @@ public:
 	static dNameHash replaces(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getReplacement() const { return replaces(); };
 };
+
+GTUT_START(test_figInterface, getSmart){
+	tOutline<cFigment>::draft();
+
+	ptrFig testMe = gWorld.get()->makeFig(getHash<cFigment>());
+	ptrFig testSmart = testMe->getSmart();
+	GTUT_ASRT(testSmart->hash() == getHash<cFigment>(), "didn't get the same figment");
+}GTUT_END;
 
 GTUT_START(test_world, drafting){
 	tOutline<testDraftParent>::draft();

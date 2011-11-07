@@ -33,15 +33,15 @@ namespace gt{
 	//!			it's been given.
 	//!\note	Plug hounds have a special relationship with Alucard, who will know that a plug he's trying to add is a hound, and will
 	//!			get the hound to get the plug for it.
-	//!\note	Currrently only works for tagged plugs.
+	//!\note	Currently only works for tagged plugs.
 	class cPlugHound : public cFigment, private tOutline<cPlugHound>{
 	public:
 		static const cPlugTag *xPT_contextTargetID;	//!< The target to jack into and get our plug. Expects a figment hash ID, and uses it to look for the figment in the context.
 		static const cPlugTag *xPT_command;	//!< ID of the command we use to get the plug from the target.
 		static const cPlugTag *xPT_tag;		//!< Used a tag ID rather than a pointer. This is the tag we use to get the plug from the target.
-		static const cPlugTag *xPT_plug;	//!< The plug we give back.
-		static const cCommand::dUID xSetup;	//!< Expects a target, a command and a tag. Searches the jack context for the target.
-		static const cCommand::dUID xGetPlug;	//!< Jacks into the target to get a plug for you. The lead you use to jack with will then have the plug.
+		static const cPlugTag *xPT_plug;		//!< The plug we give back.
+		static const cCommand::dUID xGoGetit;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target. Add's the jack job that will get our plug.
+		static const cCommand::dUID xGimmie;	//!< Gimmie the ball boy! Adds the plug that was hopefully retrieved using xSetup.
 
 		static const char* identify(){ return "plug hound"; }
 		virtual const char* name() const { return identify(); }
@@ -58,12 +58,13 @@ namespace gt{
 		tPlug<cPlugTag::dUID> mTag;
 		tPlug<dNameHash> mTarget;
 
-		void patSetup(ptrLead aLead);
-		void patGetPlug(ptrLead aLead);
+		void patGoGetit(ptrLead aLead);
+		void patGimmie(ptrLead aLead);
 
 	private:
 		cPlugTag const *tmpTag;	//!< helpful to find the plug when setting up.
 		ptrLead tmpLead;
+		bool setup;
 	};
 
 	//!\brief	Opposite Dracula has a reflection. Alucard lets you form a lead by taking a command and scanning the context for some of the objects
@@ -105,6 +106,7 @@ namespace gt{
 		struct sContextPlug{
 			dNameHash type;
 			cPlugTag const *tag;
+			tPlug<ptrFig> found;	//!< Helpful when found.
 
 			sContextPlug(dNameHash aType, const cPlugTag *aTag) : type(aType), tag(aTag) {}
 		};
@@ -128,6 +130,10 @@ namespace gt{
 		tPlug<cCommand::dUID> mCommand;
 		ptrLead mLead;	//!< This is the lead we will be playing with.
 		cContext mConx;	//!< This here is the context we create to use when jacking.
+
+		//- scratch variables
+		std::list<sContextPlug>::iterator tmpCPlug;
+		std::list<sActualPlug>::iterator tmpAPlug;
 
 		void patAddCom(ptrLead aLead);
 		void patSetTarget(ptrLead aLead);

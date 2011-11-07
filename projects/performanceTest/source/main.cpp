@@ -26,7 +26,7 @@ main(int argc, char **argv){
 		cContext fakeConx;
 		for(int numTest=0; numTest<1000; ++numTest){
 			ptrFig fig = gWorld.get()->makeFig(getHash<cFigment>());
-			ptrLead lead = gWorld.get()->makeLead(cFigment::xTestJack, fakeConx.mSig);
+			ptrLead lead = gWorld.get()->makeLead(cFigment::xTestJack, fakeConx.getSig());
 			tPlug<int> life = 42;
 
 			lead->addPlug(&life, cFigment::xPT_life);
