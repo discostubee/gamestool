@@ -94,6 +94,9 @@ cContext::finished(cFigContext *pFig){
 		if(mStack.back() != pFig){
 			//WARN("Figment on top of the stack is correct. Forcibly unwinding until we find the right one.");	//- You'll see the warnings from the emergency stop.
 			mStack.back()->emergencyStop();
+			mKeepPopping = true;
+		}else{
+			mKeepPopping = false;
 		}
 
 		itrInfo = mSigInfo.find(mStack.back());
@@ -107,7 +110,10 @@ cContext::finished(cFigContext *pFig){
 
 		(void)mStack.pop_back();
 
-	}while(!mStack.empty() && mStack.back() != pFig);
+		if(mKeepPopping && mStack.empty())
+			mKeepPopping = false;
+
+	}while(mKeepPopping);
 }
 
 bool
@@ -126,6 +132,11 @@ cContext::isStacked(cFigContext *pFig){
 
 dProgramStack
 cContext::makeStackDump(){
+
+	cWorld::lo("stack dump below:");
+	for(gt::dProgramStack::reverse_iterator itr = mStack.rbegin(); itr != mStack.rend(); ++itr){
+		cWorld::lo( (*itr)->name() );
+	}
 	return mStack;
 }
 
@@ -133,7 +144,7 @@ ptrFig
 cContext::getFirstOfType(dNameHash aType){
 	for(dProgramStack::iterator itr = mStack.begin(); itr != mStack.end(); ++itr){
 		if((*itr)->hash() == aType)
-			return *itr;
+			return (*itr)->getSmart();
 	}
 	return gWorld.get()->getEmptyFig();
 }
@@ -143,11 +154,27 @@ cContext::getSig() const{
 	return mSig;
 }
 
+void
+cContext::addJackJob(ptrLead aLead, ptrFig aTarget){
+	mJobs.push_back(sJackJob());
+	mJobs.back().mLead = aLead;
+	mJobs.back().mTarget = aTarget;
+}
+
+void
+cContext::runJackJobs(){
+	while(!mJobs.empty()){
+		mJobs.front().mTarget->jack(mJobs.front().mLead, this);
+		mJobs.pop_front();
+	}
+}
+
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
 	currentCon(NULL)
 {
 	mBlueprint = NULL;
+	self  = NULL;
 }
 
 cFigContext::~cFigContext(){
@@ -208,6 +235,7 @@ cFigContext::emergencyStop(){
 	#endif
 	WARN("Emergency stop pulled");
 }
+
 
 //--- PLEASE NOTE ---//
 //- Testing for these classes is done inside the figment source file.

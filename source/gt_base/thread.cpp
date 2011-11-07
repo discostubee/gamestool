@@ -23,6 +23,7 @@ cThread::runThread(cThread *me, cContext* pCon){
 		me->sync.notify_one();	// let the figment know we're ready.
 
 		while(!me->threadStop){
+			newContext.runJackJobs();
 			me->link.mD->run(&newContext);
 			me->sync.wait(syncLock);
 		}

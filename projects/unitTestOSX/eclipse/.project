@@ -283,6 +283,16 @@
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/ptrTools.hpp</locationURI>
 		</link>
 		<link>
+			<name>gt_base/reflection.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/reflection.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/reflection.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/reflection.hpp</locationURI>
+		</link>
+		<link>
 			<name>gt_base/runList.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/runList.cpp</locationURI>
@@ -323,9 +333,14 @@
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/threadTools.hpp</locationURI>
 		</link>
 		<link>
-			<name>gt_base/unitTests.cpp</name>
+			<name>gt_base/unitTestFigments.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTests.cpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTestFigments.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/unitTestFigments.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTestFigments.hpp</locationURI>
 		</link>
 		<link>
 			<name>gt_base/unitTests.hpp</name>

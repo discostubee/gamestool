@@ -138,9 +138,10 @@ namespace gt{
 	template<typename T>
 	ptrFig
 	cBlueprint::maker(){
-		DBUG_LO("making from blueprint, a " << T::identify());
+		//DBUG_LO("making from blueprint, a " << T::identify());
 
 		ptrFig temp(new T());
+		temp->self = temp.getDir();
 		return temp;
 	}
 

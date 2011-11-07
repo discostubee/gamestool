@@ -102,8 +102,10 @@ namespace gt{
 
 		bool isStacked(cFigContext *pFig);			//!< Determines if the figment is stacked.
 		dProgramStack makeStackDump();				//!< Spits out a copy of the program stack.
-		ptrFig getFirstOfType(dNameHash aType);		//!< Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment. \note is slow because we want all the operations to be as fast as possible.
+		ptrFig getFirstOfType(dNameHash aType);		//!< Needs to change! Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment. \note is slow because we want all the operations to be as fast as possible.
 		dConSig getSig() const;						//!< Get unique signature.
+		void runJackJobs();	//!< Runs through the list of jobs for jacking. Should do this at the start of a loop. If you use a fake context as part of a unit test, consider running this function after you do any jacking.
+		void addJackJob(ptrLead aLead, ptrFig aTarget);	//!< If your figment is going to call jack from a run, it must add it as a jack job.
 
 	protected:
 		void add(cFigContext *pFig);					//!< Adds a figment reference to the stack.
@@ -122,15 +124,23 @@ namespace gt{
 			sInfo() : timesStacked(0), realID(0), fromOtherStack(false) {}
 		};
 
+		struct sJackJob{
+			ptrLead mLead;
+			ptrFig mTarget;
+		};
+
 		typedef std::map<const cFigContext*, sInfo> dMapInfo;		//!<
+		typedef std::list<sJackJob> dJackJobs;
 
 		#ifdef GT_THREADS
 			const dThreadID mThreadID;
 		#endif
 
+		bool mKeepPopping;
 		dConSig mSig;	//!<
 		dProgramStack mStack;	//!< This is the entire stack of figments in the order that they were added in.
 		dMapInfo mSigInfo;	//!< Stores more info about different items on the stack.
+		dJackJobs mJobs;	//!< Favour list building speed over iteration speed.
 
 		dMapInfo::iterator itrInfo;
 	};
@@ -151,6 +161,8 @@ namespace gt{
 		void emergencyStop();	//!<	Used by the context a forcibly removing figments from itself.
 
 		friend class cContext;
+		friend class cBlueprint;
+
 	private:
 
 		#ifdef GT_THREADS

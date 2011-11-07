@@ -31,11 +31,12 @@
 namespace gt{
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	The postman jacks into another figment using the lead it has been given.
-	//!\todo	Postman needs a rethink.
+	//!\brief	The postman jacks into another figment using the lead it has been given. It does this
+	//!			by adding the jack to the context's jack job list.
 	class cPostman: public cFigment, private tOutline<cPostman>{
 	public:
-		static const cPlugTag* xPT_target;
+		static const cPlugTag *xPT_target;
+		static const cPlugTag *xPT_command;
 		static const cCommand::dUID xSetupPostman;
 
 		static const char* identify(){ return "postman"; }

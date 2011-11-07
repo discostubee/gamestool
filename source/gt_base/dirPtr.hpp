@@ -137,7 +137,7 @@ namespace gt{
 	bool
 	tDirPtr<T>::unique() const{
 		ASRT_NOTNULL(mDir);
-		return mDir->getCount()==1;
+		return mDir->getCount()<=1;
 	}
 
 	template<typename T>

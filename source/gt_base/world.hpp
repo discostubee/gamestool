@@ -85,6 +85,7 @@ namespace gt{
 	class cCommand;
 	class cContext;
 	class iFigment;
+	class ptrFig;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -92,7 +93,6 @@ namespace gt{
 namespace gt{
 	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
 	typedef long long dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
-	typedef tDirPtr<iFigment> ptrFig;	//!< Smart pointer to a figment.
 	typedef boost::shared_ptr<cLead> ptrLead;	//!<
 }
 
@@ -100,6 +100,28 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Classes
 namespace gt{
+
+	//-------------------------------------------------------------------------------------
+	//!\brief	Can be used as a clone sample, where it no longer cleans
+	//!			up director or counts towards the total.
+	class ptrFig : public tDirPtr<iFigment>{
+	public:
+		ptrFig();	//!< Starts without a link.
+		ptrFig(iFigment* pFig);	//!< Creates a new director and passes it the content.
+		ptrFig(const ptrFig &pPtr);
+		~ptrFig();
+
+		ptrFig& operator = (ptrFig const &pPtr);	//!< creates another link to the director.
+		bool operator == (ptrFig const &pPtr) const;		//!< Compares memory address to see if two pointers are pointing at the same thing.
+		bool operator != (ptrFig const &pPtr) const;		//!< Same.
+
+	protected:
+		void linkDir(tDirector<iFigment> *aDirector);
+		tDirector<iFigment> *getDir();
+
+		friend class cBlueprint;	//!< gives access to director.
+		friend class iFigment;
+	};
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	An individual entry for a figment.
@@ -145,8 +167,11 @@ namespace gt{
 		//static dNameHash extends(){ return uDoesntExtend; }	// You will need this static class in your figment if you extend.
 		virtual dNameHash getExtension() const =0;
 
+		virtual ptrFig getSmart();		//!< Figments are cleaned up using smart pointers, so the only way to hand out references to yourself is to use this function.
+
 	protected:
 		cBlueprint* mBlueprint;
+		tDirector<iFigment> *self;	//!< used by getSmart.
 
 	friend class cBlueprint;
 	};

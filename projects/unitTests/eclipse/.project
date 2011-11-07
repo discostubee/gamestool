@@ -82,119 +82,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>addon.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/addon.cpp</locationURI>
-		</link>
-		<link>
-			<name>addon.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/addon.hpp</locationURI>
-		</link>
-		<link>
-			<name>anchor.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.cpp</locationURI>
-		</link>
-		<link>
-			<name>anchor.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.hpp</locationURI>
-		</link>
-		<link>
-			<name>blueprint.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/blueprint.cpp</locationURI>
-		</link>
-		<link>
-			<name>blueprint.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/blueprint.hpp</locationURI>
-		</link>
-		<link>
-			<name>byteBuffer.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/byteBuffer.cpp</locationURI>
-		</link>
-		<link>
-			<name>byteBuffer.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/byteBuffer.hpp</locationURI>
-		</link>
-		<link>
-			<name>command.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/command.cpp</locationURI>
-		</link>
-		<link>
-			<name>command.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/command.hpp</locationURI>
-		</link>
-		<link>
-			<name>context.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/context.cpp</locationURI>
-		</link>
-		<link>
-			<name>context.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/context.hpp</locationURI>
-		</link>
-		<link>
-			<name>dirPtr.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/dirPtr.cpp</locationURI>
-		</link>
-		<link>
-			<name>dirPtr.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/dirPtr.hpp</locationURI>
-		</link>
-		<link>
-			<name>exceptions.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/exceptions.hpp</locationURI>
-		</link>
-		<link>
-			<name>figment.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/figment.cpp</locationURI>
-		</link>
-		<link>
-			<name>figment.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/figment.hpp</locationURI>
-		</link>
-		<link>
-			<name>fileIO.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/fileIO.cpp</locationURI>
-		</link>
-		<link>
-			<name>fileIO.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/fileIO.hpp</locationURI>
-		</link>
-		<link>
-			<name>gt_string.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/gt_string.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_string.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/gt_string.hpp</locationURI>
-		</link>
-		<link>
-			<name>lead.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/lead.cpp</locationURI>
-		</link>
-		<link>
-			<name>lead.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/lead.hpp</locationURI>
+			<name>gt_base</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
 			<name>main.cpp</name>
@@ -202,139 +92,264 @@
 			<locationURI>PARENT-1-PROJECT_LOC/source/main.cpp</locationURI>
 		</link>
 		<link>
-			<name>plug.cpp</name>
+			<name>gt_base/addon.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/plug.cpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/addon.cpp</locationURI>
 		</link>
 		<link>
-			<name>plug.hpp</name>
+			<name>gt_base/addon.hpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/plug.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/addon.hpp</locationURI>
 		</link>
 		<link>
-			<name>postman.cpp</name>
+			<name>gt_base/anchor.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/anchor.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/blueprint.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/blueprint.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/blueprint.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/blueprint.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/byteBuffer.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/byteBuffer.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/byteBuffer.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/byteBuffer.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/command.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/command.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/command.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/command.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/context.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/context.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/context.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/context.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/dirPtr.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/dirPtr.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/dirPtr.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/dirPtr.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/exceptions.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/exceptions.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/figment.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/figment.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/figment.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/figment.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/fileIO.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/fileIO.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/fileIO.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/fileIO.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/gt_string.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/gt_string.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/gt_string.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/gt_string.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/lead.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/lead.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/lead.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/lead.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/plug.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/plug.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/plug.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/plug.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/postman.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/postman.cpp</locationURI>
 		</link>
 		<link>
-			<name>postman.hpp</name>
+			<name>gt_base/postman.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/postman.hpp</locationURI>
 		</link>
 		<link>
-			<name>profiler.cpp</name>
+			<name>gt_base/precompiledHeader.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/profiler.cpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/precompiledHeader.cpp</locationURI>
 		</link>
 		<link>
-			<name>profiler.hpp</name>
+			<name>gt_base/precompiledHeader.hpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/profiler.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/precompiledHeader.hpp</locationURI>
 		</link>
 		<link>
-			<name>ptrTools.cpp</name>
+			<name>gt_base/profiler.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/ptrTools.cpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/profiler.cpp</locationURI>
 		</link>
 		<link>
-			<name>ptrTools.hpp</name>
+			<name>gt_base/profiler.hpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/ptrTools.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/profiler.hpp</locationURI>
 		</link>
 		<link>
-			<name>reflection.cpp</name>
+			<name>gt_base/ptrTools.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/ptrTools.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/ptrTools.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/ptrTools.hpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/reflection.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/reflection.cpp</locationURI>
 		</link>
 		<link>
-			<name>reflection.hpp</name>
+			<name>gt_base/reflection.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/reflection.hpp</locationURI>
 		</link>
 		<link>
-			<name>runList.cpp</name>
+			<name>gt_base/runList.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/runList.cpp</locationURI>
 		</link>
 		<link>
-			<name>runList.hpp</name>
+			<name>gt_base/runList.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/runList.hpp</locationURI>
 		</link>
 		<link>
-			<name>selectah.cpp</name>
+			<name>gt_base/selectah.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/selectah.cpp</locationURI>
 		</link>
 		<link>
-			<name>selectah.hpp</name>
+			<name>gt_base/selectah.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/selectah.hpp</locationURI>
 		</link>
 		<link>
-			<name>textFig.cpp</name>
+			<name>gt_base/textFig.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/textFig.cpp</locationURI>
 		</link>
 		<link>
-			<name>textFig.hpp</name>
+			<name>gt_base/textFig.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/textFig.hpp</locationURI>
 		</link>
 		<link>
-			<name>thread.cpp</name>
+			<name>gt_base/thread.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/thread.cpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/thread.cpp</locationURI>
 		</link>
 		<link>
-			<name>thread.hpp</name>
+			<name>gt_base/thread.hpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/thread.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/thread.hpp</locationURI>
 		</link>
 		<link>
-			<name>threadTools.cpp</name>
+			<name>gt_base/threadTools.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/threadTools.cpp</locationURI>
 		</link>
 		<link>
-			<name>threadTools.hpp</name>
+			<name>gt_base/threadTools.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/threadTools.hpp</locationURI>
 		</link>
 		<link>
-			<name>unitTestFigments.cpp</name>
+			<name>gt_base/unitTestFigments.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTestFigments.cpp</locationURI>
 		</link>
 		<link>
-			<name>unitTestFigments.hpp</name>
+			<name>gt_base/unitTestFigments.hpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTestFigments.hpp</locationURI>
 		</link>
 		<link>
-			<name>unitTests.hpp</name>
+			<name>gt_base/unitTests.hpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/unitTests.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/unitTests.hpp</locationURI>
 		</link>
 		<link>
-			<name>utils.cpp</name>
+			<name>gt_base/utils.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/utils.cpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/utils.cpp</locationURI>
 		</link>
 		<link>
-			<name>utils.hpp</name>
+			<name>gt_base/utils.hpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/utils.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/utils.hpp</locationURI>
 		</link>
 		<link>
-			<name>world.cpp</name>
+			<name>gt_base/world.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/world.cpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/world.cpp</locationURI>
 		</link>
 		<link>
-			<name>world.hpp</name>
+			<name>gt_base/world.hpp</name>
 			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/source/gt_base/world.hpp</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/world.hpp</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
