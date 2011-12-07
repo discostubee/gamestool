@@ -193,6 +193,14 @@ namespace gt{
 
 		cBase_plug& operator= (const tPlug<ptrFig> &other){ if(this != &other) mD = other.mD; return *this; }
 
+		bool operator==(const cBase_plug &pD) const{
+			if( tPlugShadows<ptrFig>::mType == pD.mType ){		// we can just cast
+				return mD == dynamic_cast< tPlug<ptrFig>* >( const_cast<cBase_plug*>(&pD) )->mD;
+			}
+
+			throw excep::base_error("Can't compare", __FILE__, __LINE__);
+		}
+
 		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;
 

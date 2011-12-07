@@ -66,6 +66,12 @@ namespace gt{
 
 		const cBlueprint* operator = (const cBlueprint* pCopy);
 
+	protected:
+
+		void (*mCleanup)();	//!< Used when the world is destroyed.
+
+	friend class cWorld;
+
 	private:
 		dNameHash mHash;
 		dNameHash mReplaces;
@@ -86,6 +92,7 @@ namespace gt{
 	class tOutline{
 	public:
 		typedef void (T::*ptrPatFoo)(ptrLead alead);
+
 		static void draft();				//!< Adds your figment to the world library.
 		static void removeFromWorld();
 
@@ -117,6 +124,7 @@ namespace gt{
 		~tOutline();
 
 		dNameHash hash() const;
+		static void cleanup();
 
 		friend class cBlueprint;
 
@@ -157,6 +165,7 @@ namespace gt{
 		mGetAllComs = &(tOutline<T>::getAllCommands);
 		mGetAllTags = &(tOutline<T>::getAllTags);
 		mHasPlugTag = &(tOutline<T>::hasPlugTag);
+		mCleanup = &(tOutline<T>::cleanup);
 
 		DBUG_LO("blueprint '" << T::identify() << "' defined.");
 	}
@@ -275,6 +284,17 @@ namespace gt{
 		return xBlueprint.hash();
 	}
 
+	template<typename T>
+	void
+	tOutline<T>::cleanup(){
+		if(xDrafted){
+			readyCommands(false);
+			readyTags(false);
+
+			xDrafted=false;
+		}
+	}
+
 	template <typename T>
 	const cCommand::dUID
 	tOutline<T>::makeCommand(
@@ -300,7 +320,7 @@ namespace gt{
 
 			xCommands->insert( dMapCom::value_type(
 				comUID,
-				new cCommand(comUID, pName, getHash<T>(), reinterpret_cast<cCommand::fooPtr>(aFoo) )
+				new tActualCommand<T>(comUID, pName, getHash<T>(), aFoo )
 			) );
 
 			itrCom = xCommands->find(comUID);	// Doing this so we can use it below.

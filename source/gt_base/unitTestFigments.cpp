@@ -10,6 +10,10 @@
 		"getData", &cTestNum::patGetData, cTestNum::xPT_num, NULL
 	);
 
+	const cCommand::dUID	cTestNum::xSetData = tOutline<cTestNum>::makeCommand(
+		"setData", &cTestNum::patSetData, cTestNum::xPT_num, NULL
+	);
+
 	cTestNum::cTestNum() : myNum(42) {
 	}
 
@@ -26,6 +30,10 @@
 
 	void cTestNum::patGetData(ptrLead aLead){
 		aLead->addPlug(&myNum, xPT_num);
+	}
+
+	void cTestNum::patSetData(ptrLead aLead){
+		myNum = aLead->getPlug(xPT_num);
 	}
 
 #endif

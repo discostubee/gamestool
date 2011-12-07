@@ -199,6 +199,14 @@ cWorld::cWorld():
 }
 
 cWorld::~cWorld(){
+	try{
+		while(!mBlueprints.empty()){
+			mBlueprints.begin()->second.mBlueprint->mCleanup();
+			mBlueprints.erase( mBlueprints.begin() );
+		}
+	}catch(...){
+	}
+
 	{
 		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
 	}
@@ -259,11 +267,11 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	DBUG_LO("Erasing blueprint '" << pRemoveMe->name() << "'");
 
 	//- Some figments should never be remove.
-	if(
-		pRemoveMe->hash() == getHash<cFigment>()
-		|| pRemoveMe->hash() == getHash<cEmptyFig>()
-	)
-		return;
+	//if(
+	//	pRemoveMe->hash() == getHash<cFigment>()
+	//	|| pRemoveMe->hash() == getHash<cEmptyFig>()
+	//)
+	//	return;
 
 	//- If this figment replaced another, restore the original blueprint.
 	if(pRemoveMe->replace() != uDoesntReplace){

@@ -1399,12 +1399,6 @@
 									<listOptionValue builtIn="false" value="OSX_dt"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.641818900" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libgamestool/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libgamestool/Debug_threading}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libOSX/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libOSX/Debug_threading}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libgraphics/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libgraphics/Debug_threading}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0/stage/lib"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/lib"/>
@@ -1420,9 +1414,9 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug.408639547" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug">
 								<option id="gnu.both.asm.option.include.paths.1687287468" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/libpng"/>
 								</option>
 								<option id="gnu.both.asm.option.flags.412522574" name="Assembler flags" superClass="gnu.both.asm.option.flags" value="" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.2054729170" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>

@@ -110,6 +110,8 @@ namespace gt{
 
 		cBase_plug& operator= (const A& pA);
 
+		virtual bool operator == (const cBase_plug &pD) const;
+
 	protected:
 
 		#ifdef GT_THREADS
@@ -231,7 +233,7 @@ namespace gt{
 			}
 
 			itrShadow = mShadows.begin() + pLead->mConx;
-			itrShadow->mData = new tPlug<A>;
+			itrShadow->mData = new tPlug<A>();
 			itrShadow->mData->mD = getMD();
 		#endif
 	}
@@ -336,6 +338,16 @@ namespace gt{
 	}
 
 	template<typename A>
+	bool
+	tPlug<A>::operator == (const cBase_plug &pD) const{
+		if( tPlugShadows<A>::mType == pD.mType ){		// we can just cast
+			return mD == dynamic_cast< tPlug<A>* >( const_cast<cBase_plug*>(&pD) )->mD;
+		}
+
+		throw excep::base_error("Can't compare", __FILE__, __LINE__);
+	}
+
+	template<typename A>
 	void
 	tPlug<A>::save(cByteBuffer* pAddHere){
 		pAddHere->add(&mD);
@@ -353,6 +365,7 @@ namespace gt{
 	template<typename A>
 	void
 	tPlug<A>::reset(){}
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -393,6 +406,17 @@ namespace gt{
 
 		void operator= (const std::string &pA){
 			mD = pA;
+		}
+
+		bool operator == (const cBase_plug &pD) const{
+			if( tPlugShadows<std::string>::mType == pD.mType ){	// we can just cast
+				return mD.compare(
+						//dynamic_cast< tPlug<std::string>* >( const_cast<cBase_plug*>(&pD) )->mD
+						dynamic_cast< const tPlug<std::string>* >( &pD )->mD
+				) == 0;
+			}
+
+			throw excep::base_error("Can't compare", __FILE__, __LINE__);
 		}
 
 		void save(cByteBuffer* pAddHere){

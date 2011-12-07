@@ -1346,7 +1346,6 @@
 								</option>
 								<option id="macosx.cpp.link.option.paths.1008117799" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0/stage/lib"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.344704095" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -1355,10 +1354,10 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug.1931866987" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug">
 								<option id="gnu.both.asm.option.include.paths.706339367" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1911106422" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
