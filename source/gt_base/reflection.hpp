@@ -76,7 +76,7 @@ namespace gt{
 	public:
 		static const cPlugTag *xPT_command;		//!< Expects a plug tag hash it can use to find the command in the world.
 		static const cPlugTag *xPT_target;		//!< Target of the jacking.
-		static const cPlugTag *xPT_plug;		//!< Currently only works with figment plugs.
+		static const cPlugTag *xPT_plug;		//!<
 		static const cPlugTag *xPT_tag;
 		static const cPlugTag *xPT_contextFig;
 		static const cCommand::dUID xAddCommand;	//!< The command to use when jacking into the target.
@@ -122,7 +122,7 @@ namespace gt{
 		typedef std::list< std::list<sActualPlug>::iterator > dListOfPlugsToAdd;
 
 		std::list<sContextPlug> mContextPlugs;	//!< Contains the info we need to search for plugs in the context. This gets saved.
-		std::list<sActualPlug> mActualPlugs;	//!< List of plugs we've added to the figment. These get saved, but they may not be present when we reload.
+		std::list<sActualPlug> mActualPlugs;		//!< List of plugs we've added to the figment. These get saved, but they may not be present when we reload.
 		dListOfPlugsToFind mNewPlugsToFind;	//!< Emptied every time we run.
 		dListOfPlugsToAdd mNewPlugsToAdd;	//!< Emptied every time we run.
 		tPlug<ptrFig> mTarget;

@@ -32,6 +32,8 @@ cPlugHound::~cPlugHound(){
 
 void
 cPlugHound::patGoGetit(ptrLead aLead){
+	PROFILE;
+
 	mCom = aLead->getPlug(xPT_command);
 	mTag = aLead->getPlug(xPT_tag);
 	mTarget = aLead->getPlug(xPT_contextTargetID);
@@ -153,7 +155,6 @@ void cAlucard::run(cContext* aCon){
 			mContextPlugs.pop_front();
 		}
 
-
 		while(!mNewPlugsToAdd.empty()){
 			tmpAPlug = *mNewPlugsToAdd.begin();
 			mLead->addPlug(
@@ -200,10 +201,33 @@ GTUT_START(test_reflection, houndGets){
 
 }GTUT_END;
 
-GTUT_START(test_reflection, getFromContext){
+GTUT_START(test_reflection, alucardBasic){
 	tOutline<cAlucard>::draft();
+	tOutline<cTestNum>::draft();
 
+	cContext fakeConx;
 	ptrFig alucard = gWorld.get()->makeFig(getHash<cAlucard>());
+	tPlug<ptrFig> testNum = gWorld.get()->makeFig(getHash<cTestNum>());
+
+	ptrLead setCom = gWorld.get()->makeLead(cAlucard::xAddCommand, fakeConx.getSig());
+	tPlug<cCommand::dUID> comID = cTestNum::xSetData;
+	setCom->addPlug(&comID, cAlucard::xPT_command);
+	alucard->jack(setCom, &fakeConx);
+
+	tPlug<int> num = 3;
+	ptrLead setPlug = gWorld.get()->makeLead(cAlucard::xAddPlug, fakeConx.getSig());
+	setPlug->addPlug(&num, cAlucard::xPT_plug);
+	alucard->jack(setPlug, &fakeConx);
+
+	ptrLead setTarget = gWorld.get()->makeLead(cAlucard::xSetTarget, fakeConx.getSig());
+	setTarget->addPlug(&testNum, cAlucard::xPT_target);
+	alucard->jack(setTarget, &fakeConx);
+
+	alucard->run(&fakeConx);
+
+	ptrLead getNum = gWorld.get()->makeLead( cTestNum::xGetData, fakeConx.getSig() );
+	testNum.mD->jack(getNum, &fakeConx);
+	GTUT_ASRT( *getNum->getPlug(cTestNum::xPT_num) == num, "number wasn't set.");
 
 }GTUT_END;
 

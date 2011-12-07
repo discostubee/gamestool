@@ -13,6 +13,7 @@
 			public:
 				static const cPlugTag *xPT_num;
 				static const cCommand::dUID	xGetData;
+				static const cCommand::dUID	xSetData;
 
 				cTestNum();
 				virtual ~cTestNum();
@@ -28,6 +29,7 @@
 				tPlug<int> myNum;
 
 				void patGetData(ptrLead aLead);
+				void patSetData(ptrLead aLead);
 			};
 		}
 	#endif

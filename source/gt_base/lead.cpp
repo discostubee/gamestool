@@ -223,7 +223,7 @@ using namespace gt;
 GTUT_START(testLead, tagging){
 	cContext fakeConx;
 	cPlugTag tag("some tag");
-	cCommand fakeCom(0, "don't care", 0, NULL);
+	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
 
 	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
 
@@ -248,7 +248,7 @@ GTUT_START(testLead, piling){
 GTUT_START(testLead, shadowUpdate){
 	cContext conxA, conxB;
 	tPlug<int> numA, numB;
-	cCommand fakeCom(0, "don't care", 0, NULL);
+	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
 	cPlugTag tag("some tag");
 	cLead leadA(fakeCom.mID, conxA.getSig()), leadB(fakeCom.mID, conxB.getSig());
 	const int magic = 3;

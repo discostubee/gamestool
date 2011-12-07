@@ -25,33 +25,49 @@ namespace gt{
 	class cCommand{
 	public:
 		typedef unsigned int dUID;	//!< unique command ID
-		typedef void (iFigment::*fooPtr)(ptrLead aLead);	//!< Pointer to our jack function.
 
 		static const dUID noID;
 
 		const dUID	mID;
 		const dStr	mName;
 		const dNameHash mParent;	//!< Used to determine which figment this command belongs too.
-		fooPtr myFoo;
 
 		cCommand(
-			const dUID pID,
-			const char* pName,
-			const dNameHash pParentHash,
-			fooPtr aFoo
+				const dUID pID,
+				const char* pName,
+				const dNameHash pParentHash
 		);
 
 		virtual ~cCommand();
 
-		bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
-		void addTag(const cPlugTag* pTag);
+		virtual bool usesTag(const cPlugTag* pTag) const =0;	//!< Checks if it has such a tag.
+		virtual void addTag(const cPlugTag* pTag) =0;
+		virtual void use(iFigment *aFig, ptrLead aLead) const =0;	//!<
 
-		void use(iFigment *aFig, ptrLead aLead) const;	//!< Assumes you've already checked the figment and the command match up.
+	};
 
-		cCommand& operator=(const cCommand& pCom);
+	//----------------------------------------------------------------------------
+	template<typename T>
+	class tActualCommand : public cCommand{
+	public:
+		typedef void (T::*ptrPatFoo)(ptrLead aLead);	//!< Pointer to our jack function.
+
+		tActualCommand(
+			const dUID pID,
+			const char* pName,
+			const dNameHash pParentHash,
+			ptrPatFoo aFoo
+		);
+
+		virtual ~tActualCommand();
+
+		virtual bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
+		virtual void addTag(const cPlugTag* pTag);
+		virtual void use(iFigment *aFig, ptrLead aLead) const;
 
 	private:
 		std::set<const cPlugTag*> mDataTags;
+		ptrPatFoo myFoo;
 	};
 
 }
@@ -69,6 +85,52 @@ namespace gt{
 			name = ::makeHash(T::identify());
 		}
 		return name;
+	}
+}
+
+////////////////////////////////////////////////////////////
+// template definitions
+namespace gt{
+
+	template<typename T>
+	tActualCommand<T>::tActualCommand(
+		const dUID pID,
+		const char* pName,
+		const dNameHash pParentHash,
+		ptrPatFoo aFoo
+	) :
+		cCommand(pID, pName, pParentHash),
+		myFoo(aFoo)
+	{}
+
+	template<typename T>
+	tActualCommand<T>::~tActualCommand(){
+	}
+
+	template<typename T>
+	bool
+	tActualCommand<T>::usesTag(const cPlugTag* pTag) const{
+		if( mDataTags.find(pTag) != mDataTags.end() )
+			return true;
+
+		return false;
+	}
+
+	template<typename T>
+	void
+	tActualCommand<T>::addTag(const cPlugTag* pTag){
+		ASRT_NOTNULL(pTag);
+
+		mDataTags.insert(pTag);
+	}
+
+	template<typename T>
+	void
+	tActualCommand<T>::use(iFigment *aFig, ptrLead aLead) const {
+		if(aFig->hash() == getHash<T>())
+			( dynamic_cast<T*>(aFig)->*myFoo )(aLead);
+		else
+			throw excep::base_error("can't use", __FILE__, __LINE__);
 	}
 }
 

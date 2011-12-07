@@ -96,6 +96,8 @@ namespace gt{
 
 		template< template<typename> class plug, typename T>	cBase_plug& operator= (const plug<T> &pT);
 
+		virtual bool operator == (const cBase_plug &pD) const =0;
+
 		template<typename T> T* exposePtr();	//!< Be careful with this.
 
 		template<typename T> void copyInto(T *container, bool silentFail = false) const;

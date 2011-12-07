@@ -233,6 +233,7 @@ namespace gt{
 		//!\brief	Removed, or un-draft, a blueprint from the world.
 		//!\note	Super slow.
 		//!\todo	Figure out a way to avoid traversing the program tree every time.
+		//!\todo	make pRemoveMe a pointer to a pointer, so that it can be turned into a NULL.
 		void removeBlueprint(const cBlueprint* pRemoveMe);
 
 		//--------------------------------------------------------
