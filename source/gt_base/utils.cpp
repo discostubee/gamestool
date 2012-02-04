@@ -11,18 +11,17 @@ dNameHash
 makeHash(const dNatChar* pString)
 {
 	dNameHash hash = 0;
-	size_t platStrLen = strlen(pString);
+	size_t len = natCharLen(pString);
 
-	if(platStrLen == 0)
+	if(len == 0)
 		return 0;
 
-	dNatChar* utf16str = new dNatChar[platStrLen];
+	dNatChar* hashMe = new dNatChar[len];
 
-	PStrToNStr(pString, utf16str, platStrLen);
-	for(size_t utfIdx = 0; utfIdx < platStrLen; ++utfIdx)
-		hash = ((hash << 5) + hash) ^ utf16str[utfIdx];
+	for(size_t utfIdx = 0; utfIdx < len; ++utfIdx)
+		hash = ((hash << 5) + hash) ^ hashMe[utfIdx];
 
-	delete [] utf16str;
+	delete [] hashMe;
 
 	return hash;
 }

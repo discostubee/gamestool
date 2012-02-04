@@ -4,6 +4,8 @@
 	<comment></comment>
 	<projects>
 		<project>addonOSXGL</project>
+		<project>libOSX</project>
+		<project>libgamestool</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

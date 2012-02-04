@@ -96,8 +96,6 @@ namespace gt{
 
 		template< template<typename> class plug, typename T>	cBase_plug& operator= (const plug<T> &pT);
 
-		virtual bool operator == (const cBase_plug &pD) const =0;
-
 		template<typename T> T* exposePtr();	//!< Be careful with this.
 
 		template<typename T> void copyInto(T *container, bool silentFail = false) const;
@@ -105,11 +103,14 @@ namespace gt{
 		//--- Intended to be polymorphed by descendants.
 		virtual ~cBase_plug();
 
-		virtual	cBase_plug&	operator= (const cBase_plug &pD) //=0;	//- should be pure virtual
+		virtual	cBase_plug& operator= (const cBase_plug &pD) //=0;	//- should be pure virtual
 			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
 
 		virtual	cBase_plug& operator= (const cBase_plug *pD) //=0;	//- should be pure virtual
 			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
+
+		virtual bool operator== (const cBase_plug &pD) //=0 //- should be pure virtual
+			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return false; }
 
 		#ifdef GT_THREADS
 			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor) =0; //!< Leads must always work with shadows.

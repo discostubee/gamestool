@@ -26,12 +26,14 @@ cProfiler::~cProfiler(){
 			i != mActiveTokens.end();
 			++i
 	){
-		(*i)->mProfiler = NULL;
+		(*i)->profilerDied();
 	}
 }
 
-cProfiler::cToken&
+cProfiler::cToken
 cProfiler::makeToken(const char* pFile, const unsigned int pLine){
+	CRITLOCK;
+
 	dNameHash tempHash = 0;
 
 	//- Using an ugly map-of-a-map to quickly find out if we need to add a new entry or not.
@@ -50,14 +52,16 @@ cProfiler::makeToken(const char* pFile, const unsigned int pLine){
 	}
 
 	if(mGetTime != NULL){
-		return *(new cToken( this, tempHash, mGetTime() ));
+		return cToken( this, tempHash, mGetTime() );
 	}else{
-		return *(new cToken( this, tempHash, 0 ));
+		return cToken( this, tempHash, 0 );
 	}
 }
 
 void
 cProfiler::tokenFinished(cProfiler::cToken* pToken){
+	CRITLOCK;
+
 	dMillisec totalTime = 0;
 	cEntry* i = &mEntries[pToken->mEntryID];
 
@@ -87,6 +91,8 @@ cProfiler::tokenFinished(cProfiler::cToken* pToken){
 
 void
 cProfiler::flushThatLog(std::ostream &log){
+	CRITLOCK;
+
 	log << "File: Line: Times profiled: Average time: Max time:" << std::endl;
 
 	for(
@@ -106,6 +112,8 @@ cProfiler::flushThatLog(std::ostream &log){
 
 cProfiler&
 cProfiler::operator += (const cProfiler& pCopyIt){
+	CRITLOCK;
+
 	if(&pCopyIt == this)
 		return *this;
 
@@ -118,11 +126,35 @@ cProfiler::cToken::cToken(cProfiler* pParent, dNameHash pEntry, dMillisec pTime)
 	mTimeStarted(pTime),
 	mProfiler(pParent)
 {
+	//- Only do this when the token is copied.
+	//mProfiler->mActiveTokens.insert(this);
+}
+
+cProfiler::cToken::cToken(const cToken &copyMe):
+		mEntryID(copyMe.mEntryID),
+		mTimeStarted(copyMe.mTimeStarted),
+		mProfiler(copyMe.mProfiler)
+{
 	mProfiler->mActiveTokens.insert(this);	// put here instead of inside cProfiler because the pointer needs to be valid.
 }
 
 cProfiler::cToken::~cToken(){
+	CRITLOCK;
+
 	if(mProfiler != NULL){
 		mProfiler->tokenFinished(this);
 	}
+}
+
+void cProfiler::cToken::profilerDied(){
+#ifdef GT_THREAD
+	if(!mu.try_lock())
+		return;
+
+	mProfiler = NULL;
+	mu.unlock();
+#else
+	mProfiler = NULL;
+#endif
+
 }

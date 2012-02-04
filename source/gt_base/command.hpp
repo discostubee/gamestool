@@ -130,7 +130,7 @@ namespace gt{
 		if(aFig->hash() == getHash<T>())
 			( dynamic_cast<T*>(aFig)->*myFoo )(aLead);
 		else
-			throw excep::base_error("can't use", __FILE__, __LINE__);
+			throw excep::base_error("can't use command", __FILE__, __LINE__);
 	}
 }
 

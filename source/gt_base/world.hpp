@@ -19,7 +19,6 @@
  *********************************************************************************************************
  * Seeing as how it's our sort of, starting point: We'll add all the kind of info that's useful right here.
  *
- *!\todo	Need to change the terms used by a jack operation that returns a plug by reference. This should be called 'pass', rather than 'get'.
  *
  *!\note	A little bit about the short hand being used in this project.
  *! oSomething		An object name, either a class or struct.
@@ -111,7 +110,7 @@ namespace gt{
 		ptrFig(const ptrFig &pPtr);
 		~ptrFig();
 
-		ptrFig& operator = (ptrFig const &pPtr);	//!< creates another link to the director.
+		ptrFig& operator = (ptrFig const &pPtr);				//!< creates another link to the director.
 		bool operator == (ptrFig const &pPtr) const;		//!< Compares memory address to see if two pointers are pointing at the same thing.
 		bool operator != (ptrFig const &pPtr) const;		//!< Same.
 
@@ -271,11 +270,11 @@ namespace gt{
 		//--------------------------------------------------------
 		// Get stuff
 		
-		//!\brief	Use this is you know the hash of the figment and the ID of the plug tag.
+		//!\brief	Use this if you know the hash of the figment and the ID of the plug tag.
 		//!\note	Throws if not found.
 		const cPlugTag* getPlugTag(dNameHash pFigHash, unsigned int pPTHash);
 
-		//!\note	Useful when writing demos where you use are using addons and you don't want to include the headers
+		//!\note	Useful when writing demos where you are using addons and you don't want to include the headers
 		const cPlugTag* getPlugTag(const dNatChar *figName, const dNatChar *tagName);
 
 		//!\breif	Tries to find a plug tag in all the current blueprints it has.
@@ -327,7 +326,7 @@ namespace gt{
 
 		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).
 
-		dBlueprintMap mBlueprints; //!< Blueprint library is static because we only every want 1 blueprint library.
+		dBlueprintMap mBlueprints; //!< Blueprint library is static because we only ever want 1 blueprint library.
 		dBlueprintMap mBlueArchive; //!< Archives a blueprint here when it is replaced.
 		std::vector<const cCommand*> mCommands;
 		dBlueprintMap::iterator mScrBMapItr;	//!< scratch variable for iterating over blueprint library.
