@@ -170,3 +170,4 @@ projects/unitTests/VS10e/unitTest.vcxproj.user
 *.mk
 *.tlog
 *.obj
+*.a

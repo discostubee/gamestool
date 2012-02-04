@@ -110,8 +110,6 @@ namespace gt{
 
 		cBase_plug& operator= (const A& pA);
 
-		virtual bool operator == (const cBase_plug &pD) const;
-
 	protected:
 
 		#ifdef GT_THREADS
@@ -338,16 +336,6 @@ namespace gt{
 	}
 
 	template<typename A>
-	bool
-	tPlug<A>::operator == (const cBase_plug &pD) const{
-		if( tPlugShadows<A>::mType == pD.mType ){		// we can just cast
-			return mD == dynamic_cast< tPlug<A>* >( const_cast<cBase_plug*>(&pD) )->mD;
-		}
-
-		throw excep::base_error("Can't compare", __FILE__, __LINE__);
-	}
-
-	template<typename A>
 	void
 	tPlug<A>::save(cByteBuffer* pAddHere){
 		pAddHere->add(&mD);
@@ -372,114 +360,6 @@ namespace gt{
 // Template specializations.
 namespace gt{
 
-	//------------------------------------------------------------------------------------------------------------------
-	//!\brief	Your program will store strings in whatever format it was built with. However, it will have to save and
-	//!			load using UTF16.
-	template<>
-	class tPlug<std::string>: public tPlugShadows<std::string>{
-	public:
-		std::string mD;
-
-		tPlug(): tPlugShadows<std::string>(typeid(dStr)){
-		}
-
-		tPlug(std::string pA): tPlugShadows<std::string>(typeid(dStr)), mD(pA){
-		}
-
-		virtual ~tPlug(){}
-
-		virtual cBase_plug& operator= (const cBase_plug &pD){
-			NOTSELF(&pD);
-
-			pD.copyInto(&mD);
-
-			return *this;
-		}
-
-		virtual cBase_plug& operator= (const cBase_plug* pD){
-			NOTSELF(pD);
-
-			pD->copyInto(&mD);
-
-			return *this;
-		}
-
-		void operator= (const std::string &pA){
-			mD = pA;
-		}
-
-		bool operator == (const cBase_plug &pD) const{
-			if( tPlugShadows<std::string>::mType == pD.mType ){	// we can just cast
-				return mD.compare(
-						//dynamic_cast< tPlug<std::string>* >( const_cast<cBase_plug*>(&pD) )->mD
-						dynamic_cast< const tPlug<std::string>* >( &pD )->mD
-				) == 0;
-			}
-
-			throw excep::base_error("Can't compare", __FILE__, __LINE__);
-		}
-
-		void save(cByteBuffer* pAddHere){
-			//!\todo Save as UTF16.
-
-			//!\todo	Avoid temporary buffer.
-			const size_t length = mD.size();
-			const size_t totalSize = length+sizeof(size_t);	// each character should only be 1 byte in size.
-			dByte* temp = new dByte[totalSize];
-
-			try{
-				::memcpy( temp, &length, sizeof(size_t) );
-				for(size_t idx=0; idx < length; ++idx){
-					//!\todo make a more sophisticated conversion.
-					temp[idx+sizeof(size_t)] = mD.at(idx);
-				}
-
-				pAddHere->add(temp, totalSize);
-			}catch(...){
-				delete [] temp; throw;
-			}
-			delete [] temp;
-		}
-
-		void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads){
-			//!\todo Load as UTF16.
-
-			DUMB_REF_ARG(aReloads);
-
-			if(pBuff->size() < sizeof(size_t))
-				throw cByteBuffer::excepUnderFlow(__FILE__, __LINE__);
-
-			size_t length = *(reinterpret_cast<const size_t*>(pBuff->get()));	// Length in 8 bit ascii.
-
-			if(length==0)
-				return;
-
-			if(pBuff->size() < sizeof(size_t) + length )
-				throw cByteBuffer::excepUnderFlow(__FILE__, __LINE__);
-
-			mD.clear();
-			mD.reserve(length);
-
-			for(size_t idx=0; idx< length; ++idx){
-				//!\todo make more sophisticated conversion.
-				mD.push_back( *pBuff->get(sizeof(size_t)+(idx * sizeof(char)) ) );
-			}
-
-			pBuff->trimHead(sizeof(size_t)+length);
-		}
-
-		void reset(){
-			mD.clear();
-		}
-
-	protected:
-		virtual std::string& getMD() {
-			return mD;
-		}
-	};
-
-
-	//------------------------------------------------------------------------------------------------------------------
 	//!\brief	plug leads are illegal. Don't make much sense anyhow.
 	template<>
 	class tPlug<cLead>: public tPlugShadows<cLead>{

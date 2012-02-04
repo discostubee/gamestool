@@ -45,9 +45,7 @@ typedef unsigned int	dMillisec;
 dNameHash makeHash(const dNatChar* pString);
 
 //------------------------------------------------------------------------------------------
-// Handy if you don't want to expose the container, but you
-// want access to its elements.
-
+//!\brief	Handy if you don't want to expose the container, but you want access to its elements.
 template <typename T>
 class tCoolItr{
 public:
@@ -160,7 +158,7 @@ isPowerOf2(int i)
 {
 	return i > 0 && (i & (i - 1)) == 0;
 
-	//- Above is the same, but it's cool because it takes advantage of && operator returning bool.
+	//- Above is the same, but it's cooler because it takes advantage of && operator returning bool.
 	//	if(i>0 && (i & (i - 1)) == 0)
 	//		return true;
 	//	return false;

@@ -39,8 +39,8 @@ namespace gt{
 		typedef boost::unique_lock<boost::mutex> dLock;
 #endif
 
-		static const cPlugTag*		xPT_fig;	//!< The figment to link.
-		static const cCommand::dUID	xLinkFig;	//!< Link figment to run in the separate thread.
+		static const cPlugTag *xPT_fig;	//!< The figment to link.
+		static const cCommand::dUID xLinkFig;	//!< Link figment to run in the separate thread.
 
 
 		cThread();

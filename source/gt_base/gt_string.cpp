@@ -7,8 +7,12 @@ natCharLen(const dNatChar* pString)
 	return ::strlen(pString);
 }
 
-void PStrToNStr(const char *source, dNatChar *destination, size_t length )
-{
-	//!\todo
-	::strncpy(destination, source, length);
+size_t plaCharLen(const dPlaChar *pString){
+	return ::strlen(pString);
+}
+
+dText NStrToText(const dNatChar *pString){
+	dText strRtn;
+
+	return strRtn;
 }

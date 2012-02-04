@@ -8,12 +8,20 @@
 #include <gt_OSX/OSX_addon.hpp>
 #include <gt_graphics/windowFrame.hpp>
 
+#include <fstream>
+
 using namespace gt;
 
 int
 main(int argc, char **argv){
 	int result = EXIT_SUCCESS;
-	std::cout << "Running gamestool tests for OSX. Version 0.1" << std::endl;
+	std::cout
+		<< "Running gamestool tests for OSX. "
+		<< "Version 0.2. "
+#ifdef GT_THREADS
+		<< "Threadding. "
+#endif
+		<< std::endl;
 
 	gWorld.take( new cOSXWorld() );
 
@@ -28,7 +36,13 @@ main(int argc, char **argv){
 	result = RUN_ALL_TESTS();
 #endif
 
-	gt::gWorld.get()->makeProfileReport(std::cout);
+	{
+		std::ofstream profileReport("profile_report.txt");
+		gt::gWorld.get()->makeProfileReport(profileReport);//(std::cout);
+		profileReport.close();
+	}
+
+
 	gt::gWorld.cleanup();
 
 	return result;
