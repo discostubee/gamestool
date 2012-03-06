@@ -11,11 +11,14 @@
 #include "exceptions.hpp"
 #include <stdlib.h>	//for memory ops.
 
+/*
 #if CHAR_BIT == 8
 	typedef char			dByte;		//!< This is the gametool's most basic byte type. It is always 8 bits.
 #else
 	#error the byte buffer is not 8 bits, and I'm too lazy to write something for your environment to enforce 8 bit buffers.
 #endif
+*/
+typedef char dByte;
 
 #ifdef DEBUG
 	#include <string.h> // c style string tools.

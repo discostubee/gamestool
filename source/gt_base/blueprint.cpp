@@ -12,7 +12,7 @@ cBlueprint::cBlueprint():
 	mFuncMake(NULL),
 	mGetName(NULL),
 	mGetCom(NULL),
-	mGecPlugTag(NULL),
+	mGetPlugTag(NULL),
 	mGetAllComs(NULL),
 	mGetAllTags(NULL),
 	mHasPlugTag(NULL)
@@ -34,7 +34,7 @@ cBlueprint::hash() const{
 	return mHash;
 }
 
-const char* 
+const dNatChar*
 cBlueprint::name() const{
 	return mGetName();
 }
@@ -52,8 +52,8 @@ cBlueprint::getCom(dNameHash pHash) const{
 
 const cPlugTag* 
 cBlueprint::getPlugTag(dNameHash pPT) const{
-	ASRT_NOTNULL(mGecPlugTag);
-	return mGecPlugTag(pPT);
+	ASRT_NOTNULL(mGetPlugTag);
+	return mGetPlugTag(pPT);
 }
 
 dListComs
@@ -83,7 +83,7 @@ cBlueprint::operator = (const cBlueprint* pCopy){
 	{
 		mHash = pCopy->mHash;
 		mReplaces = pCopy->mReplaces;
-		mGecPlugTag = pCopy->mGecPlugTag;
+		mGetPlugTag = pCopy->mGetPlugTag;
 		mFuncMake = pCopy->mFuncMake;
 		mGetCom = pCopy->mGetCom;
 		mGetAllComs = pCopy->mGetAllComs;

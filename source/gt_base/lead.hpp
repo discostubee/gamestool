@@ -43,14 +43,14 @@ namespace gt{
 	public:
 		typedef unsigned int dUID;	//!< Unique ID.
 
-		const dUID	mID;
 		const dStr	mName;
+		const dUID	mID;
 
 		cPlugTag(
-			const char* pPlugName
+			const dPlaChar* pPlugName
 		):
-			mID( makeHash(pPlugName) ),
-			mName( pPlugName )
+			mName( PCStrToNStr(pPlugName) ),
+			mID( makeHash(mName.c_str()) )
 		{}
 
 		~cPlugTag()

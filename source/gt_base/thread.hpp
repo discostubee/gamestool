@@ -46,8 +46,8 @@ namespace gt{
 		cThread();
 		virtual ~cThread();
 
-		static const char* identify(){ return "thread"; }
-		virtual const char* name() const{ return cThread::identify(); }
+		static const dNatChar* identify(){ return "thread"; }
+		virtual const dNatChar* name() const{ return cThread::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cThread>::hash(); }
 
 

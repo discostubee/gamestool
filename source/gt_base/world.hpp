@@ -149,7 +149,7 @@ namespace gt{
 	class iFigment{
 	public:
 		virtual ~iFigment() {}
-		virtual const char* name() const =0;
+		virtual const dNatChar* name() const =0;
 		virtual dNameHash hash() const =0;
 
 		virtual void jack(ptrLead pLead, cContext* pCon)=0;
@@ -279,6 +279,7 @@ namespace gt{
 
 		//!\breif	Tries to find a plug tag in all the current blueprints it has.
 		//!\note	Throws if not found.
+		//!\todo	Make this more efficient by preventing a rescan of every blueprint.
 		const cPlugTag* getPlugTag(unsigned int aID);
 
 		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
@@ -353,7 +354,9 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Macros
 #ifdef DEBUG
-	#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+	//- crude exclusion.
+	//#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+	#define PROFILE
 	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 	//#define DBUG_LO(x) { std::cout << x << std::endl; }
 	

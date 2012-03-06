@@ -23,8 +23,8 @@ namespace gt{
 		cTextFig();
 		virtual ~cTextFig();
 
-		static const char* identify(){ return "text fig"; }
-		virtual const char* name() const{ return cTextFig::identify(); }
+		static const dNatChar* identify(){ return "text fig"; }
+		virtual const dNatChar* name() const{ return cTextFig::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cTextFig>::hash(); }
 
 		virtual void run(cContext* pCon);				//!< Temp code to display text in console.

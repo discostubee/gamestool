@@ -183,8 +183,8 @@ public:
 	testContextFigment() : refOther(NULL), throwOnRun(false) {}
 	virtual ~testContextFigment() {}
 
-	static const char* identify(){ return "test context figment"; }
-	virtual const char* name() const { return identify(); }
+	static const dNatChar* identify(){ return "test context figment"; }
+	virtual const dNatChar* name() const { return identify(); }
 	virtual dNameHash hash() const { return getHash<testContextFigment>(); }
 
 	virtual void run(cContext *pCon){

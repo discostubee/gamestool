@@ -6,7 +6,7 @@
 #ifndef BITMAP_HPP
 #define BITMAP_HPP
 
-#include <gt_base/figment.hpp>
+#include "gt_base/figment.hpp"
 
 namespace gt{
 	typedef float dColRng; //!< Colour range

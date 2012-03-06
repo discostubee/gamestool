@@ -1,3 +1,20 @@
+/*
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 #ifndef	PROFILER_HPP
 #define	PROFILER_HPP
 
@@ -64,7 +81,7 @@ public:
 	cProfiler();
 	~cProfiler();
 
-	cToken makeToken(const char *pFile, const unsigned int pLine);
+	cToken makeToken(const dPlaChar *pFile, const unsigned int pLine);
 	void tokenFinished(cProfiler::cToken *pToken);
 	void flushThatLog(std::ostream &log);
 	cProfiler& operator += (const cProfiler &pCopyIt);
@@ -72,7 +89,7 @@ public:
 private:
 	class cEntry{
 	public:
-		dStr mInfo;
+		dPlaStr mInfo;
 		dMillisec mTimesProfiled;
 		dMillisec mAveTime;
 		dMillisec mMaxTime;
@@ -83,7 +100,7 @@ private:
 
 	typedef std::map<dNameHash, cEntry> dEntryMap;
 	typedef std::map<unsigned int, dNameHash> dLineToNameMap;
-	typedef std::map<const char*,  dLineToNameMap> dFileTo2ndMap;
+	typedef std::map<const dPlaChar*,  dLineToNameMap> dFileTo2ndMap;
 
 	dEntryMap mEntries;	//! \note A map is slightly slower than a vector, but tokens are always
 	dEntryMap::iterator scrEntryItr;
@@ -98,16 +115,5 @@ private:
 #endif
 };
 
-/*
-#ifdef DEBUG
-	tCoolStatic<cProfiler> gProfiler;
-
-	#define PROFILE cProfiler::cToken profileToken = tCoolStatic<cProfiler>::get()->makeToken(__FILE__, __LINE__)
-	#define LOG_PROFILE tCoolStatic<cProfiler>::get()->flushThatLog(std::cout);
-#else
-	#define PROFILE
-	#define LOG_PROFILE
-#endif
-*/
 
 #endif

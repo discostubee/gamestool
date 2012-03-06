@@ -209,8 +209,8 @@ public:
 	cSaveTester(const char* inStr) : myStr(dStr(inStr)), myNum(42) {}
 	virtual ~cSaveTester(){}
 
-	static const char* identify(){ return "save tester"; }
-	virtual const char* name() const{ return cSaveTester::identify(); }
+	static const dNatChar* identify(){ return "save tester"; }
+	virtual const dNatChar* name() const{ return cSaveTester::identify(); }
 	virtual dNameHash hash() const{ return tOutline<cSaveTester>::hash(); }
 
 	virtual void save(cByteBuffer* pAddHere) {

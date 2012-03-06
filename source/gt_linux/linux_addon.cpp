@@ -16,7 +16,7 @@ cAddon_linux::draftAddon(const std::string &pName){
 			fn = reinterpret_cast<void(*)(cWorld*)>(dlsym(mLibHandle, "draftAll"));
 
 			if( fn != NULL ){
-				(*fn)(gWorld);
+				(*fn)(gWorld.get().get());
 			}else{
 				DBUG_LO("Unable to use shared library function 'draftAll' because " << dlerror());
 			}

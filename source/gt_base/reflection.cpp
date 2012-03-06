@@ -229,6 +229,7 @@ GTUT_START(test_reflection, alucardBasic){
 	testNum.mD->jack(getNum, &fakeConx);
 	GTUT_ASRT( *getNum->getPlug(cTestNum::xPT_num) == num, "number wasn't set.");
 
+
 }GTUT_END;
 
 #endif

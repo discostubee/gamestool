@@ -39,12 +39,12 @@ namespace gt{
 		static const cPlugTag *xPT_command;
 		static const cCommand::dUID xSetupPostman;
 
-		static const char* identify(){ return "postman"; }
+		static const dNatChar* identify(){ return "postman"; }
 
 		cPostman();
 		virtual ~cPostman();
 
-		virtual const char* name() const{ return identify(); }
+		virtual const dNatChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cPostman>::hash(); }
 
 		virtual void run(cContext* pCon);

@@ -7,25 +7,6 @@
 
 #include "utils.hpp"
 
-dNameHash 
-makeHash(const dNatChar* pString)
-{
-	dNameHash hash = 0;
-	size_t len = natCharLen(pString);
-
-	if(len == 0)
-		return 0;
-
-	dNatChar* hashMe = new dNatChar[len];
-
-	for(size_t utfIdx = 0; utfIdx < len; ++utfIdx)
-		hash = ((hash << 5) + hash) ^ hashMe[utfIdx];
-
-	delete [] hashMe;
-
-	return hash;
-}
-
 
 ////////////////////////////////////////////////////////////
 cTracker::dItemMap* 			cTracker::xObjectsActive;	// Don't assign here.
