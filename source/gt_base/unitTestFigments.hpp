@@ -18,8 +18,8 @@
 				cTestNum();
 				virtual ~cTestNum();
 
-				static const char* identify(){ return "test number"; }
-				virtual const char* name() const{ return cTestNum::identify(); }
+				static const dNatChar* identify(){ return "test number"; }
+				virtual const dNatChar* name() const{ return cTestNum::identify(); }
 				virtual dNameHash hash() const{ return tOutline<cTestNum>::hash(); }
 
 				virtual void save(cByteBuffer* pAddHere);

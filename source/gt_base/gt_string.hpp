@@ -30,14 +30,19 @@ typedef std::basic_string<dPlaChar, std::char_traits<dPlaChar> > dPlaStr;
 typedef std::basic_string<dTextChar, std::char_traits<dTextChar> > dText;
 
 //--------------------------------------------------------
+//- Functions defined in this library.
 
 //!\brief
 size_t natCharLen(const dNatChar *pString);
 
 size_t plaCharLen(const dPlaChar *pString);
 
-//!\brief	Converts a native string to a text string instance.
-dText NStrToText(const dNatChar *pString);
+//--------------------------------------------------------
+//- Functions defined in other libraries.
 
+//!\brief	Converts a native string to a text string instance.
+dText NCStrToText(const dNatChar *pString);
+
+dStr PCStrToNStr(const dPlaChar *pString);
 
 #endif

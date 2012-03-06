@@ -1,9 +1,9 @@
 //!\file	main.cpp
-//!\brief	
+//!\brief	Start of unit tests
 
 
 // Include the stuff we want to test.
-#include <gt_base/figment.hpp>
+#include "gt_base/figment.hpp"
 
 int
 main(int argc, char **argv){

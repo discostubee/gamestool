@@ -9,11 +9,6 @@
 
 #include <gt_graphics/windowFrame.hpp>
 
-#include <X11/Xlib.h>	// Xlib.h is the default header that is included and has the core functionality
-#include <X11/Xatom.h>	// Xatom.h includes functionality for creating new protocol messages
-#include <X11/keysym.h> // keysym.h contains key symbols which we use to resolve what keys that are being pressed
-
-
 /* the XF86 Video Mode extension allows us to change the displaymode of the server
  * this allows us to set the display to fullscreen and also read videomodes and
  * other information.
@@ -23,6 +18,10 @@
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
+
+#include <X11/Xlib.h>	// Xlib.h is the default header that is included and has the core functionality
+#include <X11/Xatom.h>	// Xatom.h includes functionality for creating new protocol messages
+#include <X11/keysym.h> // keysym.h contains key symbols which we use to resolve what keys that are being pressed
 
 namespace gt{
 

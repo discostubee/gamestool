@@ -111,8 +111,8 @@ namespace gt{
 		static const cCommand::dUID xGetHits;
 		static const cCommand::dUID xGetChatter;
 
-		static const char* identify() { return "don't care target"; }
-		virtual const char* name() const { return identify(); }		//!< Virtual version of identify.
+		static const dNatChar* identify() { return "don't care target"; }
+		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return tOutline<cShareTarget>::hash(); }
 
 		cShareTarget(): hits(0) {}
@@ -157,8 +157,8 @@ namespace gt{
 		cWriter(cShareTarget *inT, std::string inS) : target(inT), phrase(inS) {}
 		virtual ~cWriter() {}
 
-		static const char* identify(){ return "test writer"; }
-		virtual const char* name() const { return identify(); }
+		static const dNatChar* identify(){ return "test writer"; }
+		virtual const dNatChar* name() const { return identify(); }
 		virtual dNameHash hash() const { return tOutline<cWriter>::hash(); }
 
 		virtual void run(cContext* pCon) {

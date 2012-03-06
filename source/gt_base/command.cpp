@@ -28,7 +28,7 @@ class cComTestFig: public cFigment, private tOutline<cComTestFig>{
 public:
 	static const cPlugTag* xPT_testTag;
 
-	static const char* identify(){ return "command test figment"; }
+	static const dNatChar* identify(){ return "command test figment"; }
 
 	cComTestFig(){}
 	~cComTestFig(){}

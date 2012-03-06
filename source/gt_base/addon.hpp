@@ -42,13 +42,13 @@ namespace gt{
 		static const cPlugTag* xPT_addonName;
 		static const cCommand::dUID xLoadAddon;
 
-		static const char* identify(){ return "addon"; }
+		static const dNatChar* identify(){ return "addon"; }
 		static void requirements();
 
 		cAddon();
 		virtual ~cAddon();
 
-		virtual const char* name() const{ return identify(); }
+		virtual const dNatChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cAddon>::hash(); }
 
 	protected:

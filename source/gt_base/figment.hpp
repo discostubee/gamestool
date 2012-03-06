@@ -59,10 +59,10 @@ namespace gt{
 		//!\brief	Used to define the string name of this object. It is also hashed to give the unique number
 		//!			used to quickly compare objects.
 		//!\note	You MUST replace this to identify your own
-		static const char* identify(){ return "figment"; }
+		static const dNatChar* identify(){ return "figment"; }
 
 		//- Not sure how I could eliminate this. I should be able to.
-		virtual const char* name() const { return identify(); }		//!< Virtual version of identify.
+		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return tOutline<cFigment>::hash(); }
 
 		//-----------------------------
@@ -106,12 +106,12 @@ namespace gt{
 	//!			a new figment type class.
 	class cEmptyFig: public cFigment, private tOutline<cEmptyFig>{
 	public:
-		static const char* identify(){ return "empty figment"; }
+		static const dNatChar* identify(){ return "empty figment"; }
 
 		cEmptyFig();
 		virtual ~cEmptyFig();
 
-		virtual const char* name() const{ return cEmptyFig::identify(); }
+		virtual const dNatChar* name() const{ return cEmptyFig::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cEmptyFig>::hash(); }
 	};
 
@@ -122,12 +122,12 @@ namespace gt{
 	//!\note	Should be called Unicron.
 	class cWorldShutoff: public cFigment, private tOutline<cWorldShutoff>{
 	public:
-		static const char* identify(){ return "world shutoff"; }
+		static const dNatChar* identify(){ return "world shutoff"; }
 
 		cWorldShutoff();
 		virtual ~cWorldShutoff();
 
-		virtual const char* name() const{ return identify(); }
+		virtual const dNatChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cWorldShutoff>::hash(); }
 
 		virtual void run(cContext* pCon);

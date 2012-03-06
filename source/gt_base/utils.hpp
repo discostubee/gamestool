@@ -39,10 +39,20 @@ typedef unsigned int	dNameHash;
 typedef unsigned int	dMillisec;
 
 //------------------------------------------------------------------------------------------
-//!\note	This should return the same hash for every platform, so
-//!			it has to use the portable char type.
 // !\note	Code taken from http://cboard.cprogramming.com/tech-board/114650-string-hashing-algorithm.html
-dNameHash makeHash(const dNatChar* pString);
+template<typename T> dNameHash makeHash(T const * pString){
+	dNameHash hash = 0;
+
+	if(pString!=NULL)
+		return 0;
+
+	while(*pString!='\0'){
+		hash = ((hash << 5) + hash) ^ *pString;
+		++pString;
+	}
+
+	return hash;
+}
 
 //------------------------------------------------------------------------------------------
 //!\brief	Handy if you don't want to expose the container, but you want access to its elements.
@@ -143,8 +153,11 @@ private:
 };
 
 #ifdef DEBUG
-	#define DBUG_TRACK_START(x)	cTracker::start(x)
-	#define DBUG_TRACK_END(x)	cTracker::stop(x)
+	//- crude exclusion of tracker.
+	//#define DBUG_TRACK_START(x)	cTracker::start(x)
+	//#define DBUG_TRACK_END(x)	cTracker::stop(x)
+	#define DBUG_TRACK_START(x)
+	#define DBUG_TRACK_END(x)
 #else
 	#define DBUG_TRACK_START(x)
 	#define DBUG_TRACK_END(x)

@@ -397,11 +397,20 @@ const cPlugTag*
 cWorld::getPlugTag(cPlugTag::dUID aID){
 	PROFILE;
 
-	for(dBlueprintMap::iterator bp = mBlueprints.begin(); bp != mBlueprints.end(); ++bp){
-		if( bp->second.mBlueprint->hasPlugTag(aID) )
-			return bp->second.mBlueprint->getPlugTag(aID);
+	const cPlugTag* tmp=NULL;
+
+	for(
+		dBlueprintMap::iterator bp = mBlueprints.begin();
+		bp != mBlueprints.end() && tmp==NULL;
+		++bp
+	){
+		tmp = bp->second.mBlueprint->getPlugTag(aID);
 	}
-	throw excep::notFound("plug tag", __FILE__, __LINE__);
+
+	if(tmp==NULL)
+		throw excep::notFound("plug tag", __FILE__, __LINE__);
+
+	return tmp;
 }
 
 void
@@ -485,8 +494,8 @@ public:
 	static const cPlugTag*	xPT_A;
 	static const cCommand::dUID	xCommandA;
 
-	static const char* identify(){ return "test draft parent"; }
-	virtual const char* name() const { return identify(); }
+	static const dNatChar* identify(){ return "test draft parent"; }
+	virtual const dNatChar* name() const { return identify(); }
 
 	virtual dNameHash hash() const { return getHash<testDraftParent>(); }
 
@@ -516,8 +525,8 @@ const cCommand::dUID testDraftParent::xCommandA = tOutline<testDraftParent>::mak
 //- Just extends the parent.
 class testDraftChild: public testDraftParent, private tOutline<testDraftChild>{
 public:
-	static const char* identify(){ return "test draft child"; }
-	virtual const char* name() const { return identify(); };
+	static const dNatChar* identify(){ return "test draft child"; }
+	virtual const dNatChar* name() const { return identify(); };
 
 	virtual dNameHash hash() const { return getHash<testDraftChild>(); };
 
@@ -527,8 +536,8 @@ public:
 
 class testDraftReplace: public testDraftParent, private tOutline<testDraftReplace>{
 public:
-	static const char* identify(){ return "test draft replace"; }
-	virtual const char* name() const { return identify(); };
+	static const dNatChar* identify(){ return "test draft replace"; }
+	virtual const dNatChar* name() const { return identify(); };
 	virtual dNameHash hash() const { return getHash<testDraftReplace>(); };
 	static dNameHash replaces(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getReplacement() const { return replaces(); };

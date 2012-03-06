@@ -31,7 +31,7 @@ cProfiler::~cProfiler(){
 }
 
 cProfiler::cToken
-cProfiler::makeToken(const char* pFile, const unsigned int pLine){
+cProfiler::makeToken(const dPlaChar* pFile, const unsigned int pLine){
 	CRITLOCK;
 
 	dNameHash tempHash = 0;

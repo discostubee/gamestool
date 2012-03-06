@@ -43,8 +43,8 @@ namespace gt{
 		static const cCommand::dUID xGoGetit;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target. Add's the jack job that will get our plug.
 		static const cCommand::dUID xGimmie;	//!< Gimmie the ball boy! Adds the plug that was hopefully retrieved using xSetup.
 
-		static const char* identify(){ return "plug hound"; }
-		virtual const char* name() const { return identify(); }
+		static const dNatChar* identify(){ return "plug hound"; }
+		virtual const dNatChar* name() const { return identify(); }
 		virtual dNameHash hash() const { return tOutline<cPlugHound>::hash(); }
 
 		static dNameHash extends(){ return getHash<cFigment>(); }
@@ -88,8 +88,8 @@ namespace gt{
 		cAlucard();
 		virtual ~cAlucard();
 
-		static const char* identify(){ return "alucard"; }
-		virtual const char* name() const { return identify(); }
+		static const dNatChar* identify(){ return "alucard"; }
+		virtual const dNatChar* name() const { return identify(); }
 		virtual dNameHash hash() const { return tOutline<cAlucard>::hash(); }
 
 		static dNameHash extends(){ return getHash<cFigment>(); }

@@ -11,8 +11,19 @@ size_t plaCharLen(const dPlaChar *pString){
 	return ::strlen(pString);
 }
 
-dText NStrToText(const dNatChar *pString){
+dText NCStrToText(const dNatChar *pString){
 	dText strRtn;
+
+	//!\todo
+
+	return strRtn;
+}
+
+dStr PCStrToNStr(const dPlaChar *pString){
+	dStr strRtn;
+
+	//!\todo
+	strRtn.assign(pString);
 
 	return strRtn;
 }

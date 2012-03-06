@@ -13,11 +13,11 @@ cLinuxWorld::getLinuxTime(){
 }
 
 cLinuxWorld::cLinuxWorld(){
-	mProfiler->mGetTime = &getLinuxTime;
+	mProfiles->mGetTime = &getLinuxTime;
 }
 
 cLinuxWorld::~cLinuxWorld(){
-	mRoot.reset();	//so that our console displays that all figments were destroyed.
+	mRoot.redirect(NULL);	//so that our console displays that all figments were destroyed.
 	flushLines();
 }
 

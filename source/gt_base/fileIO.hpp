@@ -40,8 +40,8 @@ namespace gt{
 		cBase_fileIO();
 		virtual ~cBase_fileIO();
 
-		static const char* identify(){ return "base file IO"; }
-		virtual const char* name() const { return identify(); }		//!<
+		static const dNatChar* identify(){ return "base file IO"; }
+		virtual const dNatChar* name() const { return identify(); }		//!<
 		virtual dNameHash hash() const{ return tOutline<cBase_fileIO>::hash(); }
 
 	protected:

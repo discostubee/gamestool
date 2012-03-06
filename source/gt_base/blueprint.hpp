@@ -56,7 +56,7 @@ namespace gt{
 
 		ptrFig make();
 		dNameHash hash() const;
-		const char* name() const;
+		const dNatChar* name() const;
 		dNameHash replace() const;
 		const cCommand* getCom(cCommand::dUID pHash) const;
 		const cPlugTag* getPlugTag(cPlugTag::dUID pPT) const;
@@ -76,9 +76,9 @@ namespace gt{
 		dNameHash mHash;
 		dNameHash mReplaces;
 		ptrFig (*mFuncMake)();
-		const char* (*mGetName)();
+		const dNatChar* (*mGetName)();
 		const cCommand* (*mGetCom)(cCommand::dUID);
-		const cPlugTag* (*mGecPlugTag)(cPlugTag::dUID);
+		const cPlugTag* (*mGetPlugTag)(cPlugTag::dUID);
 		dListComs (*mGetAllComs)();
 		dListPTags (*mGetAllTags)();
 		bool (*mHasPlugTag)(cPlugTag::dUID);
@@ -103,9 +103,9 @@ namespace gt{
 			...
 		);
 
-		static const cPlugTag* makePlugTag(const char* pName);
-		static const cCommand* getCommand(cCommand::dUID pCommandID);
-		static const cPlugTag* getPlugTag(cPlugTag::dUID pPTagID);
+		static const cPlugTag* makePlugTag(const dPlaChar* pName);			//!< Throws if the name isn't found in the list of tags for this outline.
+		static const cCommand* getCommand(cCommand::dUID pCommandID);	//!< Throws if the command not found.
+		static const cPlugTag* getPlugTag(cPlugTag::dUID pPTagID);		//!< Returns reference, or NULL. Does not throw.
 		static dListComs getAllCommands();
 		static dListPTags getAllTags();
 		static bool hasPlugTag(cPlugTag::dUID pPTID);
@@ -161,7 +161,7 @@ namespace gt{
 		mFuncMake = &(maker<T>);
 		mGetName = &(T::identify);
 		mGetCom = &(tOutline<T>::getCommand);
-		mGecPlugTag = &(tOutline<T>::getPlugTag);
+		mGetPlugTag = &(tOutline<T>::getPlugTag);
 		mGetAllComs = &(tOutline<T>::getAllCommands);
 		mGetAllTags = &(tOutline<T>::getAllTags);
 		mHasPlugTag = &(tOutline<T>::hasPlugTag);
@@ -298,7 +298,7 @@ namespace gt{
 	template <typename T>
 	const cCommand::dUID
 	tOutline<T>::makeCommand(
-		const char* pName,
+		const dPlaChar* pName,
 		ptrPatFoo aFoo,
 		const cPlugTag* pTags,
 		...
@@ -311,7 +311,7 @@ namespace gt{
 			dNameHash comUID;
 			{
 				dStr totalString = T::identify();
-				totalString.append(pName);
+				totalString.append( PCStrToNStr(pName).c_str() );
 				comUID = makeHash(totalString.c_str());
 			}
 			dMapCom::iterator itrCom;
@@ -340,21 +340,19 @@ namespace gt{
 
 	template<typename T>
 	const cPlugTag*
-	tOutline<T>::makePlugTag(const char* pName){
-		dMapPTag::iterator itrTag = xPlugTags->end();
-
+	tOutline<T>::makePlugTag(const dPlaChar* pName){
 		PROFILE;
+
+		dMapPTag::iterator itrTag = xPlugTags->end();
 
 		DBUG_LO("Making plug tag '" << pName << "' for figment '" << T::identify() << "'");
 
 		readyTags();
 
 		{
-			dNameHash tagUID = makeHash(pName);
+			dNameHash tagUID = makeHash( PCStrToNStr(pName).c_str() );
 
-			xPlugTags->insert( dMapPTag::value_type(
-				tagUID,	cPlugTag(pName)
-			) );
+			xPlugTags->insert( dMapPTag::value_type(tagUID,	cPlugTag(pName)) );
 
 			itrTag = xPlugTags->find(tagUID);
 		}
@@ -390,22 +388,27 @@ namespace gt{
 	template<typename T>
 	const cPlugTag*
 	tOutline<T>::getPlugTag(cPlugTag::dUID pHash){
-		dMapPTag::iterator itrTag;
+		cPlugTag const *rtnTag = NULL;
 
 		PROFILE;
 
 		readyTags();
 
-		itrTag = xPlugTags->find(pHash);
+		dMapPTag::iterator itrTag = xPlugTags->find(pHash);
 
 		if(itrTag == xPlugTags->end()){
-			for(dListExtensions::iterator itr = xExtensions.begin(); itr != xExtensions.end(); ++itr){
-				try{ return (*itr)->getPlugTag(pHash); }catch(excep::notFound){}
+			for(
+				dListExtensions::iterator itr = xExtensions.begin();
+				itr != xExtensions.end() && rtnTag==NULL;
+				++itr
+			){
+				rtnTag = (*itr)->getPlugTag(pHash);
 			}
-			throw excep::notFound("can't find plug tag", __FILE__, __LINE__);
+		}else{
+			rtnTag = &itrTag->second;
 		}
 
-		return &itrTag->second;
+		return rtnTag;
 	}
 
 	template<typename T>
