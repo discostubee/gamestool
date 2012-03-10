@@ -43,7 +43,7 @@ typedef unsigned int	dMillisec;
 template<typename T> dNameHash makeHash(T const * pString){
 	dNameHash hash = 0;
 
-	if(pString!=NULL)
+	if(pString==NULL)
 		return 0;
 
 	while(*pString!='\0'){
@@ -153,11 +153,8 @@ private:
 };
 
 #ifdef DEBUG
-	//- crude exclusion of tracker.
-	//#define DBUG_TRACK_START(x)	cTracker::start(x)
-	//#define DBUG_TRACK_END(x)	cTracker::stop(x)
-	#define DBUG_TRACK_START(x)
-	#define DBUG_TRACK_END(x)
+	#define DBUG_TRACK_START(x)	cTracker::start(x)
+	#define DBUG_TRACK_END(x)	cTracker::stop(x)
 #else
 	#define DBUG_TRACK_START(x)
 	#define DBUG_TRACK_END(x)

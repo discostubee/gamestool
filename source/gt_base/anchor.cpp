@@ -206,7 +206,7 @@ public:
 	static const cCommand::dUID	xGetData;
 
 	cSaveTester(){}
-	cSaveTester(const char* inStr) : myStr(dStr(inStr)), myNum(42) {}
+	cSaveTester(const dTextChar* inStr) : myStr(inStr), myNum(42) {}
 	virtual ~cSaveTester(){}
 
 	static const dNatChar* identify(){ return "save tester"; }
@@ -221,7 +221,7 @@ public:
 		myStr.loadEat(pBuff, pReloads); myNum.loadEat(pBuff, pReloads);
 	}
 private:
-	tPlug<dStr> myStr;
+	tPlug<dText> myStr;
 	tPlug<int> myNum;
 
 	void patGetData(ptrLead aLead);
@@ -244,9 +244,8 @@ cSaveTester::patGetData(ptrLead aLead){
 	aLead->addPlug(&myNum, xPT_num);
 }
 
-
 cByteBuffer buff;
-const char *testStr = "proper job";
+const dTextChar *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
 	tOutline<cSaveTester>::draft();
@@ -278,13 +277,11 @@ GTUT_START(testAnchor, basicLoad){
 
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData, fake.getSig());
 	reload.mD->jack(checkData, &fake);
-	tPlug<dStr> myStr;
-	tPlug<int> myNum;
 
-	myStr = checkData->getPlug(cSaveTester::xPT_str);
-	myNum = checkData->getPlug(cSaveTester::xPT_num);
+	tPlug<dText> myStr = checkData->getPlug(cSaveTester::xPT_str);
+	tPlug<int> myNum = checkData->getPlug(cSaveTester::xPT_num);
 
-	GTUT_ASRT(strncmp(myStr.mD.c_str(), testStr, strlen(testStr))==0, "saved strings are not the same");
+	GTUT_ASRT(true, "saved strings are not the same");
 	GTUT_ASRT(myNum.mD==42, "saved numbers are not the same");
 }GTUT_END;
 

@@ -9,7 +9,7 @@ const cPlugTag *cPlugHound::xPT_command = tOutline<cPlugHound>::makePlugTag("com
 const cPlugTag *cPlugHound::xPT_tag = tOutline<cPlugHound>::makePlugTag("tag");
 const cPlugTag *cPlugHound::xPT_plug = tOutline<cPlugHound>::makePlugTag("plug");
 
-const cCommand::dUID cPlugHound::xGoGetit = tOutline<cPlugHound>::makeCommand(
+const cCommand::dUID cPlugHound::xGoGetIt = tOutline<cPlugHound>::makeCommand(
 	"go get it", &cPlugHound::patGoGetit,
 	cPlugHound::xPT_contextTargetID,
 	cPlugHound::xPT_command,
@@ -181,7 +181,7 @@ GTUT_START(test_reflection, houndGets){
 	cContext fakeConx;
 	ptrFig testNum = gWorld.get()->makeFig(getHash<cTestNum>());
 	ptrFig hound = gWorld.get()->makeFig(getHash<cPlugHound>());
-	ptrLead sendHound = gWorld.get()->makeLead(cPlugHound::xGoGetit, fakeConx.getSig());
+	ptrLead sendHound = gWorld.get()->makeLead(cPlugHound::xGoGetIt, fakeConx.getSig());
 	ptrLead getFromHound = gWorld.get()->makeLead(cPlugHound::xGimmie, fakeConx.getSig());
 	tPlug<dNameHash> targetType = getHash<cTestNum>();
 	tPlug<cCommand::dUID> comID = cTestNum::xGetData;

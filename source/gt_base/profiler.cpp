@@ -44,7 +44,7 @@ cProfiler::makeToken(const dPlaChar* pFile, const unsigned int pLine){
 
 	if(scrLUp1stItr == mEntryLookup.end() ||  scrLUp2ndItr == scrLUp1stItr->second.end()){ //Need to add new entry first
 		std::stringstream tempS;
-		tempS << pFile << ", " << pLine;
+		tempS << pFile << ":" << pLine;
 		tempHash = makeHash( tempS.str().c_str() );
 		mEntries[tempHash].mInfo = tempS.str();
 	}else{
