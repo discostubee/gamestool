@@ -40,7 +40,7 @@ namespace gt{
 		static const cPlugTag *xPT_command;	//!< ID of the command we use to get the plug from the target.
 		static const cPlugTag *xPT_tag;		//!< Used a tag ID rather than a pointer. This is the tag we use to get the plug from the target.
 		static const cPlugTag *xPT_plug;		//!< The plug we give back.
-		static const cCommand::dUID xGoGetit;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target. Add's the jack job that will get our plug.
+		static const cCommand::dUID xGoGetIt;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target. Add's the jack job that will get our plug.
 		static const cCommand::dUID xGimmie;	//!< Gimmie the ball boy! Adds the plug that was hopefully retrieved using xSetup.
 
 		static const dNatChar* identify(){ return "plug hound"; }

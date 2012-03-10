@@ -420,6 +420,9 @@ cWorld::setRoot(ptrFig pNewRoot){
 
 void
 cWorld::makeProfileReport(std::ostream &log){
+	{
+		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
+	}
 	xProfiler->flushThatLog(log);
 }
 

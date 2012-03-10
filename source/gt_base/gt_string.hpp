@@ -17,9 +17,9 @@
 
 //--------------------------------------------------------
 
-typedef char dNatChar;	//!< char type native to gamestools, which is 8bit ascii across all platforms.
-typedef char dPlaChar;	//!< char type most efficient (speed wise) for the target platform.
-typedef wchar_t dTextChar;		//!< Used for display text.
+typedef char dNatChar;		//!< char type native to gamestools, which is 8bit ascii across all platforms.
+typedef char dPlaChar;		//!< char type most efficient (speed wise) for the target platform.
+typedef wchar_t dTextChar;	//!< Used for display text.
 
 //!\brief	stl string wrapper of the native string type.
 typedef std::basic_string<dNatChar, std::char_traits<dNatChar> > dStr;
@@ -44,5 +44,6 @@ size_t plaCharLen(const dPlaChar *pString);
 dText NCStrToText(const dNatChar *pString);
 
 dStr PCStrToNStr(const dPlaChar *pString);
+
 
 #endif

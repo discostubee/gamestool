@@ -354,11 +354,9 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Macros
 #ifdef DEBUG
-	//- crude exclusion.
-	//#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-	#define PROFILE
-	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
-	//#define DBUG_LO(x) { std::cout << x << std::endl; }
+	#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+	//#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+	#define DBUG_LO(x) { std::cout << x << std::endl; }
 	
 #else
 	#define PROFILE
