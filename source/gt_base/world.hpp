@@ -17,6 +17,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *********************************************************************************************************
+ *
  * Seeing as how it's our sort of, starting point: We'll add all the kind of info that's useful right here.
  *
  *
@@ -355,9 +356,9 @@ namespace gt{
 // Macros
 #ifdef DEBUG
 	#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-	//#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
-	#define DBUG_LO(x) { std::cout << x << std::endl; }
-	
+	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+	//#define DBUG_LO(x) { std::cout << x << std::endl; }
+
 #else
 	#define PROFILE
 	#define DBUG_LO(x)

@@ -2,6 +2,7 @@
  * !\file	figment.hpp
  * !\brief	Contains both the base implementation of the figment, and the two other basic figment types: empty figment and the world ender.
  *
+**********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,6 +16,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
  *
  */
 

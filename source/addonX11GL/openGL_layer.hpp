@@ -7,9 +7,9 @@
 #ifndef OPENGL_LAYER_HPP
 #define OPENGL_LAYER_HPP
 
-#include <gt_graphics/layer.hpp>
 #include "openGL_windowFrame.hpp"
 
+#include "gt_graphics/layer.hpp"
 
 namespace gt{
 

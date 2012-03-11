@@ -1,7 +1,22 @@
+/*
+**********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+*/
+
 #include "profiler.hpp"
-
-////////////////////////////////////////////////////////////
-
 
 
 ////////////////////////////////////////////////////////////
@@ -22,11 +37,15 @@ cProfiler::cProfiler():
 {}
 
 cProfiler::~cProfiler(){
-	for(	std::set<cToken*>::iterator i = mActiveTokens.begin();
-			i != mActiveTokens.end();
-			++i
-	){
-		(*i)->profilerDied();
+	try{
+		CRITLOCK;
+		for(	std::set<cToken*>::iterator i = mActiveTokens.begin();
+				i != mActiveTokens.end();
+				++i
+		){
+			(*i)->profilerDied();
+		}
+	}catch(...){
 	}
 }
 
@@ -139,22 +158,12 @@ cProfiler::cToken::cToken(const cToken &copyMe):
 }
 
 cProfiler::cToken::~cToken(){
-	CRITLOCK;
-
 	if(mProfiler != NULL){
 		mProfiler->tokenFinished(this);
 	}
 }
 
 void cProfiler::cToken::profilerDied(){
-#ifdef GT_THREAD
-	if(!mu.try_lock())
-		return;
-
+	//- You shouldn't need to lock this, as the profiler will try and obtain the lock in its destructor.
 	mProfiler = NULL;
-	mu.unlock();
-#else
-	mProfiler = NULL;
-#endif
-
 }

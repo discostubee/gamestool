@@ -21,7 +21,8 @@
 #ifndef OSX_ADDON_HPP
 #define OSX_ADDON_HPP
 
-#include <gt_base/addon.hpp>
+#include "gt_base/addon.hpp"
+
 #include <dlfcn.h>	// MUST include the dl library in whatever binary you build.
 
 

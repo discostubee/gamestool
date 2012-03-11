@@ -6,7 +6,7 @@
 #ifndef WINDOWFRAME_HPP
 #define WINDOWFRAME_HPP
 
-#include <gt_base/figment.hpp>
+#include "gt_base/figment.hpp"
 #include "primitives.hpp"
 
 namespace gt{

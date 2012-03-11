@@ -21,9 +21,10 @@
 #ifndef OSX_FILEIO_HPP
 #define OSX_FILEIO_HPP
 
-#include <fstream>
-#include <gt_base/fileIO.hpp>
 #include "OSX_world.hpp"
+#include "gt_base/fileIO.hpp"
+
+#include <fstream>
 
 namespace gt{
 

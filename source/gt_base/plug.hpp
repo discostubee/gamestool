@@ -1,6 +1,22 @@
 /*
  * !\file	plug.hpp
  * !\brief
+ *
+**********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
  */
 
 #ifndef PLUG_HPP
@@ -90,7 +106,7 @@ namespace gt{
 		//!\brief
 		void save(cByteBuffer* pAddHere);
 
-		//!\brief	Allows you to pass this plug a buffer for it try and load from.
+		//!\brief	Allows you to pass this plug a buffer for it to try and load from.
 		//!\param	pChewToy	Eats the buffer you pass it in order to load. This way, memory is conserved. It is up to the byte
 		//!						buffer to decide if it should use tricks to expend memory (by delaying the trim), rather than
 		//!						take a performance hit. Keeping in minds that saving and loading is not meant to be a fast

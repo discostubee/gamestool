@@ -52,12 +52,8 @@ main(
 #endif
 
 	try{
-		DBUG_LO("Example collection. Version 2.");
+		DBUG_LO("Example collection. Version 3.");
 
-		//showoff::context();
-		//showoff::programming();
-		//showoff::addons();		
-		showoff::graphics();
 
 		gWorld.get()->flushLines();
 		gWorld.get()->makeProfileReport(std::cout);

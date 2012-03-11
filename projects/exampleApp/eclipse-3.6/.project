@@ -85,16 +85,6 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>addon_example.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/projects/exampleApp/source/addon_example.cpp</locationURI>
-		</link>
-		<link>
-			<name>context_example.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/projects/exampleApp/source/context_example.cpp</locationURI>
-		</link>
-		<link>
 			<name>example_main.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/projects/exampleApp/source/example_main.cpp</locationURI>
@@ -103,16 +93,6 @@
 			<name>graphics_example.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/projects/exampleApp/source/graphics_example.cpp</locationURI>
-		</link>
-		<link>
-			<name>logic_example.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/projects/exampleApp/source/logic_example.cpp</locationURI>
-		</link>
-		<link>
-			<name>userProgram_example.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-ECLIPSE_HOME/Documents/workspace/gamestool_hg/projects/exampleApp/source/userProgram_example.cpp</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

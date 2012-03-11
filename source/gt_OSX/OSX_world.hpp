@@ -6,18 +6,15 @@
 #ifndef OSX_WORLD_HPP
 #define OSX_WORLD_HPP
 
+#include "gt_base/figment.hpp"
+
 #include <sys/time.h> // for gettimeofday and timeval
-#include <gt_base/figment.hpp>
 
 namespace gt{
 
 	//--------------------------------------------------------
 	//!\brief	The Apple Mac version of the abstract world class.
 	class cOSXWorld: public cWorld{
-	private:
-		static timeval tempTime;
-		static dMillisec getOSXTime();
-
 	public:
 		cOSXWorld();
 		~cOSXWorld();
@@ -25,6 +22,10 @@ namespace gt{
 		virtual dMillisec getAppTime();
 		virtual void loop();
 		virtual void flushLines();
+
+	private:
+		static timeval tempTime;
+		static dMillisec getOSXTime();
 	};
 }
 

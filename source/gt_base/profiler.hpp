@@ -1,4 +1,5 @@
 /*
+**********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -12,6 +13,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
  *
  */
 
@@ -66,10 +68,6 @@ public:
 		friend class cProfiler;
 
 	private:
-	#ifdef GT_THREAD
-		boost::mutex	mu;
-	#endif
-
 		cProfiler *mProfiler;	//!< When the parent is destroyed, it has to inform remaining tokens and it does this by setting mProfiler to null.
 
 		cToken& operator=(cToken& pToken){ DUMB_REF_ARG(pToken); return *this; }	//!< Banned.

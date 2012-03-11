@@ -36,6 +36,8 @@ closeLib(){
 		gt::tOutline<gt::cWindowFrame>::removeFromWorld();
 		gt::tOutline<gt::cLayer_X11GL>::removeFromWorld();
 		gt::tOutline<gt::cLayer>::removeFromWorld();
+		gt::tOutline<gt::cPolyMesh>::removeFromWorld();
+		gt::tOutline<gt::cPolyMesh_GL>::removeFromWorld();
 
 		DBUG_LO("closed x11 addon.");
 

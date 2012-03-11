@@ -1,3 +1,21 @@
+/*
+**********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+*/
+
 #include "world.hpp"
 #include "figment.hpp"
 
@@ -212,6 +230,8 @@ cWorld::~cWorld(){
 	}
 	delete xProfiler;
 
+	DBUG_LO(reinterpret_cast<long>(this));
+
 	//- Be super careful that we don't try and profile anything anymore.
 	lo("end of the world"); //- Ensure it exists.
 	flushLines();
@@ -238,8 +258,8 @@ cWorld::addBlueprint(cBlueprint* pAddMe){
 
 	// Even if this figment replaces another, it still appears under its own name hash.
 	if( mBlueprints.find(pAddMe->hash()) == mBlueprints.end()){	//new blueprint
-		mBlueprints[pAddMe->hash()] = sBlueprintHeader( pAddMe, uDoesntReplace );		
-		DBUG_LO("Blueprint '" << pAddMe->name() << "' added to library.");
+		mBlueprints[pAddMe->hash()] = sBlueprintHeader( pAddMe, uDoesntReplace );
+		DBUG_LO("Blueprint '" << pAddMe->name() << "' added to library");
 		
 	}else{
 		DBUG_LO("Blueprint '" <<  pAddMe->name() 
@@ -264,7 +284,7 @@ void
 cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	PROFILE;
 
-	DBUG_LO("Erasing blueprint '" << pRemoveMe->name() << "'");
+	DBUG_LO("Erasing blueprint '" << pRemoveMe->name());
 
 	//- Some figments should never be remove.
 	//if(
@@ -280,8 +300,9 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 			mScrBMapItr = mBlueArchive.find(mScrBMapItr->first);
 			if(mScrBMapItr != mBlueArchive.end()){
 				mBlueprints[pRemoveMe->replace()] = mScrBMapItr->second;
-				DBUG_LO("Blueprint '" << mScrBMapItr->second.mBlueprint->name() << "' restored");
+				DBUG_LO("Blueprint '" << mScrBMapItr->second.mBlueprint->name() << "' restored. Archive entry removed");
 			}
+			mBlueArchive.erase(mScrBMapItr);
 		}
 	}
 
@@ -317,18 +338,16 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 
 		}while(branches->size() > 0);
 
-		//- Empty the figments
-		for(
+		for(	//- Empty the figments
 			std::map<iFigment*, ptrFig>::iterator itr = figs.begin();
 			itr != figs.end();
 			++itr
 		){
-			DBUG_VERBOSE_LO( "Emptying figment " << reinterpret_cast<unsigned int>(itr->first) );
+			DBUG_VERBOSE_LO( "Emptying figment " << itr->first->name() );
 
 			itr->second.redirect(getEmptyFig());
 		}
 
-		//- Now erase the blueprint.
 		mBlueprints.erase(mScrBMapItr);
 	}
 }

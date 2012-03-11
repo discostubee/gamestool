@@ -7,13 +7,7 @@
 #ifndef OPENGL_WINDOWFRAME_HPP
 #define OPENGL_WINDOWFRAME_HPP
 
-#include <gt_graphics/windowFrame.hpp>
-
-/* the XF86 Video Mode extension allows us to change the displaymode of the server
- * this allows us to set the display to fullscreen and also read videomodes and
- * other information.
- */
-#include <X11/extensions/xf86vmode.h>
+#include "gt_graphics/windowFrame.hpp"
 
 #include <GL/gl.h>
 #include <GL/glx.h>
@@ -22,6 +16,12 @@
 #include <X11/Xlib.h>	// Xlib.h is the default header that is included and has the core functionality
 #include <X11/Xatom.h>	// Xatom.h includes functionality for creating new protocol messages
 #include <X11/keysym.h> // keysym.h contains key symbols which we use to resolve what keys that are being pressed
+
+/* the XF86 Video Mode extension allows us to change the displaymode of the server
+ * this allows us to set the display to fullscreen and also read videomodes and
+ * other information.
+ */
+#include <X11/extensions/xf86vmode.h>
 
 namespace gt{
 
