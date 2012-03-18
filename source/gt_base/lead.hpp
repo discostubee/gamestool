@@ -66,27 +66,33 @@ namespace gt{
 		eSM_write
 	};
 
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Used when updating a plug.
-	class cUpdateLemming{
-	private:
-		cBase_plug *callMe;
+	#ifdef GT_THREADS
+		//----------------------------------------------------------------------------------------------------------------
+		//!\brief	Used when updating a plug.
+		class cUpdateLemming{
+		private:
+			cBase_plug *callMe;
 
-	public:
-		explicit cUpdateLemming(cBase_plug *callBack);
-		~cUpdateLemming();
-	};
+		public:
+			explicit cUpdateLemming(cBase_plug *callBack);
+			~cUpdateLemming();
+		};
+
+		#define PLUGUP(plug) cUpdateLemming lem__LINE__ = plug.update()
+
+	#else
+		#define PLUGUP(plug) (void)plug
+	#endif
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	A plug is a data container that a lead can connect too. The lead can then connect that data to another
 	//!			object via the jack function, as well as automatically disconnect itself from its linked leads when it
-	//!			dies. It is also designed for serialization using a byte buffer.
+	//!			dies.
 	//!\note	You don't have to use plugs for all your figments stuff, Just for the things you want to save and
 	//!			reload or pass through a lead to another object.
 	//!\note	Using assignment operators doesn't use the other plugs shadows. This is because shadows are only for
 	//!			leads, and shadows are meant to solve the issue of data access over different threads. Inter-thread
 	//!			access should only happen through leads.
-	//!\note	Plugs do not save their connections, this is the job of the reflection object.
 	class cBase_plug{
 	public:
 		const PLUG_TYPE_ID mType;	//!< Must be public so the tPlug templates can use it.
@@ -94,38 +100,37 @@ namespace gt{
 		cBase_plug(PLUG_TYPE_ID pTI);
 		cBase_plug(const cBase_plug& pCopy);
 
-		template< template<typename> class plug, typename T>	cBase_plug& operator= (const plug<T> &pT);
-
-		template<typename T> T* exposePtr();	//!< Be careful with this.
-
+		template< template<typename> class PLUG, typename T> cBase_plug& operator= (const PLUG<T> &pT);
 		template<typename T> void copyInto(T *container, bool silentFail = false) const;
+
+		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Must be threadsafe.
+		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Must be threadsafe.
 
 		//--- Intended to be polymorphed by descendants.
 		virtual ~cBase_plug();
 
-		virtual	cBase_plug& operator= (const cBase_plug &pD) //=0;	//- should be pure virtual
-			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
+		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
+		virtual bool operator== (const cBase_plug &pD) =0;
 
-		virtual	cBase_plug& operator= (const cBase_plug *pD) //=0;	//- should be pure virtual
-			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return *this; }
+	#ifdef GT_THREADS
+		virtual cUpdateLemming update() =0; //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
+	#endif
 
-		virtual bool operator== (const cBase_plug &pD) //=0 //- should be pure virtual
-			{	DUMB_REF_ARG(pD); DONT_USE_THIS; return false; }
+	protected:
+		typedef std::map<cLead*, unsigned int> dMapLeads;
+
+		dMapLeads mLeadsConnected;		//!< Lead connections are not copied when copy plug values.
+		dMapLeads::iterator itrLead;	//!< handy.
 
 		#ifdef GT_THREADS
 			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor) =0; //!< Leads must always work with shadows.
-			virtual cUpdateLemming update() =0; //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
-		#endif
 
-		virtual void linkLead(cLead* pLead) =0; //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Must be threadsafe.
-		virtual void unlinkLead(cLead* pLead) =0; //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Must be threadsafe.
-
-	protected:
-		#ifdef GT_THREADS
 			virtual void finishUpdate() =0; //!< used only by the update lemming.
+
+			friend class cUpdateLemming;
 		#endif
 
-	friend class cUpdateLemming;
+	friend class cLead;
 	};
 
 	//--------------------------------------------------------------------------------------------------------
@@ -163,7 +168,7 @@ namespace gt{
 
 		void addPlug(cBase_plug *addMe, const cPlugTag *aTag);
 
-		void setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail = false);	//!< Assigns the value in this lead to the input input plug
+		void setPlug(const cBase_plug *setMe, const cPlugTag *aTag, bool silentFail = false);	//!< Takes the value of a plug in this lead,and assigns that value to the plug passed in.
 
 		void addToPile(cBase_plug *addMe);
 
@@ -174,7 +179,6 @@ namespace gt{
 			for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
 				target->push_back( C() );
 				#ifdef GT_THREADS
-
 					target->back() = (*scrPDataItr)->getShadow(mConx, eSM_read);
 				#else
 					target->back() = *scrPDataItr;
@@ -204,7 +208,6 @@ namespace gt{
 		//--- Things for plugs. not protected because there are a lot of templates that need them.
 		#ifdef GT_THREADS
 			typedef boost::lock_guard<boost::recursive_mutex> dLockLead;
-
 
 			boost::recursive_mutex muLead;	//!< Used by plugs and figment jacks to lock the lead.
 		#endif
@@ -266,16 +269,6 @@ namespace excep{
 // Templates
 namespace gt{
 
-
-	template<typename T>
-	T*
-	cBase_plug::exposePtr(){
-		if(mType != PLUG_TYPE_TO_ID(T))
-			PLUG_CANT_COPY_ID(mType, typeid(T));
-
-		return &dynamic_cast< tPlug<T>* >(this)->mD;
-	}
-
 	template<typename T>
 	void
 	cBase_plug::copyInto(T *container, bool silentFail) const{
@@ -287,12 +280,11 @@ namespace gt{
 		}
 
 		*container = dynamic_cast< const tPlug<T>* >(this)->mD;
-
 	}
 
-	template< template<typename> class plug, typename T>
+	template< template<typename> class PLUG, typename T>
 	cBase_plug&
-	cBase_plug::operator= (const plug<T> &pT){
+	cBase_plug::operator= (const PLUG<T> &pT){
 		if(this != &pT){
 			if(mType != pT.mType)
 				PLUG_CANT_COPY_ID(mType, pT.mType);

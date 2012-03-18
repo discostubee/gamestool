@@ -26,7 +26,7 @@ cTextFig::~cTextFig(){
 void
 cTextFig::run(cContext* pCon){
 	start(pCon);
-	DBUG_LO("text figment = " << mText.mD);
+
 	stop(pCon);
 }
 
