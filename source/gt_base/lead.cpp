@@ -4,14 +4,62 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-cUpdateLemming::cUpdateLemming(cBase_plug *callBack) : callMe(callBack)
-{}
+#ifdef GT_THREADS
+	cUpdateLemming::cUpdateLemming(cBase_plug *callBack) : callMe(callBack)
+	{}
 
-cUpdateLemming::~cUpdateLemming() {
-	#ifdef GT_THREADS
-		callMe->finishUpdate();
-	#endif
+	cUpdateLemming::~cUpdateLemming() {
+		#ifdef GT_THREADS
+			callMe->finishUpdate();
+		#endif
+	}
+#endif
+
+////////////////////////////////////////////////////////////
+cBase_plug::cBase_plug(PLUG_TYPE_ID pTI):
+	mType(pTI)
+{
 }
+
+cBase_plug::cBase_plug(const cBase_plug& pCopy):
+	mType(pCopy.mType)
+{
+}
+
+cBase_plug::~cBase_plug(){
+}
+
+void
+cBase_plug::linkLead(cLead *pLead){
+	PROFILE;
+	ASRT_NOTNULL(pLead);
+
+	itrLead = mLeadsConnected.find(pLead);
+	if(itrLead==mLeadsConnected.end()){
+		mLeadsConnected[pLead] = 1;
+	}else{
+		++itrLead->second;
+	}
+}
+
+void
+cBase_plug::unlinkLead(cLead *pLead){
+	PROFILE;
+	ASRT_NOTNULL(pLead);
+
+	itrLead = mLeadsConnected.find(pLead);
+	if(itrLead != mLeadsConnected.end()){
+		--itrLead->second;
+		if(itrLead->second == 0){
+			mLeadsConnected.erase(itrLead);
+		}
+
+	}else{
+		WARN("lead isn't connected to this plug.");
+	}
+}
+
+
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
@@ -103,21 +151,20 @@ cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 }
 
 void
-cLead::setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
+cLead::setPlug(const cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
 	PROFILE;
 
 	ASRT_NOTNULL(setMe);	ASRT_NOTNULL(aTag);
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
-	if(scrTDataItr != mTaggedData.end()){
-		#ifdef GT_THREADS
-			*scrTDataItr->second->getShadow(mConx, eSM_write) = setMe;
-		#else
-			*scrTDataItr->second = setMe;
-		#endif
-	}else if(!silentFail){
+	if(!silentFail && scrTDataItr == mTaggedData.end())
 		throw excep::notFound("plug", __FILE__, __LINE__);
-	}
+
+	#ifdef GT_THREADS
+		*scrTDataItr->second->getShadow(mConx, eSM_write) = *setMe;
+	#else
+		*scrTDataItr->second = *setMe;
+	#endif
 }
 
 void

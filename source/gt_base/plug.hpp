@@ -9,13 +9,6 @@
 #include "lead.hpp"
 #include <vector>
 
-///////////////////////////////////////////////////////////////////////////////////
-// Macros
-#ifdef GT_THREADS
-	#define PLUGUP(plug) cUpdateLemming lem__LINE__ = plug.update()
-#else
-	#define PLUGUP(plug) (void)plug
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Object types
@@ -23,39 +16,64 @@ namespace gt{
 
 	template<typename A> class tPlug;
 
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Provides serialization (as a health and neutritious breakfast 'cerial'). It is intended that only
+	//!			figments that own a plug be able to do saving and loading. Seperated out from the tPlug top class
+	//!			so that you only need to specialise this class to make a specific save/load
+	template<typename A>
+	class tPlugFlakes: public cBase_plug{
+	public:
+		tPlugFlakes(PLUG_TYPE_ID pTI) : cBase_plug(pTI) {}
+		virtual ~tPlugFlakes(){}
+
+		//!\brief Appends the buffer with binary data that should be understandable by any platform.
+		void save(cByteBuffer* pSaveHere){}
+
+		//!\brief Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
+		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){}
+	};
 
 	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Needs to be nested in plug shadows.
 	template<typename A>
 	struct tShadow{
-
 		eShadowMode mMode;
 		tPlug<A>* mData;	//!< If the shadow isn't used, this is null.
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Plug shadows is a bad name because it also handles lead connections.
+	//!\brief	The plug shadow allows you to have 1 copy of a plug per thread that connects to it (as leads can only
+	//!			be used by the context that makes them. This does not make all the functions in other plug classes
+	//!			threadsafe (although any implemented here are threadsafe), unless they are accessed via the get
+	//!			shadow function, or if update is called first.
 	//!\todo	make it smart enough to not bother with shadows unless it has more than one context connected.
 	template<typename A>
-	class tPlugShadows: public cBase_plug{
+	class tPlugShadows: public tPlugFlakes<A>{
 	public:
-
 		tPlugShadows(PLUG_TYPE_ID pTI);
 		virtual ~tPlugShadows();
 
+		virtual void linkLead(cLead* pLead);	//!<\note Threadsafe
+		virtual void unlinkLead(cLead* pLead);	//!<\note Threadsafe
+
 		#ifdef GT_THREADS
-			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor);
-			virtual cUpdateLemming update();
+			virtual cUpdateLemming update(); //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
 		#endif
 
-		void linkLead(cLead* pLead);
-		void unlinkLead(cLead* pLead);
-
-
 	protected:
-		typedef std::map<cLead*, unsigned int> dMapLeads;
+		#ifdef GT_THREADS
+			virtual A& getMD() =0;	//!< This is so the update can grab out tPlug data.
 
-		dMapLeads mLeadsConnected;		//!< Lead connections are not copied when copy plug values.
-		dMapLeads::iterator itrLead;	//!< handy.
+			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor);
+			virtual void finishUpdate();
+
+			friend class cUpdateLemming;
+		#endif
+
+	friend class cLead;
+
+	private:
+		tPlugShadows& operator=(const tPlugShadows<A> &other){ return *this; }
 
 		#ifdef GT_THREADS
 			typedef boost::lock_guard<boost::recursive_mutex> dMuLock;
@@ -65,14 +83,7 @@ namespace gt{
 
 			dVecShadow mShadows;
 			typename dVecShadow::iterator itrShadow;	//!< handy.
-
-			virtual A& getMD() =0;	//!< This is so the update can grab out tPlug data.
-
-			virtual void finishUpdate();
 		#endif
-
-	private:
-		tPlugShadows& operator=(const tPlugShadows<A> &other){ return *this; }
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -87,27 +98,10 @@ namespace gt{
 		tPlug(const cBase_plug *other);
 		virtual ~tPlug();
 
-		//!\brief
-		void save(cByteBuffer* pAddHere);
-
-		//!\brief	Allows you to pass this plug a buffer for it try and load from.
-		//!\param	pChewToy	Eats the buffer you pass it in order to load. This way, memory is conserved. It is up to the byte
-		//!						buffer to decide if it should use tricks to expend memory (by delaying the trim), rather than
-		//!						take a performance hit. Keeping in minds that saving and loading is not meant to be a fast
-		//!						process.
-		//!\param	pReloads	This needs to be renamed to something like 'party' or something, because the reload map reflects only the figments
-		//!\					that are visible to the reload process.
-		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads);
-
-		//!\brief	reset back to a default. Whatever that may be.
-		void reset();
-
 		virtual cBase_plug& operator= (const cBase_plug &pD);
-
-		virtual cBase_plug& operator= (const cBase_plug *pD);
+		virtual bool operator== (const cBase_plug &pD);
 
 		cBase_plug& operator= (const tPlug<A> &other);
-
 		cBase_plug& operator= (const A& pA);
 
 	protected:
@@ -122,12 +116,24 @@ namespace gt{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+// Functions
+namespace gt{
+	template<typename T> void plugSave(cBase_plug* pSaveMe, cByteBuffer* pSaveHere){
+
+	}
+
+	template<typename T> int plugLoad(cBase_plug* pLoadMe, dByte* pLoadFrom, dReloadMap* pLoadParty){
+		return 0;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 // Templates
 namespace gt{
 
 	//--------------------------------------
 	template<typename A>
-	tPlugShadows<A>::tPlugShadows(PLUG_TYPE_ID pTI) : cBase_plug(pTI){
+	tPlugShadows<A>::tPlugShadows(PLUG_TYPE_ID pTI) : tPlugFlakes<A>(pTI){
 	}
 
 	template<typename A>
@@ -138,7 +144,11 @@ namespace gt{
 			#endif
 			PROFILE;
 
-			for(dMapLeads::iterator itrLead = mLeadsConnected.begin(); itrLead != mLeadsConnected.end(); ++itrLead){
+			for(
+				cBase_plug::dMapLeads::iterator itrLead = cBase_plug::mLeadsConnected.begin();
+				itrLead != cBase_plug::mLeadsConnected.end();
+				++itrLead
+			){
 				try{
 					itrLead->first->unplug(this);	//- the count is irrelevant.
 				}catch(excep::base_error &e){
@@ -177,8 +187,12 @@ namespace gt{
 			PROFILE;
 			muMap.lock();	//- lemming unlocks this when it dies and call finish.
 
-			for(itrLead = mLeadsConnected.begin(); itrLead != mLeadsConnected.end(); ++itrLead)
-				itrLead->first->muLead.lock();	//- let any mutex throws go all the way and cause the program to exit.
+			for(
+				cBase_plug::itrLead = cBase_plug::mLeadsConnected.begin();
+				cBase_plug::itrLead != cBase_plug::mLeadsConnected.end();
+				++cBase_plug::itrLead
+			)
+				cBase_plug::itrLead->first->muLead.lock();	//- let any mutex throws go all the way and cause the program to exit.
 
 			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
 				if(itrShadow->mData != NULL){
@@ -200,8 +214,12 @@ namespace gt{
 				}
 			}
 
-			for(itrLead = mLeadsConnected.begin(); itrLead != mLeadsConnected.end(); ++itrLead)
-				itrLead->first->muLead.unlock();
+			for(
+				cBase_plug::itrLead = cBase_plug::mLeadsConnected.begin();
+				cBase_plug::itrLead != cBase_plug::mLeadsConnected.end();
+				++cBase_plug::itrLead
+			)
+				cBase_plug::itrLead->first->muLead.unlock();
 
 			muMap.unlock();
 		}
@@ -212,19 +230,10 @@ namespace gt{
 	tPlugShadows<A>::linkLead(cLead* pLead){
 		#ifdef GT_THREADS
 			dMuLock lock(muMap);
-		#endif
 
-		PROFILE;
-		ASRT_NOTNULL(pLead);
+			PROFILE;
+			ASRT_NOTNULL(pLead);
 
-		itrLead = mLeadsConnected.find(pLead);
-		if(itrLead==mLeadsConnected.end()){
-			mLeadsConnected[pLead] = 1;
-		}else{
-			++itrLead->second;
-		}
-
-		#ifdef GT_THREADS
 			if(mShadows.size() < pLead->mConx +1){
 				tShadow<A> stamp = { eSM_read, NULL };
 				mShadows.resize(pLead->mConx +1, stamp);
@@ -234,6 +243,8 @@ namespace gt{
 			itrShadow->mData = new tPlug<A>();
 			itrShadow->mData->mD = getMD();
 		#endif
+
+		cBase_plug::linkLead(pLead);
 	}
 
 	template<typename A>
@@ -243,19 +254,7 @@ namespace gt{
 			dMuLock lock(muMap);
 		#endif
 
-		PROFILE;
-		ASRT_NOTNULL(pLead);
-
-		itrLead = mLeadsConnected.find(pLead);
-		if(itrLead != mLeadsConnected.end()){
-			--itrLead->second;
-			if(itrLead->second == 0){
-				mLeadsConnected.erase(itrLead);
-			}
-
-		}else{
-			WARN("lead isn't connected to this plug.");
-		}
+		cBase_plug::unlinkLead(pLead);
 	}
 
 
@@ -294,8 +293,9 @@ namespace gt{
 		ASRT_NOTNULL(pD);
 		ASRT_NOTSELF(pD);
 
-		if( tPlugShadows<A>::mType == pD->mType ){	// we can just cast
-			mD = dynamic_cast< tPlug<A>* >( const_cast<cBase_plug*>(pD) )->mD;
+		if( tPlugShadows<A>::mType == pD->mType ){
+			mD = reinterpret_cast< const tPlug<A>* >(pD)->mD;
+
 		}else{ // we need to see if there is an acceptable converter.
 			//!!! can do this with a map of maps (2D map). Map this thing's template version of the copy check to the targets. Then at the right location, check if there is a templated copy function.
 			//!!! for now we just fail.
@@ -313,14 +313,6 @@ namespace gt{
 
 	template<typename A>
 	cBase_plug&
-	tPlug<A>::operator= (const cBase_plug* pD){
-		//NOTSELF(pD);	// Performed in generic copy.
-		genericCopy(pD);
-		return *this;
-	}
-
-	template<typename A>
-	cBase_plug&
 	tPlug<A>::operator= (const tPlug<A> &other){
 		if(this != &other){
 			mD = other.mD;
@@ -329,31 +321,20 @@ namespace gt{
 	}
 
 	template<typename A>
+	bool
+	tPlug<A>::operator== (const cBase_plug &pD){
+		if(pD.mType != cBase_plug::mType)
+			return false;
+
+		return false;
+	}
+
+	template<typename A>
 	cBase_plug&
 	tPlug<A>::operator= (const A& pA){
 		mD = pA;
 		return *this;
 	}
-
-	template<typename A>
-	void
-	tPlug<A>::save(cByteBuffer* pAddHere){
-		pAddHere->add(&mD);
-	}
-
-	template<typename A>
-	void
-	tPlug<A>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
-		DUMB_REF_ARG(aReloads);
-
-		pChewToy->fill(&mD);
-		pChewToy->trimHead(sizeof(mD));
-	}
-
-	template<typename A>
-	void
-	tPlug<A>::reset(){}
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

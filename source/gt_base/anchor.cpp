@@ -245,14 +245,16 @@ cSaveTester::patGetData(ptrLead aLead){
 }
 
 cByteBuffer buff;
-const dTextChar *testStr = "proper job";
+const dNatChar *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
 	tOutline<cSaveTester>::draft();
 	tOutline<cAnchor>::draft();
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
-	tPlug<ptrFig> tester(ptrFig(new cSaveTester(testStr)));
+	tPlug<ptrFig> tester(
+		ptrFig(new cSaveTester( NCStrToText(testStr).data() ))
+	);
 	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
 
 	add->addPlug(&tester, cAnchor::xPT_root);

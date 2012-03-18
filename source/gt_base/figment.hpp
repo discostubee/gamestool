@@ -134,6 +134,7 @@ namespace gt{
 	};
 }
 
+/*
 ///////////////////////////////////////////////////////////////////////////////////
 // template specializations
 namespace gt{
@@ -234,5 +235,6 @@ namespace gt{
 	};
 
 }
+*/
 
 #endif
