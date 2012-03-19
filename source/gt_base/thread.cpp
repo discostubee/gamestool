@@ -140,7 +140,8 @@ namespace gt{
 		tPlug<int> hits;
 
 		void patWrite(ptrLead aLead){
-			chatter.mD.append( *aLead->getPlug(xPT_word)->exposePtr<std::string>() );
+			tPlug<std::string> tmp = aLead->getPlug(xPT_word);
+			chatter.mD.append( tmp.mD );
 			chatter.mD.append( "." );
 			++hits.mD;
 			#ifndef GT_SPEEDTEST
@@ -260,20 +261,20 @@ namespace gt{
 			}
 
 			{
+				tPlug<dPlaStr> chatter;
 				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter, fakeContext.getSig());
 				share.mD->jack(getChatter, &fakeContext);
-				const char* ptrChatter = getChatter->getPlug(cShareTarget::xPT_chatter)->exposePtr<std::string>()->c_str();
-				DBUG_LO("chatter='" << ptrChatter << "'");
+				chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
+				DBUG_LO("chatter='" << chatter.mD << "'");
 
 				//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
-				std::stringstream ss(ptrChatter);
+				std::stringstream ss(chatter.mD);
 				std::string token;
 				while( getline(ss, token, '.') ){
 					if(token.compare(AChatter.mD) != 0 && token.compare(BChatter.mD) != 0){
 						GTUT_ASRT(false, "found a corrupt token " << token);
 					}
 				}
-
 			}
 
 		}

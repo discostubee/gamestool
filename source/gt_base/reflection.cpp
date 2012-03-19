@@ -121,7 +121,8 @@ void cAlucard::patSetTarget(ptrLead aLead){
 void cAlucard::patAddPlug(ptrLead aLead){
 	PROFILE;
 
-	cPlugTag::dUID tagID = *aLead->getPlug(xPT_tag)->exposePtr<cPlugTag::dUID>();
+	cPlugTag::dUID tagID;
+	aLead->getPlug(xPT_tag)->copyInto(&tagID);
 	cPlugTag const *tag = gWorld.get()->getPlugTag(tagID);
 	mActualPlugs.push_back( sActualPlug(
 		aLead->getPlug(xPT_plug), tag
@@ -133,9 +134,13 @@ void cAlucard::patAddPlug(ptrLead aLead){
 void cAlucard::patAddConxPlug(ptrLead aLead){
 	PROFILE;
 
-	cPlugTag::dUID tagID = *aLead->getPlug(xPT_tag)->exposePtr<cPlugTag::dUID>();
+	cPlugTag::dUID tagID;
+	dNameHash fig;
+
+	aLead->getPlug(xPT_tag)->copyInto(&tagID);
+	aLead->getPlug(xPT_contextFig)->copyInto(&fig);
 	cPlugTag const *tag = gWorld.get()->getPlugTag(tagID);
-	dNameHash fig = *aLead->getPlug(xPT_contextFig)->exposePtr<dNameHash>();
+
 	mContextPlugs.push_back( sContextPlug(fig, tag) );
 
 	mNewPlugsToFind.push_back( mNewPlugsToFind.back() );
@@ -215,7 +220,7 @@ GTUT_START(test_reflection, houndGets){
 	fakeConx.runJackJobs();
 
 	hound->jack(getFromHound, &fakeConx);
-	GTUT_ASRT( *getFromHound->getPlug(cPlugHound::xPT_plug)->exposePtr<int>() == 42, "Didn't get the right number back from the test figment.");
+	//GTUT_ASRT( *getFromHound->getPlug(cPlugHound::xPT_plug)->exposePtr<int>() == 42, "Didn't get the right number back from the test figment.");
 
 }GTUT_END;
 

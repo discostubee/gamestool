@@ -19,8 +19,10 @@
 #include "plug.hpp"
 #include "figment.hpp"
 
-using namespace gt;
 
+
+////////////////////////////////////////////////////////////
+using namespace gt;
 
 cReload::cReload(){
 }
@@ -32,22 +34,6 @@ cReload::cReload(ptrFig pFig, const dByte* copyMe, size_t buffSize): fig(pFig){
 
 cReload::~cReload(){
 }
-
-////////////////////////////////////////////////////////////
-cBase_plug::cBase_plug(PLUG_TYPE_ID pTI):
-	mType(pTI)
-{
-}
-
-cBase_plug::cBase_plug(const cBase_plug& pCopy):
-	mType(pCopy.mType)
-{
-}
-
-cBase_plug::~cBase_plug(){
-}
-
-
 
 ////////////////////////////////////////////////////////////
 // Tests
