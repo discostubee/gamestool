@@ -532,13 +532,18 @@ public:
 	virtual void save(cByteBuffer* pAddHere) {}
 	virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL) {}
 	virtual void getLinks(std::list<ptrFig>* pOutLinks) {}
+	virtual dMigrationPattern getLoadPattern() { return dMigrationPattern(); }
+	virtual dNumVer getVersion() const { return 0; }
 
+	virtual ~testDraftParent(){}
+
+protected:
 	void patA(ptrLead aLead){
-
 	}
 };
 
 const cPlugTag*	testDraftParent::xPT_A = tOutline<testDraftParent>::makePlugTag("A");
+
 const cCommand::dUID testDraftParent::xCommandA = tOutline<testDraftParent>::makeCommand(
 	"command A", &testDraftParent::patA, testDraftParent::xPT_A,
 	NULL
@@ -552,17 +557,27 @@ public:
 
 	virtual dNameHash hash() const { return getHash<testDraftChild>(); };
 
+	virtual dNumVer getVersion() const { return 0; }
+
 	static dNameHash extends(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getExtension() const { return extends(); }
+
+	virtual ~testDraftChild(){}
 };
 
 class testDraftReplace: public testDraftParent, private tOutline<testDraftReplace>{
 public:
 	static const dNatChar* identify(){ return "test draft replace"; }
 	virtual const dNatChar* name() const { return identify(); };
+
 	virtual dNameHash hash() const { return getHash<testDraftReplace>(); };
+
+	virtual dNumVer getVersion() const { return 0; }
+
 	static dNameHash replaces(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getReplacement() const { return replaces(); };
+
+	virtual ~testDraftReplace(){}
 };
 
 GTUT_START(test_figInterface, getSmart){

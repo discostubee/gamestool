@@ -38,6 +38,12 @@ using namespace std;
 typedef unsigned int	dNameHash;
 typedef unsigned int	dMillisec;
 
+#if CHAR_BIT == 8
+	typedef char			dByte;		//!< This is the gametool's most basic byte type. It is always 8 bits.
+#else
+	#error "the byte buffer is not 8 bits, and I'm too lazy to write something for your environment to enforce 8 bit buffers."
+#endif
+
 //------------------------------------------------------------------------------------------
 // !\note	Code taken from http://cboard.cprogramming.com/tech-board/114650-string-hashing-algorithm.html
 template<typename T> dNameHash makeHash(T const * pString){

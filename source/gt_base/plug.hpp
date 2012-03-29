@@ -7,6 +7,7 @@
 #define PLUG_HPP
 
 #include "lead.hpp"
+#include "binPacker.hpp"
 #include <vector>
 
 
@@ -17,20 +18,17 @@ namespace gt{
 	template<typename A> class tPlug;
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Provides serialization (as a health and neutritious breakfast 'cerial'). It is intended that only
-	//!			figments that own a plug be able to do saving and loading. Seperated out from the tPlug top class
-	//!			so that you only need to specialise this class to make a specific save/load
+	//!\brief	Provides serialization (as a healthy breakfast).
 	template<typename A>
 	class tPlugFlakes: public cBase_plug{
 	public:
 		tPlugFlakes(PLUG_TYPE_ID pTI) : cBase_plug(pTI) {}
 		virtual ~tPlugFlakes(){}
 
-		//!\brief Appends the buffer with binary data that should be understandable by any platform.
-		void save(cByteBuffer* pSaveHere){}
+		virtual void save(cByteBuffer* pSaveHere){}
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){}
 
-		//!\brief Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
-		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){}
+		virtual A& getMD() =0;
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -60,9 +58,14 @@ namespace gt{
 			virtual cUpdateLemming update(); //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
 		#endif
 
+		virtual	cBase_plug& operator= (const cBase_plug &pD);
+		virtual bool operator== (const cBase_plug &pD);
+
+		virtual A& getMD() =0;
+
 	protected:
+
 		#ifdef GT_THREADS
-			virtual A& getMD() =0;	//!< This is so the update can grab out tPlug data.
 
 			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor);
 			virtual void finishUpdate();
@@ -77,7 +80,7 @@ namespace gt{
 
 		#ifdef GT_THREADS
 			typedef boost::lock_guard<boost::recursive_mutex> dMuLock;
-			typedef std::vector<tShadow<A> > dVecShadow;
+			typedef std::vector< tShadow<A> > dVecShadow;
 
 			boost::recursive_mutex muMap;
 
@@ -104,11 +107,7 @@ namespace gt{
 		cBase_plug& operator= (const tPlug<A> &other);
 		cBase_plug& operator= (const A& pA);
 
-	protected:
-
-		#ifdef GT_THREADS
-			virtual A& getMD() { return mD; }
-		#endif
+		virtual A& getMD();
 
 	private:
 		void genericCopy(const cBase_plug* pD);
@@ -187,7 +186,7 @@ namespace gt{
 			PROFILE;
 			muMap.lock();	//- lemming unlocks this when it dies and call finish.
 
-			for(
+			for(	//- Name is qualified but itrLead is in cBase_plug
 				tPlugFlakes<A>::itrLead = tPlugFlakes<A>::mLeadsConnected.begin();
 				tPlugFlakes<A>::itrLead != tPlugFlakes<A>::mLeadsConnected.end();
 				++tPlugFlakes<A>::itrLead
@@ -255,6 +254,20 @@ namespace gt{
 		#endif
 
 		cBase_plug::unlinkLead(pLead);
+	}
+
+	template<typename A>
+	cBase_plug&
+	tPlugShadows<A>::operator= (const cBase_plug &pD){
+		//todo
+		return *this;
+	}
+
+	template<typename A>
+	bool
+	tPlugShadows<A>::operator== (const cBase_plug &pD){
+		//todo
+		return false;
 	}
 
 
@@ -334,6 +347,12 @@ namespace gt{
 	tPlug<A>::operator= (const A& pA){
 		mD = pA;
 		return *this;
+	}
+
+	template<typename A>
+	A&
+	tPlug<A>::getMD(){
+		return mD;
 	}
 }
 

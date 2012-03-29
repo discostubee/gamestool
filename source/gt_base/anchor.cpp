@@ -45,7 +45,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 	std::list<ptrFig>*	prev = new std::list<ptrFig>();
 	std::set<iFigment*> figs;
 
-	size_t				chunkSize = 0;
+	size_t					chunkSize = 0;
 	dNameHash			chunkHash = 0;
 	tPlug<size_t>		currentSpot;
 	dFigSaveSig			chunkSig = 0;
@@ -93,21 +93,23 @@ cAnchor::save(cByteBuffer* pAddHere){
 			//- Get additional save data.
 			try{
 				 (*i)->save(&chunkSave);
-			}catch(excep::dontUseThis){
+
+				chunkSize = sizeof(dNameHash) + sizeof(dFigSaveSig) + chunkSave.size(); // We are counting the hash as part of the chunk size as a kind of check against corruption.
+
+				DBUG_LO("	saving a " << (*i)->name());
+
+				chunkSig = reinterpret_cast<dFigSaveSig>(*i);
+
+				//- Add it to the buffer. The process below must happen in exactly the same way when loading.
+				pAddHere->add( &chunkSize );
+				pAddHere->add( &chunkHash );
+				pAddHere->add( &chunkSig );			//- use the pointer as a way to identify all the different figments in the tree.
+				if(chunkSave.size() > 0)
+					pAddHere->add(chunkSave);
+
+			}catch(excep::base_error &e){
+				WARN(e);
 			}
-
-			chunkSize = sizeof(dNameHash) + sizeof(dFigSaveSig) + chunkSave.size(); // We are counting the hash as part of the chunk size as a kind of check against corruption.
-
-			DBUG_LO("	saving a " << (*i)->name());
-
-			chunkSig = reinterpret_cast<dFigSaveSig>(*i);
-
-			//- Add it to the buffer. The process below must happen in exactly the same way when loading.
-			pAddHere->add( &chunkSize );
-			pAddHere->add( &chunkHash );
-			pAddHere->add( &chunkSig );			//- use the pointer as a way to identify all the different figments in the tree.
-			if(chunkSave.size() > 0)
-				pAddHere->add(chunkSave);
 		}
 
 	}catch(...){
@@ -171,7 +173,11 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 		//- Now re-load all the figs we've made. It's done on a separate loop to the on above so that figment references can be re-created.
 		for(dReloadMap::iterator itr = reloads.begin(); itr != reloads.end(); ++itr){
 			DBUG_LO("		loading " << itr->second->fig->name());
-			itr->second->fig->loadEat( &itr->second->data, &reloads );
+			try{
+				itr->second->fig->loadEat( &itr->second->data, &reloads );
+			}catch(excep::base_error &e){
+				WARN(e);
+			}
 		}
 
 		mRoot.mD = reloads[rootSig]->fig;

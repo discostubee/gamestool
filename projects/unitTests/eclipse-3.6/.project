@@ -112,6 +112,16 @@
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/anchor.hpp</locationURI>
 		</link>
 		<link>
+			<name>gt_base/binPacker.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/binPacker.cpp</locationURI>
+		</link>
+		<link>
+			<name>gt_base/binPacker.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/binPacker.hpp</locationURI>
+		</link>
+		<link>
 			<name>gt_base/blueprint.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/source/gt_base/blueprint.cpp</locationURI>

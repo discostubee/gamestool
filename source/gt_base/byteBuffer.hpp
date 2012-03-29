@@ -22,18 +22,9 @@
 #ifndef BYTEBUFFER_HPP
 #define BYTEBUFFER_HPP
 
-#include "utils.hpp"
+#include "binPacker.hpp"
 #include "exceptions.hpp"
 #include <stdlib.h>	//for memory ops.
-
-/*
-#if CHAR_BIT == 8
-	typedef char			dByte;		//!< This is the gametool's most basic byte type. It is always 8 bits.
-#else
-	#error the byte buffer is not 8 bits, and I'm too lazy to write something for your environment to enforce 8 bit buffers.
-#endif
-*/
-typedef char dByte;
 
 #ifdef DEBUG
 	#include <string.h> // c style string tools.
@@ -43,7 +34,8 @@ typedef char dByte;
 #endif
 
 
-//!\brief	8Bit buffer used for consistency across platforms and not for performance.
+//!\brief	8Bit buffer used for consistency across platforms and not for performance. If you give it memory location to a type, it will store
+//!			it as a cross platform binary stream possibly not exactly the same as the memory you passed it.
 //!\note	The gamestool byte buffer is always 8bits even if it is not effective for the system to process 8 bit buffers. This ensures that data files
 //!			are compatible across the different gamestool virtual machines.
 //!\note	The gamestool should pretty much only use byte buffers for saving and loading data, because the guarantee of 8bit buffers is more important
@@ -68,27 +60,22 @@ public:
 
 	const dByte* get(const size_t pStart=0) const;
 	
-	template<typename TYPE> void fill(TYPE* pCup, size_t pStart=0) const{
-		if( pStart + sizeof(TYPE) > mBuffSize )
-			throw excep::base_error("", __FILE__, __LINE__);
-	
-		::memcpy( static_cast<void*>(pCup), static_cast<void*>(&mBuff[pStart]), sizeof(TYPE) );
-	}	//!< Fill the target type with what's in the buffer (if there is enough to room in the buffer to fill the target). Can begin at an offset into the buffer.
+	template<typename TYPE> void fill(TYPE *pCup, size_t pStart=0) const;	//!< Fill the target type based upon the memory found at the start location. It unpacks the binary data it has into the type requested.
 
 	void copy(const dByte* pBuffIn, size_t pInSize);	//!< This buffer will free its current contents (if the size is different), and copy what's being pointed too.
-	template<typename TYPE> void copy(TYPE* pBuffIn){ copy( (dByte*)(pBuffIn), sizeof(TYPE) ); }
+	template<typename TYPE> void copy(const TYPE *pBuffIn);
 
 	void copyBuff(const cByteBuffer &pBuff);
 	void copyBuff(const cByteBuffer *pBuff);
 
 	void take(dByte* pBuffIn, size_t pInSize);	//!< Buffer takes a memory location, which makes it responsible for cleaning it up later.
-	template<typename TYPE> void take(TYPE* pBuffIn){ take( (dByte*)(pBuffIn), sizeof(TYPE) ); }	//!< Slack way of using take.
+	template<typename TYPE> void take(TYPE *pBuffIn);	//!< Slack way of using take.
 	
 	void trimHead(size_t pSize, size_t pStart=0);	//!< Deletes a section, or just from the start, of the buffer and recombines it if there are 2 halves remaining.
 
 	void add( const dByte* pBuffIn, size_t pInSize);
 	void add( const cByteBuffer &pBuff ); //!< Copies itself and the content being pointed to into a new buffer that combines the two.
-	template<typename TYPE> void add(TYPE* pBuffIn){ add( (dByte*)(pBuffIn), sizeof(TYPE) ); }
+	template<typename TYPE> void add(const TYPE *pBuffIn);
 
 	cByteBuffer & operator= (const cByteBuffer &pCopyMe);	//!< Alias for copy.
 	cByteBuffer & operator+= (const cByteBuffer &pCopyMe);	//!< Alias for add.
@@ -112,5 +99,52 @@ protected:
 	dByte*	mBuff;
 	size_t	mBuffSize;
 };
+
+
+template<typename TYPE>
+void
+cByteBuffer::fill(TYPE *pCup, size_t pStart) const{
+	ASRT_NOTNULL(pCup);
+
+	int sizeUnpacked=0;
+	bpk::unpack<TYPE>(&mBuff[pStart], pCup, &sizeUnpacked, mBuffSize-pStart);
+	if(sizeUnpacked != sizeof(TYPE) || pCup == NULL)
+		throw excepUnderFlow(__FILE__, __LINE__);
+}
+
+template<typename TYPE>
+void
+cByteBuffer::copy(const TYPE *pBuffIn){
+	ASRT_NOTNULL(pBuffIn);
+
+	delete mBuff;
+	mBuff = NULL;
+	mBuffSize = 0;
+	bpk::pack<TYPE>(pBuffIn, &mBuff, &mBuffSize, sizeof(TYPE));
+}
+
+template<typename TYPE>
+void
+cByteBuffer::take(TYPE *pBuffIn){
+	ASRT_NOTNULL(pBuffIn);
+
+	delete mBuff;
+	mBuff=NULL;
+	mBuffSize=0;
+	bpk::pack<TYPE>(pBuffIn, &mBuff, &mBuffSize, sizeof(TYPE));
+	delete pBuffIn;
+}
+
+template<typename TYPE>
+void
+cByteBuffer::add(const TYPE *pBuffIn){
+	ASRT_NOTNULL(pBuffIn);
+
+	dByte *packed=NULL;
+	int sizePacked=0;
+	bpk::pack<TYPE>(pBuffIn, &packed, &sizePacked, mBuffSize);
+	add( packed, sizePacked );
+	delete packed;
+}
 
 #endif
