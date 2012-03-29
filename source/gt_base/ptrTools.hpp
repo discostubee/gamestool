@@ -46,7 +46,7 @@ namespace gt{
 	};
 
 	//-------------------------------------------------------------------------------------
-	//!\brief
+	//!\brief	Used as a non-smart pointer wrapper
 	template <typename T>
 	class tPtrRef{
 	public:
@@ -119,43 +119,90 @@ namespace gt{
 	};
 
 	//------------------------------------------------------------------------------------------
-	//!\brief	Has sole ownership of a pointer which it cleans up and allows child classes
-	//!			to work with.
+	//!\brief	Polymorph jar. Used so that you can exploit polymorphism by holding a pointer
+	//!			that the jar can either manage, or dangerously, let you manage.
 	template<typename T>
 	class tPMorphJar{
 	private:
 		T *data;
+		bool castodian;
 
 	public:
-		explicit tPMorphJar() : data(NULL){}
+		explicit tPMorphJar() :
+			data(NULL), castodian(false)
+		{}
 
-		template<typename COPY> tPMorphJar(const COPY &copyMe){
+		template<typename COPY> tPMorphJar(const COPY &copyMe) :
+			castodian(true)
+		{
 			data = new COPY();
 			*data = copyMe;
 		}
 
 		template<typename COPY> tPMorphJar(const tPMorphJar<COPY> &copyMe){
-			data = new COPY();
-			*data = *copyMe.data;
+			if(copyMe.castodian){
+				data = new COPY();
+				*data = *copyMe.data;
+			}else{
+				data = copyMe.data;
+			}
 		}
 
-		~tPMorphJar(){ delete data; }
+		~tPMorphJar(){
+			if(castodian)
+				delete data;
+		}
 
 		tPMorphJar<T> & operator = (const tPMorphJar<T> &otherJar){
 			if(&otherJar != this){
-				*data = *otherJar.data;
+				if(data==NULL)
+					return *this;
+
+				if(otherJar.castodian){
+					*data = *otherJar.data;
+
+				}else{
+					if(castodian)
+						delete data;
+
+					data = otherJar.data;
+					castodian = false;
+				}
 			}
 			return *this;
 		}
 
-		template<typename COPY> tPMorphJar<T> & operator = (const COPY &copyMe){
-			delete data;
-			data = new COPY();
-			*data = copyMe;
+		template<typename REF> tPMorphJar<T> & operator = (REF *refMe){
+			if(castodian)
+				delete data;
+
+			data = refMe;
+			castodian = false;
 			return *this;
 		}
 
-		T& get(){ return *data; }
+		template<typename COPY> tPMorphJar<T> & operator = (const COPY &copyMe){
+			if(castodian)
+				delete data;
+
+			data = new COPY();
+			*data = copyMe;
+			castodian = true;
+			return *this;
+		}
+
+		//!\brief	Pray to Tron that refMe doesn't go invalid.
+		tPMorphJar<T>& operator = (T *refMe){
+			if(castodian)
+				delete data;
+
+			data = refMe;
+			castodian = false;
+		}
+
+		T& get(){
+			return *data;
+		}
 	};
 }
 

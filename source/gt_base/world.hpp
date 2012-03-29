@@ -22,7 +22,8 @@
  *
  *
  *!\note	A little bit about the short hand being used in this project.
- *! oSomething		An object name, either a class or struct.
+ *! cSomething		An complex object name, either a class or struct which has methods.
+ *! sSomething		A simple object or data container. In other words, a struct with no defined methods.
  *! eSomething		an enum, for both the scope and the values.
  *! mSomething		Variable data stored in a class or structure, otherwise known as a member variable.
  *! aSomething		An argument passed into a function call.
@@ -38,15 +39,16 @@
  *
  *!\note		A little bit about some of the terms used around the place. This isn't shorthand exactly, so it get's it's own note coz it's special.
  *! set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.
- *! copy	Copy a stream/buffer
+ *! copy		Copy a stream/buffer
  *! get		Return a primitive by copy, return a stream/buffer copy, return a reference to an object
- *! pass	Passes back something as a reference.
- *! link	Set a smart pointer to different, already existing, reference.
+ *! pass		Passes back something as a reference.
+ *! link		Set a smart pointer to different, already existing, reference.
  *! make	Return a fresh new instance of an object from a factory.
  *! clone	Make a duplicate of an object instance and return a smart pointer to the new clone.
- *! clear	Empty something so that it doesn't contain any data.
+ *! clear		Empty something so that it doesn't contain any data.
  *! blank	Change a link to being a blank or dead end (terminator) object.
- *! take	The function will clean up the memory it is being passed. The object becomes the custodian of this memory.
+ *! take		The function will clean up the memory it is being passed. In other word the object or function becomes the custodian of this memory.
+ *! eat		A function that consumes a buffer parameter.
  *
  *!\note	Some notes about the terminology for the jack interface
  *!	When manipulating a figment, we use the jack function, which reads a command, which contains plugs, which are wrappers to data. In a sense
@@ -149,23 +151,32 @@ namespace gt{
 	//!			class to get the low down on what all these methods mean (cFigContext, cFigment).
 	class iFigment{
 	public:
+		typedef tPMorphJar<cBase_plug> dPlugHolder;
+		typedef boost::shared_ptr<cByteBuffer> ptrBuff;
+		typedef unsigned short dNumVer;	//!< Version number.
+		typedef std::vector< std::vector<dPlugHolder> > dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data.
+
 		virtual ~iFigment() {}
 		virtual const dNatChar* name() const =0;
 		virtual dNameHash hash() const =0;
 
 		virtual void jack(ptrLead pLead, cContext* pCon)=0;
 		virtual void run(cContext* pCon)=0;
-		virtual void save(cByteBuffer* pAddHere)=0;
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL)=0;
 		virtual void getLinks(std::list<ptrFig>* pOutLinks)=0;
 		virtual void start(cContext *con)=0;
 		virtual void stop(cContext *con)=0;
+		virtual void save(cByteBuffer* pSaveHere) =0;		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
+		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL) =0;			//!< Called load-eat because the head of the buffer is consume by the load function.
+		virtual dMigrationPattern getLoadPattern() =0;
 
-		//static dNameHash replaces(){ return uDoesntReplace; }	// You will need these static class in your figment if you replace.
+		//static dNameHash replaces()	// You will need these static class in your figment if you replace.
 		virtual dNameHash getReplacement() const =0;
 
-		//static dNameHash extends(){ return uDoesntExtend; }	// You will need this static class in your figment if you extend.
+		//static dNameHash extends()	// You will need this static class in your figment if you extend.
 		virtual dNameHash getExtension() const =0;
+
+		//static dNumVer version()	// same as extends and replaces.
+		virtual dNumVer getVersion() const =0;
 
 		virtual ptrFig getSmart();		//!< Figments are cleaned up using smart pointers, so the only way to hand out references to yourself is to use this function.
 
@@ -343,7 +354,7 @@ namespace gt{
 ///////////////////////////////////////////////////////////////////////////////////
 // Typedefs
 namespace gt{
-	typedef tPtrRef<iFigment> refFig;	//!< Used when you want access to a figment
+	//typedef tPtrRef<iFigment> refFig;	//!< Used when you want access to a figment
 }
 
 ////////////////////////////////////////////////////////////////////

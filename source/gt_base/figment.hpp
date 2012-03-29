@@ -28,6 +28,23 @@
 #include "plug.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////
+// exceptions
+namespace excep{
+
+	//!\brief	Thrown when data is detected thats from a version that is greater than what this version can handle.
+	class fromTheFuture: public base_error{
+	public:
+		fromTheFuture(const char* pFunc, const unsigned int pLine) throw():
+            base_error(pFunc, pLine)
+        {
+		    addInfo("I am from the future, and unable to load.");
+		}
+		virtual ~fromTheFuture() throw(){}
+
+	};
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 // classes
 namespace gt{
 
@@ -36,9 +53,11 @@ namespace gt{
 	//!			for all the funky new stuff you'll make.
 	class cFigment: public cFigContext, private tOutline<cFigment>{
 	public:
+
 		//-----------------------------
 		// Commands and plug tags
-		static const cPlugTag*	xPT_saveData;	//!<
+		static const cPlugTag*	xPT_serialBuff;	//!< A smart pointer to the buffer where we load from, and save to.
+		static const cPlugTag* xPT_loadingParty;	//!< This is a special group of figments relevant to loading.
 
 		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability.
 		static const cCommand::dUID	xLoad;	//!< Ditto above.
@@ -84,18 +103,27 @@ namespace gt{
 		static dNameHash extends(){ return uDoesntExtend; }
 		virtual dNameHash getExtension() const { return extends(); }	//!\<	You'll need to override this if you are replacing stuff.
 
+		//!\brief	Version number used when loading. 0 Means that this version has no member plugs to load.
+		//!\note	Migration is done in a manual fashion as demoed in the testMigration class.
+		static dNumVer version(){ return 0; }
+		virtual dNumVer getVersion() const { return version(); }
+
 		//- These are currently not threadsafe.
-		virtual void save(cByteBuffer* pAddHere);		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL);			//!< Called load-eat because the head of the buffer is consume by the load function.
+		virtual dMigrationPattern getLoadPattern();
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program.
+
+		virtual void save(cByteBuffer* pSaveHere);
+		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL);
 
 	protected:
 
 		//-----------------------------
 		// Patch through functions for use with command.
 		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
-		void patLoad(ptrLead aLead);	//!< Same asa the patSave function above.
+		void patLoad(ptrLead aLead);	//!< Same as the patSave function above.
 
+		//-----------------------------
+		// testing
 		#if defined(DEBUG) && defined(GT_SPEED)
 			void patTestJack(ptrLead aLead);
 		#endif

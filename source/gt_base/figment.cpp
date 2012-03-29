@@ -4,15 +4,16 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag* cFigment::xPT_saveData = tOutline<cFigment>::makePlugTag("save data");
+const cPlugTag* cFigment::xPT_serialBuff = tOutline<cFigment>::makePlugTag("serial buffer");
+const cPlugTag* cFigment::xPT_loadingParty = tOutline<cFigment>::makePlugTag("loading party");
 
 const cCommand::dUID cFigment::xSave = tOutline<cFigment>::makeCommand(
-	"save", &cFigment::patSave, cFigment::xPT_saveData,
+	"save", &cFigment::patSave, cFigment::xPT_serialBuff,
 	NULL
 );
 
 const cCommand::dUID cFigment::xLoad = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patLoad, cFigment::xPT_saveData,
+	"load", &cFigment::patLoad, cFigment::xPT_serialBuff,
 	NULL
 );
 
@@ -34,24 +35,70 @@ cFigment::~cFigment(){
 }
 
 void
+cFigment::save(cByteBuffer* pSaveHere){
+	dMigrationPattern loadPattern = getLoadPattern();
+
+	if(loadPattern.empty())
+		return;
+}
+
+void
+cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
+	dMigrationPattern loadPattern = getLoadPattern();
+
+	if(loadPattern.empty())
+		return;
+
+	tPlug<dNumVer> numVer;
+
+	numVer.loadEat(pLoadFrom);
+
+	if(numVer.mD > loadPattern.size())
+		throw excep::fromTheFuture(__FILE__, __LINE__);
+
+	std::vector<dPlugHolder>::iterator itrPrev, itrPrevEnd, itrCur;
+
+	for(size_t idxVer = numVer.mD; idxVer < loadPattern.size(); ++idxVer){
+		itrCur = loadPattern[idxVer].begin();
+		if(idxVer==0){
+			while(itrCur != loadPattern[0].end()){
+				itrPrev->get().loadEat( pLoadFrom, aReloads );
+				++itrCur;
+			}
+
+		}else{
+			itrPrev = loadPattern[idxVer-1].begin();
+			itrPrevEnd = loadPattern[idxVer-1].end();
+			for(itrCur=loadPattern[idxVer].begin(); itrCur!=loadPattern[idxVer].end(); ++itrCur){
+				if(itrPrev != itrPrevEnd){
+					itrCur->get() = itrPrev->get();
+					++itrPrev;
+
+				}else{
+					break;
+				}
+			}
+		}
+	}
+}
+
+void
 cFigment::patSave(ptrLead aLead){
-	cByteBuffer buff;
-	save( &buff );
+	tPlug<ptrBuff> buffer = aLead->getPlug(xPT_serialBuff);
+
+	save(buffer.mD.get());
 }
 
 void
 cFigment::patLoad(ptrLead aLead){
-	cByteBuffer buff;
-	loadEat( &buff );
+	tPlug<ptrBuff> buffer = aLead->getPlug(xPT_serialBuff);
+
+	loadEat(buffer.mD.get());
 }
 
 void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
-
-	//- May not need this anymore.
-	//if(pLead->mConx != pCon->mSig)
-	//	throw excep::badContext(__FILE__, __LINE__);
 
 	start(pCon);
 	try{
@@ -60,10 +107,12 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 		#endif
 		ASRT_NOTNULL(mBlueprint);
 		mBlueprint->getCom(pLead->mCom)->use(this, pLead);
+
 	}catch(excep::base_error &e){
 		std::stringstream ss;
 		ss << name() << e.what();
 		WARN(ss.str().c_str());
+
 	}catch(...){
 		UNKNOWN_ERROR;
 	}
@@ -78,16 +127,9 @@ cFigment::run(cContext* pCon){
 	//stop(pCon);
 }
 
-void
-cFigment::save(cByteBuffer* pAddHere){
-	DUMB_REF_ARG(pAddHere);
-	//start(pCon);
-	//stop(pCon);
-}
-
-void 
-cFigment::loadEat(cByteBuffer* pBuff, dReloadMap *aReloads){
-	DUMB_REF_ARG(pBuff); DUMB_REF_ARG(aReloads);
+cFigment::dMigrationPattern
+cFigment::getLoadPattern(){
+	return dMigrationPattern();
 }
 
 void 
@@ -138,6 +180,10 @@ cWorldShutoff::run(cContext* pCon){
 
 #ifdef GTUT
 
+GTUT_START(test_bufferPlug, allGood){
+
+}GTUT_END;
+
 GTUT_START(test_figment, polymorphNames){
 	tOutline<cFigment>::draft();
 	tOutline<cEmptyFig>::draft();
@@ -171,7 +217,43 @@ GTUT_START(test_figment, hashes){
 	GTUT_ASRT(getHash<cFigment>()==test.hash(), "hashes don't match");
 }GTUT_END;
 
+class testMigration_v1: public cFigment{
+private:
+public:
+	tPlug<int> mCat;
 
+	testMigration_v1(){}
+	virtual ~testMigration_v1(){}
+
+	static const dNatChar* identify(){ return "test migration figment"; }
+	virtual const dNatChar* name() const { return identify(); }
+	virtual dNameHash hash() const { return getHash<testMigration_v1>(); }
+	static dNumVer version(){ return 1; }
+	virtual dNumVer getVersion() const { return version(); }
+
+};
+
+class testMigration_v2: public cFigment{
+private:
+public:
+	tPlug<int> mCat, mMoo;
+
+	testMigration_v2(){}
+	virtual ~testMigration_v2(){}
+
+	static const dNatChar* identify(){ return "test migration figment"; }
+	virtual const dNatChar* name() const { return identify(); }
+	virtual dNameHash hash() const { return getHash<testMigration_v1>(); }
+	static dNumVer version(){ return 2; }
+	virtual dNumVer getVersion() const { return version(); }
+
+protected:
+
+};
+
+GTUT_START(test_figment, migration){
+
+}GTUT_END;
 
 
 //!\brief	Really basic class for testing out the context.

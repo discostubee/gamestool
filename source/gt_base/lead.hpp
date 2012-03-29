@@ -125,6 +125,12 @@ namespace gt{
 		//--- Intended to be polymorphed by descendants.
 		virtual ~cBase_plug();
 
+		//!\brief Appends the buffer with binary data that should be understandable by any platform.
+		virtual void save(cByteBuffer* pSaveHere) = 0;
+
+		//!\brief Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) = 0;
+
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
 		virtual bool operator== (const cBase_plug &pD) =0;
 
