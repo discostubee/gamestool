@@ -92,7 +92,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 			//- Get additional save data.
 			try{
-				 (*i)->save(&chunkSave);
+				(*i)->save(&chunkSave);
 
 				chunkSize = sizeof(dNameHash) + sizeof(dFigSaveSig) + chunkSave.size(); // We are counting the hash as part of the chunk size as a kind of check against corruption.
 

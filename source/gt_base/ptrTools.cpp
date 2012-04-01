@@ -85,22 +85,24 @@ using namespace gt;
 	};
 
 	GTUT_START(test_pmorph, polymorphing){
-		tPMorphJar<pmorphParent> jarA;
-
 		{
-			pmorphParent parent;
-			parent.num = 2;
-			jarA = parent;
-		}
-		GTUT_ASRT(jarA.get().num == 2, "jar didn't get int right");
+			tPMorphJar<pmorphParent> jarA;
 
-		{
-			pmorphChild child;
-			child.num = 5;
-			jarA = child;
+			{
+				pmorphParent parent;
+				parent.num = 2;
+				jarA = parent;
+			}
+			GTUT_ASRT(jarA.get().num == 2, "jar didn't get int right");
+
+			{
+				pmorphChild child;
+				child.num = 5;
+				jarA = child;
+			}
+			GTUT_ASRT(jarA.get().num == 5, "jar didn't get int right");
+			GTUT_ASRT(jarA.get().magic() == 42, "jar didn't get polymorph right");
 		}
-		GTUT_ASRT(jarA.get().num == 5, "jar didn't get int right");
-		GTUT_ASRT(jarA.get().magic() == 42, "jar didn't get polymorph right");
 		GTUT_ASRT(pmorphParent::instantCount==0, "Didn't delete all jar contents.");
 
 	}GTUT_END;
@@ -116,8 +118,9 @@ using namespace gt;
 			jarB = jarA;
 			GTUT_ASRT(pmorphParent::instantCount==1, "Wrong number of instances.");
 		}
-		GTUT_ASRT(pmorphParent::instantCount==1, "Wrong number of instances.");
 		delete child;
+		GTUT_ASRT(pmorphParent::instantCount==0, "Didn't delete all jar contents.");
+
 	}GTUT_END;
 
 #endif

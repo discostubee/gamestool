@@ -65,7 +65,7 @@ GTUT_START(testPlug, saveLoad){
 	cByteBuffer buff;
 	dReloadMap dontCare;
 
-	A.mD = 42;
+	A = 42;
 	A.save(&buff);
 	B.loadEat(&buff, &dontCare);
 	GTUT_ASRT(B.mD == A.mD, "A didn't save, or B didn't load, correctly.");

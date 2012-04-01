@@ -7,7 +7,7 @@ cByteBuffer::cByteBuffer():
 
 cByteBuffer::~cByteBuffer(){
 	if(mBuff != NULL)
-		::free(mBuff);
+		delete [] mBuff;
 }
 
 const dByte*
@@ -25,7 +25,7 @@ cByteBuffer::copy(const dByte* pBuffIn, const size_t pInSize){
 
 	if(mBuffSize != pInSize){	//- Only re-allocate if the new buffer is a different size.
 		if(mBuff!=NULL)
-			::free(mBuff);
+			delete [] mBuff;
 
 		mBuff = reinterpret_cast<dByte*>(::malloc(pInSize));
 		mBuffSize = pInSize;
@@ -86,7 +86,7 @@ cByteBuffer::trimHead(size_t pSize, size_t pStart){
 		}
 
 		mBuffSize = mBuffSize - (pStart+pSize);
-		::free(orig);
+		delete [] orig;
 	}
 }
 
@@ -94,7 +94,7 @@ cByteBuffer::trimHead(size_t pSize, size_t pStart){
 void 
 cByteBuffer::clear(){
 	if(mBuff!=NULL)
-		::free(mBuff);
+		delete [] mBuff;
 
 	mBuff = NULL;
 	mBuffSize = 0;
@@ -102,15 +102,12 @@ cByteBuffer::clear(){
 
 void
 cByteBuffer::add( const dByte* pBuffIn, size_t pInSize){
-
 	dByte* oldBuff = mBuff;
-	mBuff = reinterpret_cast<dByte*>(
-		::malloc(mBuffSize + pInSize)
-	);
+	mBuff = new dByte[pInSize+mBuffSize];
 
 	if(oldBuff != NULL){
 		::memcpy(mBuff, oldBuff, mBuffSize);
-		::free(oldBuff);
+		delete [] oldBuff;
 		::memcpy( &mBuff[mBuffSize], pBuffIn, pInSize );
 	}else{
 		::memcpy(mBuff, pBuffIn, pInSize);

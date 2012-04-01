@@ -45,11 +45,11 @@ cThread::runThread(cThread *me, cContext* pCon){
 			me->sync.wait(syncLock);
 		}
 	}catch(excep::base_error &e){
-		std::cout << e.what() << std::endl;	//!!!
+		WARN(e);//std::cout << e.what() << std::endl;	//!!!
 	}catch(std::exception &e){
-		std::cout << e.what() << std::endl;	//!!!
+		WARN(e);//std::cout << e.what() << std::endl;	//!!!
 	}catch(...){
-		std::cout << "unknown error in thread" << std::endl;	//!!!
+		UNKNOWN_ERROR; //std::cout << "unknown error in thread" << std::endl;	//!!!
 	}
 #else
 	DUMB_REF_ARG(me); DUMB_REF_ARG(pCon);
@@ -142,6 +142,7 @@ namespace gt{
 		void patWrite(ptrLead aLead){
 			tPlug<std::string> tmp = aLead->getPlug(xPT_word);
 			chatter.mD.append( tmp.mD );
+
 			chatter.mD.append( "." );
 			++hits.mD;
 			#ifndef GT_SPEEDTEST
@@ -264,6 +265,7 @@ namespace gt{
 				tPlug<dPlaStr> chatter;
 				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter, fakeContext.getSig());
 				share.mD->jack(getChatter, &fakeContext);
+
 				chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
 				DBUG_LO("chatter='" << chatter.mD << "'");
 
