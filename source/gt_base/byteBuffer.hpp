@@ -23,7 +23,6 @@
 #define BYTEBUFFER_HPP
 
 #include "binPacker.hpp"
-#include "exceptions.hpp"
 #include <stdlib.h>	//for memory ops.
 
 #ifdef DEBUG
@@ -60,7 +59,7 @@ public:
 
 	const dByte* get(const size_t pStart=0) const;
 	
-	template<typename TYPE> void fill(TYPE *pCup, size_t pStart=0) const;	//!< Fill the target type based upon the memory found at the start location. It unpacks the binary data it has into the type requested.
+	template<typename TYPE> void fill(TYPE *pCup, size_t pStart=0) const;	//!< Fill the target based upon its TYPE using memory at the head of the buffer offset by pStart. DOES NOT call the TYPE's constructor, so be careful with
 
 	void copy(const dByte* pBuffIn, size_t pInSize);	//!< This buffer will free its current contents (if the size is different), and copy what's being pointed too.
 	template<typename TYPE> void copy(const TYPE *pBuffIn);
@@ -75,7 +74,7 @@ public:
 
 	void add( const dByte* pBuffIn, size_t pInSize);
 	void add( const cByteBuffer &pBuff ); //!< Copies itself and the content being pointed to into a new buffer that combines the two.
-	template<typename TYPE> void add(const TYPE *pBuffIn);
+	template<typename TYPE> void add(const TYPE *pIn);	//!< Copies the TYPE and adds it to the end of the buffer. Should be able to use this memory to refil a container of the same TYPE.
 
 	cByteBuffer & operator= (const cByteBuffer &pCopyMe);	//!< Alias for copy.
 	cByteBuffer & operator+= (const cByteBuffer &pCopyMe);	//!< Alias for add.
@@ -106,8 +105,8 @@ void
 cByteBuffer::fill(TYPE *pCup, size_t pStart) const{
 	ASRT_NOTNULL(pCup);
 
-	int sizeUnpacked=0;
-	bpk::unpack<TYPE>(&mBuff[pStart], pCup, &sizeUnpacked, mBuffSize-pStart);
+	size_t sizeUnpacked=0;
+	bpk::unpack(&mBuff[pStart], pCup, &sizeUnpacked, mBuffSize-pStart);
 	if(sizeUnpacked != sizeof(TYPE) || pCup == NULL)
 		throw excepUnderFlow(__FILE__, __LINE__);
 }
@@ -120,7 +119,7 @@ cByteBuffer::copy(const TYPE *pBuffIn){
 	delete mBuff;
 	mBuff = NULL;
 	mBuffSize = 0;
-	bpk::pack<TYPE>(pBuffIn, &mBuff, &mBuffSize, sizeof(TYPE));
+	bpk::pack(pBuffIn, &mBuff, &mBuffSize, sizeof(TYPE));
 }
 
 template<typename TYPE>
@@ -131,18 +130,18 @@ cByteBuffer::take(TYPE *pBuffIn){
 	delete mBuff;
 	mBuff=NULL;
 	mBuffSize=0;
-	bpk::pack<TYPE>(pBuffIn, &mBuff, &mBuffSize, sizeof(TYPE));
+	bpk::pack(pBuffIn, &mBuff, &mBuffSize, sizeof(TYPE));
 	delete pBuffIn;
 }
 
 template<typename TYPE>
 void
-cByteBuffer::add(const TYPE *pBuffIn){
-	ASRT_NOTNULL(pBuffIn);
+cByteBuffer::add(const TYPE *pIn){
+	ASRT_NOTNULL(pIn);
 
 	dByte *packed=NULL;
-	int sizePacked=0;
-	bpk::pack<TYPE>(pBuffIn, &packed, &sizePacked, mBuffSize);
+	size_t sizePacked=0;
+	bpk::pack(pIn, &packed, &sizePacked);
 	add( packed, sizePacked );
 	delete packed;
 }

@@ -384,7 +384,8 @@ namespace gt{
 #define WARN(x)	gt::cWorld::warnError(x, __FILE__, __LINE__)
 
 // Handy for all those (...) catch blocks.
-#define UNKNOWN_ERROR	WARN("unknown error")
+extern const char *MSG_UNKNOWN_ERROR;
+#define UNKNOWN_ERROR	WARN(MSG_UNKNOWN_ERROR);
 
 #ifdef GTUT
 	#undef GTUT_END

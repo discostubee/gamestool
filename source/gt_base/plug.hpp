@@ -25,8 +25,14 @@ namespace gt{
 		tPlugFlakes(PLUG_TYPE_ID pTI) : cBase_plug(pTI) {}
 		virtual ~tPlugFlakes(){}
 
-		virtual void save(cByteBuffer* pSaveHere){}
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){}
+		virtual void save(cByteBuffer* pSaveHere){
+			pSaveHere->add(&getMD());
+		}
+
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
+			pChewToy->fill(&getMD());
+			pChewToy->trimHead(sizeof(A));
+		}
 
 		virtual A& getMD() =0;
 	};
@@ -112,18 +118,6 @@ namespace gt{
 	private:
 		void genericCopy(const cBase_plug* pD);
 	};
-}
-
-///////////////////////////////////////////////////////////////////////////////////
-// Functions
-namespace gt{
-	template<typename T> void plugSave(cBase_plug* pSaveMe, cByteBuffer* pSaveHere){
-
-	}
-
-	template<typename T> int plugLoad(cBase_plug* pLoadMe, dByte* pLoadFrom, dReloadMap* pLoadParty){
-		return 0;
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

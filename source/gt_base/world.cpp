@@ -25,6 +25,8 @@ using namespace gt;
 // Globals and statics
 using namespace gt;
 
+const char *MSG_UNKNOWN_ERROR = "unknown error";
+
 tMrSafety<cWorld> gt::gWorld;
 
 //- Don't assign anything to the stuff below.
@@ -229,8 +231,6 @@ cWorld::~cWorld(){
 		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
 	}
 	delete xProfiler;
-
-	DBUG_LO(reinterpret_cast<long>(this));
 
 	//- Be super careful that we don't try and profile anything anymore.
 	lo("end of the world"); //- Ensure it exists.

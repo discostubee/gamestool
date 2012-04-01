@@ -6,7 +6,6 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include "gt_string.hpp"
 #include "exceptions.hpp"
 #include <iostream>
 #include <vector>
@@ -17,8 +16,6 @@
 #ifdef GTUT
 	#include "unitTests.hpp"
 #endif
-
-using namespace std;
 
 //------------------------------------------------------------------------------------------
 //!\brief	useful for those odd occasions when you need a parameter in a function 
@@ -32,21 +29,21 @@ using namespace std;
 //------------------------------------------------------------------------------------------
 #define SAFEDEL(P) if(P != NULL){ delete(P); P=NULL; }
 
-
 //------------------------------------------------------------------------------------------
 // some defines which are common in this project.
 typedef unsigned int	dNameHash;
 typedef unsigned int	dMillisec;
 
-#if CHAR_BIT == 8
-	typedef char			dByte;		//!< This is the gametool's most basic byte type. It is always 8 bits.
+#if CHAR_BIT == 8 || __CHAR_BIT__ == 8
+	typedef char		dByte;		//!< This is the gametool's most basic byte type. It is always 8 bits.
 #else
 	#error "the byte buffer is not 8 bits, and I'm too lazy to write something for your environment to enforce 8 bit buffers."
 #endif
 
 //------------------------------------------------------------------------------------------
 // !\note	Code taken from http://cboard.cprogramming.com/tech-board/114650-string-hashing-algorithm.html
-template<typename T> dNameHash makeHash(T const * pString){
+template<typename T>
+dNameHash makeHash(T const * pString){
 	dNameHash hash = 0;
 
 	if(pString==NULL)
@@ -103,7 +100,7 @@ private:
 //!\brief	Handy little function for just seeing if a value is in a vector.
 template<typename T>
 bool
-isIn(const T &pFindMe, const vector<T> &pFindIn){
+isIn(const T &pFindMe, const std::vector<T> &pFindIn){
 
 	//for(size_t idx = 0; idx < pFindIn.size(); ++idx){
 	//	if(pFindMe == pFindIn[idx]){
@@ -112,7 +109,7 @@ isIn(const T &pFindMe, const vector<T> &pFindIn){
 	//}
 	//return false;
 
-	for(typename vector<T>::const_iterator itr = pFindIn.begin(); itr != pFindIn.end(); ++itr){
+	for(typename std::vector<T>::const_iterator itr = pFindIn.begin(); itr != pFindIn.end(); ++itr){
 		if(*itr == pFindMe){
 			return true;
 		}
@@ -148,8 +145,8 @@ private:
 		friend class cTracker;
 	};
 
-	typedef map<dNameHash, sItem> dItemMap;
-	typedef pair<dNameHash, sItem> dItemPair;
+	typedef std::map<dNameHash, sItem> dItemMap;
+	typedef std::pair<dNameHash, sItem> dItemPair;
 
 	static dItemMap* xObjectsActive;
 	static dItemMap::iterator xItemItr;

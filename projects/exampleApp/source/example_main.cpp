@@ -49,6 +49,13 @@ main(
 ){
 
 	gWorld.take(new cWinWorld(pInstance));
+
+#elif defined(LINUX)
+
+int
+main(void){
+	gWorld = new cLinuxWorld();
+
 #endif
 
 	try{

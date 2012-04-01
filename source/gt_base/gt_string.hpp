@@ -25,7 +25,7 @@
 
 #include <stdio.h>
 #include <string.h>	//- C library.
-#include <string>		//- c++ library.
+#include <string>	//- c++ library.
 
 #ifdef DEBUG
 	#include "unitTests.hpp"
@@ -59,5 +59,6 @@ dStr PCStrToNStr(const dPlaChar *pString);
 
 //!\brief	Converts platform C style string to text string instance.
 dText PCStrToText(const dPlaChar *pString);
+
 
 #endif
