@@ -35,7 +35,6 @@ namespace gt{
 	//!			that's online.
 	class cBase_fileIO: public cFigment, private tOutline<cBase_fileIO>{
 
-
 	public:
 
 		static const unsigned int ENDOF_FILE = static_cast<unsigned int>(-1);	//!< special identifier used mostly by insert function.
