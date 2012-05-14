@@ -164,75 +164,25 @@ namespace gt{
 	};
 }
 
-/*
+
 ///////////////////////////////////////////////////////////////////////////////////
 // template specializations
 namespace gt{
 
 	//--------------------------------------
 	template<>
-	class tPlug<ptrFig>: public tPlugShadows<ptrFig>{
+	class tPlugFlakes<ptrFig>: public cBase_plug{
 	public:
-		ptrFig mD;
+		tPlugFlakes(PLUG_TYPE_ID pTI) : cBase_plug(pTI) {}
 
-		tPlug() : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(gWorld.get()->getEmptyFig()){
+		virtual ~tPlugFlakes(){
 		}
-
-		tPlug(ptrFig pA) : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(pA){
-		}
-
-		tPlug(const tPlug<ptrFig> &other) : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(other.mD){
-		}
-
-		virtual ~tPlug(){}
-
-		virtual cBase_plug& operator= (const cBase_plug &pD){
-			NOTSELF(&pD);
-			PROFILE;
-
-			//!\todo figure out a way to prevent code duplication.
-			if( mType == pD.mType ){	// we can just cast
-				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
-				mD = dynamic_cast< tPlug<ptrFig>* >(
-					const_cast<cBase_plug*>(&pD)
-				)->mD;
-			}else{
-				PLUG_CANT_COPY_ID(mType, pD.mType);
-			}
-
-			return *this;
-		}
-
-		virtual cBase_plug& operator= (const cBase_plug* pD){
-			NOTSELF(pD);
-			PROFILE;
-
-			//!\todo figure out a way to prevent code duplication.
-			if( mType == pD->mType ){	// we can just cast
-				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
-				mD = dynamic_cast< tPlug<ptrFig>* >(
-					const_cast<cBase_plug*>(pD)
-				)->mD;
-			}else{
-				PLUG_CANT_COPY_ID(mType, pD->mType);
-			}
-
-			return *this;
-		}
-
-		virtual bool operator== (const cBase_plug &pD){
-			return ( mD.get() == const_cast<cBase_plug*>(&pD)->exposePtr<ptrFig>()->get() );
-		}
-
-		cBase_plug& operator= (ptrFig pA){ mD = pA; return *this; }
-
-		cBase_plug& operator= (const tPlug<ptrFig> &other){ if(this != &other) mD = other.mD; return *this; }
 
 		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;
 
 			//- Using the pointer as a unique number to identify the referenced figment.
-			dFigSaveSig saveSig = reinterpret_cast<dFigSaveSig>( mD.get() );
+			dFigSaveSig saveSig = reinterpret_cast<dFigSaveSig>( getMD().get() );
 			pAddHere->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
 
 			//DBUG_LO("	Saved as" << reinterpret_cast<unsigned long>(saveSig));
@@ -250,21 +200,13 @@ namespace gt{
 			if(itr == aReloads->end())
 				throw excep::notFound("signature of reloaded figment", __FILE__, __LINE__);	//- figment remains empty.
 
-			mD = itr->second->fig;
+			getMD() = itr->second->fig;
 		}
 
-		virtual void reset(cContext* context){
-			DUMB_REF_ARG(context);
-			mD = gWorld.get()->getEmptyFig();
-		}
-
-	protected:
-		#ifdef GT_THREADS
-			virtual ptrFig& getMD() { return mD; }
-		#endif
+		virtual ptrFig& getMD() = 0;
 	};
 
 }
-*/
+
 
 #endif
