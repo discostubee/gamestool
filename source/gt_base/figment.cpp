@@ -295,8 +295,10 @@ GTUT_START(test_context, preventSelfReference){
 GTUT_START(test_context, forceUnwind){
 	cContext testMe;
 	testContextFigment A, B;
+
 	A.refOther = &B;
 	B.throwOnRun = true;
+	cWorld::suppressNextError();
 	try{ A.run(&testMe); }catch(excep::base_error){}
 	A.stop(&testMe);
 	GTUT_ASRT( !B.stillStacked(), "B is still stacked." );

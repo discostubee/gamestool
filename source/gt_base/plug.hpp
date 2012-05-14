@@ -34,7 +34,7 @@ namespace gt{
 			pChewToy->trimHead(sizeof(A));
 		}
 
-		virtual A& getMD() =0;
+		virtual A& getMD() = 0;
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -233,8 +233,7 @@ namespace gt{
 			}
 
 			itrShadow = mShadows.begin() + pLead->mConx;
-			itrShadow->mData = new tPlug<A>();
-			itrShadow->mData->mD = getMD();
+			itrShadow->mData = new tPlug<A>(getMD());
 		#endif
 
 		cBase_plug::linkLead(pLead);
@@ -285,7 +284,7 @@ namespace gt{
 	tPlug<A>::tPlug(const cBase_plug *other) :
 		tPlugShadows<A>(other->mType)
 	{
-		genericCopy(other);
+		other->copyInto(&mD);
 	}
 
 	template<typename A>
@@ -293,47 +292,25 @@ namespace gt{
 	}
 
 	template<typename A>
-	void 
-	tPlug<A>::genericCopy(const cBase_plug* pD){
-		PROFILE;
-
-		ASRT_NOTNULL(pD);
-		ASRT_NOTSELF(pD);
-
-		if( tPlugShadows<A>::mType == pD->mType ){
-			mD = reinterpret_cast< const tPlug<A>* >(pD)->mD;
-
-		}else{ // we need to see if there is an acceptable converter.
-			//!!! can do this with a map of maps (2D map). Map this thing's template version of the copy check to the targets. Then at the right location, check if there is a templated copy function.
-			//!!! for now we just fail.
-			PLUG_CANT_COPY(typeid(A), pD->mType);
-		}
-	}
-
-	template<typename A>
 	cBase_plug&
 	tPlug<A>::operator= (const cBase_plug &pD){
-		//NOTSELF(&pD);	// Performed in generic copy.
-		genericCopy(&pD);
+		NOTSELF(&pD);
+		pD.copyInto(&mD);
 		return *this;
 	}
 
 	template<typename A>
 	cBase_plug&
 	tPlug<A>::operator= (const tPlug<A> &other){
-		if(this != &other){
-			mD = other.mD;
-		}
+		NOTSELF(&other);
+		mD = other.mD;
 		return *this;
 	}
 
 	template<typename A>
 	bool
 	tPlug<A>::operator== (const cBase_plug &pD){
-		if(pD.mType != tPlugShadows<A>::mType)
-			return false;
-
-		return false;
+		return (pD.mType == tPlugShadows<A>::mType);
 	}
 
 	template<typename A>

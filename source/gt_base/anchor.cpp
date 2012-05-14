@@ -307,7 +307,7 @@ GTUT_START(testAnchor, basicLoad){
 	tPlug<dText> myStr = checkData->getPlug(cSaveTester::xPT_str);
 	tPlug<int> myNum = checkData->getPlug(cSaveTester::xPT_num);
 
-	GTUT_ASRT(true, "saved strings are not the same");
+
 	GTUT_ASRT(myNum.mD==42, "saved numbers are not the same");
 }GTUT_END;
 

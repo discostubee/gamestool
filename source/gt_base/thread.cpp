@@ -47,7 +47,7 @@ cThread::runThread(cThread *me, cContext* pCon){
 	}catch(excep::base_error &e){
 		WARN(e);//std::cout << e.what() << std::endl;	//!!!
 	}catch(std::exception &e){
-		WARN(e);//std::cout << e.what() << std::endl;	//!!!
+		//std::cout << e.what() << std::endl;	//!!!
 	}catch(...){
 		UNKNOWN_ERROR; //std::cout << "unknown error in thread" << std::endl;	//!!!
 	}
@@ -88,6 +88,9 @@ cThread::run(cContext* pCon){
 
 	start(pCon);
 	PLUGUP(link);
+	if(!link.getMD().valid())
+		return;
+
 #ifdef GT_THREADS
 	if(firstRun){
 		dLock lockMake(syncMu); // If we don't wait for the thread to be made, it can be possible to deadlock.
@@ -102,7 +105,7 @@ cThread::run(cContext* pCon){
 		sync.notify_all();
 	}
 #else
-	link.mD->run(pCon);
+	link.getMD()->run(pCon);
 #endif
 	stop(pCon);
 }

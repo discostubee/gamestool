@@ -216,10 +216,14 @@ namespace gt{
 		static void lo(const dStr& pLine);
 
 		//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
+		static void warnError(const char *msg, const char* pFile, const unsigned int pLine);
+
+		//!\brief	Allows you to pass the error type directly.
 		static void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
 
-		//!\brief
-		static void warnError(const char *msg, const char* pFile, const unsigned int pLine);
+		#ifdef GTUT
+			static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
+		#endif
 
 		//!\todo	Make threadsafe.
 		static void makeProfileReport(std::ostream &log);
@@ -309,6 +313,9 @@ namespace gt{
 		virtual void		flushLines	();		//!< Process the lines to be displayed on the console. Uses cout by default
 
 	protected:
+		#ifdef GTUT
+			static bool mSuppressError;	//!<
+		#endif
 
 		//--------------------------------------------------------
 		// Data which must be redirected if this is an addon's heap.
@@ -335,6 +342,11 @@ namespace gt{
 			static boost::recursive_mutex *xLineGuard;
 			boost::recursive_mutex *mProfileGuard;
 			boost::recursive_mutex *mLineGuard;
+
+			#ifdef GTUT
+				static boost::recursive_mutex *xSuppressGuard;
+				boost::recursive_mutex *mSuppressGuard;
+			#endif
 		#endif
 
 		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).

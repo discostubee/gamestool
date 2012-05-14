@@ -51,9 +51,6 @@ cTracker::start(const char* pName){
 
 void
 cTracker::stop(const char* pName){
-#ifdef GT_THREADS
-	return;
-#endif
 	ensureSetup();
 
 	xTempHash = makeHash(pName);
@@ -62,9 +59,6 @@ cTracker::stop(const char* pName){
 
 void
 cTracker::makeReport(std::ostream &report){
-#ifdef GT_THREADS
-	return;
-#endif
 	ensureSetup();
 
 	report << " Tracker report" << std::endl;

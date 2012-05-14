@@ -17,8 +17,8 @@ the gamestool running on these OSs, there is also a list of supported
 IDEs.
 
 Windows 7: Visual Studio Express 2010.
-Ubuntu 9->11L: Eclipse
-OS X 10.6: Eclipse
+Ubuntu 11: Eclipse 3.5
+OS X 10.6: Eclipse 3.6
 
 If you want to expand the list of supported stuff, feel free to jump on
 the forum or source forge and let us know.
@@ -153,6 +153,13 @@ There are a few includes you need:
 Boost
 x11 for OSX (linux is already visible)
 gtest (if building for testing apps)
+
+- Link external static libs in Eclipse
+You will sometimes need to link to some static libraries, and in an effort
+not to put specific paths in the eclipse project, the paths to these libraries you'll need to add symbolic links inside the follow directory:
+
+projects/shared/eclipse-(version)-(OSX or linux)/(boost or opengl)
+
 
 - for OSX, get X11 
 You'll need to install X11 for OSX (google for it) first, then add the 

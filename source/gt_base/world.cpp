@@ -29,6 +29,8 @@ const char *MSG_UNKNOWN_ERROR = "unknown error";
 
 tMrSafety<cWorld> gt::gWorld;
 
+bool cWorld::mSuppressError = false;
+
 //- Don't assign anything to the stuff below.
 cWorld::dLines* cWorld::xLines;
 cProfiler* cWorld::xProfiler;
@@ -36,6 +38,10 @@ cProfiler* cWorld::xProfiler;
 #ifdef GT_THREADS
 	boost::recursive_mutex *cWorld::xProfileGuard;
 	boost::recursive_mutex *cWorld::xLineGuard;
+
+	#ifdef GTUT
+		boost::recursive_mutex *cWorld::xSuppressGuard;
+	#endif
 #endif
 
 bool cWorld::thereCanBeOnlyOne = false;
@@ -215,6 +221,10 @@ cWorld::cWorld():
 		//- Used so external modules can use the location
 		mProfileGuard = xProfileGuard;
 		mLineGuard = xLineGuard;
+
+		#ifdef GTUT
+			mSuppressGuard = xSuppressGuard;
+		#endif
 	#endif
 }
 
@@ -376,6 +386,11 @@ cWorld::copyWorld(cWorld* pWorld){
 		mLineGuard = pWorld->mLineGuard;
 		xProfileGuard = pWorld->mProfileGuard;
 		xLineGuard = pWorld->mLineGuard;
+
+		#ifdef GTUT
+			xSuppressGuard = pWorld->xSuppressGuard;
+			mSuppressGuard = pWorld->mSuppressGuard;
+		#endif
 	#endif
 }
 
@@ -446,18 +461,38 @@ cWorld::makeProfileReport(std::ostream &log){
 }
 
 void
-cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
-	std::stringstream ss;
-	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << pE.what();
-	lo(ss.str());
-}
-
-void
 cWorld::warnError(const char *msg, const char* pFile, const unsigned int pLine){
+	#ifdef GTUT
+		if(mSuppressError){
+			mSuppressError = false;
+			return;
+		}
+	#endif
 	std::stringstream ss;
 	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << msg;
 	lo(ss.str());
 }
+
+void
+cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
+	warnError(pE.what(), pFile, pLine);
+}
+
+#ifdef GTUT
+	void
+	cWorld::suppressNextError(){
+		#ifdef GT_THREADS
+			static bool setup = false;
+			if(!setup){
+				setup = true;
+				xSuppressGuard = new boost::recursive_mutex();
+			}
+
+			boost::lock_guard<boost::recursive_mutex> lock(*xSuppressGuard);
+		#endif
+		mSuppressError = true;
+	}
+#endif
 
 ptrFig
 cWorld::getEmptyFig(){
