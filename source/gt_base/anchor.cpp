@@ -224,6 +224,8 @@ cAnchor::patGetRoot(ptrLead aLead){
 
 #ifdef GTUT
 
+#include "runList.hpp"
+
 class cSaveTester: public cFigment, private tOutline<cSaveTester>{
 public:
 	static const cPlugTag *xPT_str, *xPT_num;
@@ -269,18 +271,16 @@ cSaveTester::patGetData(ptrLead aLead){
 }
 
 cByteBuffer buff;
-const dNatChar *testStr = "proper job";
+const dTextChar *testStr = L"proper job";
 
 GTUT_START(testAnchor, basicSave){
 	tOutline<cSaveTester>::draft();
 	tOutline<cAnchor>::draft();
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
-	tPlug<ptrFig> tester(
-		ptrFig(new cSaveTester( NCStrToText(testStr).data() ))
-	);
-	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
+	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
 
+	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
 	add->addPlug(&tester, cAnchor::xPT_root);
 	ank->jack(add, &fakeCon);
 
@@ -307,9 +307,27 @@ GTUT_START(testAnchor, basicLoad){
 	tPlug<dText> myStr = checkData->getPlug(cSaveTester::xPT_str);
 	tPlug<int> myNum = checkData->getPlug(cSaveTester::xPT_num);
 
-
-	GTUT_ASRT(myNum.mD==42, "saved numbers are not the same");
+	GTUT_ASRT(myNum.getMD()==42, "saved numbers are not the same");
+	GTUT_ASRT(myStr.getMD().compare(testStr)==0, "saved string doesn't match");
 }GTUT_END;
 
+
+GTUT_START(testAnchor, figmentSave){
+	tOutline<cSaveTester>::draft();
+	tOutline<cAnchor>::draft();
+	tOutline<cRunList>::draft();
+	cContext fakeCon;
+	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
+	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
+	ptrFig rlist = gWorld.get()->makeFig(getHash<cRunList>());
+
+
+	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
+
+}GTUT_END;
+
+GTUT_START(testAnchor, figmentLoad){
+
+}GTUT_END;
 
 #endif

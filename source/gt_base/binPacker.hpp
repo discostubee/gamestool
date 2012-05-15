@@ -27,11 +27,8 @@ namespace bpk{
 	template<typename TYPE>
 	void unpack(const dByte *unpackFrom, TYPE *unpackTo, size_t *sizeOut, size_t limit){
 		//todo actual unpacking.
-		if(limit < sizeof(TYPE)){
-			sizeOut = 0;
-			unpackTo = NULL;
-			return;
-		}
+		if(limit < sizeof(TYPE))
+			throw excep::underFlow(__FILE__, __LINE__);
 
 		ASRT_NOTNULL(unpackFrom);
 		ASRT_NOTNULL(unpackTo);

@@ -88,8 +88,10 @@ cThread::run(cContext* pCon){
 
 	start(pCon);
 	PLUGUP(link);
-	if(!link.getMD().valid())
+	if(!link.getMD().valid()){
+		stop(pCon);
 		return;
+	}
 
 #ifdef GT_THREADS
 	if(firstRun){
@@ -292,9 +294,11 @@ namespace gt{
 		const short testLength = 5;
 		for(short i=0; i < testLength; ++i){
 			cContext fakeContext;
-			cThread threadA;
+			cThread A, B, C;
 			for(short j=0; j < testLength; ++j){
-				threadA.run(&fakeContext);
+				A.run(&fakeContext);
+				B.run(&fakeContext);
+				C.run(&fakeContext);
 			}
 		}
 	}GTUT_END;

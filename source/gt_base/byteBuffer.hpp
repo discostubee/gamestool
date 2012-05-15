@@ -79,21 +79,6 @@ public:
 	cByteBuffer & operator= (const cByteBuffer &pCopyMe);	//!< Alias for copy.
 	cByteBuffer & operator+= (const cByteBuffer &pCopyMe);	//!< Alias for add.
 
-	class excepUnderFlow: public excep::base_error{
-	public:
-		excepUnderFlow(const char* pFunc, const unsigned int pLine) throw():
-            base_error(pFunc, pLine)
-         { addInfo("buffer underflow"); }
-		virtual ~excepUnderFlow() throw(){}
-	};
-
-	class excepOverFlow: public excep::base_error{
-		excepOverFlow(const char* pFunc, const unsigned int pLine) throw():
-			base_error(pFunc, pLine)
-		 { addInfo("buffer overflow"); }
-		virtual ~excepOverFlow() throw(){}
-	};
-
 protected:
 	dByte*	mBuff;
 	size_t	mBuffSize;
@@ -106,9 +91,7 @@ cByteBuffer::fill(TYPE *pCup, size_t pStart) const{
 	ASRT_NOTNULL(pCup);
 
 	size_t sizeUnpacked=0;
-	bpk::unpack<TYPE>(&mBuff[pStart], pCup, &sizeUnpacked, mBuffSize-pStart);
-	if(sizeUnpacked != sizeof(TYPE) || pCup == NULL)
-		throw excepUnderFlow(__FILE__, __LINE__);
+	bpk::unpack(&mBuff[pStart], pCup, &sizeUnpacked, mBuffSize-pStart);
 }
 
 template<typename TYPE>
