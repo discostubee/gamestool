@@ -1,19 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>libOSX</name>
+	<name>addonX11GL</name>
 	<comment></comment>
 	<projects>
-		<project>libgamestool</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
 			<name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
 			<triggers>clean,full,incremental,</triggers>
 			<arguments>
-				<dictionary>
-					<key>?children?</key>
-					<value>?name?=outputEntries\|?children?=?name?=entry\\\\\\\|\\\|?name?=entry\\\\\\\|\\\|\||</value>
-				</dictionary>
 				<dictionary>
 					<key>?name?</key>
 					<value></value>
@@ -36,7 +31,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildLocation</key>
-					<value>${workspace_loc:/libOSX/Debug}</value>
+					<value>${workspace_loc:/addonX11GL/Debug}</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.cleanBuildTarget</key>
@@ -74,7 +69,6 @@
 		</buildCommand>
 		<buildCommand>
 			<name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
-			<triggers>full,incremental,</triggers>
 			<arguments>
 			</arguments>
 		</buildCommand>
@@ -87,39 +81,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>gt_OSX</name>
+			<name>source</name>
 			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_addon.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_addon.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_addon.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_addon.hpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_fileIO.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_fileIO.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_fileIO.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_fileIO.hpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_world.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_world.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_world.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_world.hpp</locationURI>
+			<locationURI>source_root/addonX11GL</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

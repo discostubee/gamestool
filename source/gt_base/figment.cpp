@@ -180,10 +180,6 @@ cWorldShutoff::run(cContext* pCon){
 
 #ifdef GTUT
 
-GTUT_START(test_bufferPlug, allGood){
-
-}GTUT_END;
-
 GTUT_START(test_figment, polymorphNames){
 	tOutline<cFigment>::draft();
 	tOutline<cEmptyFig>::draft();

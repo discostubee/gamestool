@@ -65,8 +65,8 @@ namespace excep{
     //!\brief	Nobody knows.
 	class unknownError: public base_error{
 	public:
-		unknownError(const char* pFunc, const unsigned int pLine) throw():
-            base_error(pFunc, pLine)
+		unknownError(const char* pFile, const unsigned int pLine) throw():
+            base_error(pFile, pLine)
         {
 		    addInfo(dStr("Unknown error"));
 		}
@@ -77,8 +77,8 @@ namespace excep{
 	//!\brief	Thrown when you try to find something and it isn't there.
 	class notFound: public base_error{
 	public:
-		notFound(const char* pDidntFind, const char* pFunc, const unsigned int pLine) throw():
-            base_error(pFunc, pLine)
+		notFound(const char* pDidntFind, const char* pFile, const unsigned int pLine) throw():
+            base_error(pFile, pLine)
         {
 		    std::stringstream ss;
 		    ss << "Didn't find " << pDidntFind;
@@ -91,8 +91,8 @@ namespace excep{
 	//!\brief	Thrown when a NULL pointer is passed in, and it can't be handled nicely.
 	class isNull: public base_error{
 	public:
-		isNull(const char* pFunc, const unsigned int pLine) throw():
-            base_error(pFunc, pLine)
+		isNull(const char* pFile, const unsigned int pLine) throw():
+            base_error(pFile, pLine)
         {
             addInfo("Is Null");
 		}
@@ -102,8 +102,8 @@ namespace excep{
 	//!\brief	Generic error used when an interator or index is out of range.
 	class outOfRange: public base_error{
 	public:
-		outOfRange(size_t maxRange, int index, const char* pFunc, const unsigned int pLine) throw():
-			base_error(pFunc, pLine)
+		outOfRange(size_t maxRange, int index, const char* pFile, const unsigned int pLine) throw():
+			base_error(pFile, pLine)
 		{
 			std::stringstream ss;
 			ss << "Out of range. Range " << maxRange << ", index " << index;
@@ -115,27 +115,42 @@ namespace excep{
 	//!			instantiated in it's base form, but some of it's functions are not meant to be used.
 	class dontUseThis:  public base_error{
 	public:
-		dontUseThis(const char* pFunc, const unsigned int pLine) throw():
-            base_error(pFunc, pLine)
+		dontUseThis(const char* pFile, const unsigned int pLine) throw():
+            base_error(pFile, pLine)
         {
             addInfo("What are you doing! Don't use this.");
 		}
 		virtual ~dontUseThis() throw(){}
 	};
 
+	class underFlow: public excep::base_error{
+	public:
+		underFlow(const char* pFile, const unsigned int pLine) throw():
+            base_error(pFile, pLine)
+         { addInfo("buffer underflow"); }
+		virtual ~underFlow() throw(){}
+	};
+
+	class overFlow: public excep::base_error{
+		overFlow(const char* pFile, const unsigned int pLine) throw():
+			base_error(pFile, pLine)
+		 { addInfo("buffer overflow"); }
+		virtual ~overFlow() throw(){}
+	};
+
 	//!\brief	Generic error trown when a function tries to copy something it should't (IE, polymorphed classes).
 	class cantCopy: public base_error{
 	public:
-		cantCopy(const dStr &copyer, const dStr &copyee, const char* pFunc, const unsigned int pLine) throw():
-			base_error(pFunc, pLine)
+		cantCopy(const dStr &copyer, const dStr &copyee, const char* pFile, const unsigned int pLine) throw():
+			base_error(pFile, pLine)
 		{
 			std::stringstream ss;
 			ss << copyer << " can't copy " << copyee;
 			addInfo(ss.str());
 		}
 
-		cantCopy(const char* copyer, const char* copyee, const char* pFunc, const unsigned int pLine) throw():
-			base_error(pFunc, pLine)
+		cantCopy(const char* copyer, const char* copyee, const char* pFile, const unsigned int pLine) throw():
+			base_error(pFile, pLine)
 		{
 			std::stringstream ss;
 			ss << copyer << " can't copy " << copyee;

@@ -18,7 +18,7 @@ namespace gt{
 	template<typename A> class tPlug;
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Provides serialization (as a healthy breakfast).
+	//!\brief	Provides serialization (as a healthy breakfast). Get it, cereal, haha haha, uuuuhhh.
 	template<typename A>
 	class tPlugFlakes: public cBase_plug{
 	public:
