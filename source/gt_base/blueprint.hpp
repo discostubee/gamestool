@@ -255,6 +255,15 @@ namespace gt{
 				DBUG_LO(T::identify() << " extends " << gWorld.get()->getBlueprint(T::extends())->name());
 			}
 
+			for(dListExtensions::iterator ext = xExtensions.begin(); ext != xExtensions.end(); ++ext){
+				for(dListComs cmds = (*ext)->getAllComs(); !cmds.empty(); cmds.pop_front()){
+					xCommands->insert( dMapCom::value_type(
+						cmds.front()->mID,
+						cmds.front()->respawn(getHash<T>())
+					) );
+				}
+			}
+
 			gWorld.get()->addBlueprint(&xBlueprint);
 
 			xDrafted=true;
@@ -373,6 +382,11 @@ namespace gt{
 		itrCom = xCommands->find(pHash);
 
 		if(itrCom == xCommands->end()){
+			std::stringstream ss; ss << T::identify() << " command " << pHash;
+			throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
+		}
+
+		/*if(itrCom == xCommands->end()){
 			for(dListExtensions::iterator itr = xExtensions.begin(); itr != xExtensions.end(); ++itr){
 				try{ return (*itr)->getCom(pHash); }catch(excep::notFound){}
 			}
@@ -381,7 +395,7 @@ namespace gt{
 				std::stringstream ss; ss << T::identify() << " command " << pHash;
 				throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
 			}
-		}
+		}*/
 
 		return itrCom->second;
 	}

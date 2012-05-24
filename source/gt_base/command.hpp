@@ -47,12 +47,12 @@ namespace gt{
 
 		const dUID	mID;
 		const dStr	mName;
-		const dNameHash mParent;	//!< Used to determine which figment this command belongs too.
+		const dNameHash mParent;	//!< Used to determine which figment this command belongs too. Not using a callback from the actual command so that extending classes can make use of this command when respawned.
 
 		cCommand(
-				const dUID pID,
-				const char* pName,
-				const dNameHash pParentHash
+			const dUID pID,
+			const char* pName,
+			const dNameHash pParentHash
 		);
 
 		virtual ~cCommand();
@@ -60,14 +60,14 @@ namespace gt{
 		virtual bool usesTag(const cPlugTag* pTag) const =0;	//!< Checks if it has such a tag.
 		virtual void addTag(const cPlugTag* pTag) =0;
 		virtual void use(iFigment *aFig, ptrLead aLead) const =0;	//!<
-
+		virtual cCommand *respawn(dNameHash diffParent) const =0;
 	};
 
 	//----------------------------------------------------------------------------
 	template<typename T>
 	class tActualCommand : public cCommand{
 	public:
-		typedef void (T::*ptrPatFoo)(ptrLead aLead);	//!< Pointer to our jack function.
+		typedef void (T::*ptrPatFoo)(ptrLead aLead);	//!< Pointer to our patch through function.
 
 		tActualCommand(
 			const dUID pID,
@@ -81,6 +81,7 @@ namespace gt{
 		virtual bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
 		virtual void addTag(const cPlugTag* pTag);
 		virtual void use(iFigment *aFig, ptrLead aLead) const;
+		virtual cCommand *respawn(dNameHash diffParent) const;
 
 	private:
 		std::set<const cPlugTag*> mDataTags;
@@ -144,10 +145,16 @@ namespace gt{
 	template<typename T>
 	void
 	tActualCommand<T>::use(iFigment *aFig, ptrLead aLead) const {
-		if(aFig->hash() == getHash<T>())
+		if(aFig->hash() == mParent)
 			( dynamic_cast<T*>(aFig)->*myFoo )(aLead);
 		else
 			throw excep::base_error("can't use command", __FILE__, __LINE__);
+	}
+
+	template<typename T>
+	cCommand*
+	tActualCommand<T>::respawn(dNameHash diffParent) const {
+		return new tActualCommand<T>(mID, mName.c_str(), diffParent, myFoo);
 	}
 }
 

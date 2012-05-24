@@ -30,8 +30,7 @@ namespace gt{
 		}
 
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
-			pChewToy->fill(&getMD());
-			pChewToy->trimHead(sizeof(A));
+			pChewToy->trimHead( pChewToy->fill(&getMD()) );
 		}
 
 		virtual A& getMD() = 0;

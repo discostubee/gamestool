@@ -49,9 +49,7 @@ class cByteBuffer{
 
 public:
 	cByteBuffer();
-	cByteBuffer(const cByteBuffer& pCopy){
-		copyBuff(pCopy);
-	}
+	cByteBuffer(const cByteBuffer& pCopy);
 	~cByteBuffer();
 
 	size_t size() const{ return mBuffSize; }
@@ -59,7 +57,7 @@ public:
 
 	const dByte* get(const size_t pStart=0) const;
 	
-	template<typename TYPE> void fill(TYPE *pCup, size_t pStart=0) const;	//!< Fill the target based upon its TYPE using memory at the head of the buffer offset by pStart. DOES NOT call the TYPE's constructor, so be careful with
+	template<typename TYPE> int fill(TYPE *pCup, size_t pStart=0) const;	//!< Fill the target based upon its TYPE using memory at the head of the buffer offset by pStart. DOES NOT call the TYPE's constructor, so be careful with. Returns the number of bytes used in filling (not always the number of bytes the object is).
 
 	void copy(const dByte* pBuffIn, size_t pInSize);	//!< This buffer will free its current contents (if the size is different), and copy what's being pointed too.
 	template<typename TYPE> void copy(const TYPE *pBuffIn);
@@ -86,12 +84,13 @@ protected:
 
 
 template<typename TYPE>
-void
+int
 cByteBuffer::fill(TYPE *pCup, size_t pStart) const{
 	ASRT_NOTNULL(pCup);
 
 	size_t sizeUnpacked=0;
 	bpk::unpack(&mBuff[pStart], pCup, &sizeUnpacked, mBuffSize-pStart);
+	return sizeUnpacked;
 }
 
 template<typename TYPE>

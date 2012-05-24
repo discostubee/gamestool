@@ -232,7 +232,7 @@ public:
 	static const cCommand::dUID	xGetData;
 
 	cSaveTester(){}
-	cSaveTester(const dTextChar* inStr) : myStr(inStr), myNum(42) {}
+	cSaveTester(const dNatChar* inStr, int pNum) : myStr(inStr), myNum(pNum) {}
 	virtual ~cSaveTester(){}
 
 	static const dNatChar* identify(){ return "save tester"; }
@@ -247,7 +247,7 @@ public:
 		myStr.loadEat(pBuff, pReloads); myNum.loadEat(pBuff, pReloads);
 	}
 private:
-	tPlug<dText> myStr;
+	tPlug<dStr> myStr;
 	tPlug<int> myNum;
 
 	void patGetData(ptrLead aLead);
@@ -271,15 +271,18 @@ cSaveTester::patGetData(ptrLead aLead){
 }
 
 cByteBuffer buff;
-const dTextChar *testStr = L"proper job";
+//const dTextChar *testStr = L"proper job";
+const dNatChar *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
+	tOutline<cFigment>::draft();
 	tOutline<cSaveTester>::draft();
 	tOutline<cAnchor>::draft();
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
-	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
+	tPlug<ptrFig> tester;
 
+	tester = ptrFig(new cSaveTester(testStr, 42));
 	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
 	add->addPlug(&tester, cAnchor::xPT_root);
 	ank->jack(add, &fakeCon);
@@ -304,7 +307,7 @@ GTUT_START(testAnchor, basicLoad){
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData, fake.getSig());
 	reload.mD->jack(checkData, &fake);
 
-	tPlug<dText> myStr = checkData->getPlug(cSaveTester::xPT_str);
+	tPlug<dStr> myStr = checkData->getPlug(cSaveTester::xPT_str);
 	tPlug<int> myNum = checkData->getPlug(cSaveTester::xPT_num);
 
 	GTUT_ASRT(myNum.getMD()==42, "saved numbers are not the same");
@@ -313,21 +316,62 @@ GTUT_START(testAnchor, basicLoad){
 
 
 GTUT_START(testAnchor, figmentSave){
+	tOutline<cFigment>::draft();
 	tOutline<cSaveTester>::draft();
 	tOutline<cAnchor>::draft();
 	tOutline<cRunList>::draft();
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
-	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
-	ptrFig rlist = gWorld.get()->makeFig(getHash<cRunList>());
+	tPlug<ptrFig> rlist = gWorld.get()->makeFig(getHash<cRunList>());
 
+	{
+		ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
 
-	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
+		add->addPlug(&rlist, cAnchor::xPT_root);
+		ank->jack(add, &fakeCon);
+	}
+	{
+		tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
+		ptrLead add = gWorld.get()->makeLead(cRunList::xAdd, fakeCon.getSig());
+
+		add->addToPile(&tester);
+		rlist.getMD()->jack(add, &fakeCon);
+	}
+	{
+		tPlug<cByteBuffer> plugBuff;
+		ptrLead save = gWorld.get()->makeLead(cAnchor::xSave, fakeCon.getSig());
+
+		save->addPlug(&plugBuff, cAnchor::xPT_serialBuff);
+		ank->jack(save, &fakeCon);
+
+		buff = plugBuff.getMD();
+	}
 
 }GTUT_END;
 
 GTUT_START(testAnchor, figmentLoad){
+	tOutline<cSaveTester>::draft();
+	tOutline<cAnchor>::draft();
+	tOutline<cRunList>::draft();
+	cContext fakeCon;
+	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
+	dReloadMap dontcare;
 
+	ank->loadEat(&buff, &dontcare);
+
+	std::list<ptrFig> links;
+	ank->getLinks(&links);
+	if(links.empty())
+		GTUT_ASRT(false, "root of anchor not in links list");
+
+	links.front()->getLinks(&links);
+
+	if(links.size() != 2)
+		GTUT_ASRT(false, "tester not in links list");
+
+	links.pop_front();
+
+	GTUT_ASRT(strncmp( links.front()->name(), cSaveTester::identify(), strlen( cSaveTester::identify()) )==0, "didn't save/load correct figment");
 }GTUT_END;
 
 #endif
