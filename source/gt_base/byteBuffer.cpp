@@ -5,29 +5,40 @@ cByteBuffer::cByteBuffer():
 	mBuffSize(0)
 {}
 
+cByteBuffer::cByteBuffer(const cByteBuffer& pCopy):
+	mBuff(NULL),
+	mBuffSize(0)
+{
+	copyBuff(pCopy);
+}
+
 cByteBuffer::~cByteBuffer(){
-	if(mBuff != NULL)
-		delete [] mBuff;
+	delete [] mBuff;
 }
 
 const dByte*
 cByteBuffer::get(const size_t pStart) const{
-	if(pStart > mBuffSize || mBuff == NULL)
-		throw excep::notFound("buffer, while getting", __FILE__, __LINE__);
+	if(pStart > mBuffSize)
+		throw excep::underFlow(__FILE__, __LINE__);
+
+	if(mBuff == NULL)
+		return NULL;
 
 	return &mBuff[pStart];
 }
 
 void
 cByteBuffer::copy(const dByte* pBuffIn, const size_t pInSize){
-	if(pBuffIn == NULL || pInSize == 0)
-		throw excep::cantCopy("buffer", "empty buffer", __FILE__, __LINE__);
+	if(pBuffIn == NULL || pInSize == 0){
+		delete [] mBuff;
+		mBuff = NULL;
+		mBuffSize = 0;
+		return;
+	}
 
 	if(mBuffSize != pInSize){	//- Only re-allocate if the new buffer is a different size.
-		if(mBuff!=NULL)
-			delete [] mBuff;
-
-		mBuff = reinterpret_cast<dByte*>(::malloc(pInSize));
+		delete [] mBuff;
+		mBuff = new dByte[pInSize];
 		mBuffSize = pInSize;
 	}
 
@@ -53,8 +64,7 @@ cByteBuffer::take(dByte* pBuffIn, size_t pInSize){
 	if(pInSize == 0)
 		throw excep::base_error("can't be zero, while taking", __FILE__, __LINE__);
 
-	if(mBuff!=NULL)
-		::free(mBuff);
+	delete [] mBuff;
 
 	mBuff = pBuffIn;
 	mBuffSize = pInSize;
@@ -135,28 +145,6 @@ cByteBuffer::operator+= (const cByteBuffer &pCopyMe){
 	add(pCopyMe);
 	return *this;
 }
-
-//void*
-//cByteBuffer::barf(const size_t pHowMuch){
-//
-//	if(mBuff == NULL)
-//		throw excep::notFound("buffer, while barfing", __FILE__, __LINE__);
-//
-//	if(pHowMuch == 0 || pHowMuch > mBuffSize)
-//		throw excep::base_error(__FILE__, __LINE__);	//!\todo
-//
-//	scrTail = reinterpret_cast<dByte*>( ::malloc(mBuffSize-pHowMuch) );
-//	::memcpy( scrTail, &mBuff[pHowMuch], mBuffSize-pHowMuch );
-//
-//	scrHead = reinterpret_cast<dByte*>(
-//		::realloc(mBuff, pHowMuch )
-//	);
-//
-//	mBuffSize -= pHowMuch;
-//	mBuff = scrTail;
-//
-//	return scrHead;
-//}
 
 
 ////////////////////////////////////////////////////////////
