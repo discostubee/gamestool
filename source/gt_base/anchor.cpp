@@ -41,20 +41,19 @@ void
 cAnchor::save(cByteBuffer* pAddHere){
 	PROFILE;
 
+	ASRT_NOTNULL(pAddHere);
+
 	std::list<ptrFig>*	branches = new std::list<ptrFig>();
 	std::list<ptrFig>*	prev = new std::list<ptrFig>();
 	std::set<iFigment*> figs;
 
 	size_t					chunkSize = 0;
 	dNameHash			chunkHash = 0;
-	tPlug<size_t>		currentSpot;
 	dFigSaveSig			chunkSig = 0;
 
-	currentSpot.mD = 0;
-
 	try{
-		mRoot.mD->getLinks(branches);
-		figs.insert( mRoot.mD.get() );
+		mRoot.get()->getLinks(branches);
+		figs.insert( mRoot.get().get() );
 
 		do{ //- while there are branches still left to explore. Must prevent circular references.
 			PROFILE;
@@ -77,7 +76,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 		DBUG_LO(":) anchor saving " << figs.size() << " figments" );
 
-		chunkSig = reinterpret_cast<dFigSaveSig>(mRoot.mD.get());
+		chunkSig = reinterpret_cast<dFigSaveSig>(mRoot.get().get());
 		pAddHere->add( &chunkSig ); // Save reference to the root.
 
 		for( std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i ){
@@ -180,7 +179,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 			}
 		}
 
-		mRoot.mD = reloads[rootSig]->fig;
+		mRoot.get() = reloads[rootSig]->fig;
 
 	}catch(...){
 		for(dReloadMap::iterator itr = reloads.begin(); itr != reloads.end(); ++itr){	//- Cleanup
@@ -195,9 +194,9 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	pBuff->trimHead(readSpot);
 }
 
-cAnchor::cAnchor():
-	mRoot(gWorld.get()->getEmptyFig())
-{}
+cAnchor::cAnchor(){
+	addToUpdateRoster(&mRoot);
+}
 
 cAnchor::~cAnchor() {
 }
@@ -205,7 +204,8 @@ cAnchor::~cAnchor() {
 void
 cAnchor::run(cContext* pCon) {
 	start(pCon);
-	mRoot.mD->run(pCon);
+	updatePlugs();
+	mRoot.get()->run(pCon);
 	stop(pCon);
 }
 
@@ -270,7 +270,7 @@ cSaveTester::patGetData(ptrLead aLead){
 	aLead->addPlug(&myNum, xPT_num);
 }
 
-cByteBuffer buff;
+tPlug<iFigment::ptrBuff> plugBuff;
 //const dTextChar *testStr = L"proper job";
 const dNatChar *testStr = "proper job";
 
@@ -282,13 +282,12 @@ GTUT_START(testAnchor, basicSave){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> tester;
 
+	plugBuff = iFigment::ptrBuff( iFigment::ptrBuff(new cByteBuffer()) );
 	tester = ptrFig(new cSaveTester(testStr, 42));
 	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
 	add->addPlug(&tester, cAnchor::xPT_root);
 	ank->jack(add, &fakeCon);
-
-	buff.clear();
-	ank->save(&buff);
+	ank->save(plugBuff.get().get());
 }GTUT_END;
 
 GTUT_START(testAnchor, basicLoad){
@@ -297,7 +296,7 @@ GTUT_START(testAnchor, basicLoad){
 
 	ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad, fake.getSig());
 	dReloadMap dontcare;
-	ank->loadEat(&buff, &dontcare);
+	ank->loadEat(plugBuff.get().get(), &dontcare);
 
 	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot, fake.getSig());
 	ank->jack(root, &fake);
@@ -305,13 +304,15 @@ GTUT_START(testAnchor, basicLoad){
 	reload = root->getPlug(cAnchor::xPT_root);
 
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData, fake.getSig());
-	reload.mD->jack(checkData, &fake);
+	reload.get()->jack(checkData, &fake);
 
 	tPlug<dStr> myStr = checkData->getPlug(cSaveTester::xPT_str);
 	tPlug<int> myNum = checkData->getPlug(cSaveTester::xPT_num);
 
-	GTUT_ASRT(myNum.getMD()==42, "saved numbers are not the same");
-	GTUT_ASRT(myStr.getMD().compare(testStr)==0, "saved string doesn't match");
+	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
+	GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
+
+	plugBuff.get().reset();
 }GTUT_END;
 
 
@@ -335,16 +336,14 @@ GTUT_START(testAnchor, figmentSave){
 		ptrLead add = gWorld.get()->makeLead(cRunList::xAdd, fakeCon.getSig());
 
 		add->addToPile(&tester);
-		rlist.getMD()->jack(add, &fakeCon);
+		rlist.get()->jack(add, &fakeCon);
 	}
 	{
-		tPlug<cByteBuffer> plugBuff;
 		ptrLead save = gWorld.get()->makeLead(cAnchor::xSave, fakeCon.getSig());
 
+		plugBuff = iFigment::ptrBuff( iFigment::ptrBuff(new cByteBuffer()) );
 		save->addPlug(&plugBuff, cAnchor::xPT_serialBuff);
 		ank->jack(save, &fakeCon);
-
-		buff = plugBuff.getMD();
 	}
 
 }GTUT_END;
@@ -357,7 +356,7 @@ GTUT_START(testAnchor, figmentLoad){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	dReloadMap dontcare;
 
-	ank->loadEat(&buff, &dontcare);
+	ank->loadEat(plugBuff.get().get(), &dontcare);
 
 	std::list<ptrFig> links;
 	ank->getLinks(&links);
@@ -372,6 +371,8 @@ GTUT_START(testAnchor, figmentLoad){
 	links.pop_front();
 
 	GTUT_ASRT(strncmp( links.front()->name(), cSaveTester::identify(), strlen( cSaveTester::identify()) )==0, "didn't save/load correct figment");
+
+	plugBuff.get().reset();
 }GTUT_END;
 
 #endif

@@ -18,16 +18,10 @@ const cCommand::dUID cTextFig::xGetText = tOutline<cTextFig>::makeCommand(
 );
 
 cTextFig::cTextFig(){
+	addToUpdateRoster(&mText);
 }
 
 cTextFig::~cTextFig(){
-}
-
-void
-cTextFig::run(cContext* pCon){
-	start(pCon);
-
-	stop(pCon);
 }
 
 void

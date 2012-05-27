@@ -42,20 +42,7 @@ typedef unsigned int	dMillisec;
 
 //------------------------------------------------------------------------------------------
 // !\note	Code taken from http://cboard.cprogramming.com/tech-board/114650-string-hashing-algorithm.html
-template<typename T>
-dNameHash makeHash(T const * pString){
-	dNameHash hash = 0;
-
-	if(pString==NULL)
-		return 0;
-
-	while(*pString!='\0'){
-		hash = ((hash << 5) + hash) ^ *pString;
-		++pString;
-	}
-
-	return hash;
-}
+dNameHash makeHash(const char *pString);
 
 //------------------------------------------------------------------------------------------
 //!\brief	Handy if you don't want to expose the container, but you want access to its elements.

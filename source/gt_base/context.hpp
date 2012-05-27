@@ -146,19 +146,23 @@ namespace gt{
 	};
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	Provides services to handle multithreading figments.
+	//!\brief	Provides services to handle multithreading figments. You must add all your
+	//!			figments plugs to the update roster.
 	class cFigContext : public iFigment{
 	public:
 		cFigContext();
 		virtual ~cFigContext();
 
-		void start(cContext *con);	//!<	Puts this figment onto the given context stack, but only if it's not already using a context.
-		void stop(cContext *con);	//!<	Takes the figment off the stack.
+		void start(cContext *con);	//!< Puts this figment onto the given context stack, but only if that figment isn't already stacked. Updates all plugs in the roster.
+		void stop(cContext *con);	//!< Takes the figment off the stack.
+		void updatePlugs();
+		void addToUpdateRoster(cBase_plug *pPlug);	//!< Adds a plug to the list of things to update when we start. Typically you can use this in the constructor. NOT threadsafe.
+		void remFromRoster(cBase_plug *pPlug);	//!< Used only if a plug is removed from a class during its jack/run functions. NOT threadsafe.
 
 	protected:
 		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
 
-		void emergencyStop();	//!<	Used by the context a forcibly removing figments from itself.
+		void emergencyStop();	//!< If there is a problem, we want the figment to be able to stop using a context.
 
 		friend class cContext;
 		friend class cBlueprint;
@@ -166,8 +170,14 @@ namespace gt{
 	private:
 
 		#ifdef GT_THREADS
-			//boost::condition_variable conSync;
 			boost::mutex conMu;
+			std::vector<cBase_plug*> updateRoster;	//!< Reference to plugs that need to update. DO NOT delete the contents, even on destruction.
+			std::vector<cBase_plug*>::iterator itrRos;
+			bool locked;	//!< Used mostly to ensure we only update plugs when locked.
+			bool updating;
+
+			//- for ref
+			//boost::condition_variable conSync;
 			//boost::unique_lock<boost::mutex> lock;
 		#endif
 	};

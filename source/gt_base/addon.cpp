@@ -35,7 +35,9 @@ const cCommand::dUID cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
 );
 
 cAddon::cAddon()
-{}
+{
+	addToUpdateRoster(&mAddonName);
+}
 
 cAddon::~cAddon(){
 	try{
@@ -52,21 +54,22 @@ cAddon::~cAddon(){
 }
 
 void cAddon::patLoadAddon(ptrLead aLead){
-	if(mAddonName.mD.empty()){
+	dText &name = mAddonName.get();
+	if(name.empty()){
 		dTimesOpened::iterator found;
 
 		mAddonName = aLead->getPlug(xPT_addonName);
 
-		if(mAddonName.mD.empty())
+		if(name.empty())
 			throw excep::base_error("No name given for loading addon", __FILE__, __LINE__);
 
-		mAddonHash = makeHash(mAddonName.mD.c_str());
+		mAddonHash = makeHash( textToNStr(name.c_str()).c_str() );
 
 		found = xOpenAddons.find(mAddonHash);
 		if(found != xOpenAddons.end()){
 			++found->second;
 		}else{
-			draftAddon(mAddonName.mD);
+			draftAddon(name);
 			++xOpenAddons[mAddonHash];
 		}
 	}

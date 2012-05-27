@@ -7,6 +7,20 @@
 
 #include "utils.hpp"
 
+////////////////////////////////////////////////////////////
+dNameHash makeHash(const char *pString){
+	dNameHash hash = 0;
+
+	if(pString==NULL)
+		return 0;
+
+	while(*pString!='\0'){
+		hash = ((hash << 5) + hash) ^ *pString;
+		++pString;
+	}
+
+	return hash;
+}
 
 ////////////////////////////////////////////////////////////
 cTracker::dItemMap* 			cTracker::xObjectsActive;	// Don't assign here.

@@ -10,6 +10,15 @@
 #include "binPacker.hpp"
 #include <vector>
 
+namespace gt{
+	namespace voidCopiers{
+		template<typename A>
+		void baseCopy(const void *pFrom, void *pTo){
+			*reinterpret_cast<A*>(pTo) = *reinterpret_cast<const A*>(pFrom);
+		}
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Object types
@@ -22,18 +31,21 @@ namespace gt{
 	template<typename A>
 	class tPlugFlakes: public cBase_plug{
 	public:
-		tPlugFlakes(PLUG_TYPE_ID pTI) : cBase_plug(pTI) {}
+		tPlugFlakes(dPlugType pTI, dMapCopiers *pCopiers) :
+			cBase_plug(pTI, pCopiers)
+		{}
+
 		virtual ~tPlugFlakes(){}
 
 		virtual void save(cByteBuffer* pSaveHere){
-			pSaveHere->add(&getMD());
+			pSaveHere->add(&get());
 		}
 
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
-			pChewToy->trimHead( pChewToy->fill(&getMD()) );
+			pChewToy->trimHead( pChewToy->fill(&get()) );
 		}
 
-		virtual A& getMD() = 0;
+		virtual A& get() = 0;
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -53,29 +65,38 @@ namespace gt{
 	template<typename A>
 	class tPlugShadows: public tPlugFlakes<A>{
 	public:
-		tPlugShadows(PLUG_TYPE_ID pTI);
+		tPlugShadows(cBase_plug::dPlugType pTI, cBase_plug::dMapCopiers *pCopiers);
 		virtual ~tPlugShadows();
 
 		virtual void linkLead(cLead* pLead);	//!<\note Threadsafe
 		virtual void unlinkLead(cLead* pLead);	//!<\note Threadsafe
 
 		#ifdef GT_THREADS
-			virtual cUpdateLemming update(); //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
+			virtual void updateStart();
+			virtual void updateFinish();
+
+			virtual void save(cByteBuffer* pSaveHere){
+				updateStart();
+				tPlugFlakes<A>::save(pSaveHere);
+				updateFinish();
+			}
+
+			virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
+				updateStart();
+				tPlugFlakes<A>::loadEat(pChewToy, aReloads);
+				updateFinish();
+			}
 		#endif
+
+		virtual A& get() = 0;
 
 		virtual	cBase_plug& operator= (const cBase_plug &pD);
 		virtual bool operator== (const cBase_plug &pD);
 
-		virtual A& getMD() =0;
-
 	protected:
 
 		#ifdef GT_THREADS
-
 			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor);
-			virtual void finishUpdate();
-
-			friend class cUpdateLemming;
 		#endif
 
 	friend class cLead;
@@ -98,8 +119,6 @@ namespace gt{
 	template<typename A>
 	class tPlug: public tPlugShadows<A>{
 	public:
-		A mD;	//!< Data: This is public so that the owner can have easy access to it.
-
 		tPlug();
 		tPlug(const A& pA);
 		tPlug(const tPlug<A> &other);
@@ -112,10 +131,13 @@ namespace gt{
 		cBase_plug& operator= (const tPlug<A> &other);
 		cBase_plug& operator= (const A& pA);
 
-		virtual A& getMD();
+		virtual A& get();
 
 	private:
-		void genericCopy(const cBase_plug* pD);
+		static cBase_plug::dMapCopiers* getCopiers();
+
+		A mD;	//!< Data
+
 	};
 }
 
@@ -125,8 +147,9 @@ namespace gt{
 
 	//--------------------------------------
 	template<typename A>
-	tPlugShadows<A>::tPlugShadows(PLUG_TYPE_ID pTI) : tPlugFlakes<A>(pTI){
-	}
+	tPlugShadows<A>::tPlugShadows(cBase_plug::dPlugType pTI, cBase_plug::dMapCopiers *pCopiers) :
+		tPlugFlakes<A>(pTI, pCopiers)
+	{}
 
 	template<typename A>
 	tPlugShadows<A>::~tPlugShadows(){
@@ -168,16 +191,16 @@ namespace gt{
 		cBase_plug*
 		tPlugShadows<A>::getShadow(dConSig aCon, eShadowMode whatFor){
 			//- It should be fine to not lock here because this data should be independent of the other threads, and the shadow list should only be updated when all leads are locked.
-			if(mShadows[aCon].mMode == eSM_read)	//- these operations should be quick as its a vector.
+			if(mShadows[aCon].mMode == eSM_read)	//- these operations should be quick as it's a vector.
 				mShadows[aCon].mMode = whatFor;
 			return mShadows[aCon].mData;
 		}
 
 		template<typename A>
-		cUpdateLemming
-		tPlugShadows<A>::update(){
+		void
+		tPlugShadows<A>::updateStart(){
 			PROFILE;
-			muMap.lock();	//- lemming unlocks this when it dies and call finish.
+			muMap.lock();	//- lemming unlocks this when it dies and calls finish.
 
 			for(	//- Name is qualified but itrLead is in cBase_plug
 				tPlugFlakes<A>::itrLead = tPlugFlakes<A>::mLeadsConnected.begin();
@@ -189,20 +212,18 @@ namespace gt{
 			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
 				if(itrShadow->mData != NULL){
 					if(itrShadow->mMode == eSM_write)
-						getMD() = itrShadow->mData->mD;
+						get() = itrShadow->mData->get();
 				}
 			}
-
-			return cUpdateLemming(this);
 		}
 
 		template<typename A>
 		void
-		tPlugShadows<A>::finishUpdate(){
+		tPlugShadows<A>::updateFinish(){
 			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
 				if(itrShadow->mData != NULL){
 					itrShadow->mMode = eSM_read;
-					itrShadow->mData->mD = getMD();
+					itrShadow->mData->get() = get();
 				}
 			}
 
@@ -232,7 +253,7 @@ namespace gt{
 			}
 
 			itrShadow = mShadows.begin() + pLead->mConx;
-			itrShadow->mData = new tPlug<A>(getMD());
+			itrShadow->mData = new tPlug<A>(get());
 		#endif
 
 		cBase_plug::linkLead(pLead);
@@ -264,24 +285,41 @@ namespace gt{
 
 
 	//--------------------------------------
+
+	template<typename A>
+	cBase_plug::dMapCopiers*
+	tPlug<A>::getCopiers(){
+		static bool setup = false;
+		static cBase_plug::dMapCopiers copiers;
+
+		if(!setup){
+			copiers[ cBase_plug::getPlugType<A>() ] = voidCopiers::baseCopy<A>;
+			setup=true;
+		}
+
+		return &copiers;
+	}
+
 	template<typename A>
 	tPlug<A>::tPlug():
-		tPlugShadows<A>(typeid(A))
+		tPlugShadows<A>(cBase_plug::getPlugType<A>(), getCopiers())
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const A& pA):
-		tPlugShadows<A>(typeid(A)), mD(pA)
+		tPlugShadows<A>(cBase_plug::getPlugType<A>(), getCopiers()),
+		mD(pA)
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const tPlug<A> &other) :
-		tPlugShadows<A>(typeid(A)), mD(other.mD)
+		tPlugShadows<A>(cBase_plug::getPlugType<A>(), getCopiers()),
+		mD(other.mD)
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const cBase_plug *other) :
-		tPlugShadows<A>(other->mType)
+		tPlugShadows<A>(other->mType, getCopiers())
 	{
 		other->copyInto(&mD);
 	}
@@ -321,7 +359,7 @@ namespace gt{
 
 	template<typename A>
 	A&
-	tPlug<A>::getMD(){
+	tPlug<A>::get(){
 		return mD;
 	}
 }

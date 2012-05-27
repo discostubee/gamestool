@@ -51,3 +51,9 @@ dText PCStrToText(const dPlaChar *pString){
 
 	return strRtn;
 }
+
+dStr textToNStr(const dTextChar *pString){
+	dStr strRtn;
+
+	return strRtn;
+}

@@ -59,8 +59,8 @@ namespace gt{
 		static const cPlugTag*	xPT_serialBuff;	//!< A smart pointer to the buffer where we load from, and save to.
 		static const cPlugTag* xPT_loadingParty;	//!< This is a special group of figments relevant to loading.
 
-		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability.
-		static const cCommand::dUID	xLoad;	//!< Ditto above.
+		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability. Expects a xPT_serialBuff.
+		static const cCommand::dUID	xLoad;	//!< Expects a xPT_serialBuff and xPT_loadingParty
 
 		#if defined(DEBUG) && defined(GT_SPEED)
 			static const cCommand::dUID xTestJack;
@@ -171,21 +171,59 @@ namespace gt{
 
 	//--------------------------------------
 	template<>
-	class tPlugFlakes<ptrFig>: public cBase_plug{
+	class tPlug<ptrFig>: public tPlugShadows<ptrFig>{
 	public:
-		tPlugFlakes(PLUG_TYPE_ID pTI) : cBase_plug(pTI) {}
+		tPlug():
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>(), getCopiers())
+		{
+			mD = gWorld.get()->getEmptyFig();
+		}
 
-		virtual ~tPlugFlakes(){
+		tPlug(const ptrFig& pA):
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>(), getCopiers())
+		{
+			mD = pA;
+		}
+
+		tPlug(const tPlug<ptrFig> &other):
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>(), getCopiers())
+		{
+			mD = other.mD;
+		}
+
+		tPlug(const cBase_plug *other):
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>(), getCopiers())
+		{
+			other->copyInto(&mD);
+		}
+
+		virtual ~tPlug(){}
+
+		virtual cBase_plug& operator= (const cBase_plug &pD){
+			NOTSELF(&pD);
+			pD.copyInto(&mD);
+			return *this;
+		}
+
+		virtual bool operator== (const cBase_plug &pD){ return false; }
+
+		cBase_plug& operator= (const tPlug<ptrFig> &other){
+			NOTSELF(&other);
+			mD = other.mD;
+			return *this;
+		}
+
+		cBase_plug& operator= (const ptrFig& pA){
+			mD = pA;
+			return *this;
 		}
 
 		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;
 
 			//- Using the pointer as a unique number to identify the referenced figment.
-			dFigSaveSig saveSig = reinterpret_cast<dFigSaveSig>( getMD().get() );
+			dFigSaveSig saveSig = reinterpret_cast<dFigSaveSig>( get().get() );
 			pAddHere->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
-
-			//DBUG_LO("	Saved as" << reinterpret_cast<unsigned long>(saveSig));
 		}
 
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
@@ -200,10 +238,28 @@ namespace gt{
 			if(itr == aReloads->end())
 				throw excep::notFound("signature of reloaded figment", __FILE__, __LINE__);	//- figment remains empty.
 
-			getMD() = itr->second->fig;
+			get() = itr->second->fig;
 		}
 
-		virtual ptrFig& getMD() = 0;
+		virtual ptrFig& get(){
+			return mD;
+		}
+
+	private:
+		ptrFig mD;	//!< Data
+
+		cBase_plug::dMapCopiers*
+		getCopiers(){
+			static bool setup = false;
+			static cBase_plug::dMapCopiers copiers;
+
+			if(!setup){
+				copiers[ cBase_plug::getPlugType<ptrFig>() ] = &voidCopiers::baseCopy<ptrFig>;
+				setup=true;
+			}
+
+			return &copiers;
+		}
 	};
 
 }

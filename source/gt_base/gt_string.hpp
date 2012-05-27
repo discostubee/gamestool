@@ -60,5 +60,8 @@ dStr PCStrToNStr(const dPlaChar *pString);
 //!\brief	Converts platform C style string to text string instance.
 dText PCStrToText(const dPlaChar *pString);
 
+//!\brief	Convert from a text C style string to a native string instance.
+dStr textToNStr(const dTextChar *pString);
+
 
 #endif

@@ -67,6 +67,8 @@ const cCommand::dUID	cBase_fileIO::xGetSize = tOutline<cBase_fileIO>::makeComman
 
 
 cBase_fileIO::cBase_fileIO(){
+	addToUpdateRoster(&mPath);
+	addToUpdateRoster(&mFileSize);
 }
 
 cBase_fileIO::~cBase_fileIO(){
@@ -86,7 +88,7 @@ cBase_fileIO::patRead(ptrLead aLead){
 	aLead->getValue(&readSize, xPT_startSpot, true);
 
 	tPlug<cByteBuffer> readInto;
-	read(&readInto.mD, readSize, readStart);
+	read(&readInto.get(), readSize, readStart);
 	aLead->setPlug(&readInto, xPT_buffer, false);
 }
 
@@ -94,7 +96,7 @@ void
 cBase_fileIO::patWrite(ptrLead aLead){
 
 	tPlug<cByteBuffer>  writeHere;
-	write(&writeHere.mD);
+	write(&writeHere.get());
 	aLead->setPlug(&writeHere, xPT_buffer, false);
 }
 
@@ -104,7 +106,7 @@ cBase_fileIO::patInsert(ptrLead aLead){
 
 	aLead->getValue(&startSpot, xPT_startSpot, true);
 	tPlug<cByteBuffer> current = aLead->getPlug(xPT_buffer);
-	insert( &current.mD, startSpot );
+	insert( &current.get(), startSpot );
 	aLead->setPlug(&current, xPT_buffer);
 }
 

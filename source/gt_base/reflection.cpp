@@ -43,7 +43,11 @@ const cCommand::dUID cPlugHound::xGimmie = tOutline<cPlugHound>::makeCommand(
 
 cPlugHound::cPlugHound():
 		tmpTag(NULL), setup(false)
-{}
+{
+	addToUpdateRoster(&mCom);
+	addToUpdateRoster(&mTag);
+	addToUpdateRoster(&mTarget);
+}
 
 cPlugHound::~cPlugHound(){
 }
@@ -55,9 +59,9 @@ cPlugHound::patGoGetit(ptrLead aLead){
 	mCom = aLead->getPlug(xPT_command);
 	mTag = aLead->getPlug(xPT_tag);
 	mTarget = aLead->getPlug(xPT_contextTargetID);
-	tmpTag = gWorld.get()->getPlugTag(mTag.mD);
-	tmpLead = gWorld.get()->makeLead(mCom.mD, currentCon->getSig());
-	ptrFig fig = currentCon->getFirstOfType(mTarget.mD);
+	tmpTag = gWorld.get()->getPlugTag(mTag.get());
+	tmpLead = gWorld.get()->makeLead(mCom.get(), currentCon->getSig());
+	ptrFig fig = currentCon->getFirstOfType(mTarget.get());
 	if(fig->hash() != getHash<cEmptyFig>()){
 		currentCon->addJackJob( tmpLead, fig );
 	}
@@ -103,10 +107,13 @@ const cCommand::dUID cAlucard::xSetContextTarget = tOutline<cAlucard>::makeComma
 
 cAlucard::cAlucard():
 	mCommand(cCommand::noID)
-{}
+{
+	addToUpdateRoster(&mTarget);
+	addToUpdateRoster(&mAltTargetName);
+	addToUpdateRoster(&mCommand);
+}
 
 cAlucard::~cAlucard(){
-
 }
 
 void
@@ -162,8 +169,8 @@ void cAlucard::run(cContext* aCon){
 	PROFILE;
 	start(aCon);
 
-	if(mLead.get() == NULL && mCommand.mD != cCommand::noID){
-		mLead = ptrLead(new cLead(mCommand.mD, mConx.getSig()) );
+	if(mLead.get() == NULL && mCommand.get() != cCommand::noID){
+		mLead = ptrLead(new cLead(mCommand.get(), mConx.getSig()) );
 	}
 
 	if(mLead.get() != NULL){
@@ -172,7 +179,7 @@ void cAlucard::run(cContext* aCon){
 			tmpCPlug = *mNewPlugsToFind.begin();
 			tmpCPlug->found = aCon->getFirstOfType( tmpCPlug->type );
 
-			if( tmpCPlug->found.mD->hash() != getHash<cEmptyFig>() ){
+			if( tmpCPlug->found.get()->hash() != getHash<cEmptyFig>() ){
 				mLead->addPlug(&tmpCPlug->found, tmpCPlug->tag);
 			}
 			mContextPlugs.pop_front();
@@ -186,8 +193,8 @@ void cAlucard::run(cContext* aCon){
 			mNewPlugsToAdd.pop_front();
 		}
 
-		if(mTarget.mD->hash() != getHash<cEmptyFig>()){
-			mTarget.mD->jack(mLead, &mConx);
+		if(mTarget.get()->hash() != getHash<cEmptyFig>()){
+			mTarget.get()->jack(mLead, &mConx);
 		}
 	}
 
@@ -249,7 +256,7 @@ GTUT_START(test_reflection, alucardBasic){
 	alucard->run(&fakeConx);
 
 	ptrLead getNum = gWorld.get()->makeLead( cTestNum::xGetData, fakeConx.getSig() );
-	testNum.mD->jack(getNum, &fakeConx);
+	testNum.get()->jack(getNum, &fakeConx);
 	GTUT_ASRT( *getNum->getPlug(cTestNum::xPT_num) == num, "number wasn't set.");
 
 
