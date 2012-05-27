@@ -40,24 +40,7 @@ cReload::~cReload(){
 #ifdef GTUT
 
 GTUT_START(testPlug, copy){
-	tPlug<int> A;
-	cBase_plug *B = new tPlug<int>();
-	int C = 0;
-	char D = 'a';
-	
-	A = 5;
-	TRYME( *B = A );
 
-	TRYME( B->copyInto(&C) );
-	GTUT_ASRT(C == 5, "B didn't copy A");
-
-	try{
-		B->copyInto(&D);
-	}catch(std::exception){
-		GTUT_ASRT(true, "");
-	}
-
-	delete(B);
 }GTUT_END;
 
 GTUT_START(testPlug, saveLoad){
@@ -68,7 +51,7 @@ GTUT_START(testPlug, saveLoad){
 	A = 42;
 	A.save(&buff);
 	B.loadEat(&buff, &dontCare);
-	GTUT_ASRT(B.mD == A.mD, "A didn't save, or B didn't load, correctly.");
+	GTUT_ASRT(B.get() == A.get(), "A didn't save, or B didn't load, correctly.");
 }GTUT_END;
 
 

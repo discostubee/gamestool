@@ -19,28 +19,16 @@
 #include "lead.hpp"
 #include "figment.hpp"
 
-////////////////////////////////////////////////////////////
 using namespace gt;
 
-#ifdef GT_THREADS
-	cUpdateLemming::cUpdateLemming(cBase_plug *callBack) : callMe(callBack)
-	{}
-
-	cUpdateLemming::~cUpdateLemming() {
-		#ifdef GT_THREADS
-			callMe->finishUpdate();
-		#endif
-	}
-#endif
-
 ////////////////////////////////////////////////////////////
-cBase_plug::cBase_plug(PLUG_TYPE_ID pTI):
-	mType(pTI)
+cBase_plug::cBase_plug(dPlugType pTI, dMapCopiers *pCopiers):
+	mType(pTI), mCopiers(pCopiers)
 {
 }
 
-cBase_plug::cBase_plug(const cBase_plug& pCopy):
-	mType(pCopy.mType)
+cBase_plug::cBase_plug(const cBase_plug &pCopy):
+	mType(pCopy.mType), mCopiers(pCopy.mCopiers)
 {
 }
 
@@ -297,13 +285,14 @@ GTUT_START(testLead, tagging){
 	tPlug<int> numA, numB;
 	const int magic = 3;
 	lead.addPlug(&numA, &tag);
-	numA.mD = magic;
-	{
-		PLUGUP(numA);
-	}
+	numA.get() = magic;
+	numA.updateStart();
+	numA.updateFinish();
 
 	numB = lead.getPlug(&tag);
-	GTUT_ASRT(numB.mD == magic, "B didn't get A's number");
+	numB.updateStart();
+	numB.updateFinish();
+	GTUT_ASRT(numB.get() == magic, "B didn't get A's number");
 
 }GTUT_END;
 
@@ -321,19 +310,17 @@ GTUT_START(testLead, shadowUpdate){
 
 	GTUT_ASRT(conxA.getSig() != conxB.getSig(), "contexts have same signature");
 
-	numA.mD = 0;
+	numA.get() = 0;
 
 	leadA.addPlug(&numA, &tag);
 	leadB.addPlug(&numA, &tag);
-	numB.mD = magic;
+	numB.get() = magic;
 	leadA.setPlug(&numB, &tag);
-	{
-		PLUGUP(numA);
-		numA.mD *= numA.mD;
-	}
-	GTUT_ASRT(numA.mD == magicSquare, "A didn't get B's number");
+	numA.get() *= numA.get();
+
+	GTUT_ASRT(numA.get() == magicSquare, "A didn't get B's number");
 	numB = leadB.getPlug(&tag);
-	GTUT_ASRT(numB.mD == numA.mD, "something went wrong using multiple shadows");
+	GTUT_ASRT(numB.get() == numA.get(), "something went wrong using multiple shadows");
 
 }GTUT_END;
 

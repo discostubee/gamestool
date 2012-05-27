@@ -36,17 +36,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Macros
 
-#ifdef USE_TYPEINFO
-	typedef const std::type_info & PLUG_TYPE_ID;
-	#define PLUG_TYPE_TO_ID(t) typeid(t)
-	#define PLUG_CANT_COPY(copier, copiee) throw excep::cantCopy(typeid(copier).name(), typeid(copiee).name(), __FILE__, __LINE__)
-	#define PLUG_CANT_COPY_ID(copier, copiee) throw excep::cantCopy(copier.name(), copiee.name(), __FILE__, __LINE__)
-#else
-	typedef const dNameHash PLUG_TYPE_ID;
-	#define PLUG_TYPE_TO_ID(t) nameHash(typeid(t).name())
-	#define PLUG_CANT_COPY(copier, copiee) throw excep::cantCopy("", "", __FILE__, __LINE__)
-	#define PLUG_CANT_COPY_ID(copier, copiee) throw excep::cantCopy("", "", __FILE__, __LINE__)
-#endif
+#define PLUG_CANT_COPY(copier, copiee) throw excep::cantCopy(typeid(copier).name(), typeid(copiee).name(), __FILE__, __LINE__)
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Classes
@@ -82,24 +72,6 @@ namespace gt{
 		eSM_write
 	};
 
-	#ifdef GT_THREADS
-		//----------------------------------------------------------------------------------------------------------------
-		//!\brief	Used when updating a plug.
-		class cUpdateLemming{
-		private:
-			cBase_plug *callMe;
-
-		public:
-			explicit cUpdateLemming(cBase_plug *callBack);
-			~cUpdateLemming();
-		};
-
-		#define PLUGUP(plug) cUpdateLemming lem__LINE__ = plug.update()
-
-	#else
-		#define PLUGUP(plug) (void)plug
-	#endif
-
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	A plug is a data container that a lead can connect too. The lead can then connect that data to another
 	//!			object via the jack function, as well as automatically disconnect itself from its linked leads when it
@@ -111,13 +83,28 @@ namespace gt{
 	//!			access should only happen through leads.
 	class cBase_plug{
 	public:
-		const PLUG_TYPE_ID mType;	//!< Must be public so the tPlug templates can use it.
+		//--- types
+		typedef dNameHash dPlugType;
+		typedef void (*fuCopyInto)(const void *copyFrom, void *copyTo);
+		typedef std::map<dPlugType, fuCopyInto> dMapCopiers;
 
-		cBase_plug(PLUG_TYPE_ID pTI);
+		//---
+		template<typename PLUG_TYPE> static dPlugType getPlugType(){
+			static dPlugType typeID = 0;
+			if(typeID == 0){
+				typeID = makeHash(typeid(PLUG_TYPE).name());
+			}
+			return typeID;
+		}
+
+		//---
+		const dPlugType mType;	//!< Must be public so the tPlug templates can use it.
+
+		cBase_plug(dPlugType pTI, dMapCopiers *pCopiers);
 		cBase_plug(const cBase_plug& pCopy);
 
 		template< template<typename> class PLUG, typename T> cBase_plug& operator= (const PLUG<T> &pT);
-		template<typename T> void copyInto(T *container, bool silentFail = false) const;
+		template< typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
 
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Must be threadsafe.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Must be threadsafe.
@@ -134,9 +121,10 @@ namespace gt{
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
 		virtual bool operator== (const cBase_plug &pD) =0;
 
-	#ifdef GT_THREADS
-		virtual cUpdateLemming update() =0; //!< locks all the connected leads and updates the shadows. The update finished when the lemming dies.
-	#endif
+		#ifdef GT_THREADS
+			virtual void updateStart() =0;
+			virtual void updateFinish() =0;
+		#endif
 
 	protected:
 		typedef std::map<cLead*, unsigned int> dMapLeads;
@@ -146,13 +134,12 @@ namespace gt{
 
 		#ifdef GT_THREADS
 			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor) =0; //!< Leads must always work with shadows.
-
-			virtual void finishUpdate() =0; //!< used only by the update lemming.
-
-			friend class cUpdateLemming;
 		#endif
 
 	friend class cLead;
+
+	private:
+		dMapCopiers* mCopiers;
 	};
 
 	//--------------------------------------------------------------------------------------------------------
@@ -241,28 +228,6 @@ namespace gt{
 	protected:
 		typedef std::map<cPlugTag::dUID, cBase_plug*> dDataMap;
 		typedef std::list<cBase_plug*> dPiledData;
-
-		/*
-		//!\brief
-		struct sSortDMap{
-			bool operator () (const dDataMap::iterator &pA, const dDataMap::iterator &pB) const {
-				if(pA->first > pB->first)
-					return true;
-				else
-					return false;
-			}
-		};
-
-		//!\brief
-		struct sSortPile{
-			bool operator () (const dPiledData::iterator &pA, const dPiledData::iterator &pB) const {
-				if(*pA > *pB) // just compare memory addresses
-					return true;
-				else
-					return false;
-			}
-		};
-		*/
 		
 		dDataMap mTaggedData; 	//!<
 		dPiledData mDataPile;	//!<
@@ -291,34 +256,48 @@ namespace excep{
 // Templates
 namespace gt{
 
-	template<typename T>
-	void
-	cBase_plug::copyInto(T *container, bool silentFail) const{
-		if(mType != PLUG_TYPE_TO_ID(T)){
-			if(!silentFail)
-				PLUG_CANT_COPY_ID(mType, typeid(T));
-			else
-				return;
-		}
-
-		*container = dynamic_cast< const tPlug<T>* >(this)->mD;
-	}
-
 	template< template<typename> class PLUG, typename T>
 	cBase_plug&
 	cBase_plug::operator= (const PLUG<T> &pT){
-		if(this != &pT){
-			if(mType != pT.mType)
-				PLUG_CANT_COPY_ID(mType, pT.mType);
-
-			dynamic_cast< tPlug<T>* >(this)->mD = pT.mD;
-		}else{
-			WARN("type mismatch when assigning");
-		}
+		ASRT_NOTNULL(&pT);
+		copyInto(&pT.getMD());
 		return *this;
 	}
 
+	template< typename T>
+	void
+	cBase_plug::copyInto(T *container) const{
+		dMapCopiers::iterator itrCopiers = mCopiers->find(getPlugType<T>());
+		if(itrCopiers != mCopiers->end()){
+			itrCopiers->second( &reinterpret_cast< tPlug<T>* >( const_cast<cBase_plug*>(this) )->get(), container );
+		}else{
+			PLUG_CANT_COPY(cBase_plug, T);
+		}
+	}
+
 }
+
+/*
+//!\brief
+struct sSortDMap{
+	bool operator () (const dDataMap::iterator &pA, const dDataMap::iterator &pB) const {
+		if(pA->first > pB->first)
+			return true;
+		else
+			return false;
+	}
+};
+
+//!\brief
+struct sSortPile{
+	bool operator () (const dPiledData::iterator &pA, const dPiledData::iterator &pB) const {
+		if(*pA > *pB) // just compare memory addresses
+			return true;
+		else
+			return false;
+	}
+};
+*/
 
 
 #endif

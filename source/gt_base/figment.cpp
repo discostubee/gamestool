@@ -53,12 +53,12 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 
 	numVer.loadEat(pLoadFrom);
 
-	if(numVer.mD > loadPattern.size())
+	if(numVer.get() > loadPattern.size())
 		throw excep::fromTheFuture(__FILE__, __LINE__);
 
 	std::vector<dPlugHolder>::iterator itrPrev, itrPrevEnd, itrCur;
 
-	for(size_t idxVer = numVer.mD; idxVer < loadPattern.size(); ++idxVer){
+	for(size_t idxVer = numVer.get(); idxVer < loadPattern.size(); ++idxVer){
 		itrCur = loadPattern[idxVer].begin();
 		if(idxVer==0){
 			while(itrCur != loadPattern[0].end()){
@@ -86,14 +86,14 @@ void
 cFigment::patSave(ptrLead aLead){
 	tPlug<ptrBuff> buffer = aLead->getPlug(xPT_serialBuff);
 
-	save(buffer.mD.get());
+	save(buffer.get().get());
 }
 
 void
 cFigment::patLoad(ptrLead aLead){
 	tPlug<ptrBuff> buffer = aLead->getPlug(xPT_serialBuff);
 
-	loadEat(buffer.mD.get());
+	loadEat(buffer.get().get());
 }
 
 void
@@ -122,9 +122,10 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 
 void 
 cFigment::run(cContext* pCon){
-	DUMB_REF_ARG(pCon);
-	//start(pCon);
-	//stop(pCon);
+	//- Run these in case the child figment doesn't have a run function but has plugs to update.
+	start(pCon);
+	updatePlugs();
+	stop(pCon);
 }
 
 cFigment::dMigrationPattern
@@ -135,7 +136,10 @@ cFigment::getLoadPattern(){
 void 
 cFigment::getLinks(std::list<ptrFig>* pOutLinks){
 	DUMB_REF_ARG(pOutLinks);
+
+	//- Don't forget these when getting links
 	//start(pCon);
+	//updatePlugs();
 	//stop(pCon);
 }
 

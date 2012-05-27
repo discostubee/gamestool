@@ -38,7 +38,6 @@ namespace gt{
 		virtual const dNatChar* name() const{ return cTextFig::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cTextFig>::hash(); }
 
-		virtual void run(cContext* pCon);				//!< Temp code to display text in console.
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 

@@ -41,7 +41,7 @@ cThread::runThread(cThread *me, cContext* pCon){
 
 		while(!me->threadStop){
 			newContext.runJackJobs();
-			me->link.mD->run(&newContext);
+			me->link.get()->run(&newContext);
 			me->sync.wait(syncLock);
 		}
 	}catch(excep::base_error &e){
@@ -59,11 +59,12 @@ cThread::runThread(cThread *me, cContext* pCon){
 #ifdef GT_THREADS
 cThread::cThread() :
 	threadStop(true), firstRun(true)
-{}
 #else
 cThread::cThread()
-{}
 #endif
+{
+	addToUpdateRoster(&link);
+}
 
 cThread::~cThread(){
 #ifdef GT_THREADS
@@ -87,8 +88,8 @@ cThread::run(cContext* pCon){
 	PROFILE;
 
 	start(pCon);
-	PLUGUP(link);
-	if(!link.getMD().valid()){
+	updatePlugs();
+	if(!link.get().valid()){
 		stop(pCon);
 		return;
 	}
@@ -107,7 +108,7 @@ cThread::run(cContext* pCon){
 		sync.notify_all();
 	}
 #else
-	link.getMD()->run(pCon);
+	link.get()->run(pCon);
 #endif
 	stop(pCon);
 }
@@ -146,20 +147,18 @@ namespace gt{
 
 		void patWrite(ptrLead aLead){
 			tPlug<std::string> tmp = aLead->getPlug(xPT_word);
-			chatter.mD.append( tmp.mD );
+			chatter.get().append( tmp.get() );
 
-			chatter.mD.append( "." );
-			++hits.mD;
+			chatter.get().append( "." );
+			++hits.get();
 			#ifndef GT_SPEEDTEST
 				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 			#endif
 		}
 		void patHits(ptrLead aLead){
-			PLUGUP(hits);
 			aLead->addPlug(&hits, xPT_hits);
 		}
 		void patGetChatter(ptrLead aLead){
-			PLUGUP(chatter);
 			aLead->addPlug(&chatter, xPT_chatter);
 		}
 
@@ -191,7 +190,7 @@ namespace gt{
 				//- Really inefficient, but who cares.
 				ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite, pCon->getSig());
 				writeLead->addPlug(&phrase, cShareTarget::xPT_word);
-				target.mD->jack(writeLead, pCon);
+				target.get()->jack(writeLead, pCon);
 			}
 			stop(pCon);
 		}
@@ -233,7 +232,7 @@ namespace gt{
 		AChatter = std::string("cat");
 		BChatter = std::string("dog");
 
-		GTUT_ASRT(AChatter.mD.length() == BChatter.mD.length(), "you didn't choose 2 strings of equal length.");
+		GTUT_ASRT(AChatter.get().length() == BChatter.get().length(), "you didn't choose 2 strings of equal length.");
 		{
 			{
 				ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup, fakeContext.getSig());
@@ -242,25 +241,25 @@ namespace gt{
 				setupB->addPlug(&share, cWriter::xPT_target);
 				setupA->addPlug(&AChatter, cWriter::xPT_word);
 				setupB->addPlug(&BChatter, cWriter::xPT_word);
-				writerA.mD->jack(setupA, &fakeContext);
-				writerB.mD->jack(setupB, &fakeContext);
+				writerA.get()->jack(setupA, &fakeContext);
+				writerB.get()->jack(setupB, &fakeContext);
 			}
 			{
 				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig, fakeContext.getSig());
 				linkTest->addPlug(&writerA, cThread::xPT_fig);
-				threadA.mD->jack(linkTest, &fakeContext);
+				threadA.get()->jack(linkTest, &fakeContext);
 			}
 			{
 				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig, fakeContext.getSig());
 				linkTest->addPlug(&writerB, cThread::xPT_fig);
-				threadB.mD->jack(linkTest, &fakeContext);
+				threadB.get()->jack(linkTest, &fakeContext);
 			}
 
 			ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits, fakeContext.getSig());
 			while(testCount < testLength){
-				threadA.mD->run(&fakeContext);
-				threadB.mD->run(&fakeContext);
-				share.mD->jack(getHits, &fakeContext);
+				threadA.get()->run(&fakeContext);
+				threadB.get()->run(&fakeContext);
+				share.get()->jack(getHits, &fakeContext);
 				getHits->getValue(&testCount, cShareTarget::xPT_hits);
 				++time;
 				GTUT_ASRT(time < timeout, "timeout when running.");
@@ -269,16 +268,16 @@ namespace gt{
 			{
 				tPlug<dPlaStr> chatter;
 				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter, fakeContext.getSig());
-				share.mD->jack(getChatter, &fakeContext);
+				share.get()->jack(getChatter, &fakeContext);
 
 				chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
-				DBUG_LO("chatter='" << chatter.mD << "'");
+				DBUG_LO("chatter='" << chatter.get() << "'");
 
 				//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
-				std::stringstream ss(chatter.mD);
+				std::stringstream ss(chatter.get());
 				std::string token;
 				while( getline(ss, token, '.') ){
-					if(token.compare(AChatter.mD) != 0 && token.compare(BChatter.mD) != 0){
+					if(token.compare(AChatter.get()) != 0 && token.compare(BChatter.get()) != 0){
 						GTUT_ASRT(false, "found a corrupt token " << token);
 					}
 				}
