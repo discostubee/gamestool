@@ -102,7 +102,7 @@ cRunList::patAdd(ptrLead aLead){
 	//!\todo use append
 	for(dList::iterator itr = plugs.begin(); itr != plugs.end(); ++itr){
 		mList.push_back( *itr );
-		addToUpdateRoster( &(*itr) );
+		addUpdRoster( &(*itr) );
 	}
 }
 

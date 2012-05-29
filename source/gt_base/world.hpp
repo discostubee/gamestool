@@ -154,7 +154,7 @@ namespace gt{
 		typedef tPMorphJar<cBase_plug> dPlugHolder;
 		typedef boost::shared_ptr<cByteBuffer> ptrBuff;
 		typedef unsigned short dNumVer;	//!< Version number.
-		typedef std::vector< std::vector<dPlugHolder> > dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data.
+		typedef std::vector< std::vector<dPlugHolder> > dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data. NOT THREADSAFE.
 
 		virtual ~iFigment() {}
 		virtual const dNatChar* name() const =0;
@@ -167,7 +167,7 @@ namespace gt{
 		virtual void stop(cContext *con)=0;
 		virtual void save(cByteBuffer* pSaveHere) =0;		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
 		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL) =0;			//!< Called load-eat because the head of the buffer is consume by the load function.
-		virtual dMigrationPattern getLoadPattern() =0;
+		virtual dMigrationPattern getLoadPattern() =0;	 //!< NOT THREADSAFE.
 
 		//static dNameHash replaces()	// You will need these static class in your figment if you replace.
 		virtual dNameHash getReplacement() const =0;

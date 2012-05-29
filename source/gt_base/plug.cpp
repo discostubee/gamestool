@@ -39,8 +39,28 @@ cReload::~cReload(){
 // Tests
 #ifdef GTUT
 
-GTUT_START(testPlug, copy){
+GTUT_START(testPlug, copyMem){
+	const long magic = 3;
 
+	tPlug<long> A;
+	cBase_plug *refA = &A;
+	long numA;
+
+	A.get() = magic;
+	refA->copyInto(&numA);
+	GTUT_ASRT(numA == magic, "A didn't copy into the target correctly.");
+
+}GTUT_END;
+
+GTUT_START(testPlug, copyPlugs){
+	const short magic = 3;
+
+	tPlug<short> A, B;
+	cBase_plug *refA = &A;
+
+	B.get() = magic;
+	A = refA;
+	GTUT_ASRT(A.get() = magic, "A didn't copy B.");
 }GTUT_END;
 
 GTUT_START(testPlug, saveLoad){

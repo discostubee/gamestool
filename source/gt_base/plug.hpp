@@ -71,10 +71,10 @@ namespace gt{
 		virtual void linkLead(cLead* pLead);	//!<\note Threadsafe
 		virtual void unlinkLead(cLead* pLead);	//!<\note Threadsafe
 
-		#ifdef GT_THREADS
-			virtual void updateStart();
-			virtual void updateFinish();
+		virtual void updateStart();
+		virtual void updateFinish();
 
+		#ifdef GT_THREADS
 			virtual void save(cByteBuffer* pSaveHere){
 				updateStart();
 				tPlugFlakes<A>::save(pSaveHere);
@@ -157,7 +157,6 @@ namespace gt{
 			#ifdef GT_THREADS
 				dMuLock lock(muMap);
 			#endif
-			PROFILE;
 
 			for(
 				tPlugFlakes<A>::itrLead = tPlugFlakes<A>::mLeadsConnected.begin();
@@ -195,10 +194,12 @@ namespace gt{
 				mShadows[aCon].mMode = whatFor;
 			return mShadows[aCon].mData;
 		}
+	#endif
 
-		template<typename A>
-		void
-		tPlugShadows<A>::updateStart(){
+	template<typename A>
+	void
+	tPlugShadows<A>::updateStart(){
+		#ifdef GT_THREADS
 			PROFILE;
 			muMap.lock();	//- lemming unlocks this when it dies and calls finish.
 
@@ -215,11 +216,13 @@ namespace gt{
 						get() = itrShadow->mData->get();
 				}
 			}
-		}
+		#endif
+	}
 
-		template<typename A>
-		void
-		tPlugShadows<A>::updateFinish(){
+	template<typename A>
+	void
+	tPlugShadows<A>::updateFinish(){
+		#ifdef GT_THREADS
 			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
 				if(itrShadow->mData != NULL){
 					itrShadow->mMode = eSM_read;
@@ -235,8 +238,8 @@ namespace gt{
 				tPlugFlakes<A>::itrLead->first->muLead.unlock();
 
 			muMap.unlock();
-		}
-	#endif
+		#endif
+	}
 
 	template<typename A>
 	void
