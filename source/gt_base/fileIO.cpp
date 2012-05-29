@@ -67,8 +67,8 @@ const cCommand::dUID	cBase_fileIO::xGetSize = tOutline<cBase_fileIO>::makeComman
 
 
 cBase_fileIO::cBase_fileIO(){
-	addToUpdateRoster(&mPath);
-	addToUpdateRoster(&mFileSize);
+	addUpdRoster(&mPath);
+	addUpdRoster(&mFileSize);
 }
 
 cBase_fileIO::~cBase_fileIO(){

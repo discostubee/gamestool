@@ -30,7 +30,7 @@ const cPlugTag *cPostman::xPT_command = tOutline<cPostman>::makePlugTag("command
 //);
 
 cPostman::cPostman(){
-	addToUpdateRoster(&mTarget);
+	addUpdRoster(&mTarget);
 }
 
 cPostman::~cPostman(){

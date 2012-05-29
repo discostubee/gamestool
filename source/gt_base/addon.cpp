@@ -36,7 +36,7 @@ const cCommand::dUID cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
 
 cAddon::cAddon()
 {
-	addToUpdateRoster(&mAddonName);
+	addUpdRoster(&mAddonName);
 }
 
 cAddon::~cAddon(){

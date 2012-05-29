@@ -1,5 +1,4 @@
-/*
-**********************************************************************************************************
+/**********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -13,8 +12,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *********************************************************************************************************
-*/
+ *********************************************************************************************************/
 
 #include "anchor.hpp"
 
@@ -195,7 +193,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 }
 
 cAnchor::cAnchor(){
-	addToUpdateRoster(&mRoot);
+	addUpdRoster(&mRoot);
 }
 
 cAnchor::~cAnchor() {
@@ -219,6 +217,12 @@ cAnchor::patGetRoot(ptrLead aLead){
 	aLead->addPlug(&mRoot, cAnchor::xPT_root);
 }
 
+void
+cAnchor::getLinks(std::list<ptrFig>* pOutLinks){
+	mRoot.updateStart();
+	mRoot.updateFinish();
+	pOutLinks->push_back(mRoot.get());
+}
 
 ////////////////////////////////////////////////////////////
 

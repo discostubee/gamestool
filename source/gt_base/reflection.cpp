@@ -44,9 +44,9 @@ const cCommand::dUID cPlugHound::xGimmie = tOutline<cPlugHound>::makeCommand(
 cPlugHound::cPlugHound():
 		tmpTag(NULL), setup(false)
 {
-	addToUpdateRoster(&mCom);
-	addToUpdateRoster(&mTag);
-	addToUpdateRoster(&mTarget);
+	addUpdRoster(&mCom);
+	addUpdRoster(&mTag);
+	addUpdRoster(&mTarget);
 }
 
 cPlugHound::~cPlugHound(){
@@ -108,9 +108,9 @@ const cCommand::dUID cAlucard::xSetContextTarget = tOutline<cAlucard>::makeComma
 cAlucard::cAlucard():
 	mCommand(cCommand::noID)
 {
-	addToUpdateRoster(&mTarget);
-	addToUpdateRoster(&mAltTargetName);
-	addToUpdateRoster(&mCommand);
+	addUpdRoster(&mTarget);
+	addUpdRoster(&mAltTargetName);
+	addUpdRoster(&mCommand);
 }
 
 cAlucard::~cAlucard(){

@@ -53,6 +53,7 @@ namespace gt{ //gamestool
 		virtual void run(cContext* pCon);
 		virtual void save(cByteBuffer* pAddHereb);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);
+		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 
 	protected:
 		void patSetRoot(ptrLead aLead);

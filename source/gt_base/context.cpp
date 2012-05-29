@@ -271,7 +271,7 @@ cFigContext::updatePlugs(){
 }
 
 void
-cFigContext::addToUpdateRoster(cBase_plug *pPlug){
+cFigContext::addUpdRoster(cBase_plug *pPlug){
 	#ifdef GT_THREADS
 		updateRoster.push_back(pPlug);
 	#endif

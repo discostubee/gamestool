@@ -156,7 +156,7 @@ namespace gt{
 		void start(cContext *con);	//!< Puts this figment onto the given context stack, but only if that figment isn't already stacked. Updates all plugs in the roster.
 		void stop(cContext *con);	//!< Takes the figment off the stack.
 		void updatePlugs();
-		void addToUpdateRoster(cBase_plug *pPlug);	//!< Adds a plug to the list of things to update when we start. Typically you can use this in the constructor. NOT threadsafe.
+		void addUpdRoster(cBase_plug *pPlug);	//!< Adds a plug to the list of things to update when we start. Typically you can use this in the constructor. NOT threadsafe.
 		void remFromRoster(cBase_plug *pPlug);	//!< Used only if a plug is removed from a class during its jack/run functions. NOT threadsafe.
 
 	protected:

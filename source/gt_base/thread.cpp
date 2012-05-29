@@ -63,7 +63,7 @@ cThread::cThread() :
 cThread::cThread()
 #endif
 {
-	addToUpdateRoster(&link);
+	addUpdRoster(&link);
 }
 
 cThread::~cThread(){
@@ -126,21 +126,6 @@ cThread::patLink(ptrLead aLead){
 namespace gt{
 
 	class cShareTarget : public cFigment, private tOutline<cShareTarget>{
-	public:
-		static const cPlugTag* xPT_word;
-		static const cPlugTag* xPT_hits;
-		static const cPlugTag* xPT_chatter;
-		static const cCommand::dUID xWrite;
-		static const cCommand::dUID xGetHits;
-		static const cCommand::dUID xGetChatter;
-
-		static const dNatChar* identify() { return "don't care target"; }
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<cShareTarget>::hash(); }
-
-		cShareTarget(): hits(0) {}
-		virtual ~cShareTarget(){}
-
 	protected:
 		tPlug<std::string> chatter;
 		tPlug<int> hits;
@@ -162,6 +147,21 @@ namespace gt{
 			aLead->addPlug(&chatter, xPT_chatter);
 		}
 
+	public:
+		static const cPlugTag* xPT_word;
+		static const cPlugTag* xPT_hits;
+		static const cPlugTag* xPT_chatter;
+		static const cCommand::dUID xWrite;
+		static const cCommand::dUID xGetHits;
+		static const cCommand::dUID xGetChatter;
+
+		static const dNatChar* identify() { return "don't care target"; }
+		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		virtual dNameHash hash() const { return tOutline<cShareTarget>::hash(); }
+
+		cShareTarget(): hits(0) { addUpdRoster(&chatter); addUpdRoster(&hits); }
+		virtual ~cShareTarget(){}
+
 	};
 	const cPlugTag* cShareTarget::xPT_word = tOutline<cShareTarget>::makePlugTag("word");
 	const cPlugTag* cShareTarget::xPT_hits = tOutline<cShareTarget>::makePlugTag("hits");
@@ -172,11 +172,19 @@ namespace gt{
 
 	//- The following are shallow test classes not meant for rugged use.
 	class cWriter : public cFigment, private tOutline<cWriter>{
+	private:
+		tPlug<ptrFig> target;
+		tPlug<std::string> phrase;
+
+		void patSetup(ptrLead aLead){
+			target = aLead->getPlug(xPT_target);
+			phrase = aLead->getPlug(xPT_word);
+		}
 	public:
 		static const cCommand::dUID xSetup;
 		static const cPlugTag *xPT_word, *xPT_target;
 
-		cWriter(){}
+		cWriter(){ addUpdRoster(&target); addUpdRoster(&phrase); }
 		cWriter(cShareTarget *inT, std::string inS) : target(inT), phrase(inS) {}
 		virtual ~cWriter() {}
 
@@ -186,23 +194,15 @@ namespace gt{
 
 		virtual void run(cContext* pCon) {
 			start(pCon);
-			{
+			updatePlugs();
+
 				//- Really inefficient, but who cares.
 				ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite, pCon->getSig());
 				writeLead->addPlug(&phrase, cShareTarget::xPT_word);
 				target.get()->jack(writeLead, pCon);
-			}
 			stop(pCon);
 		}
 
-	private:
-		tPlug<ptrFig> target;
-		tPlug<std::string> phrase;
-
-		void patSetup(ptrLead aLead){
-			target = aLead->getPlug(xPT_target);
-			phrase = aLead->getPlug(xPT_word);
-		}
 	};
 
 	const cPlugTag* cWriter::xPT_word = tOutline<cWriter>::makePlugTag("word");
@@ -216,10 +216,10 @@ namespace gt{
 		tOutline<cWriter>::draft();
 		tOutline<cThread>::draft();
 
-		const short timeout = 10000;
-		const short testLength = 20;
-		short testCount = 0;
-		short time = 0;
+		const int timeout = 10000;
+		const int testLength = 20;
+		int testCount = 0;
+		int time = 0;
 		cContext fakeContext;
 		tPlug<std::string> AChatter;
 		tPlug<std::string> BChatter;

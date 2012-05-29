@@ -136,11 +136,6 @@ cFigment::getLoadPattern(){
 void 
 cFigment::getLinks(std::list<ptrFig>* pOutLinks){
 	DUMB_REF_ARG(pOutLinks);
-
-	//- Don't forget these when getting links
-	//start(pCon);
-	//updatePlugs();
-	//stop(pCon);
 }
 
 #if defined(DEBUG) && defined(GT_SPEED)

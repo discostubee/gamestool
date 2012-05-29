@@ -285,13 +285,17 @@ GTUT_START(testLead, tagging){
 	tPlug<int> numA, numB;
 	const int magic = 3;
 	lead.addPlug(&numA, &tag);
+
 	numA.get() = magic;
+
 	numA.updateStart();
 	numA.updateFinish();
 
+	int testA=0;
+	lead.getPlug(&tag)->copyInto(&testA);
+	GTUT_ASRT(testA == magic, "Lead didn't store A");
+
 	numB = lead.getPlug(&tag);
-	numB.updateStart();
-	numB.updateFinish();
 	GTUT_ASRT(numB.get() == magic, "B didn't get A's number");
 
 }GTUT_END;
@@ -300,28 +304,35 @@ GTUT_START(testLead, piling){
 }GTUT_END;
 
 GTUT_START(testLead, shadowUpdate){
-	cContext conxA, conxB;
-	tPlug<int> numA, numB;
-	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
-	cPlugTag tag("some tag");
-	cLead leadA(fakeCom.mID, conxA.getSig()), leadB(fakeCom.mID, conxB.getSig());
-	const int magic = 3;
-	const int magicSquare = magic*magic;
+	#ifdef GT_TREADS
+		cContext conxA, conxB;
+		tPlug<int> numA, numB;
+		tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
+		cPlugTag tag("some tag");
+		cLead leadA(fakeCom.mID, conxA.getSig()), leadB(fakeCom.mID, conxB.getSig());
+		const int magic = 3;
+		const int magicSquare = magic*magic;
 
-	GTUT_ASRT(conxA.getSig() != conxB.getSig(), "contexts have same signature");
+		GTUT_ASRT(conxA.getSig() != conxB.getSig(), "contexts have same signature");
 
-	numA.get() = 0;
+		numA.get() = 0;
 
-	leadA.addPlug(&numA, &tag);
-	leadB.addPlug(&numA, &tag);
-	numB.get() = magic;
-	leadA.setPlug(&numB, &tag);
-	numA.get() *= numA.get();
+		leadA.addPlug(&numA, &tag);
+		leadA.setPlug(&numB, &tag);
+		leadB.addPlug(&numA, &tag);
 
-	GTUT_ASRT(numA.get() == magicSquare, "A didn't get B's number");
-	numB = leadB.getPlug(&tag);
-	GTUT_ASRT(numB.get() == numA.get(), "something went wrong using multiple shadows");
+		numB.get() = magic;
+		numB.updateStart();
+		numB.updateFinish();
 
+		numA.get() *= numA.get();
+		numA.updateStart();
+		numA.updateFinish();
+
+		GTUT_ASRT(numA.get() == magicSquare, "A didn't get B's number");
+		numB = leadB.getPlug(&tag);
+		GTUT_ASRT(numB.get() == numA.get(), "something went wrong using multiple shadows");
+	#endif
 }GTUT_END;
 
 #endif
