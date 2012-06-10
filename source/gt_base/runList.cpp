@@ -102,6 +102,7 @@ cRunList::patAdd(ptrLead aLead){
 	//!\todo use append
 	for(dList::iterator itr = plugs.begin(); itr != plugs.end(); ++itr){
 		mList.push_back( *itr );
+		// DANGER
 		addUpdRoster( &(*itr) );
 	}
 }
@@ -159,4 +160,19 @@ cValves::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 void
 cValves::patSetValve(ptrLead pLead){
 }
+
+#ifdef GTUT
+
+GTUT_START(test_cRunList, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cRunList>();
+}GTUT_END;
+
+GTUT_START(test_cValves, test_suit){
+	tOutline<cFigment>::draft();
+	tOutline<cRunList>::draft();
+	figmentTestSuit<cValves>();
+}GTUT_END;
+
+#endif
 

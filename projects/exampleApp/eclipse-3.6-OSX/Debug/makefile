@@ -39,8 +39,14 @@ endif
 # All Target
 all: example_d
 
+dependents:
+	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgamestool/eclipse-3.6-OSX/Debug && $(MAKE) all
+	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgraphics/eclipse-3.6-OSX/Debug && $(MAKE) all
+	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6-OSX/Debug && $(MAKE) all
+	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6-OSX/Debug && $(MAKE) all
+
 # Tool invocations
-example_d: $(OBJS) $(USER_OBJS)
+example_d: $(OBJS) $(USER_OBJS) /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgamestool/eclipse-3.6-OSX/Debug/libgamestool_d.a /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgraphics/eclipse-3.6-OSX/Debug/libgraphics_d.a /Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6-OSX/Debug/addonX11GL_d.dylib /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6-OSX/Debug/libOSX_d.a
 	@echo 'Building target: $@'
 	@echo 'Invoking: MacOS X C++ Linker'
 	g++ -L"/Users/stuandlou/Documents/workspace/gamestool_hg/projects/exampleApp/eclipse-3.6-OSX/../../../includes" -o "example_d" $(OBJS) $(USER_OBJS) $(LIBS)
@@ -59,5 +65,9 @@ post-build:
 
 .PHONY: all clean dependents
 .SECONDARY: post-build
+/Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgamestool/eclipse-3.6-OSX/Debug/libgamestool_d.a:
+/Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgraphics/eclipse-3.6-OSX/Debug/libgraphics_d.a:
+/Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6-OSX/Debug/addonX11GL_d.dylib:
+/Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6-OSX/Debug/libOSX_d.a:
 
 -include ../makefile.targets

@@ -1,3 +1,21 @@
+/*
+ **********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+*/
+
 #include "figment.hpp"
 
 
@@ -179,6 +197,14 @@ cWorldShutoff::run(cContext* pCon){
 
 #ifdef GTUT
 
+GTUT_START(test_cfigment, test_suit){
+	figmentTestSuit<cFigment>();
+}GTUT_END;
+
+GTUT_START(test_cWorldShutoff, test_suit){
+	figmentTestSuit<cWorldShutoff>();
+}GTUT_END;
+
 GTUT_START(test_figment, polymorphNames){
 	tOutline<cFigment>::draft();
 	tOutline<cEmptyFig>::draft();
@@ -220,8 +246,8 @@ public:
 	testMigration_v1(){}
 	virtual ~testMigration_v1(){}
 
-	static const dNatChar* identify(){ return "test migration figment"; }
-	virtual const dNatChar* name() const { return identify(); }
+	static const dPlaChar* identify(){ return "test migration figment"; }
+	virtual const dPlaChar* name() const { return identify(); }
 	virtual dNameHash hash() const { return getHash<testMigration_v1>(); }
 	static dNumVer version(){ return 1; }
 	virtual dNumVer getVersion() const { return version(); }
@@ -236,8 +262,8 @@ public:
 	testMigration_v2(){}
 	virtual ~testMigration_v2(){}
 
-	static const dNatChar* identify(){ return "test migration figment"; }
-	virtual const dNatChar* name() const { return identify(); }
+	static const dPlaChar* identify(){ return "test migration figment"; }
+	virtual const dPlaChar* name() const { return identify(); }
 	virtual dNameHash hash() const { return getHash<testMigration_v1>(); }
 	static dNumVer version(){ return 2; }
 	virtual dNumVer getVersion() const { return version(); }
@@ -260,8 +286,8 @@ public:
 	testContextFigment() : refOther(NULL), throwOnRun(false) {}
 	virtual ~testContextFigment() {}
 
-	static const dNatChar* identify(){ return "test context figment"; }
-	virtual const dNatChar* name() const { return identify(); }
+	static const dPlaChar* identify(){ return "test context figment"; }
+	virtual const dPlaChar* name() const { return identify(); }
 	virtual dNameHash hash() const { return getHash<testContextFigment>(); }
 
 	virtual void run(cContext *pCon){

@@ -1,5 +1,5 @@
 /*
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -19,41 +19,141 @@
 #include "gt_string.hpp"
 
 
-size_t 
-natCStrLen(const dNatChar* pString)
-{
+//--------------------------------------------------------
+
+
+static std::locale&
+getNativeEncode(){
+	static bool setup = false;
+	static std::locale loc;
+	if(!setup){
+		boost::locale::generator gen;
+		gen.use_ansi_encoding(true);
+		loc = gen.generate("en_US.UTF-8");
+		setup=true;
+	}
+
+	return loc;
+}
+
+//!\brief	Modify this to be whatever the platform is encoding with.
+static std::locale&
+getPlatformEncode(){
+	static bool setup = false;
+	static std::locale loc;
+	if(!setup){
+		boost::locale::generator gen;
+		loc = gen.generate("");
+		setup=true;
+	}
+
+	return loc;
+}
+
+static std::locale&
+getTextEncode(){
+	static bool setup = false;
+	static std::locale loc;
+	if(!setup){
+		boost::locale::generator gen;
+		loc = gen.generate("en_US.UTF-8");
+		setup=true;
+	}
+
+	return loc;
+}
+
+//--------------------------------------------------------
+
+dStr
+toPStr(const dNatStr &pString){
+	dStr strRtn;
+
+	if(pString.t.empty())
+		return strRtn;
+
+	strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getPlatformEncode());
+
+	return strRtn;
+}
+
+dText
+toText(const dNatStr &pString){
+	dText strRtn;
+
+	if(pString.t.empty())
+		return strRtn;
+
+	strRtn = boost::locale::conv::to_utf<dTextChar>(pString.t, getTextEncode());
+
+	return strRtn;
+}
+
+size_t
+PCStrLen(const dPlaChar *pString){
 	return ::strlen(pString);
 }
 
-size_t plaCStrLen(const dPlaChar *pString){
-	return ::strlen(pString);
-}
+dNatStr
+toNStr(const dPlaChar *pString){
+	dNatStr strRtn;
 
-dText NCStrToText(const dNatChar *pString){
-	dText strRtn;
+	if(pString == NULL)
+		return strRtn;
 
-	//!\todo
+	size_t inLen = PCStrLen(pString);
+
+	if(inLen==0)
+		return strRtn;
+
+	strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen-1], getNativeEncode());
 
 	return strRtn;
 }
 
-dStr PCStrToNStr(const dPlaChar *pString){
+dStr
+toPStr(const dText &pString){
 	dStr strRtn;
 
-	//!\todo
-	strRtn.assign(pString);
+	if(pString.t.empty())
+		return strRtn;
+
+	strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getPlatformEncode());
 
 	return strRtn;
 }
 
-dText PCStrToText(const dPlaChar *pString){
+dText
+toText(const dPlaChar *pString){
 	dText strRtn;
 
+	if(pString == NULL)
+		return strRtn;
+
+	size_t inLen = PCStrLen(pString);
+
+	if(inLen==0)
+		return strRtn;
+
+	strRtn = boost::locale::conv::to_utf<dTextChar>(pString, &pString[inLen-1], getTextEncode());
+
 	return strRtn;
 }
 
-dStr textToNStr(const dTextChar *pString){
-	dStr strRtn;
+dNatStr
+toNStr(const dText &pString){
+	dNatStr strRtn;
+
+	if(pString.t.empty())
+		return strRtn;
+
+	strRtn = boost::locale::conv::to_utf<dNatChar>(pString.t, getNativeEncode());
 
 	return strRtn;
 }
+
+
+
+
+
+

@@ -202,7 +202,18 @@ void cAlucard::run(cContext* aCon){
 }
 
 #ifdef GTUT
-	#include "unitTestFigments.hpp"
+
+GTUT_START(test_cPlugHound, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cPlugHound>();
+}GTUT_END;
+
+GTUT_START(test_cAlucard, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cAlucard>();
+}GTUT_END;
+
+#include "unitTestFigments.hpp"
 
 GTUT_START(test_reflection, houndGets){
 	tOutline<cPlugHound>::draft();

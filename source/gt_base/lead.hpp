@@ -2,7 +2,7 @@
  * !\file	lead.hpp
  * !\brief
  *
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -34,11 +34,6 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Macros
-
-#define PLUG_CANT_COPY(copier, copiee) throw excep::cantCopy(typeid(copier).name(), typeid(copiee).name(), __FILE__, __LINE__)
-
-///////////////////////////////////////////////////////////////////////////////////
 // Classes
 namespace gt{
 	template<typename T> class tPlug;
@@ -55,8 +50,12 @@ namespace gt{
 		cPlugTag(
 			const dPlaChar* pPlugName
 		):
-			mName( PCStrToNStr(pPlugName) ),
-			mID( makeHash(mName.c_str()) )
+			mName(pPlugName),
+			mID(
+				makeHash( toNStr(
+					mName.c_str()
+				).t.c_str() )
+			)
 		{}
 
 		~cPlugTag()
@@ -85,8 +84,6 @@ namespace gt{
 	public:
 		//--- types
 		typedef dNameHash dPlugType;
-		typedef void (*fuCopyInto)(const void *copyFrom, void *copyTo);
-		typedef std::map<dPlugType, fuCopyInto> dMapCopiers;
 
 		//---
 		template<typename PLUG_TYPE> static dPlugType getPlugType(){
@@ -100,11 +97,11 @@ namespace gt{
 		//---
 		const dPlugType mType;	//!< Must be public so the tPlug templates can use it.
 
-		cBase_plug(dPlugType pTI, dMapCopiers *pCopiers);
+		cBase_plug(dPlugType pTI);
 		cBase_plug(const cBase_plug& pCopy);
 
 		template< template<typename> class PLUG, typename T> cBase_plug& operator= (const PLUG<T> &pT);
-		template< typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
+		template<typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
 
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Must be threadsafe.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Must be threadsafe.
@@ -132,14 +129,13 @@ namespace gt{
 		dMapLeads mLeadsConnected;		//!< Lead connections are not copied when copy plug values.
 		dMapLeads::iterator itrLead;	//!< handy.
 
+		virtual void actualCopyInto(void* pContainer, dPlugType pType) const =0;
+
 		#ifdef GT_THREADS
 			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor) =0; //!< Leads must always work with shadows.
 		#endif
 
 	friend class cLead;
-
-	private:
-		dMapCopiers* mCopiers;
 	};
 
 	//--------------------------------------------------------------------------------------------------------
@@ -209,7 +205,7 @@ namespace gt{
 					scrTDataItr->second->copyInto(input);
 				#endif
 			}else if(!silentFail){
-				std::stringstream ss; ss << "plug " << tag->mName;
+				std::stringstream ss; ss << "plug " << &tag->mName;
 				throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
 			}
 		}
@@ -267,12 +263,7 @@ namespace gt{
 	template< typename T>
 	void
 	cBase_plug::copyInto(T *container) const{
-		dMapCopiers::iterator itrCopiers = mCopiers->find(getPlugType<T>());
-		if(itrCopiers != mCopiers->end()){
-			itrCopiers->second( &reinterpret_cast< tPlug<T>* >( const_cast<cBase_plug*>(this) )->get(), container );
-		}else{
-			PLUG_CANT_COPY(cBase_plug, T);
-		}
+		actualCopyInto(reinterpret_cast<void*>(container), getPlugType<T>());
 	}
 
 }

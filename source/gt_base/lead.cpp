@@ -1,5 +1,5 @@
 /*
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -22,13 +22,13 @@
 using namespace gt;
 
 ////////////////////////////////////////////////////////////
-cBase_plug::cBase_plug(dPlugType pTI, dMapCopiers *pCopiers):
-	mType(pTI), mCopiers(pCopiers)
+cBase_plug::cBase_plug(dPlugType pTI):
+	mType(pTI)
 {
 }
 
 cBase_plug::cBase_plug(const cBase_plug &pCopy):
-	mType(pCopy.mType), mCopiers(pCopy.mCopiers)
+	mType(pCopy.mType)
 {
 }
 
@@ -128,8 +128,7 @@ cLead::getPlug(const cPlugTag* pTag){
 
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr == mTaggedData.end()){
-		std::stringstream ss; ss << "plug " << pTag->mName;
-		throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
+		throw excep::notFound(pTag->mName.c_str(), __FILE__, __LINE__);
 	}
 
 	#ifdef GT_THREADS

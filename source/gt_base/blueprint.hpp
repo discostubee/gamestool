@@ -3,7 +3,7 @@
  * !\brief		The blueprint file contains both the blueprint class and the figment outline template. This is because the 2
  * !			are pretty interdependent.
  *
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -38,6 +38,7 @@ namespace gt{
 namespace gt{
 	typedef std::list<const cCommand*> dListComs;
 	typedef std::list<const cPlugTag*> dListPTags;
+	typedef std::vector<const cBlueprint *> dExtensions;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -57,12 +58,14 @@ namespace gt{
 
 		ptrFig make();
 		dNameHash hash() const;
-		const dNatChar* name() const;
+		const dPlaChar* name() const;
 		dNameHash replace() const;
+		dNameHash extend() const;
 		const cCommand* getCom(cCommand::dUID pHash) const;
 		const cPlugTag* getPlugTag(cPlugTag::dUID pPT) const;
 		dListComs getAllComs() const;
 		dListPTags getAllTags() const;
+		dExtensions getExtensions() const;
 		bool hasPlugTag(cPlugTag::dUID pPT) const;
 
 		const cBlueprint* operator = (const cBlueprint* pCopy);
@@ -76,12 +79,14 @@ namespace gt{
 	private:
 		dNameHash mHash;
 		dNameHash mReplaces;
+		dNameHash mExtends;
 		ptrFig (*mFuncMake)();
-		const dNatChar* (*mGetName)();
+		const dPlaChar* (*mGetName)();
 		const cCommand* (*mGetCom)(cCommand::dUID);
 		const cPlugTag* (*mGetPlugTag)(cPlugTag::dUID);
 		dListComs (*mGetAllComs)();
 		dListPTags (*mGetAllTags)();
+		dExtensions (*mGetExtensions)();
 		bool (*mHasPlugTag)(cPlugTag::dUID);
 
 		template<typename T> static ptrFig maker();
@@ -109,15 +114,15 @@ namespace gt{
 		static const cPlugTag* getPlugTag(cPlugTag::dUID pPTagID);		//!< Returns reference, or NULL. Does not throw.
 		static dListComs getAllCommands();
 		static dListPTags getAllTags();
+		static dExtensions getExtensions();
 		static bool hasPlugTag(cPlugTag::dUID pPTID);
 
 	protected:
 		typedef std::map<cCommand::dUID, cCommand* > dMapCom;
 		typedef std::map<cPlugTag::dUID, cPlugTag> dMapPTag;
-		typedef std::vector<const cBlueprint *> dListExtensions;
 
 		static cBlueprint xBlueprint;	//!< The blueprint formed by this outline.
-		static dListExtensions xExtensions;	//!< This is the list of blueprints that this outline can use commands and tags from. If you replace a figment you automatically take that blueprint as an extension.
+		static dExtensions xExtensions;	//!< This is the list of blueprints that this outline can use commands and tags from. If you replace a figment you automatically take that blueprint as an extension.
 		static dMapCom* xCommands;
 		static dMapPTag* xPlugTags;
 
@@ -147,7 +152,7 @@ namespace gt{
 	template<typename T>
 	ptrFig
 	cBlueprint::maker(){
-		//DBUG_LO("making from blueprint, a " << T::identify());
+		DBUG_VERBOSE_LO("making from blueprint, a " << T::identify());
 
 		ptrFig temp(new T());
 		temp->self = temp.getDir();
@@ -159,12 +164,14 @@ namespace gt{
 	cBlueprint::setup(){
 		mHash = getHash<T>();
 		mReplaces = T::replaces();
+		mExtends = T::extends();
 		mFuncMake = &(maker<T>);
 		mGetName = &(T::identify);
 		mGetCom = &(tOutline<T>::getCommand);
 		mGetPlugTag = &(tOutline<T>::getPlugTag);
 		mGetAllComs = &(tOutline<T>::getAllCommands);
 		mGetAllTags = &(tOutline<T>::getAllTags);
+		mGetExtensions = &(tOutline<T>::getExtensions);
 		mHasPlugTag = &(tOutline<T>::hasPlugTag);
 		mCleanup = &(tOutline<T>::cleanup);
 
@@ -177,7 +184,7 @@ namespace gt{
 	cBlueprint tOutline<T>::xBlueprint;
 
 	template<typename T>
-	typename tOutline<T>::dListExtensions tOutline<T>::xExtensions;
+	dExtensions tOutline<T>::xExtensions;
 
 	template<typename T>
 	typename tOutline<T>::dMapCom *tOutline<T>::xCommands;	//- Don't assign anything here.
@@ -187,6 +194,8 @@ namespace gt{
 
 	template<typename T>
 	bool tOutline<T>::xDrafted = false;
+
+
 
 	template<typename T>
 	void
@@ -205,7 +214,7 @@ namespace gt{
 			if(!setup){
 				xCommands = new dMapCom();
 				setup = true;
-				DBUG_LO(T::identify() << " readied commands");
+				DBUG_VERBOSE_LO(T::identify() << " readied commands");
 			}
 		}
 	}
@@ -225,7 +234,7 @@ namespace gt{
 			if(!setup){
 				xPlugTags = new dMapPTag();
 				setup = true;
-				DBUG_LO(T::identify() << " readied plug tags");
+				DBUG_VERBOSE_LO(T::identify() << " readied plug tags");
 			}
 		}
 	}
@@ -246,45 +255,41 @@ namespace gt{
 			readyTags(); // just in case.
 			xBlueprint.setup<T>();
 
-			if(T::replaces() != uDoesntReplace){
-				xExtensions.push_back( gWorld.get()->getBlueprint(T::replaces()) );
-			}
+			cBlueprint const *tmpBlue = NULL;
 
-			if(T::extends() != uDoesntExtend){
-				xExtensions.push_back( gWorld.get()->getBlueprint(T::extends()) );
-				DBUG_LO(T::identify() << " extends " << gWorld.get()->getBlueprint(T::extends())->name());
-			}
+			if(xBlueprint.replace() != uDoesntReplace)
+				tmpBlue = gWorld.get()->getBlueprint(xBlueprint.replace());
+			else if(xBlueprint.extend() != uDoesntExtend)
+				tmpBlue = gWorld.get()->getBlueprint(xBlueprint.extend());
 
-			for(dListExtensions::iterator ext = xExtensions.begin(); ext != xExtensions.end(); ++ext){
-				for(dListComs cmds = (*ext)->getAllComs(); !cmds.empty(); cmds.pop_front()){
+			if(tmpBlue != NULL){
+				for(dListComs cmds = tmpBlue->getAllComs(); !cmds.empty(); cmds.pop_front()){
 					xCommands->insert( dMapCom::value_type(
 						cmds.front()->mID,
 						cmds.front()->respawn(getHash<T>())
 					) );
+
+					DBUG_VERBOSE_LO(T::identify() << " respawned command " << cmds.front()->mName );
 				}
+
+				xExtensions = tmpBlue->getExtensions();
+				xExtensions.push_back(tmpBlue);
 			}
 
 			gWorld.get()->addBlueprint(&xBlueprint);
 
 			xDrafted=true;
 
-		}else{
-			DBUG_LO("already drafted " << T::identify());
+		//}else{
+		//	WARN_S("already drafted " << T::identify());
 		}
 	}
 
 	template<typename T>
 	void
 	tOutline<T>::removeFromWorld(){
-		if(xDrafted){
-			gWorld.get()->removeBlueprint(&xBlueprint);
-
-			//!\todo Figure out a way to run this when the outline is no longer needed.
-			readyCommands(false);
-			readyTags(false);
-
-			xDrafted=false;
-		}
+		cleanup();
+		gWorld.get()->removeBlueprint(&xBlueprint);
 	}
 
 	template<typename T>
@@ -320,9 +325,9 @@ namespace gt{
 		{	//- Using braces to ensure that the pointer to the command map is correct.
 			dNameHash comUID;
 			{
-				dStr totalString = T::identify();
-				totalString.append( PCStrToNStr(pName).c_str() );
-				comUID = makeHash(totalString.c_str());
+				dNatStr totalString = toNStr(T::identify());
+				totalString.t.append( toNStr(pName).t );
+				comUID = makeHash( totalString );
 			}
 			dMapCom::iterator itrCom;
 			cPlugTag* param=const_cast<cPlugTag*>(pTags);
@@ -342,7 +347,7 @@ namespace gt{
 			}
 			va_end(params);
 
-			DBUG_LO( "The outline of '" << T::identify() << "' made command '" << pName << "'");
+			DBUG_VERBOSE_LO( "The outline of '" << T::identify() << "' made command '" << pName << "'");
 
 			return comUID;
 		}
@@ -355,12 +360,12 @@ namespace gt{
 
 		dMapPTag::iterator itrTag = xPlugTags->end();
 
-		DBUG_LO("Making plug tag '" << pName << "' for figment '" << T::identify() << "'");
+		DBUG_VERBOSE_LO("Making plug tag '" << pName << "' for figment '" << T::identify() << "'");
 
 		readyTags();
 
 		{
-			dNameHash tagUID = makeHash( PCStrToNStr(pName).c_str() );
+			dNameHash tagUID = makeHash( toNStr(pName).t.c_str() );
 
 			xPlugTags->insert( dMapPTag::value_type(tagUID,	cPlugTag(pName)) );
 
@@ -386,17 +391,6 @@ namespace gt{
 			throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
 		}
 
-		/*if(itrCom == xCommands->end()){
-			for(dListExtensions::iterator itr = xExtensions.begin(); itr != xExtensions.end(); ++itr){
-				try{ return (*itr)->getCom(pHash); }catch(excep::notFound){}
-			}
-
-			{
-				std::stringstream ss; ss << T::identify() << " command " << pHash;
-				throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
-			}
-		}*/
-
 		return itrCom->second;
 	}
 
@@ -413,7 +407,7 @@ namespace gt{
 
 		if(itrTag == xPlugTags->end()){
 			for(
-				dListExtensions::iterator itr = xExtensions.begin();
+				dExtensions::iterator itr = xExtensions.begin();
 				itr != xExtensions.end() && rtnTag==NULL;
 				++itr
 			){
@@ -451,6 +445,13 @@ namespace gt{
 
 		return rtnList;
 	}
+
+	template<typename T>
+	dExtensions
+	tOutline<T>::getExtensions(){
+		return xExtensions;
+	}
+
 
 	template<typename T>
 	bool

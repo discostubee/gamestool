@@ -71,7 +71,7 @@ namespace gt{
 		cFigment();
 		virtual ~cFigment();
 
-		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this.
+		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this. !\note Threadsafe.
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 		//-----------------------------
@@ -80,10 +80,10 @@ namespace gt{
 		//!\brief	Used to define the string name of this object. It is also hashed to give the unique number
 		//!			used to quickly compare objects.
 		//!\note	You MUST replace this to identify your own
-		static const dNatChar* identify(){ return "figment"; }
+		static const dPlaChar* identify(){ return "figment"; }
 
 		//- Not sure how I could eliminate this. I should be able to.
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return tOutline<cFigment>::hash(); }
 
 		//-----------------------------
@@ -108,12 +108,10 @@ namespace gt{
 		static dNumVer version(){ return 0; }
 		virtual dNumVer getVersion() const { return version(); }
 
-		//- These are currently not threadsafe.
-		virtual dMigrationPattern getLoadPattern();
-		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program.
-
-		virtual void save(cByteBuffer* pSaveHere);
-		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL);
+		virtual dMigrationPattern getLoadPattern();	//!< !\note NOT threadsafe.
+		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.
+		virtual void save(cByteBuffer* pSaveHere);	//!< !\note NOT threadsafe.
+		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL); //!< !\note NOT threadsafe.
 
 	protected:
 
@@ -136,12 +134,12 @@ namespace gt{
 	//!			a new figment type class.
 	class cEmptyFig: public cFigment, private tOutline<cEmptyFig>{
 	public:
-		static const dNatChar* identify(){ return "empty figment"; }
+		static const dPlaChar* identify(){ return "empty figment"; }
 
 		cEmptyFig();
 		virtual ~cEmptyFig();
 
-		virtual const dNatChar* name() const{ return cEmptyFig::identify(); }
+		virtual const dPlaChar* name() const{ return cEmptyFig::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cEmptyFig>::hash(); }
 	};
 
@@ -152,12 +150,12 @@ namespace gt{
 	//!\note	Should be called Unicron.
 	class cWorldShutoff: public cFigment, private tOutline<cWorldShutoff>{
 	public:
-		static const dNatChar* identify(){ return "world shutoff"; }
+		static const dPlaChar* identify(){ return "world shutoff"; }
 
 		cWorldShutoff();
 		virtual ~cWorldShutoff();
 
-		virtual const dNatChar* name() const{ return identify(); }
+		virtual const dPlaChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cWorldShutoff>::hash(); }
 
 		virtual void run(cContext* pCon);
@@ -169,30 +167,39 @@ namespace gt{
 // template specializations
 namespace gt{
 
-	//--------------------------------------
+	//-----------------------------------------------------------------------------------
+	//!\brief	This thing is slightly odd. I say odd as opposed to dangerous because
+	//!			a figment pointer plug is only threadsafe because the interface to
+	//!			figment is. Plugs use shadows to be threadsafe, but only if the contained
+	//!			data doesn't have a reference that's outside a copy. Put another way, if
+	//!			your plug is for a class that has a smart pointer, what that smart
+	//!			pointer refers to won't be protected by the shadow strategy.
 	template<>
 	class tPlug<ptrFig>: public tPlugShadows<ptrFig>{
 	public:
+		typedef void (*fuCopyInto)(const ptrFig *copyFrom, void *copyTo);
+		typedef std::map<cBase_plug::dPlugType, fuCopyInto> dMapCopiers;
+
 		tPlug():
-			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>(), getCopiers())
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
 		{
 			mD = gWorld.get()->getEmptyFig();
 		}
 
 		tPlug(const ptrFig& pA):
-			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>(), getCopiers())
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
 		{
 			mD = pA;
 		}
 
 		tPlug(const tPlug<ptrFig> &other):
-			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>(), getCopiers())
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
 		{
 			mD = other.mD;
 		}
 
 		tPlug(const cBase_plug *other):
-			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>(), getCopiers())
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
 		{
 			other->copyInto(&mD);
 		}
@@ -245,24 +252,35 @@ namespace gt{
 			return mD;
 		}
 
+	protected:
+		virtual void actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const{
+			dMapCopiers::iterator itrCopiers = getPlugCopiers<ptrFig>()->find(getPlugType<ptrFig>());
+			if(itrCopiers != getPlugCopiers<ptrFig>()->end()){
+				itrCopiers->second( &mD, pContainer );
+			}else{
+				throw excep::cantCopy(typeid(ptrFig).name(), "unknown", __FILE__, __LINE__);
+			}
+		}
+
 	private:
 		ptrFig mD;	//!< Data
 
-		cBase_plug::dMapCopiers*
-		getCopiers(){
-			static bool setup = false;
-			static cBase_plug::dMapCopiers copiers;
 
-			if(!setup){
-				copiers[ cBase_plug::getPlugType<ptrFig>() ] = &voidCopiers::baseCopy<ptrFig>;
-				setup=true;
-			}
-
-			return &copiers;
-		}
 	};
 
 }
 
+
+#ifdef GTUT
+	namespace gt{
+		//!\brief	Used to run a series of standard tests.
+		template<typename FIGTYPE>
+		void figmentTestSuit(){
+			tOutline<FIGTYPE>::draft();
+			tPlug<ptrFig> me = gWorld.get()->makeFig(getHash<FIGTYPE>());
+			//tOutline<FIGTYPE>::removeFromWorld();
+		}
+	}
+#endif
 
 #endif

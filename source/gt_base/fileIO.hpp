@@ -55,8 +55,8 @@ namespace gt{
 		cBase_fileIO();
 		virtual ~cBase_fileIO();
 
-		static const dNatChar* identify(){ return "base file IO"; }
-		virtual const dNatChar* name() const { return identify(); }		//!<
+		static const dPlaChar* identify(){ return "base file IO"; }
+		virtual const dPlaChar* name() const { return identify(); }		//!<
 		virtual dNameHash hash() const{ return tOutline<cBase_fileIO>::hash(); }
 
 	protected:

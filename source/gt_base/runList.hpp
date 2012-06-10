@@ -37,9 +37,11 @@ namespace gt{ //gamestool
 		virtual ~cRunList();
 
 		//- Required
-		static const dNatChar* identify(){ return "run list"; }
-		virtual const dNatChar* name() const{ return identify(); }
+		static const dPlaChar* identify(){ return "run list"; }
+		virtual const dPlaChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cRunList>::hash(); }
+		static dNameHash extends(){ return getHash<cFigment>(); }
+		virtual dNameHash getExtension() const { return extends(); }
 
 		//- Optional
 		virtual void run(cContext* pCon);				//!< runs every element in the list
@@ -74,8 +76,8 @@ namespace gt{ //gamestool
 		virtual ~cValves();
 
 		//- Required
-		static const dNatChar* identify(){ return "valve station"; }
-		virtual const dNatChar* name() const { return identify(); }
+		static const dPlaChar* identify(){ return "valve station"; }
+		virtual const dPlaChar* name() const { return identify(); }
 		virtual dNameHash hash() const { return tOutline<cValves>::hash(); }
 
 		//- Optional

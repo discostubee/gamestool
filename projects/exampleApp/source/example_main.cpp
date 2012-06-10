@@ -19,9 +19,6 @@
 //#define WIN32 //should be a project setting.
 //#define LINUX //should be a project setting.
 
-#include "context_example.cpp"
-#include "addon_example.cpp"
-#include "userProgram_example.cpp"
 #include "graphics_example.cpp"
 
 using namespace gt;
@@ -30,7 +27,7 @@ using namespace gt;
 
 int
 main(void){
-	gWorld.take( new cOSXWorld() );
+	gWorld.take(new cOSXWorld());
 
 #elif defined(LINUX)
 
@@ -54,13 +51,14 @@ main(
 
 int
 main(void){
-	gWorld = new cLinuxWorld();
+	gWorld.take(new cLinuxWorld());
 
 #endif
 
 	try{
-		DBUG_LO("Example collection. Version 3.");
+		DBUG_LO("Example application. Version 4.");
 
+		graphics();
 
 		gWorld.get()->flushLines();
 		gWorld.get()->makeProfileReport(std::cout);
@@ -68,7 +66,6 @@ main(void){
 	}catch(excep::base_error &e){
 		WARN(e);
 	}
-
 
 	gWorld.cleanup();
 

@@ -122,3 +122,11 @@ cBase_fileIO::patGetFileSize(ptrLead aLead){
 	aLead->setPlug(&mFileSize, xPT_fileSize);
 }
 
+#ifdef GTUT
+
+GTUT_START(test_cBase_fileIO, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cBase_fileIO>();
+}GTUT_END;
+
+#endif

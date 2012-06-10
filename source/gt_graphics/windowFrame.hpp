@@ -38,7 +38,7 @@ namespace gt{
 	protected:
 		tPlug<ptrFig>		mContent;	//!< Things to render in this window.
 		tPlug<ptrFig>		mClosing;	//!< The object to run when this window is closed.
-		tPlug<dUnitPix32>	mX, mY, mHeight, mWidth;
+		tPlug<dUnitPix32>	mX, mY, mWidth, mHeight;
 
 		void patLink(ptrLead aLead);
 		void patSetDim(ptrLead aLead);

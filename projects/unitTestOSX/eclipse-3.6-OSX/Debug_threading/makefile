@@ -42,15 +42,14 @@ endif
 all: unitTestOSX_dt
 
 dependents:
-	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6/Debug_threading && $(MAKE) clean all
-	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6/Debug_threading && $(MAKE) clean all
-	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgamestool/eclipse-3.6/Debug_threading && $(MAKE) clean all
+	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6-OSX/Debug_threading && $(MAKE) all
+	-cd /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6-OSX/Debug_threading && $(MAKE) all
 
 # Tool invocations
-unitTestOSX_dt: $(OBJS) $(USER_OBJS) /Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6/Debug_threading/addonX11GL_dt.dylib /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6/Debug_threading/libOSX_dt.a /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgamestool/eclipse-3.6/Debug_threading/libgamestool_dt.a
+unitTestOSX_dt: $(OBJS) $(USER_OBJS) /Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6-OSX/Debug_threading/addonX11GL_dt.dylib /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6-OSX/Debug_threading/libOSX_dt.a
 	@echo 'Building target: $@'
 	@echo 'Invoking: MacOS X C++ Linker'
-	g++ -L"/Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTestOSX/eclipse-3.6/../../../includes" -L/Developer/SDKs/boost_1_46_0/stage/lib -L/Developer/SDKs/libpng -o "unitTestOSX_dt" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTestOSX/eclipse-3.6-OSX/../../../includes" -L"/Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTestOSX/eclipse-3.6-OSX/../../shared/eclipse-3.6-OSX/lib_links/boost" -o "unitTestOSX_dt" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build
@@ -61,13 +60,12 @@ clean:
 	-@echo ' '
 
 post-build:
-	-cp /Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTestOSX/eclipse-3.6/Debug_threading/unitTestOSX_dt /Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTestOSX/eclipse-3.6/../../../bin/unitTestOSX_dt
+	-cp /Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTestOSX/eclipse-3.6-OSX/Debug_threading/unitTestOSX_dt /Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTestOSX/eclipse-3.6-OSX/../../../bin/unitTestOSX_dt
 	-@echo ' '
 
 .PHONY: all clean dependents
 .SECONDARY: post-build
-/Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6/Debug_threading/addonX11GL_dt.dylib:
-/Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6/Debug_threading/libOSX_dt.a:
-/Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgamestool/eclipse-3.6/Debug_threading/libgamestool_dt.a:
+/Users/stuandlou/Documents/workspace/gamestool_hg/projects/addonOSXGL/eclipse-3.6-OSX/Debug_threading/addonX11GL_dt.dylib:
+/Users/stuandlou/Documents/workspace/gamestool_hg/projects/libOSX/eclipse-3.6-OSX/Debug_threading/libOSX_dt.a:
 
 -include ../makefile.targets

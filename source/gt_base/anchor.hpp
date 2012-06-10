@@ -43,8 +43,8 @@ namespace gt{ //gamestool
 		virtual ~cAnchor();
 
 		//- Required
-		static const dNatChar* identify(){ return "anchor"; }
-		virtual const dNatChar* name() const { return identify(); }	//!<
+		static const dPlaChar* identify(){ return "anchor"; }
+		virtual const dPlaChar* name() const { return identify(); }	//!<
 		virtual dNameHash hash() const { return tOutline<cAnchor>::hash(); }
 		static dNameHash extends(){ return getHash<cFigment>(); }
 		virtual dNameHash getExtension() const { return extends(); }

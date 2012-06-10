@@ -26,42 +26,33 @@
 #include <stdio.h>
 #include <string.h>	//- C library.
 #include <string>	//- c++ library.
-
-#ifdef DEBUG
-	#include "unitTests.hpp"
-#endif
+#include <boost/locale.hpp>	//- Requires boost 1.49
+#include <boost/serialization/strong_typedef.hpp>
 
 //--------------------------------------------------------
 
+typedef char dPlaChar;		//!< Raw buffer type most efficient (speed wise) for the target platform to use internally. Typically this is UTF-8. Note that the number of bytes isn't the number of characters.
 typedef char dNatChar;		//!< char type native to gamestools, which is 8bit ascii across all platforms.
-typedef char dPlaChar;		//!< char type most efficient (speed wise) for the target platform.
-typedef wchar_t dTextChar;	//!< Used for display text.
+typedef char dTextChar;		//!< Used for UTF-8 text which will be displayed to the user. Note: The buffer size isn't linked just to the number of characters.
 
-//!\brief	stl string wrapper of the native string type.
-typedef std::basic_string<dNatChar, std::char_traits<dNatChar> > dStr;
+typedef std::basic_string<dPlaChar, std::char_traits<dPlaChar> > dStr;	//!< stl string wrapper of the platform string type. Calling it dStr and not dPlaStr because I'm lazy and this is the most common string type. Not using boost strong typedef here so that string streams and string literals work with it.
+typedef std::basic_string<dNatChar, std::char_traits<dNatChar> > dNatStr_def;	//!< stl string wrapper of the string type native to gamestool.
+typedef std::basic_string<dTextChar, std::char_traits<dTextChar> > dText_def;	//!< Text strings are used for displaying text.
 
-typedef std::basic_string<dPlaChar, std::char_traits<dPlaChar> > dPlaStr;
+BOOST_STRONG_TYPEDEF(dNatStr_def, dNatStr);
+BOOST_STRONG_TYPEDEF(dText_def, dText);
 
-//!\brief	Text strings are used for displaying text. Intended to be UTF16 allowing for compression and multiple languages.
-typedef std::basic_string<dTextChar, std::char_traits<dTextChar> > dText;
+//--------------------------------------------------------
 
-//!\brief	Find length of a native string
-size_t natCStrLen(const dNatChar *pString);
+dStr toPStr(const dNatStr &pString);
+dText toText(const dNatStr &pString);	//!< Converts a native C style string to a text string instance.
 
-//!\brief	Find length of a platform string.
-size_t plaCStrLen(const dPlaChar *pString);
+size_t PCStrLen(const dPlaChar *pString);	//!< Find length of a platform string. Only platform strings offer raw buffer support, because string literals are all platform based.
+dNatStr toNStr(const dPlaChar *pString);	//!< Converts platform C style string to native C++ string instance.
+dText toText(const dPlaChar *pString);	//!< Converts platform C style string to text string instance.
 
-//!\brief	Converts a native C style string to a text string instance.
-dText NCStrToText(const dNatChar *pString);
-
-//!\brief	Converts platform C style string to native C++ string instance.
-dStr PCStrToNStr(const dPlaChar *pString);
-
-//!\brief	Converts platform C style string to text string instance.
-dText PCStrToText(const dPlaChar *pString);
-
-//!\brief	Convert from a text C style string to a native string instance.
-dStr textToNStr(const dTextChar *pString);
+dNatStr toNStr(const dText &pString);	//!< Convert from a text C style string to a native string instance.
+dStr toPStr(const dText &pString);	//!< Convert from a text C style string to a platform string instance.
 
 
 #endif

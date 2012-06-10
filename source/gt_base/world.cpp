@@ -29,8 +29,6 @@ const char *MSG_UNKNOWN_ERROR = "unknown error";
 
 tMrSafety<cWorld> gt::gWorld;
 
-bool cWorld::mSuppressError = false;
-
 //- Don't assign anything to the stuff below.
 cWorld::dLines* cWorld::xLines;
 cProfiler* cWorld::xProfiler;
@@ -204,7 +202,7 @@ cWorld::cWorld():
 	mBicycleSetup(false)
 {
 	if(thereCanBeOnlyOne)
-		throw excep::base_error("can only create the world once", __FILE__, __LINE__);
+		THROW_BASEERROR("can only create the world once");
 
 	thereCanBeOnlyOne = true;
 
@@ -255,27 +253,27 @@ void
 cWorld::addBlueprint(cBlueprint* pAddMe){
 	PROFILE;
 
-	// Archive the old blueprint being replaced.
-	if( pAddMe->replace() != uDoesntReplace ){
-		mScrBMapItr = mBlueprints.find(pAddMe->replace());
-		if(mScrBMapItr != mBlueprints.end()){
-			mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);
-			DBUG_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mScrBMapItr->second.mBlueprint->name() << "'");
-		}
-
-		mBlueprints[pAddMe->replace()] = sBlueprintHeader( pAddMe, pAddMe->replace() );		
-	}
-
 	// Even if this figment replaces another, it still appears under its own name hash.
 	if( mBlueprints.find(pAddMe->hash()) == mBlueprints.end()){	//new blueprint
 		mBlueprints[pAddMe->hash()] = sBlueprintHeader( pAddMe, uDoesntReplace );
 		DBUG_LO("Blueprint '" << pAddMe->name() << "' added to library");
-		
+
 	}else{
-		DBUG_LO("Blueprint '" <<  pAddMe->name() 
-			<< "' with hash "<< pAddMe->name()
-			<< ", has already been added"
-		);
+		DBUG_LO("Blueprint '" <<  pAddMe->name() << "', has already been added");
+		return;
+	}
+
+	if( pAddMe->replace() != uDoesntReplace ){
+		mScrBMapItr = mBlueprints.find(pAddMe->replace());
+		if(mScrBMapItr != mBlueprints.end()){
+			// Archive the old blueprint being replaced.
+			mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);
+
+			mScrBMapItr->second = sBlueprintHeader( pAddMe, mScrBMapItr->second.mReplaced );
+			DBUG_VERBOSE_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mScrBMapItr->second.mBlueprint->name() << "'");
+		}else{
+			WARN_S(pAddMe->name() << " missing parent");
+		}
 	}
 }
 
@@ -285,7 +283,7 @@ cWorld::getBlueprint(dNameHash pNameHash){
 
 	mScrBMapItr = mBlueprints.find(pNameHash);
 	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("bad name hash", __FILE__, __LINE__);
+		throw excep::base_error("couldn't find blueprint", __FILE__, __LINE__);
 
 	return mScrBMapItr->second.mBlueprint;
 }
@@ -402,10 +400,10 @@ cWorld::makeLead(cCommand::dUID pComID, dConSig pConx){
 }
 
 ptrLead
-cWorld::makeLead(const dNatChar *aFigName, const dNatChar *aComName, dConSig aConx){
+cWorld::makeLead(const dPlaChar *aFigName, const dPlaChar *aComName, dConSig aConx){
 	dStr tmpStr = aFigName;
 	tmpStr.append(aComName);
-	dNameHash hash = makeHash(tmpStr.c_str());
+	dNameHash hash = makeHash(toNStr(tmpStr.c_str()));
 	ptrLead rtnLead(new cLead( hash, aConx ));
 	return rtnLead;
 }
@@ -417,7 +415,7 @@ cWorld::getPlugTag(dNameHash pFigHash, cPlugTag::dUID pPTHash){
 	mScrBMapItr =  mBlueprints.find(pFigHash);
 
 	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("figment wasn't found", __FILE__, __LINE__);
+		THROW_BASEERROR("figment wasn't found");
 
 	return mScrBMapItr->second.mBlueprint->getPlugTag(pPTHash);
 }
@@ -479,6 +477,8 @@ cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int p
 }
 
 #ifdef GTUT
+	bool cWorld::mSuppressError = false;
+
 	void
 	cWorld::suppressNextError(){
 		#ifdef GT_THREADS
@@ -551,8 +551,8 @@ public:
 	static const cPlugTag*	xPT_A;
 	static const cCommand::dUID	xCommandA;
 
-	static const dNatChar* identify(){ return "test draft parent"; }
-	virtual const dNatChar* name() const { return identify(); }
+	static const dPlaChar* identify(){ return "test draft parent"; }
+	virtual const dPlaChar* name() const { return identify(); }
 
 	virtual dNameHash hash() const { return getHash<testDraftParent>(); }
 
@@ -587,8 +587,8 @@ const cCommand::dUID testDraftParent::xCommandA = tOutline<testDraftParent>::mak
 //- Just extends the parent.
 class testDraftChild: public testDraftParent, private tOutline<testDraftChild>{
 public:
-	static const dNatChar* identify(){ return "test draft child"; }
-	virtual const dNatChar* name() const { return identify(); };
+	static const dPlaChar* identify(){ return "test draft child"; }
+	virtual const dPlaChar* name() const { return identify(); };
 
 	virtual dNameHash hash() const { return getHash<testDraftChild>(); };
 
@@ -602,8 +602,8 @@ public:
 
 class testDraftReplace: public testDraftParent, private tOutline<testDraftReplace>{
 public:
-	static const dNatChar* identify(){ return "test draft replace"; }
-	virtual const dNatChar* name() const { return identify(); };
+	static const dPlaChar* identify(){ return "test draft replace"; }
+	virtual const dPlaChar* name() const { return identify(); };
 
 	virtual dNameHash hash() const { return getHash<testDraftReplace>(); };
 

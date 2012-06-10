@@ -228,6 +228,11 @@ cAnchor::getLinks(std::list<ptrFig>* pOutLinks){
 
 #ifdef GTUT
 
+GTUT_START(test_cAnchor, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cAnchor>();
+}GTUT_END;
+
 #include "runList.hpp"
 
 class cSaveTester: public cFigment, private tOutline<cSaveTester>{
@@ -236,11 +241,11 @@ public:
 	static const cCommand::dUID	xGetData;
 
 	cSaveTester(){}
-	cSaveTester(const dNatChar* inStr, int pNum) : myStr(inStr), myNum(pNum) {}
+	cSaveTester(const dPlaChar* inStr, int pNum) : myStr(inStr), myNum(pNum) {}
 	virtual ~cSaveTester(){}
 
-	static const dNatChar* identify(){ return "save tester"; }
-	virtual const dNatChar* name() const{ return cSaveTester::identify(); }
+	static const dPlaChar* identify(){ return "save tester"; }
+	virtual const dPlaChar* name() const{ return cSaveTester::identify(); }
 	virtual dNameHash hash() const{ return tOutline<cSaveTester>::hash(); }
 
 	virtual void save(cByteBuffer* pAddHere) {
@@ -276,7 +281,7 @@ cSaveTester::patGetData(ptrLead aLead){
 
 tPlug<iFigment::ptrBuff> plugBuff;
 //const dTextChar *testStr = L"proper job";
-const dNatChar *testStr = "proper job";
+const dPlaChar *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
 	tOutline<cFigment>::draft();
