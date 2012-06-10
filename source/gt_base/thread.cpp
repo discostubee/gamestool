@@ -123,6 +123,10 @@ cThread::patLink(ptrLead aLead){
 // Tests
 #if defined(GTUT) && defined(GT_THREADS)
 
+GTUT_START(test_cThread, test_suit){
+	figmentTestSuit<cThread>();
+}GTUT_END;
+
 namespace gt{
 
 	class cShareTarget : public cFigment, private tOutline<cShareTarget>{
@@ -155,8 +159,8 @@ namespace gt{
 		static const cCommand::dUID xGetHits;
 		static const cCommand::dUID xGetChatter;
 
-		static const dNatChar* identify() { return "don't care target"; }
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		static const dPlaChar* identify() { return "don't care target"; }
+		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return tOutline<cShareTarget>::hash(); }
 
 		cShareTarget(): hits(0) { addUpdRoster(&chatter); addUpdRoster(&hits); }
@@ -188,8 +192,8 @@ namespace gt{
 		cWriter(cShareTarget *inT, std::string inS) : target(inT), phrase(inS) {}
 		virtual ~cWriter() {}
 
-		static const dNatChar* identify(){ return "test writer"; }
-		virtual const dNatChar* name() const { return identify(); }
+		static const dPlaChar* identify(){ return "test writer"; }
+		virtual const dPlaChar* name() const { return identify(); }
 		virtual dNameHash hash() const { return tOutline<cWriter>::hash(); }
 
 		virtual void run(cContext* pCon) {

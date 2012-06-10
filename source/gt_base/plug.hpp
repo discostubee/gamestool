@@ -1,7 +1,20 @@
 /*
- * !\file	plug.hpp
- * !\brief
- */
+**********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+*/
 
 #ifndef PLUG_HPP
 #define PLUG_HPP
@@ -10,12 +23,36 @@
 #include "binPacker.hpp"
 #include <vector>
 
+///////////////////////////////////////////////////////////////////////////////////
+//
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
+//
 namespace gt{
 	namespace voidCopiers{
 		template<typename A>
-		void baseCopy(const void *pFrom, void *pTo){
-			*reinterpret_cast<A*>(pTo) = *reinterpret_cast<const A*>(pFrom);
+		void baseCopy(const A *pFrom, void *pTo){
+			*reinterpret_cast<A*>(pTo) = *pFrom;
 		}
+
+		void textToNStr(const dText *pFrom, void *pTo);
+		void textToPStr(const dText *pFrom, void *pTo);
+	}
+
+	template<typename A>
+	inline typename tPlug<A>::dMapCopiers*
+	getPlugCopiers(){
+		static bool setup = false;
+		static typename tPlug<A>::dMapCopiers copiers;
+
+		if(!setup){
+			copiers[ cBase_plug::getPlugType<A>() ] = voidCopiers::baseCopy<A>;
+			setup=true;
+		}
+
+		return &copiers;
 	}
 }
 
@@ -31,8 +68,8 @@ namespace gt{
 	template<typename A>
 	class tPlugFlakes: public cBase_plug{
 	public:
-		tPlugFlakes(dPlugType pTI, dMapCopiers *pCopiers) :
-			cBase_plug(pTI, pCopiers)
+		tPlugFlakes(dPlugType pTI) :
+			cBase_plug(pTI)
 		{}
 
 		virtual ~tPlugFlakes(){}
@@ -65,7 +102,7 @@ namespace gt{
 	template<typename A>
 	class tPlugShadows: public tPlugFlakes<A>{
 	public:
-		tPlugShadows(cBase_plug::dPlugType pTI, cBase_plug::dMapCopiers *pCopiers);
+		tPlugShadows(cBase_plug::dPlugType pTI);
 		virtual ~tPlugShadows();
 
 		virtual void linkLead(cLead* pLead);	//!<\note Threadsafe
@@ -119,6 +156,9 @@ namespace gt{
 	template<typename A>
 	class tPlug: public tPlugShadows<A>{
 	public:
+		typedef void (*fuCopyInto)(const A *copyFrom, void *copyTo);
+		typedef std::map<cBase_plug::dPlugType, fuCopyInto> dMapCopiers;
+
 		tPlug();
 		tPlug(const A& pA);
 		tPlug(const tPlug<A> &other);
@@ -133,9 +173,10 @@ namespace gt{
 
 		virtual A& get();
 
-	private:
-		static cBase_plug::dMapCopiers* getCopiers();
+	protected:
+		virtual void actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const;
 
+	private:
 		A mD;	//!< Data
 
 	};
@@ -147,8 +188,8 @@ namespace gt{
 
 	//--------------------------------------
 	template<typename A>
-	tPlugShadows<A>::tPlugShadows(cBase_plug::dPlugType pTI, cBase_plug::dMapCopiers *pCopiers) :
-		tPlugFlakes<A>(pTI, pCopiers)
+	tPlugShadows<A>::tPlugShadows(cBase_plug::dPlugType pTI) :
+		tPlugFlakes<A>(pTI)
 	{}
 
 	template<typename A>
@@ -180,8 +221,7 @@ namespace gt{
 			#endif
 
 		}catch(...){
-			excep::base_error e("Unknown error when destroying a plug", __FILE__, __LINE__);
-			WARN(e);
+			WARN("Unknown error when destroying a plug");
 		}
 	}
 
@@ -290,39 +330,25 @@ namespace gt{
 	//--------------------------------------
 
 	template<typename A>
-	cBase_plug::dMapCopiers*
-	tPlug<A>::getCopiers(){
-		static bool setup = false;
-		static cBase_plug::dMapCopiers copiers;
-
-		if(!setup){
-			copiers[ cBase_plug::getPlugType<A>() ] = voidCopiers::baseCopy<A>;
-			setup=true;
-		}
-
-		return &copiers;
-	}
-
-	template<typename A>
 	tPlug<A>::tPlug():
-		tPlugShadows<A>(cBase_plug::getPlugType<A>(), getCopiers())
+		tPlugShadows<A>(cBase_plug::getPlugType<A>())
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const A& pA):
-		tPlugShadows<A>(cBase_plug::getPlugType<A>(), getCopiers()),
+		tPlugShadows<A>(cBase_plug::getPlugType<A>()),
 		mD(pA)
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const tPlug<A> &other) :
-		tPlugShadows<A>(cBase_plug::getPlugType<A>(), getCopiers()),
+		tPlugShadows<A>(cBase_plug::getPlugType<A>()),
 		mD(other.mD)
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const cBase_plug *other) :
-		tPlugShadows<A>(other->mType, getCopiers())
+		tPlugShadows<A>(other->mType)
 	{
 		other->copyInto(&mD);
 	}
@@ -365,6 +391,17 @@ namespace gt{
 	tPlug<A>::get(){
 		return mD;
 	}
+
+	template<typename A>
+	void
+	tPlug<A>::actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const{
+		typename dMapCopiers::iterator itrCopiers = getPlugCopiers<A>()->find( cBase_plug::getPlugType<A>() );
+		if(itrCopiers != getPlugCopiers<A>()->end()){
+			itrCopiers->second( &mD, pContainer );
+		}else{
+			throw excep::cantCopy(typeid(A).name(), "unknown", __FILE__, __LINE__);
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -376,6 +413,22 @@ namespace gt{
 	class tPlug<cLead>: public tPlugShadows<cLead>{
 		//--- I AM BANNED COZ I BREAK THINGS ---///
 	};
+
+	template<>
+	inline tPlug<dText>::dMapCopiers*
+	getPlugCopiers<dText>(){
+		static bool setup = false;
+		static tPlug<dText>::dMapCopiers copiers;
+
+		if(!setup){
+			copiers[ cBase_plug::getPlugType<dText>() ] = voidCopiers::baseCopy<dText>;
+			copiers[ cBase_plug::getPlugType<dNatStr>() ] = voidCopiers::textToNStr;
+			copiers[ cBase_plug::getPlugType<dStr>() ] = voidCopiers::textToPStr;
+			setup=true;
+		}
+
+		return &copiers;
+	}
 }
 
 

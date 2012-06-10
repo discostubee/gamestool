@@ -19,7 +19,18 @@
 #include "plug.hpp"
 #include "figment.hpp"
 
+////////////////////////////////////////////////////////////
+using namespace gt;
 
+void
+gt::voidCopiers::textToNStr(const dText *pFrom, void *pTo){
+	*reinterpret_cast<dNatStr*>(pTo) = ::toNStr(*pFrom);
+}
+
+void
+gt::voidCopiers::textToPStr(const dText *pFrom, void *pTo){
+	*reinterpret_cast<dStr*>(pTo) = ::toPStr(*pFrom);
+}
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
@@ -56,11 +67,10 @@ GTUT_START(testPlug, copyPlugs){
 	const short magic = 3;
 
 	tPlug<short> A, B;
-	cBase_plug *refA = &A;
 
 	B.get() = magic;
-	A = refA;
-	GTUT_ASRT(A.get() = magic, "A didn't copy B.");
+	A = B;
+	GTUT_ASRT(A.get() == magic, "A didn't copy B.");
 }GTUT_END;
 
 GTUT_START(testPlug, saveLoad){

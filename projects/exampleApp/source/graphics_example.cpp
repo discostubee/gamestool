@@ -3,19 +3,18 @@
 #define GRAPHICS_EXAMPLE_HPP
 
 #if defined(__APPLE__)
-	#include <gt_OSX/OSX_addon.hpp>
+	#include "gt_OSX/OSX_addon.hpp"
+	#include "gt_OSX/OSX_world.hpp"
 #elif defined(LINUX)
-	#include <gt_linux/linux_addon.hpp>
+	#include "gt_linux/linux_addon.hpp"
 #elif defined(WIN32)
-	#include <gt_win7/win_addon.hpp>
+	#include "gt_win7/win_addon.hpp"
 #endif
 
-#include <gt_base/addon.hpp>
-#include <gt_graphics/polygonMesh.hpp>
-#include <gt_graphics/windowFrame.hpp>
-#include <gt_base/runList.hpp>
-
-namespace showoff{
+#include "gt_base/addon.hpp"
+#include "gt_graphics/polygonMesh.hpp"
+#include "gt_graphics/windowFrame.hpp"
+#include "gt_base/runList.hpp"
 
 //!\brief	Showing off the graphics engine. You may notice that a lot of identifiers are using strings, bleh! This is because a lot of these
 //!			objects come from an addon, and normally we wouldn't be hand coding stuff like this (eventually, these programs will be written
@@ -24,7 +23,6 @@ inline void graphics(){
 	using namespace gt;
 
 	PROFILE;
-	DBUG_LO("showing off addons.");
 
 	//- Need to draft all the objects we want to use first:
 	tOutline<cFigment>::draft();
@@ -50,11 +48,11 @@ inline void graphics(){
 			tPlug<dStr> addonName;
 
 		#if		defined	__APPLE__
-			addonName.mD = "X11GL";
+			addonName.get() = "X11GL";
 		#elif	defined	LINUX
-			addonName.mD = "X11GL";
+			addonName.get() = "X11GL";
 		#elif	defined	WIN32
-			addonName.mD = "WinGL";
+			addonName.get() = "WinGL";
 		#endif
 
 			loadAddon->addPlug(&addonName, cAddon::xPT_addonName);
@@ -66,7 +64,7 @@ inline void graphics(){
 			tPlug<ptrFig> layer = gWorld.get()->makeFig(makeHash("layer"));
 			tPlug<ptrFig> mesh = gWorld.get()->makeFig(makeHash("polygon mesh"));
 			tPlug<ptrFig> drawlist = gWorld.get()->makeFig(makeHash("run list"));
-			//tPlug<ptrFig> camera = gWorld.get()->makeFig(makeHash("camera"));
+			tPlug<ptrFig> camera = gWorld.get()->makeFig(makeHash("camera"));
 
 			{
 				tPlug<ptrFig> partyPooper = gWorld.get()->makeFig(makeHash("world shutoff"));
@@ -74,7 +72,7 @@ inline void graphics(){
 
 				setCloser->addPlug( &partyPooper, gWorld.get()->getPlugTag("window frame", "closer") );
 
-				shiney.mD->jack(setCloser, &fake);
+				shiney.get()->jack(setCloser, &fake);
 			}
 			{
 				tPlug<dUnitPix32> width, height;
@@ -85,18 +83,18 @@ inline void graphics(){
 				setWinDim->addPlug( &width, gWorld.get()->getPlugTag("window frame", "width") );
 				setWinDim->addPlug( &height, gWorld.get()->getPlugTag("window frame", "height") );
 
-				shiney.mD->jack(setWinDim, &fake);
+				shiney.get()->jack(setWinDim, &fake);
 			}
 			{
 				const cPlugTag *link = gWorld.get()->getPlugTag("window frame", "content");
 				ptrLead addLayerToWindow = gWorld.get()->makeLead("window frame", "link content", fake.getSig());
 				addLayerToWindow->addPlug(&layer, link);
-				shiney.mD->jack(addLayerToWindow, &fake);
+				shiney.get()->jack(addLayerToWindow, &fake);
 			}
 			{
 				ptrLead addStuff = gWorld.get()->makeLead(cRunList::xAdd, fake.getSig());
 				addStuff->addToPile(&shiney);
-				stuff.mD->jack(addStuff, &fake);
+				stuff.get()->jack(addStuff, &fake);
 			}
 			{
 				ptrLead vertData = gWorld.get()->makeLead("polygon mesh", "add vertex", fake.getSig());
@@ -113,8 +111,8 @@ inline void graphics(){
 				polyData->addToPile(&front);
 				polyData->addToPile(&back);
 
-				mesh.mD->jack(vertData, &fake);
-				mesh.mD->jack(polyData, &fake);
+				mesh.get()->jack(vertData, &fake);
+				mesh.get()->jack(polyData, &fake);
 			}
 			{
 				ptrLead addToList = gWorld.get()->makeLead(cRunList::xAdd, fake.getSig());
@@ -123,19 +121,17 @@ inline void graphics(){
 
 				//addToList->addToPile(&camera, &fake);
 				addToList->addToPile(&mesh);
-				drawlist.mD->jack(addToList, &fake);
+				drawlist.get()->jack(addToList, &fake);
 
 				addToLayer->addPlug(&drawlist, contentTag);
-				layer.mD->jack(addToLayer, &fake);
+				layer.get()->jack(addToLayer, &fake);
 			}
 
-			gWorld.get()->setRoot(stuff.mD);
+			gWorld.get()->setRoot(stuff.get());
 			gWorld.get()->loop();
 		}
 		gWorld.get()->setRoot(gWorld.get()->getEmptyFig());
 	}
-}
-
 }
 
 #endif

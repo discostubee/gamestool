@@ -1,46 +1,58 @@
+/*
+ **********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+*/
 
 #include "binPacker.hpp"
 
-template<typename CHAR_TYPE>
-void packString(
-	const typename std::basic_string< CHAR_TYPE, std::char_traits<CHAR_TYPE> > *packMe,
-	dByte **output,
-	size_t *sizeOut
-){
+void
+bpk::pack(const dNatStr *packMe, dByte **output, size_t *sizeOut){
 	ASRT_NOTNULL(packMe); ASRT_NOTNULL(output);
 
-	if(packMe->empty()){
+	const dNatStr_def *ref = &packMe->t;
+
+	if(ref->empty()){
 		(*sizeOut) = sizeof(size_t);
 	}else{
-		(*sizeOut) = ((packMe->length() + 1) * sizeof(CHAR_TYPE)) + sizeof(size_t);
+		(*sizeOut) = ((ref->length() + 1)) + sizeof(size_t);	//- Assume 8 bits per char
 	}
 
 	delete(*output);
 	(*output) = new dByte[*sizeOut];
-	*reinterpret_cast<size_t*>(*output) = packMe->length();
+	*reinterpret_cast<size_t*>(*output) = ref->length();
 
-	if(!packMe->empty()){
+	if(!ref->empty()){
 		memcpy(
 			(*output)+sizeof(size_t),
-			packMe->data(),
-			(*sizeOut) - sizeof(size_t) - sizeof(CHAR_TYPE)	//- std::string::data() doesn't use a null terminator
+			ref->data(),
+			(*sizeOut) - sizeof(size_t) - sizeof(dNatChar)	//- std::string::data() doesn't use a null terminator
 		);
 	}
 	memset(
-		((*output)+sizeof(size_t)) + (packMe->length() * sizeof(CHAR_TYPE)),
+		((*output)+sizeof(size_t)) + ref->length(),	//- Assume 8 bits per char
 		0,
-		sizeof(CHAR_TYPE)
+		sizeof(dNatChar)
 	);
 }
 
-template<typename CHAR_TYPE>
-void unpackString(
-	const dByte *unpackFrom,
-	typename std::basic_string< CHAR_TYPE, std::char_traits<CHAR_TYPE> > *unpackTo,
-	size_t *sizeOut,
-	size_t limit
-){
+void
+bpk::unpack(const dByte *unpackFrom, dNatStr *unpackTo, size_t *sizeOut, size_t limit){
 	ASRT_NOTNULL(unpackFrom); ASRT_NOTNULL(unpackTo); ASRT_NOTNULL(sizeOut);
+
+	dNatStr_def *ref = &unpackTo->t;
 
 	if(limit < sizeof(size_t))
 		throw excep::underFlow(__FILE__, __LINE__);
@@ -51,36 +63,49 @@ void unpackString(
 	if(numChars!=0)
 		++numChars;	//- So we get the null terminator.
 
-	(*sizeOut) = sizeof(size_t) + (numChars * sizeof(CHAR_TYPE));
+	(*sizeOut) = sizeof(size_t) + numChars;	//- Assume 8 bits per char
 
 	if(limit < (*sizeOut))
 		throw excep::underFlow(__FILE__, __LINE__);
 
 	if(numChars!=0){
-		unpackTo->assign( reinterpret_cast<const CHAR_TYPE*>(unpackFrom+sizeof(size_t)), (numChars - 1));	//- Don't assign the null.
+		ref->assign(
+			reinterpret_cast<const dNatChar*>(
+				unpackFrom+sizeof(size_t)
+			), (numChars - 1)
+		);	//- Don't assign the null.
 	}else{
-		unpackTo->clear();
+		ref->clear();
 	}
 }
 
 void
 bpk::pack(const dStr *packMe, dByte **output, size_t *sizeOut){
-	packString(packMe, output, sizeOut);
+	ASRT_NOTNULL(packMe); ASRT_NOTNULL(output);
+
+	dText tmp = toText(packMe->c_str());
+	pack(&tmp, output, sizeOut);
 }
 
 void
 bpk::unpack(const dByte *unpackFrom, dStr *unpackTo, size_t *sizeOut, size_t limit){
-	unpackString(unpackFrom, unpackTo, sizeOut, limit);
+	ASRT_NOTNULL(unpackFrom); ASRT_NOTNULL(unpackTo); ASRT_NOTNULL(sizeOut);
+
+	dText tmp;
+	unpack(unpackFrom, &tmp, sizeOut, limit);
+	*unpackTo = toPStr(tmp);
 }
 
 void
 bpk::pack(const dText *packMe, dByte **output, size_t *sizeOut){
-	packString(packMe, output, sizeOut);
+	ASRT_NOTNULL(packMe); ASRT_NOTNULL(output);
+
 }
 
 void
 bpk::unpack(const dByte *unpackFrom, dText *unpackTo, size_t *sizeOut, size_t limit){
-	unpackString(unpackFrom, unpackTo, sizeOut, limit);
+	ASRT_NOTNULL(unpackFrom); ASRT_NOTNULL(unpackTo); ASRT_NOTNULL(sizeOut);
+
 }
 
 ////////////////////////////////////////////////////////////

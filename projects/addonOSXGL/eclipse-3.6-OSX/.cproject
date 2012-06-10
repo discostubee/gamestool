@@ -1400,8 +1400,8 @@
 								</option>
 								<option id="macosx.cpp.link.option.paths.641818900" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0/stage/lib"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/lib"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
 								</option>
 								<option defaultValue="true" id="macosx.cpp.link.option.shared.417543822" name="Shared (-dynamiclib)" superClass="macosx.cpp.link.option.shared" valueType="boolean"/>
 								<option id="macosx.cpp.link.option.flags.2123382569" name="Linker flags" superClass="macosx.cpp.link.option.flags" value="" valueType="string"/>

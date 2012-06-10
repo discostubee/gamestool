@@ -23,8 +23,7 @@
 
 namespace gt{
 
-	//!\note	Stores string types in a format that is most efficient to this compilation of gamestool.
-	//!			When saving, it is converted into a string format that is consistent across all compilations.
+	//!\brief	Simple gamestool container for UTF-8 text.
 	class cTextFig: public cFigment, private tOutline<cTextFig>{
 	public:
 		static const cPlugTag* xPT_text;
@@ -34,8 +33,8 @@ namespace gt{
 		cTextFig();
 		virtual ~cTextFig();
 
-		static const dNatChar* identify(){ return "text fig"; }
-		virtual const dNatChar* name() const{ return cTextFig::identify(); }
+		static const dPlaChar* identify(){ return "text fig"; }
+		virtual const dPlaChar* name() const{ return cTextFig::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cTextFig>::hash(); }
 
 		virtual void save(cByteBuffer* pAddHere);
@@ -48,6 +47,7 @@ namespace gt{
 	private:
 		tPlug<dText> mText;
 	};
+
 }
 
 

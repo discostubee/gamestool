@@ -2,7 +2,7 @@
  * !\file	exceptions.hpp
  * !\brief	Contains different comment exception types as well as some assertions.
  *
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -61,6 +61,9 @@ namespace excep{
         template<typename T>
         dStr operator << (const T &pT) { dStr out; out + mInfo + pT; return out; }
     };
+
+    //!\brief	Useful macro to make writing error bombs easier to write.
+	#define THROW_BASEERROR(s) { std::stringstream ss; ss << s; throw excep::base_error(ss.str().c_str(), __FILE__, __LINE__); }
 
     //!\brief	Nobody knows.
 	class unknownError: public base_error{

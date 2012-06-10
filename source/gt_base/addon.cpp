@@ -1,5 +1,5 @@
 /*
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -54,25 +54,36 @@ cAddon::~cAddon(){
 }
 
 void cAddon::patLoadAddon(ptrLead aLead){
-	dText &name = mAddonName.get();
-	if(name.empty()){
+	if(mAddonName.get().t.empty()){
 		dTimesOpened::iterator found;
 
 		mAddonName = aLead->getPlug(xPT_addonName);
 
-		if(name.empty())
-			throw excep::base_error("No name given for loading addon", __FILE__, __LINE__);
+		if(mAddonName.get().t.empty())
+			THROW_BASEERROR("No name given for loading addon");
 
-		mAddonHash = makeHash( textToNStr(name.c_str()).c_str() );
+		mAddonHash = makeHash(
+			toNStr(
+				mAddonName.get()
+			)
+		);
 
 		found = xOpenAddons.find(mAddonHash);
 		if(found != xOpenAddons.end()){
 			++found->second;
 		}else{
-			draftAddon(name);
+			draftAddon(mAddonName.get());
 			++xOpenAddons[mAddonHash];
 		}
 	}
 }
 
+#ifdef GTUT
+
+GTUT_START(test_cAddon, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cAddon>();
+}GTUT_END;
+
+#endif
 

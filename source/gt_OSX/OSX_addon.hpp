@@ -29,25 +29,27 @@
 namespace gt{
 
 	class cAddon_OSX: public cAddon, private tOutline<cAddon_OSX>{
-	private:
-		void* mLibHandle;
-		std::string mLibPath;
-
-	protected:
-		typedef void (*draftFoo)(cWorld *pWorld);
-
-		virtual void draftAddon(const std::string &pName);
-		virtual void closeAddon();
-
 	public:
-
-		static const char* identify(){ return "OSX addon"; }
-		static dNameHash replaces(){ return getHash<cAddon>(); }
 
 		cAddon_OSX();
 		virtual ~cAddon_OSX();
 
-		virtual dNameHash getReplacement() const{ return replaces(); }
+		static const char* identify(){ return "OSX addon"; }
+		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+
+		virtual dNameHash hash() const { return tOutline<cAddon_OSX>::hash(); }
+
+		static dNameHash replaces(){ return getHash<cAddon>(); }
+
+	protected:
+			typedef void (*draftFoo)(cWorld *pWorld);
+
+			virtual void draftAddon(const std::string &pName);
+			virtual void closeAddon();
+
+	private:
+			void* mLibHandle;
+			std::string mLibPath;
 	};
 }
 

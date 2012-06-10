@@ -9,6 +9,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir.mk
+-include gt_graphics/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -54,7 +55,7 @@ clean:
 	-@echo ' '
 
 post-build:
-	-cp /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgraphics/eclipse-3.6/Debug/libgraphics_d.a /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgraphics/eclipse-3.6/../../../includes/libgraphics_d.a
+	-cp /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgraphics/eclipse-3.6-OSX/Debug/libgraphics_d.a /Users/stuandlou/Documents/workspace/gamestool_hg/projects/libgraphics/eclipse-3.6-OSX/../../../includes/libgraphics_d.a
 	-@echo ' '
 
 .PHONY: all clean dependents

@@ -77,6 +77,11 @@
 #include <stdarg.h>
 #include <boost/shared_ptr.hpp>
 
+#ifdef DEBUG
+	//!\brief	Defined so that all debug versions are verbose at the moment.
+#	define DBUG_VERBOSE
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////
 // forward declarations
 namespace gt{
@@ -148,7 +153,8 @@ namespace gt{
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	Figment interface, put here so we have a complete interface for the ptrFig type. Refer to the implementations of this
-	//!			class to get the low down on what all these methods mean (cFigContext, cFigment).
+	//!			class to get the low down on what all these methods mean (cFigContext, cFigment). Refer to the cFigment implementation
+	//!			for more info such as thread safety.
 	class iFigment{
 	public:
 		typedef tPMorphJar<cBase_plug> dPlugHolder;
@@ -157,7 +163,7 @@ namespace gt{
 		typedef std::vector< std::vector<dPlugHolder> > dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data. NOT THREADSAFE.
 
 		virtual ~iFigment() {}
-		virtual const dNatChar* name() const =0;
+		virtual const dPlaChar* name() const =0;
 		virtual dNameHash hash() const =0;
 
 		virtual void jack(ptrLead pLead, cContext* pCon)=0;
@@ -264,7 +270,7 @@ namespace gt{
 
 		//!\brief	If you don't have the context ID (possible because you're creating some kind of hard coded demo), you can still
 		//!			get a lead if you have the string name of the figment and the context it came from.
-		ptrLead makeLead(const dNatChar *aFigName, const dNatChar *aComName, dConSig aConx);
+		ptrLead makeLead(const dPlaChar *aFigName, const dPlaChar *aComName, dConSig aConx);
 
 		//!\brief	Makes a profile token using the profiler stored in this world.
 		//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
@@ -378,33 +384,32 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Macros
 #ifdef GTUT
-	#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-	#define DBUG_LO(x) { std::cout << x << std::endl; }
-
+#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+#	define DBUG_LO(x) { std::cout << x << std::endl; }
 #elif defined DEBUG
-	#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
-
+#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 #else
-	#define PROFILE
-	#define DBUG_LO(x)
+#	define PROFILE
+#	define DBUG_LO(x)
 #endif
 
 #if defined(DBUG_VERBOSE) && defined(DEBUG)
-	#define DBUG_VERBOSE_LO(x) DBUG_LO(x)
+#	define DBUG_VERBOSE_LO(x) DBUG_LO(x)
 #else
-	#define DBUG_VERBOSE_LO(x)
+#	define DBUG_VERBOSE_LO(x)
 #endif
 
-#define WARN(x)	gt::cWorld::warnError(x, __FILE__, __LINE__)
+#define WARN(x) gt::cWorld::warnError(x, __FILE__, __LINE__)
+#define WARN_S(x) {std::stringstream ss; ss << x; gt::cWorld::warnError(ss.str().c_str(), __FILE__, __LINE__);}
 
 // Handy for all those (...) catch blocks.
 extern const char *MSG_UNKNOWN_ERROR;
 #define UNKNOWN_ERROR	WARN(MSG_UNKNOWN_ERROR);
 
 #ifdef GTUT
-	#undef GTUT_END
-	#define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
+#	undef GTUT_END
+#	define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
 #endif
 
 #endif

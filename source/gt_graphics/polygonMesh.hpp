@@ -81,50 +81,33 @@ namespace gt{
 // template specializations
 namespace gt{
 
-	//!\brief	sMesh requires a special plug in order to work.
-	//!\todo	Everything.
 	template<>
-	class tPlug<sMesh>: public cBase_plug{
+	class tPlugFlakes<sMesh>: public cBase_plug{
 	public:
-		sMesh mD;
+		tPlugFlakes(dPlugType pTI, dMapCopiers *pCopiers) :
+			cBase_plug(pTI, pCopiers)
+		{}
 
-		tPlug() : cBase_plug(typeid(sMesh)){}
+		virtual ~tPlugFlakes(){}
 
-		tPlug(const sMesh& pMesh) : cBase_plug(typeid(sMesh)), mD(pMesh){}
+		virtual void save(cByteBuffer* pSaveHere){
+			sMesh &m = get();
+			size_t tmpSize, outSize;
+			dByte *tmpBuff=NULL;
 
-		virtual ~tPlug(){}
-
-		virtual cBase_plug& operator= (const cBase_plug &pD){
-			return operator=(&pD);
+			tmpSize = m.mPolys.size();
+			bpk::pack(&tmpSize, &tmpBuff, &outSize);
+			pSaveHere->add(tmpBuff, outSize);
+			delete tmpBuff;
 		}
 
-		virtual cBase_plug& operator= (const cBase_plug *pD){
-			if(pD != this){
-				if(mType != pD->mType)
-				{	PLUG_CANT_COPY_ID(mType, pD->mType); }
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
 
-				mD = dynamic_cast< tPlug<sMesh>* >( const_cast<cBase_plug*>(pD) )->mD;
-			}
-			return *this;
 		}
 
-		void operator= (const sMesh& pA){
-			mD = pA;
-		}
-
-		void save(cByteBuffer* pAddHere){
-			//!\todo
-		}
-
-		void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
-			//!\todo
-		}
-
-		void reset(){
-			mD = sMesh();
-		}
-
+		virtual sMesh& get() = 0;
 	};
+
 }
 
 #endif

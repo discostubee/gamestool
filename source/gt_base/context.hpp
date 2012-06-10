@@ -22,7 +22,7 @@
  * !		time they run. running the update causes the context that shadow belongs to to become locked.
  *
  *
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify

@@ -30,6 +30,7 @@
 								</option>
 								<option id="macosx.cpp.link.option.paths.8038634" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0/stage/lib"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.101571088" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -1355,13 +1356,10 @@
 								<option id="macosx.cpp.link.option.libs.1808923779" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="gtest_main"/>
 									<listOptionValue builtIn="false" value="boost_thread"/>
-									<listOptionValue builtIn="false" value="OSX_dt"/>
-									<listOptionValue builtIn="false" value="gamestool_dt"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.1156660033" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0/stage/lib"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/libpng"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.210945782" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

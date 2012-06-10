@@ -2,7 +2,7 @@
  * !\file	dirPtr.hpp
  * !\brief	Contains the directional pointer.
  *
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify

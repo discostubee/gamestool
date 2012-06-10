@@ -1,8 +1,8 @@
-/*
+/**********************************************************************************************************
  * !\file	command.hpp
  * !\brief
  *
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -60,7 +60,7 @@ namespace gt{
 		virtual bool usesTag(const cPlugTag* pTag) const =0;	//!< Checks if it has such a tag.
 		virtual void addTag(const cPlugTag* pTag) =0;
 		virtual void use(iFigment *aFig, ptrLead aLead) const =0;	//!<
-		virtual cCommand *respawn(dNameHash diffParent) const =0;
+		virtual cCommand *respawn(dNameHash diffParent) const =0;	//!< Allows you to create a copy of this command but with a different parent.
 	};
 
 	//----------------------------------------------------------------------------
@@ -78,7 +78,7 @@ namespace gt{
 
 		virtual ~tActualCommand();
 
-		virtual bool usesTag(const cPlugTag* pTag) const;	//!< Checks if it has such a tag.
+		virtual bool usesTag(const cPlugTag* pTag) const;
 		virtual void addTag(const cPlugTag* pTag);
 		virtual void use(iFigment *aFig, ptrLead aLead) const;
 		virtual cCommand *respawn(dNameHash diffParent) const;
@@ -94,14 +94,13 @@ namespace gt{
 // Template functions
 namespace gt{
 
-	//!\brief	Generates a hash for this class and remembers is, so it won't regenerate it every time.
+	//!\brief	Generates a hash for this figment and remembers is, so it won't regenerate it every time.
 	template <typename T>
 	dNameHash
 	getHash(){
 		static dNameHash name = 0;
-		if(name == 0){
-			name = ::makeHash(T::identify());
-		}
+		if(name == 0)
+			name = ::makeHash( toNStr(T::identify()) );
 		return name;
 	}
 }
@@ -145,10 +144,12 @@ namespace gt{
 	template<typename T>
 	void
 	tActualCommand<T>::use(iFigment *aFig, ptrLead aLead) const {
-		if(aFig->hash() == mParent)
+		if(aFig->hash() == mParent){
 			( dynamic_cast<T*>(aFig)->*myFoo )(aLead);
-		else
-			throw excep::base_error("can't use command", __FILE__, __LINE__);
+		}else{
+			THROW_BASEERROR(aFig->name() << " can't use command " << mName << " (" << aFig->hash() << ", " << mParent << ")");
+
+		}
 	}
 
 	template<typename T>

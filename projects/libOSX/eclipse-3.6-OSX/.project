@@ -89,37 +89,7 @@
 		<link>
 			<name>gt_OSX</name>
 			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_addon.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_addon.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_addon.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_addon.hpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_fileIO.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_fileIO.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_fileIO.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_fileIO.hpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_world.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_world.cpp</locationURI>
-		</link>
-		<link>
-			<name>gt_OSX/OSX_world.hpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/source/gt_OSX/OSX_world.hpp</locationURI>
+			<locationURI>SOURCE_DIR/gt_OSX</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

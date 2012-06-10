@@ -1,4 +1,19 @@
 /*
+**********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
  * !\file	utils.hpp
  * !\brief	Contains all kinds of stand alone tools. This is mostly a grab bag where something will get it's own file once it matures.
  */
@@ -31,6 +46,7 @@
 
 //------------------------------------------------------------------------------------------
 // some defines which are common in this project.
+typedef unsigned int	dHash;
 typedef unsigned int	dNameHash;
 typedef unsigned int	dMillisec;
 
@@ -42,7 +58,8 @@ typedef unsigned int	dMillisec;
 
 //------------------------------------------------------------------------------------------
 // !\note	Code taken from http://cboard.cprogramming.com/tech-board/114650-string-hashing-algorithm.html
-dNameHash makeHash(const char *pString);
+dHash makeHash(const char *pString);	//!< Make hash from literal string
+dNameHash makeHash(const dNatStr &pString);	//!< Should be used when dealing with a hash identifier that we need to be consistent across platforms.
 
 //------------------------------------------------------------------------------------------
 //!\brief	Handy if you don't want to expose the container, but you want access to its elements.
