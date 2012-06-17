@@ -71,7 +71,8 @@ namespace gt{
 		cFigment();
 		virtual ~cFigment();
 
-		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this. !\note Threadsafe.
+		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this.
+		//!\note	Threadsafe, so you can be running a this figment at the same time your are jacking.
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 		//-----------------------------
@@ -89,7 +90,7 @@ namespace gt{
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
 
-		virtual void run(cContext* pCon);				//!< Gives the figment some runtime to do whatever it is that it normally does. Uses context to ensure it doesn't run into itself or other threads.
+		virtual void run(cContext* pCon);	//!< Gives the figment some runtime to do whatever it is that it normally does. Uses context to ensure it doesn't run into itself or other threads.
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
@@ -104,14 +105,14 @@ namespace gt{
 		virtual dNameHash getExtension() const { return extends(); }	//!\<	You'll need to override this if you are replacing stuff.
 
 		//!\brief	Version number used when loading. 0 Means that this version has no member plugs to load.
-		//!\note	Migration is done in a manual fashion as demoed in the testMigration class.
+		//!\note	Migration is done in a manual fashion as demo-ed in the testMigration class.
 		static dNumVer version(){ return 0; }
 		virtual dNumVer getVersion() const { return version(); }
 
-		virtual dMigrationPattern getLoadPattern();	//!< !\note NOT threadsafe.
+		virtual dMigrationPattern getLoadPattern();	//!< Load patterns offer you a way to migrate an older version of a figment to the current version. Override this function to pass back different load patterns. \note NOT threadsafe.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.
-		virtual void save(cByteBuffer* pSaveHere);	//!< !\note NOT threadsafe.
-		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL); //!< !\note NOT threadsafe.
+		virtual void save(cByteBuffer* pSaveHere);	//!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
+		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL); //!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
 
 	protected:
 
@@ -119,12 +120,6 @@ namespace gt{
 		// Patch through functions for use with command.
 		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
 		void patLoad(ptrLead aLead);	//!< Same as the patSave function above.
-
-		//-----------------------------
-		// testing
-		#if defined(DEBUG) && defined(GT_SPEED)
-			void patTestJack(ptrLead aLead);
-		#endif
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -249,6 +244,10 @@ namespace gt{
 		}
 
 		virtual ptrFig& get(){
+			return mD;
+		}
+
+		virtual const ptrFig& getConst() const{
 			return mD;
 		}
 

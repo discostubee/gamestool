@@ -4,6 +4,8 @@
 
 #include "openGL_layer.hpp"
 #include "openGL_polyMesh.hpp"
+#include "openGL_bitmap.hpp"
+#include "openGL_camera.hpp"
 
 #include "gt_base/addon.hpp"
 

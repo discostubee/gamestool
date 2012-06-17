@@ -31,8 +31,8 @@ namespace gt{
 		virtual ~cWindowFrame();
 
 		//----- Stuff we must have.
-		static const dNatChar* identify(){ return "window frame"; }
-		virtual const dNatChar* name() const{ return identify(); }
+		static const dPlaChar* identify(){ return "window frame"; }
+		virtual const dPlaChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cWindowFrame>::hash(); }
 
 	protected:

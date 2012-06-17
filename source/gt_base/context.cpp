@@ -205,7 +205,8 @@ cFigContext::~cFigContext(){
 			currentCon->finished(this);
 
 		#ifdef GT_THREADS
-			conMu.unlock();
+			if(locked)
+				conMu.unlock();
 		#endif
 	}catch(excep::base_error &e){
 		WARN(e);

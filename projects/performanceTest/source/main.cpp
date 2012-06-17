@@ -3,8 +3,8 @@
 
 
 // Include the stuff we want to test.
-#include <gt_base/figment.hpp>
-#include <gt_OSX/OSX_world.hpp>
+#include "gt_base/figment.hpp"
+#include "gt_OSX/OSX_world.hpp"
 int
 main(int argc, char **argv){
 	int result = EXIT_FAILURE;

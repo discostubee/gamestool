@@ -58,7 +58,7 @@ cThread::runThread(cThread *me, cContext* pCon){
 
 #ifdef GT_THREADS
 cThread::cThread() :
-	threadStop(true), firstRun(true)
+	threadStop(true), threading(false)
 #else
 cThread::cThread()
 #endif
@@ -68,17 +68,14 @@ cThread::cThread()
 
 cThread::~cThread(){
 #ifdef GT_THREADS
-	if(!firstRun){
+	if(threading){
 		{
 			dLock lockReady(syncMu);
 			threadStop = true;
 			sync.notify_all();
 		}
-		{
-			dLock lockFinish(finishMu); // wait for the thread to finish.
-
-			myThread.join();
-		}
+		dLock lockFinish(finishMu); // wait for the thread to finish.
+		myThread.join();
 	}
 #endif
 }
@@ -89,23 +86,19 @@ cThread::run(cContext* pCon){
 
 	start(pCon);
 	updatePlugs();
-	if(!link.get().valid()){
-		stop(pCon);
-		return;
-	}
 
 #ifdef GT_THREADS
-	if(firstRun){
+	if(!threading && link.get().valid()){
 		dLock lockMake(syncMu); // If we don't wait for the thread to be made, it can be possible to deadlock.
-		firstRun = false;
 		threadStop = false;
+		threading = true;
 
 		isMultithreading::nowThreading();
 		myThread = boost::thread(cThread::runThread, this, pCon);
 		sync.wait(lockMake);
-	}else{
 
-		sync.notify_all();
+	}else{
+		sync.notify_all();	// Run the thread once.
 	}
 #else
 	link.get()->run(pCon);
@@ -115,6 +108,19 @@ cThread::run(cContext* pCon){
 
 void
 cThread::patLink(ptrLead aLead){
+	#ifdef GT_THREADS
+	if(threading){
+		{
+			dLock lockReady(syncMu);
+			threadStop = true;
+			sync.notify_all();
+		}
+		dLock lockFinish(finishMu); // wait for the thread to finish.
+		myThread.join();
+		threading = false;
+	}
+	#endif
+
 	link = aLead->getPlug(xPT_fig);
 }
 
@@ -270,7 +276,7 @@ namespace gt{
 			}
 
 			{
-				tPlug<dPlaStr> chatter;
+				tPlug<dStr> chatter;
 				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter, fakeContext.getSig());
 				share.get()->jack(getChatter, &fakeContext);
 

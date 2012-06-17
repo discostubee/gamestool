@@ -67,13 +67,24 @@ cTextFig::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 #ifdef GTUT
 
-GTUT_START(test_string, platformToText){
-	const char *sample = "てすと";
-	dText textA = toText(sample);
-	dStr strB = toPStr(textA);
-	GTUT_ASRT(strcmp(sample, strB.c_str())==0, "failed to convert");
+GTUT_START(test_string, textToNative){
+	const char *sampleA = "i'm ok, this isn't:";
+	const char *sampleB = "てすと";
+	dText textA;
+
+	textA.t.append(sampleA);
+	textA.t.append(sampleB);
+	dNatStr nstr= toNStr(textA);
+	GTUT_ASRT(nstr.t.compare(sampleA)==0, "conversions failed.");
 }GTUT_END;
 
+GTUT_START(test_string, platformToText){
+	const char *sample = "test me!";
+	dStr pstr = sample;
+	dText text = toText(pstr);
+	pstr = toPStr(text);
+	GTUT_ASRT(pstr.compare(sample)==0, "conversions failed.");
+}GTUT_END;
 
 #endif
 

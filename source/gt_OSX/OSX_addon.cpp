@@ -3,17 +3,20 @@
 using namespace gt;
 
 void
-cAddon_OSX::draftAddon(const std::string &pName){
+cAddon_OSX::draftAddon(const dText &refAddonName){
 	if( mLibHandle == NULL ){
+		mLibPath = "addon" + refAddonName.t;
 		#if defined(DEBUG) && defined(GT_THREADS)
-			mLibPath = "addon" + pName + "_dt.dylib";
+			mLibPath += "_dt.dylib";
 		#elif defined(DEBUG)
-			mLibPath = "addon" + pName + "_d.dylib";
+			mLibPath += "_d.dylib";
+		#elif defined(GT_THREADS)
+			mLibPath += "_t.dylib";
 		#else
-			mLibPath = "addon" + pName + ".dylib";
+			mLibPath += ".dylib";
 		#endif
 
-		DBUG_LO("using OSX to load shared library " << pName);
+		DBUG_LO("using OSX to load shared library " << mLibPath);
 
 		mLibHandle = dlopen(mLibPath.c_str(), RTLD_LAZY);
 		if(mLibHandle != NULL){
@@ -23,11 +26,11 @@ cAddon_OSX::draftAddon(const std::string &pName){
 			if( fn != NULL ){
 				(*fn)(gWorld.get().get());
 			}else{
-				DBUG_LO("Unable to use shared library function 'draftAll' because " << dlerror());
+				WARN_S("Unable to use shared library function 'draftAll' because " << dlerror());
 			}
 
 		}else{
-			DBUG_LO("unable to load shared library '" << mLibPath << "' because " << dlerror() );
+			WARN_S("unable to load shared library '" << mLibPath << "' because " << dlerror() );
 		}
 	}
 }

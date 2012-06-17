@@ -42,8 +42,8 @@ namespace gt{
 		};
 
 		//--- Required stuff
-		static const char* identify(){ return "layer"; }
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		static const dPlaChar* identify(){ return "layer"; }
+		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return tOutline<cLayer>::hash(); }
 
 

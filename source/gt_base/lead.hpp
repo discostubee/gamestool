@@ -100,13 +100,10 @@ namespace gt{
 		cBase_plug(dPlugType pTI);
 		cBase_plug(const cBase_plug& pCopy);
 
-		template< template<typename> class PLUG, typename T> cBase_plug& operator= (const PLUG<T> &pT);
-		template<typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
+		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Made threadsafe in implementation.
+		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Made threadsafe in implementation.
 
-		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Must be threadsafe.
-		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Must be threadsafe.
-
-		//--- Intended to be polymorphed by descendants.
+		//--- Intended to be polymorphed by implementation.
 		virtual ~cBase_plug();
 
 		//!\brief Appends the buffer with binary data that should be understandable by any platform.
@@ -117,6 +114,8 @@ namespace gt{
 
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
 		virtual bool operator== (const cBase_plug &pD) =0;
+
+		template<typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
 
 		#ifdef GT_THREADS
 			virtual void updateStart() =0;
@@ -173,7 +172,7 @@ namespace gt{
 
 		void addPlug(cBase_plug *addMe, const cPlugTag *aTag);
 
-		void setPlug(const cBase_plug *setMe, const cPlugTag *aTag, bool silentFail = false);	//!< Takes the value of a plug in this lead,and assigns that value to the plug passed in.
+		void setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail = false);	//!< Handy when you want to set one of your plugs to the value of a plug that may or may not be in this lead.
 
 		void addToPile(cBase_plug *addMe);
 
@@ -210,18 +209,12 @@ namespace gt{
 			}
 		}
 
-		//--- Things for plugs. not protected because there are a lot of templates that need them.
-		#ifdef GT_THREADS
-			typedef boost::lock_guard<boost::recursive_mutex> dLockLead;
-
-			boost::recursive_mutex muLead;	//!< Used by plugs and figment jacks to lock the lead.
-		#endif
-
 		//!\brief	When a plug dies, it must let the lead know it is no longer valid.
 		//!\note	Locks until finished because this can come from any thread at any time.
 		void unplug(cBase_plug* pPlug);
 
 	protected:
+
 		typedef std::map<cPlugTag::dUID, cBase_plug*> dDataMap;
 		typedef std::list<cBase_plug*> dPiledData;
 		
@@ -251,14 +244,6 @@ namespace excep{
 ///////////////////////////////////////////////////////////////////////////////////
 // Templates
 namespace gt{
-
-	template< template<typename> class PLUG, typename T>
-	cBase_plug&
-	cBase_plug::operator= (const PLUG<T> &pT){
-		ASRT_NOTNULL(&pT);
-		copyInto(&pT.getMD());
-		return *this;
-	}
 
 	template< typename T>
 	void

@@ -42,10 +42,12 @@
 									<listOptionValue builtIn="false" value="gamestool_d"/>
 									<listOptionValue builtIn="false" value="graphics_d"/>
 									<listOptionValue builtIn="false" value="OSX_d"/>
+									<listOptionValue builtIn="false" value="boost_locale"/>
+									<listOptionValue builtIn="false" value="iconv"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.1178125795" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0/stage/lib"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/lib"/>
 								</option>
 								<option defaultValue="true" id="macosx.cpp.link.option.shared.598384512" name="Shared (-dynamiclib)" superClass="macosx.cpp.link.option.shared" valueType="boolean"/>
@@ -730,9 +732,12 @@
 							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.release.1845666242" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.release">
 								<option id="macosx.cpp.link.option.libs.1834203906" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="boost_thread"/>
+									<listOptionValue builtIn="false" value="boost_locale"/>
+									<listOptionValue builtIn="false" value="iconv"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.1567359323" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Developer/SDKs/boost_1_46_0/stage/lib}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.1618005601" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -1393,15 +1398,17 @@
 									<listOptionValue builtIn="false" value="GLU"/>
 									<listOptionValue builtIn="false" value="X11"/>
 									<listOptionValue builtIn="false" value="dl"/>
-									<listOptionValue builtIn="false" value="boost_thread"/>
 									<listOptionValue builtIn="false" value="gamestool_dt"/>
 									<listOptionValue builtIn="false" value="graphics_dt"/>
 									<listOptionValue builtIn="false" value="OSX_dt"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="boost_locale"/>
+									<listOptionValue builtIn="false" value="boost_thread"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.641818900" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/lib"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/lib"/>
 								</option>
 								<option defaultValue="true" id="macosx.cpp.link.option.shared.417543822" name="Shared (-dynamiclib)" superClass="macosx.cpp.link.option.shared" valueType="boolean"/>
 								<option id="macosx.cpp.link.option.flags.2123382569" name="Linker flags" superClass="macosx.cpp.link.option.flags" value="" valueType="string"/>
@@ -1417,6 +1424,7 @@
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/libpng"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0"/>
 								</option>
 								<option id="gnu.both.asm.option.flags.412522574" name="Assembler flags" superClass="gnu.both.asm.option.flags" value="" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.2054729170" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
@@ -1433,6 +1441,7 @@
 									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.380764772" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1389151209" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
@@ -1452,6 +1461,7 @@
 									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.other.366560132" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0" valueType="string"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.711050549" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
@@ -1481,12 +1491,11 @@
 						<entry flags="RESOLVED" kind="libraryFile" name="libOSX_dt"/>
 					</externalSetting>
 				</externalSettings>
-				<externalSettings containerId="libgamestool;cdt.managedbuild.config.gnu.exe.debug.297269935.1080972856" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+				<externalSettings containerId="libgamestool;cdt.managedbuild.config.gnu.cross.exe.debug.841976667.384987090" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libgamestool"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libgamestool/Debug_threadding"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libgamestool/Debug"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libgamestool/Debug_threading"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libgamestool_dt"/>
 					</externalSetting>
 				</externalSettings>
 			</storageModule>

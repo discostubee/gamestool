@@ -15,8 +15,8 @@ namespace gt{
 	public:
 
 		//--- Required
-		static const dNatChar* identify(){ return "3D camera"; }
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		static const dPlaChar* identify(){ return "3D camera"; }
+		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return tOutline<c3DCamera>::hash(); }
 
 		//--- Standard
@@ -29,8 +29,8 @@ namespace gt{
 	public:
 
 		//--- Required
-		static const dNatChar* identify(){ return "2D camera"; }
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		static const dPlaChar* identify(){ return "2D camera"; }
+		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return tOutline<c2DCamera>::hash(); }
 
 		//--- Standard

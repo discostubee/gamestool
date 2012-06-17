@@ -58,6 +58,13 @@ cFigment::save(cByteBuffer* pSaveHere){
 
 	if(loadPattern.empty())
 		return;
+
+	tPlug<dNumVer> numVer;
+	numVer = getVersion();
+	numVer.save(pSaveHere);
+
+	for(dVersionPlugs::iterator itr = loadPattern.back().begin(); itr != loadPattern.back().end(); ++itr)
+		itr->get().save(pSaveHere);
 }
 
 void
@@ -68,13 +75,12 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 		return;
 
 	tPlug<dNumVer> numVer;
-
 	numVer.loadEat(pLoadFrom);
 
 	if(numVer.get() > loadPattern.size())
 		throw excep::fromTheFuture(__FILE__, __LINE__);
 
-	std::vector<dPlugHolder>::iterator itrPrev, itrPrevEnd, itrCur;
+	dVersionPlugs::iterator itrPrev, itrPrevEnd, itrCur;
 
 	for(size_t idxVer = numVer.get(); idxVer < loadPattern.size(); ++idxVer){
 		itrCur = loadPattern[idxVer].begin();
@@ -91,13 +97,13 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 				if(itrPrev != itrPrevEnd){
 					itrCur->get() = itrPrev->get();
 					++itrPrev;
-
 				}else{
 					break;
 				}
 			}
 		}
 	}
+
 }
 
 void
@@ -120,16 +126,11 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 
 	start(pCon);
 	try{
-		#ifdef GT_THREADS
-			cLead::dLockLead lock(pLead->muLead);
-		#endif
 		ASRT_NOTNULL(mBlueprint);
 		mBlueprint->getCom(pLead->mCom)->use(this, pLead);
 
 	}catch(excep::base_error &e){
-		std::stringstream ss;
-		ss << name() << e.what();
-		WARN(ss.str().c_str());
+		WARN_S(name() << e.what());
 
 	}catch(...){
 		UNKNOWN_ERROR;
@@ -155,15 +156,6 @@ void
 cFigment::getLinks(std::list<ptrFig>* pOutLinks){
 	DUMB_REF_ARG(pOutLinks);
 }
-
-#if defined(DEBUG) && defined(GT_SPEED)
-	void cFigment::patTestJack(ptrLead aLead){
-		tPlug<int> gotIt;
-		gotIt = aLead->getPlug(xPT_life);
-		if(gotIt.mD != 42)
-			throw std::exception();
-	}
-#endif
 
 ////////////////////////////////////////////////////////////
 using namespace gt;

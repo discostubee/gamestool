@@ -266,11 +266,10 @@ cWorld::addBlueprint(cBlueprint* pAddMe){
 	if( pAddMe->replace() != uDoesntReplace ){
 		mScrBMapItr = mBlueprints.find(pAddMe->replace());
 		if(mScrBMapItr != mBlueprints.end()){
-			// Archive the old blueprint being replaced.
-			mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);
+			mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);	// Archive the old blueprint being replaced.
 
 			mScrBMapItr->second = sBlueprintHeader( pAddMe, mScrBMapItr->second.mReplaced );
-			DBUG_VERBOSE_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mScrBMapItr->second.mBlueprint->name() << "'");
+			DBUG_VERBOSE_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mBlueArchive[ mScrBMapItr->first ].mBlueprint->name() << "'");
 		}else{
 			WARN_S(pAddMe->name() << " missing parent");
 		}
@@ -372,6 +371,11 @@ cWorld::makeFig(dNameHash pNameHash){
 	return mScrBMapItr->second.mBlueprint->make();
 }
 
+ptrFig
+cWorld::makeFig(const dPlaChar *pName){
+	return makeFig(makeHash(toNStr(pName)));
+}
+
 void
 cWorld::copyWorld(cWorld* pWorld){
 	if(!pWorld->mLines->empty())
@@ -401,9 +405,9 @@ cWorld::makeLead(cCommand::dUID pComID, dConSig pConx){
 
 ptrLead
 cWorld::makeLead(const dPlaChar *aFigName, const dPlaChar *aComName, dConSig aConx){
-	dStr tmpStr = aFigName;
-	tmpStr.append(aComName);
-	dNameHash hash = makeHash(toNStr(tmpStr.c_str()));
+	dNatStr totalString = toNStr(aFigName);
+	totalString.t.append( toNStr(aComName) );
+	dNameHash hash = makeHash(totalString);
 	ptrLead rtnLead(new cLead( hash, aConx ));
 	return rtnLead;
 }
@@ -422,7 +426,10 @@ cWorld::getPlugTag(dNameHash pFigHash, cPlugTag::dUID pPTHash){
 
 const cPlugTag*
 cWorld::getPlugTag(const dNatChar *figName, const dNatChar *tagName){
-	return getPlugTag(makeHash(figName), makeHash(tagName));
+	return getPlugTag(
+		makeHash(toNStr(figName)),
+		makeHash(toNStr(tagName))
+	);
 }
 
 const cPlugTag*

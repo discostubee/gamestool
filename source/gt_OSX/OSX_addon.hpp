@@ -34,8 +34,8 @@ namespace gt{
 		cAddon_OSX();
 		virtual ~cAddon_OSX();
 
-		static const char* identify(){ return "OSX addon"; }
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
+		static const dPlaChar* identify(){ return "OSX addon"; }
+		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 
 		virtual dNameHash hash() const { return tOutline<cAddon_OSX>::hash(); }
 
@@ -44,7 +44,7 @@ namespace gt{
 	protected:
 			typedef void (*draftFoo)(cWorld *pWorld);
 
-			virtual void draftAddon(const std::string &pName);
+			virtual void draftAddon(const dText &refAddonName);
 			virtual void closeAddon();
 
 	private:

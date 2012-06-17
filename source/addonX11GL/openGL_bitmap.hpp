@@ -7,7 +7,7 @@
 
 namespace gt{
 
-	class cBitmap_gl: public cBitmap, private tOutline<cBitmap_gl>{
+	class cBitmap_X11GL: public cBitmap, private tOutline<cBitmap_X11GL>{
 
 	protected:
 		virtual void setMap(dColourChan){ DONT_USE_THIS; };
@@ -23,12 +23,12 @@ namespace gt{
 		//-----------------------------
 		// Statics
 
-		static const char* identify(){ return "gl bitmap"; }
+		static const char* identify(){ return "bitmap X11GL"; }
 		static dNameHash replaces(){ return getHash<cBitmap>(); }
 
 		//-----------------------------
-		cBitmap_gl();
-		virtual ~cBitmap_gl();
+		cBitmap_X11GL();
+		virtual ~cBitmap_X11GL();
 
 		//-----------------------------
 		virtual const char* name() const{ return identify(); }

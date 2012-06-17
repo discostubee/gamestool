@@ -44,7 +44,7 @@ namespace gt{ //gamestool
 		virtual dNameHash getExtension() const { return extends(); }
 
 		//- Optional
-		virtual void run(cContext* pCon);				//!< runs every element in the list
+		virtual void run(cContext* pCon);	//!< runs every element in the list
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
@@ -59,9 +59,9 @@ namespace gt{ //gamestool
 	};
 
 	//-----------------------------------------------------------------------------------------------
-	//!\brief Running or not running an object is controlled by this valve station (still keeping
-	//		that plumbing analogy going). Use the jack to change what objects will be run every
-	//		time this figment is run.
+	//!\brief Running or not running an object is controlled by this valve station. Use the jack to
+	//!		change what objects will be run every time this figment is run.
+	//!\todo	Save and Load.
 	class cValves: public cRunList, private tOutline<cValves>{
 	protected:
 		std::map< dListItr, tPlug<bool> > mStates;	//!< Maps states to the list entries. These states control which objects are run.

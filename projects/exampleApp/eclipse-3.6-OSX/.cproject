@@ -26,9 +26,12 @@
 								<option id="macosx.cpp.link.option.libs.604664677" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="OSX_d"/>
 									<listOptionValue builtIn="false" value="gamestool_d"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="boost_locale"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.1031264296" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.471366870" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -38,8 +41,6 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.base.1696332327" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.base">
 								<option id="gnu.both.asm.option.include.paths.863209437" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1355012644" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
@@ -747,6 +748,11 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.release.1456050601" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.release">
 								<option id="gnu.cpp.link.option.paths.701819102" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
+								</option>
+								<option id="gnu.cpp.link.option.libs.883990248" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="boost_locale"/>
+									<listOptionValue builtIn="false" value="iconv"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1748090766" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

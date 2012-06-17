@@ -45,7 +45,7 @@ namespace gt{
 
 		//-----------------------------
 		// Statics
-		static const char* identify(){ return "bitmap"; }
+		static const dPlaChar* identify(){ return "bitmap"; }
 
 		//-----------------------------
 		cBitmap();
@@ -53,7 +53,7 @@ namespace gt{
 
 		//-----------------------------
 		// Standard, constant interface polymorphs
-		virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
+		virtual const dPlaChar* name() const{ return identify(); }		//!< Virtual version of identify.
 
 		//-----------------------------
 		// Standard interface polymorphs
