@@ -1,6 +1,6 @@
 
-#ifndef OPENGL_POLYMESH
-#define OPENGL_POLYMESH
+#ifndef OPENGL_POLYMESH_HPP
+#define OPENGL_POLYMESH_HPP
 
 #include "openGL_layer.hpp"
 
@@ -13,7 +13,7 @@ namespace gt{
 	//!\brief	Open GL 3.1 version of the polygon mesh.
 	//!\note	Code taken from http://www.opengl.org/wiki/http://www.opengl.org/wiki/Tutorial:_OpenGL_3.1_The_First_Triangle_%28C%2B%2B/Win%29
 	//!\todo	Make GL meshes coordinate with the rest of the openGL system, adding to a single vertex+index buffer.
-	class cPolyMesh_GL : public cPolyMesh, private tOutline<cPolyMesh_GL>{
+	class cPolyMesh_X11GL : public cPolyMesh, private tOutline<cPolyMesh_X11GL>{
 	public:
 		typedef float dGLFloat;	//!< Ensure control over size of float.
 		typedef GLuint handVBO;	//!< ID handle to vertex buffer object.
@@ -27,15 +27,15 @@ namespace gt{
 			dGLFloat u, v;			//!< Texture mapping
 		};
 
-		cPolyMesh_GL();
-		virtual ~cPolyMesh_GL();
+		cPolyMesh_X11GL();
+		virtual ~cPolyMesh_X11GL();
 
-		static const dNatChar* identify(){ return "gl mesh"; }
+		static const dNatChar* identify(){ return "mesh X11GL"; }
 		virtual const dNatChar* name() const { return identify(); }
-		virtual dNameHash hash() const { return tOutline<cPolyMesh_GL>::hash(); }
+		virtual dNameHash hash() const { return tOutline<cPolyMesh_X11GL>::hash(); }
 
 		static dNameHash replaces(){ return getHash<cPolyMesh>(); }
-		virtual dNameHash getReplacement() const{ return cPolyMesh_GL::replaces(); }
+		virtual dNameHash getReplacement() const{ return cPolyMesh_X11GL::replaces(); }
 
 		virtual void run(cContext* pCon);	//!< Draw this mesh
 

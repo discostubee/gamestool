@@ -2,11 +2,11 @@
 
 using namespace gt;
 
-cPolyMesh_GL::cPolyMesh_GL():
+cPolyMesh_X11GL::cPolyMesh_X11GL():
 		vbuff(NULL), ibuff(NULL), mVBO(0), mIBO(0), polyCount(0), vertCount(0)
 {}
 
-cPolyMesh_GL::~cPolyMesh_GL(){
+cPolyMesh_X11GL::~cPolyMesh_X11GL(){
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &mIBO);
@@ -16,7 +16,7 @@ cPolyMesh_GL::~cPolyMesh_GL(){
 }
 
 void
-cPolyMesh_GL::run(cContext *pCon){
+cPolyMesh_X11GL::run(cContext *pCon){
 	PROFILE;
 
 	start(pCon);
@@ -46,7 +46,7 @@ cPolyMesh_GL::run(cContext *pCon){
 }
 
 void
-cPolyMesh_GL::formatGLMesh(){
+cPolyMesh_X11GL::formatGLMesh(){
 	PROFILE;
 
 	if(mLazyMesh->mVertexes.empty())

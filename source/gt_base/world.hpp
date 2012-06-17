@@ -160,7 +160,8 @@ namespace gt{
 		typedef tPMorphJar<cBase_plug> dPlugHolder;
 		typedef boost::shared_ptr<cByteBuffer> ptrBuff;
 		typedef unsigned short dNumVer;	//!< Version number.
-		typedef std::vector< std::vector<dPlugHolder> > dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data. NOT THREADSAFE.
+		typedef std::vector<dPlugHolder> dVersionPlugs;	//!< Vector of all the different plugs in a given version.
+		typedef std::vector< dVersionPlugs > dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data.
 
 		virtual ~iFigment() {}
 		virtual const dPlaChar* name() const =0;
@@ -263,6 +264,9 @@ namespace gt{
 		//!\brief	Makes a new figment that is managed by a smart pointer.
 		ptrFig makeFig(dNameHash pNameHash);
 
+		//!\brief	Handy function if you want to use literal strings in a demo.
+		ptrFig makeFig(const dNatChar *pName);
+
 		//!\brief	Makes a new lead that is managed by a smart pointer.
 		//!\param	pFigNameHash	The name hash of the figment which has the command we're after.
 		//!\param	pCommandID
@@ -297,7 +301,7 @@ namespace gt{
 		const cPlugTag* getPlugTag(dNameHash pFigHash, unsigned int pPTHash);
 
 		//!\note	Useful when writing demos where you are using addons and you don't want to include the headers
-		const cPlugTag* getPlugTag(const dNatChar *figName, const dNatChar *tagName);
+		const cPlugTag* getPlugTag(const dPlaChar *figName, const dPlaChar *tagName);
 
 		//!\breif	Tries to find a plug tag in all the current blueprints it has.
 		//!\note	Throws if not found.

@@ -51,6 +51,9 @@ size_t PCStrLen(const dPlaChar *pString);	//!< Find length of a platform string.
 dNatStr toNStr(const dPlaChar *pString);	//!< Converts platform C style string to native C++ string instance.
 dText toText(const dPlaChar *pString);	//!< Converts platform C style string to text string instance.
 
+dNatStr toNStr(const dStr &pString);
+dText toText(const dStr &pString);
+
 dNatStr toNStr(const dText &pString);	//!< Convert from a text C style string to a native string instance.
 dStr toPStr(const dText &pString);	//!< Convert from a text C style string to a platform string instance.
 

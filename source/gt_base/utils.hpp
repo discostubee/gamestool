@@ -42,7 +42,8 @@
 #endif
 
 //------------------------------------------------------------------------------------------
-#define SAFEDEL(P) if(P != NULL){ delete(P); P=NULL; }
+#define SAFEDEL(P) if(P != NULL){ delete P; P=NULL; }
+#define SAFEDEL_ARR(P) if(P != NULL){ delete [] P; P=NULL; }
 
 //------------------------------------------------------------------------------------------
 // some defines which are common in this project.

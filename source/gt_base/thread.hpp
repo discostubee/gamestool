@@ -50,8 +50,7 @@ namespace gt{
 		virtual const dPlaChar* name() const{ return cThread::identify(); }
 		virtual dNameHash hash() const{ return tOutline<cThread>::hash(); }
 
-
-		virtual void run(cContext* pCon);
+		virtual void run(cContext* pCon);	//!< Begins a new thread if the link plug is set. Threads run through once and wait until this figment is run to go again. This is opposed to running a tight loop in every thread figment.
 
 	protected:
 		tPlug<ptrFig> link;
@@ -61,10 +60,11 @@ namespace gt{
 #ifdef GT_THREADS
 		boost::thread myThread;
 		boost::mutex syncMu;
+		boost::mutex finishMu;				//!< The destructor must wait for the thread to finish.
 		boost::condition_variable sync;		//!< sync the thread to the calling of the run function.
 		bool threadStop;					//!< Stops the thread loop.
-		bool firstRun;
-		boost::mutex finishMu;				//!< The destructor must wait for the thread to finish.
+		bool threading;						//!< Is this figment currently running a thread?
+
 #endif
 
 		static void runThread(cThread *me, cContext* pCon);

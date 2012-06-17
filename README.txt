@@ -38,13 +38,6 @@ But we already have a write once, run anywhere language you retort! It's
 called Java, Ruby, Mr fantastics do anything language. Well, you sir don't
 understand the zen of lolz do you!
 
-Jumping in
-----------------------------------------------------
-Check out the example app project. This should be 
-easier to compile and run than the unit tests or
-any of the multi-threaded apps because you wont
-need to compile the google test library or the boost
-library.
 
 
 Directories
@@ -90,7 +83,7 @@ Make sure you ...
 
 --- Download boost library 1.49
 You'll need to have boost installed in order to compile the games tool.
-You can download it from:
+Google for boost c++ and use their homepage to find a download mirror.
 
 Once downloaded, all you need to do is unzip it and chuck it somewhere your
 compiler can find it. If can't install it somewhere that any compiler can
@@ -104,6 +97,9 @@ instance, I've got mine under: linux:~/includes/boost_1_49
 Read the index html file that's in the boost root directory, and follow the
 instructions for making 'b2' from the shell script and then use the
 normal build using b2.
+
+gamestool includes all boost libraries as statics so you'll need the
+option: link=static to build static versions of the libs.
 
 In OSX it's likely you'll need to run b2 as an admin so it can link to
 the system libraries.
@@ -125,16 +121,6 @@ to the bjam line, so it'll read something like this:
 
 sudo ./bjam link=static
 
---- OSX issues
-OSX has issues, and you'll need to fix some things.
-
-If iconv symbols are missing, you'll need to install from here:
-http://www.gnu.org/software/libiconv/#downloading
-
-An example of a mirror to download the package is:
-ftp://www.mirrorservice.org/sites/ftp.gnu.org/gnu/libiconv/
-
-Read the GNU docs Then make sure it goes into your usr/local directory.
 
 --- Link external includes in Eclipse
 For eclipse you'll need to point your IDE to the spot you unzipped the 
@@ -154,11 +140,10 @@ You will sometimes need to link to some static libraries, and in an effort
 not to put specific paths in the eclipse project, the paths to these 
 libraries you'll need to add symbolic links inside the follow directory:
 
-projects/shared/eclipse-(version)-(OSX or linux)/(boost or opengl)
+projects/shared/eclipse-(version)-(OSX or linux)/lib_links/(boost or opengl)
 
-In OSX the easiest thing to do drag and drop the 'boost_1_49_0/stage/lib'
-directory into the 'gamestool/projects/shared/(IDE)/lib_links' directory
-while holding option+command to create a symbolic link.
+use the terminal command to create the symbolic link:
+ln -s your_boost_install_dir/stage/lib gamestool_dir/projects/shared/eclipse-someversion/lib_links/boost
 
 note:
 I couldn't use the PATH environment variable in OSX because it destroyed
@@ -168,6 +153,19 @@ I couldn't use the PATH environment variable in OSX because it destroyed
 You'll need to install X11 for OSX (google for it) first, then add the 
 path to the includes directory to the Eclipse environment, just like 
 you do for the boost library. 
+
+--- other OSX issues
+OSX has issues, and you'll need to fix some things.
+
+If iconv symbols are missing, you'll need to install from here:
+http://www.gnu.org/software/libiconv/#downloading
+
+An example of a mirror to download the package is:
+ftp://www.mirrorservice.org/sites/ftp.gnu.org/gnu/libiconv/
+
+Read the GNU docs Then make sure it goes into your usr/local directory.
+
+
 
 --- (OLD) compile boost lib 1.46 in OSX
 Reading the online 'getting started' guide for boost you'll find a spot 

@@ -30,8 +30,7 @@
 								</option>
 								<option id="macosx.cpp.link.option.paths.1389298044" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0/stage/lib"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.2051557754" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -691,16 +690,14 @@
 							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug.1323290425" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug"/>
 							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug.16907012" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug">
 								<option id="macosx.cpp.link.option.libs.541007840" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" value="gtest_main"/>
-									<listOptionValue builtIn="false" value="boost_thread"/>
-									<listOptionValue builtIn="false" value="boost_locale"/>
 									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="boost_locale"/>
+									<listOptionValue builtIn="false" value="boost_thread"/>
+									<listOptionValue builtIn="false" value="gtest_main"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.1008117799" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse-3.6-OSX/lib_links/boost&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0/stage/lib"/>
-									<listOptionValue builtIn="false" value="/usr/local/lib"/>
 								</option>
 								<option id="macosx.cpp.link.option.flags.1153390922" name="Linker flags" superClass="macosx.cpp.link.option.flags" value="-framework CoreFoundation" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.344704095" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">

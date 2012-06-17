@@ -219,8 +219,6 @@ cAnchor::patGetRoot(ptrLead aLead){
 
 void
 cAnchor::getLinks(std::list<ptrFig>* pOutLinks){
-	mRoot.updateStart();
-	mRoot.updateFinish();
 	pOutLinks->push_back(mRoot.get());
 }
 

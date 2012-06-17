@@ -170,7 +170,7 @@ namespace gt{
 	private:
 
 		#ifdef GT_THREADS
-			boost::mutex conMu;
+			boost::recursive_mutex conMu;
 			std::vector<cBase_plug*> updateRoster;	//!< Reference to plugs that need to update. DO NOT delete the contents, even on destruction.
 			std::vector<cBase_plug*>::iterator itrRos;
 			bool locked;	//!< Used mostly to ensure we only update plugs when locked.

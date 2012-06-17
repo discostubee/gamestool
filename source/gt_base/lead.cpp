@@ -83,10 +83,6 @@ cLead::cLead(const cLead &otherLead):
 	DBUG_TRACK_START("lead");
 
 	cLead *other = const_cast<cLead*>(&otherLead);
-	#ifdef GT_THREADS
-			dLockLead lockMe(muLead);
-			dLockLead lockOther(other->muLead);
-	#endif
 
 	for(dDataMap::iterator itr = other->mTaggedData.begin(); itr != other->mTaggedData.end(); ++itr){
 		mTaggedData[itr->first] = itr->second;
@@ -101,10 +97,6 @@ cLead::cLead(const cLead &otherLead):
 
 cLead::~cLead(){
 	try{
-		#ifdef GT_THREADS
-			dLockLead lock(muLead);
-		#endif
-
 		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
 			scrTDataItr->second->unlinkLead(this);
 		}
@@ -156,19 +148,23 @@ cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 }
 
 void
-cLead::setPlug(const cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
+cLead::setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
 	PROFILE;
 
 	ASRT_NOTNULL(setMe);	ASRT_NOTNULL(aTag);
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
-	if(!silentFail && scrTDataItr == mTaggedData.end())
+	if(scrTDataItr == mTaggedData.end()){
+		if(silentFail)
+			return;
+
 		throw excep::notFound("plug", __FILE__, __LINE__);
+	}
 
 	#ifdef GT_THREADS
-		*scrTDataItr->second->getShadow(mConx, eSM_write) = *setMe;
+		*setMe = *scrTDataItr->second->getShadow(mConx, eSM_read);
 	#else
-		*scrTDataItr->second = *setMe;
+		*setMe = *scrTDataItr->second;
 	#endif
 }
 
@@ -180,9 +176,6 @@ cLead::addToPile(cBase_plug *addMe){
 
 void
 cLead::unplug(cBase_plug* aPlug){
-	#ifdef GT_THREADS
-		dLockLead lock(muLead);
-	#endif
 
 	PROFILE;
 
@@ -203,7 +196,6 @@ cLead::unplug(cBase_plug* aPlug){
 		}
 	}
 }
-
 
 
 /*

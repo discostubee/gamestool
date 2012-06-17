@@ -17,10 +17,26 @@
 */
 
 #include "gt_string.hpp"
+//--------------------------------------------------------
 
+static const char *nativeEncoding="ISO-8859-1";
+static const char *textEncoding="UTF-8";
 
 //--------------------------------------------------------
 
+static std::locale&
+getPlatformEncode(){
+	static bool setup = false;
+	static std::locale loc;
+	if(!setup){
+		boost::locale::generator gen;
+		loc = gen.generate("");	//- Default system encoding
+		std::locale::global(loc);
+		setup=true;
+	}
+
+	return loc;
+}
 
 static std::locale&
 getNativeEncode(){
@@ -29,21 +45,8 @@ getNativeEncode(){
 	if(!setup){
 		boost::locale::generator gen;
 		gen.use_ansi_encoding(true);
-		loc = gen.generate("en_US.UTF-8");
-		setup=true;
-	}
+		loc = gen.generate(nativeEncoding);
 
-	return loc;
-}
-
-//!\brief	Modify this to be whatever the platform is encoding with.
-static std::locale&
-getPlatformEncode(){
-	static bool setup = false;
-	static std::locale loc;
-	if(!setup){
-		boost::locale::generator gen;
-		loc = gen.generate("");
 		setup=true;
 	}
 
@@ -56,7 +59,7 @@ getTextEncode(){
 	static std::locale loc;
 	if(!setup){
 		boost::locale::generator gen;
-		loc = gen.generate("en_US.UTF-8");
+		loc = gen.generate(textEncoding);
 		setup=true;
 	}
 
@@ -72,7 +75,7 @@ toPStr(const dNatStr &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getPlatformEncode());
+	strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, "UTF-8");//getPlatformEncode());
 
 	return strRtn;
 }
@@ -84,7 +87,7 @@ toText(const dNatStr &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dTextChar>(pString.t, getTextEncode());
+	strRtn = boost::locale::conv::to_utf<dTextChar>(pString.t, textEncoding);//getTextEncode());
 
 	return strRtn;
 }
@@ -106,7 +109,7 @@ toNStr(const dPlaChar *pString){
 	if(inLen==0)
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen-1], getNativeEncode());
+	strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], nativeEncoding, boost::locale::conv::skip);//getNativeEncode());
 
 	return strRtn;
 }
@@ -118,7 +121,7 @@ toPStr(const dText &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getPlatformEncode());
+	strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, "UTF-8");//getPlatformEncode());
 
 	return strRtn;
 }
@@ -135,7 +138,7 @@ toText(const dPlaChar *pString){
 	if(inLen==0)
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dTextChar>(pString, &pString[inLen-1], getTextEncode());
+	strRtn = boost::locale::conv::to_utf<dTextChar>(pString, &pString[inLen], textEncoding);//getTextEncode());
 
 	return strRtn;
 }
@@ -147,9 +150,19 @@ toNStr(const dText &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dNatChar>(pString.t, getNativeEncode());
+	strRtn = boost::locale::conv::to_utf<dNatChar>(pString.t, nativeEncoding, boost::locale::conv::skip);//getNativeEncode());
 
 	return strRtn;
+}
+
+dNatStr
+toNStr(const dStr &pString){
+	return toNStr(pString.c_str());
+}
+
+dText
+toText(const dStr &pString){
+	return toText(pString.c_str());
 }
 
 

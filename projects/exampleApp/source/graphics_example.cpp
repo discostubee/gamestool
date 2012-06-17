@@ -57,17 +57,18 @@ inline void graphics(){
 
 			loadAddon->addPlug(&addonName, cAddon::xPT_addonName);
 			prettyAddon->jack(loadAddon, &fake);
+			prettyAddon->run(&fake);
 		}
 		{
-			tPlug<ptrFig> stuff = gWorld.get()->makeFig(makeHash("run list"));
-			tPlug<ptrFig> shiney = gWorld.get()->makeFig(makeHash("window frame"));
-			tPlug<ptrFig> layer = gWorld.get()->makeFig(makeHash("layer"));
-			tPlug<ptrFig> mesh = gWorld.get()->makeFig(makeHash("polygon mesh"));
-			tPlug<ptrFig> drawlist = gWorld.get()->makeFig(makeHash("run list"));
-			tPlug<ptrFig> camera = gWorld.get()->makeFig(makeHash("camera"));
+			tPlug<ptrFig> stuff = gWorld.get()->makeFig("run list");
+			tPlug<ptrFig> shiney = gWorld.get()->makeFig("window frame");
+			tPlug<ptrFig> layer = gWorld.get()->makeFig("layer");
+			tPlug<ptrFig> mesh = gWorld.get()->makeFig("polygon mesh");
+			tPlug<ptrFig> drawlist = gWorld.get()->makeFig("run list");
+			tPlug<ptrFig> camera = gWorld.get()->makeFig("3D camera");
 
 			{
-				tPlug<ptrFig> partyPooper = gWorld.get()->makeFig(makeHash("world shutoff"));
+				tPlug<ptrFig> partyPooper = gWorld.get()->makeFig(makeHash(toNStr("world shutoff")));
 				ptrLead setCloser = gWorld.get()->makeLead("window frame", "link closer", fake.getSig());
 
 				setCloser->addPlug( &partyPooper, gWorld.get()->getPlugTag("window frame", "closer") );

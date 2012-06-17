@@ -14,7 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *********************************************************************************************************
-*/
+ */
 
 #include "addon.hpp"
 
@@ -34,7 +34,8 @@ const cCommand::dUID cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
 	NULL
 );
 
-cAddon::cAddon()
+cAddon::cAddon():
+	mAddonHash(0)
 {
 	addUpdRoster(&mAddonName);
 }
@@ -53,28 +54,42 @@ cAddon::~cAddon(){
 	}
 }
 
-void cAddon::patLoadAddon(ptrLead aLead){
-	if(mAddonName.get().t.empty()){
-		dTimesOpened::iterator found;
+void
+cAddon::run(cContext* pCon){
+	start(pCon);
+	updatePlugs();
 
-		mAddonName = aLead->getPlug(xPT_addonName);
-
-		if(mAddonName.get().t.empty())
-			THROW_BASEERROR("No name given for loading addon");
-
+	if(mAddonHash == 0){
 		mAddonHash = makeHash(
 			toNStr(
 				mAddonName.get()
 			)
 		);
 
-		found = xOpenAddons.find(mAddonHash);
+		dTimesOpened::iterator found = xOpenAddons.find(mAddonHash);
 		if(found != xOpenAddons.end()){
 			++found->second;
 		}else{
 			draftAddon(mAddonName.get());
 			++xOpenAddons[mAddonHash];
 		}
+	}
+	stop(pCon);
+}
+
+iFigment::dMigrationPattern
+cAddon::getLoadPattern(){
+	dMigrationPattern mp;
+	dVersionPlugs vp;
+	vp.push_back(mAddonName);
+	mp.push_back(vp);
+	return mp;
+}
+
+void
+cAddon::patLoadAddon(ptrLead aLead){
+	if(mAddonHash == 0){
+		mAddonName = aLead->getPlug(xPT_addonName);
 	}
 }
 

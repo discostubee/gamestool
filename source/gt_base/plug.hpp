@@ -83,6 +83,7 @@ namespace gt{
 		}
 
 		virtual A& get() = 0;
+		virtual const A& getConst() const =0;
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -125,10 +126,11 @@ namespace gt{
 			}
 		#endif
 
-		virtual A& get() = 0;
+		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
+		virtual bool operator== (const cBase_plug &pD) =0;
 
-		virtual	cBase_plug& operator= (const cBase_plug &pD);
-		virtual bool operator== (const cBase_plug &pD);
+		virtual A& get() = 0;
+		virtual const A& getConst() const =0;
 
 	protected:
 
@@ -168,10 +170,12 @@ namespace gt{
 		virtual cBase_plug& operator= (const cBase_plug &pD);
 		virtual bool operator== (const cBase_plug &pD);
 
-		cBase_plug& operator= (const tPlug<A> &other);
-		cBase_plug& operator= (const A& pA);
+		virtual cBase_plug& operator= (const tPlug<A> &other);
+		virtual cBase_plug& operator= (const A& pA);
 
 		virtual A& get();
+
+		virtual const A& getConst() const;
 
 	protected:
 		virtual void actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const;
@@ -243,13 +247,6 @@ namespace gt{
 			PROFILE;
 			muMap.lock();	//- lemming unlocks this when it dies and calls finish.
 
-			for(	//- Name is qualified but itrLead is in cBase_plug
-				tPlugFlakes<A>::itrLead = tPlugFlakes<A>::mLeadsConnected.begin();
-				tPlugFlakes<A>::itrLead != tPlugFlakes<A>::mLeadsConnected.end();
-				++tPlugFlakes<A>::itrLead
-			)
-				tPlugFlakes<A>::itrLead->first->muLead.lock();	//- let any mutex throws go all the way and cause the program to exit.
-
 			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
 				if(itrShadow->mData != NULL){
 					if(itrShadow->mMode == eSM_write)
@@ -269,13 +266,6 @@ namespace gt{
 					itrShadow->mData->get() = get();
 				}
 			}
-
-			for(
-				tPlugFlakes<A>::itrLead = tPlugFlakes<A>::mLeadsConnected.begin();
-				tPlugFlakes<A>::itrLead != tPlugFlakes<A>::mLeadsConnected.end();
-				++tPlugFlakes<A>::itrLead
-			)
-				tPlugFlakes<A>::itrLead->first->muLead.unlock();
 
 			muMap.unlock();
 		#endif
@@ -310,20 +300,6 @@ namespace gt{
 		#endif
 
 		cBase_plug::unlinkLead(pLead);
-	}
-
-	template<typename A>
-	cBase_plug&
-	tPlugShadows<A>::operator= (const cBase_plug &pD){
-		//todo
-		return *this;
-	}
-
-	template<typename A>
-	bool
-	tPlugShadows<A>::operator== (const cBase_plug &pD){
-		//todo
-		return false;
 	}
 
 
@@ -389,6 +365,12 @@ namespace gt{
 	template<typename A>
 	A&
 	tPlug<A>::get(){
+		return mD;
+	}
+
+	template<typename A>
+	const A&
+	tPlug<A>::getConst() const{
 		return mD;
 	}
 

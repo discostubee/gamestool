@@ -53,10 +53,10 @@ namespace gt{
 
 		//-----------------------------
 		// The stuff me must have.
-		static const char* identify(){ return "polygon mesh"; }
+		static const dPlaChar* identify(){ return "polygon mesh"; }
 
 		virtual dNameHash hash() const { return tOutline<cPolyMesh>::hash(); }
-		virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
+		virtual const dPlaChar* name() const{ return identify(); }		//!< Virtual version of identify.
 
 		//-----------------------------
 		cPolyMesh();
@@ -81,15 +81,17 @@ namespace gt{
 // template specializations
 namespace gt{
 
+	//!\brief	Saving any class that is a dynamic size, we need a special plug flake type.
 	template<>
 	class tPlugFlakes<sMesh>: public cBase_plug{
 	public:
-		tPlugFlakes(dPlugType pTI, dMapCopiers *pCopiers) :
-			cBase_plug(pTI, pCopiers)
+		tPlugFlakes(dPlugType pTI) :
+			cBase_plug(pTI)
 		{}
 
 		virtual ~tPlugFlakes(){}
 
+		//!\todo
 		virtual void save(cByteBuffer* pSaveHere){
 			sMesh &m = get();
 			size_t tmpSize, outSize;
@@ -98,9 +100,16 @@ namespace gt{
 			tmpSize = m.mPolys.size();
 			bpk::pack(&tmpSize, &tmpBuff, &outSize);
 			pSaveHere->add(tmpBuff, outSize);
-			delete tmpBuff;
+			SAFEDEL_ARR(tmpBuff);
+
+			for(std::vector<sPoly>::iterator itr = m.mPolys.begin(); itr != m.mPolys.end(); ++itr){
+				bpk::pack(&itr->a, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
+				bpk::pack(&itr->b, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
+				bpk::pack(&itr->c, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
+			}
 		}
 
+		//!\todo
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
 
 		}

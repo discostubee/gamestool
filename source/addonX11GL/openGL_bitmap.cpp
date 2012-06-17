@@ -2,9 +2,9 @@
 
 using namespace gt;
 
-cBitmap_gl::cBitmap_gl(){
+cBitmap_X11GL::cBitmap_X11GL(){
 }
 
-cBitmap_gl::~cBitmap_gl(){
+cBitmap_X11GL::~cBitmap_X11GL(){
 }
 

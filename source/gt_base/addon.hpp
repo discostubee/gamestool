@@ -44,14 +44,17 @@ namespace gt{
 		static const cPlugTag* xPT_addonName;
 		static const cCommand::dUID xLoadAddon;
 
-		static const dPlaChar* identify(){ return "addon"; }
-		static void requirements();
-
 		cAddon();
 		virtual ~cAddon();
 
+		static const dPlaChar* identify(){ return "addon"; }
 		virtual const dPlaChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return tOutline<cAddon>::hash(); }
+		static dNumVer version(){ return 1; }
+		virtual dNumVer getVersion() const { return version(); }
+		virtual dMigrationPattern getLoadPattern();
+
+		virtual void run(cContext* pCon);	//!< The addon only loads during a run.
 
 	protected:
 		typedef boost::shared_ptr<dStr> ptrStr;
