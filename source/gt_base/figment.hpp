@@ -48,10 +48,51 @@ namespace excep{
 // classes
 namespace gt{
 
+	//---------------------------------------------------------------------------------------------------
+	//!\brief	Gives you an idea of what class to use to specialize the addon template below.
+	class iAddon{
+	public:
+		static const dPlaChar* getName(){ return ""; };
+	};
+
+	//---------------------------------------------------------------------------------------------------
+	//!\brief	Any figments that come from an addon are dependent on that addon (so you inherit from it).
+	//!			Provides a way to see what addon a figment is dependent on, and informs the world when
+	//!			there are no more figments dependent on an addon.
+	template<typename ADDON>
+	class tAddonDependent{
+	private:
+		static const dStr nameAddon;
+		static int instCount;
+
+	public:
+		tAddonDependent(){
+			//- chicken or the egg?
+			//if(instCount==0){
+			//	gWorld.get()->openAddon( nameAddon );
+			//}
+			++instCount;
+		}
+
+		virtual ~tAddonDependent(){
+			--instCount;
+			try{
+				if(instCount<=0)
+					gWorld.get()->lazyCloseAddon( nameAddon );
+			}catch(...){}
+		}
+
+		virtual dStr const & requiredAddon() const { return nameAddon; }	//!< Returns name of addon that this figment comes from. An empty string means that no addon is required.
+
+
+	};
+	template<typename ADDON> int tAddonDependent<ADDON>::instCount = 0;
+	template<typename ADDON> const dStr tAddonDependent<ADDON>::nameAddon = dStr(ADDON::getName());
+
 	//-------------------------------------------------------------------------------------
 	//!\brief	A figment of your imagination! More specifically, it's the base class type
 	//!			for all the funky new stuff you'll make.
-	class cFigment: public cFigContext, private tOutline<cFigment>{
+	class cFigment: public cFigContext{
 	public:
 
 		//-----------------------------
@@ -75,6 +116,9 @@ namespace gt{
 		//!\note	Threadsafe, so you can be running a this figment at the same time your are jacking.
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
+		//!\brief	Unless this figment comes from an addon, only an empty string should be returned.
+		virtual dStr const & requiredAddon() const { static const dStr noRequirement(""); return noRequirement; }
+
 		//-----------------------------
 		// These things are REQUIRED for any figment class.
 
@@ -85,7 +129,7 @@ namespace gt{
 
 		//- Not sure how I could eliminate this. I should be able to.
 		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<cFigment>::hash(); }
+		virtual dNameHash hash() const { return getHash<cFigment>(); }
 
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
@@ -127,15 +171,14 @@ namespace gt{
 	//!			objects to still function by referencing this dummy instead of null.
 	//!\note	This is an example of the bare minimum that you have to do in order to make
 	//!			a new figment type class.
-	class cEmptyFig: public cFigment, private tOutline<cEmptyFig>{
+	class cEmptyFig: public cFigment{
 	public:
-		static const dPlaChar* identify(){ return "empty figment"; }
-
 		cEmptyFig();
 		virtual ~cEmptyFig();
 
+		static const dPlaChar* identify(){ return "empty figment"; }
 		virtual const dPlaChar* name() const{ return cEmptyFig::identify(); }
-		virtual dNameHash hash() const{ return tOutline<cEmptyFig>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cEmptyFig>(); }
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -143,20 +186,19 @@ namespace gt{
 	//!			this is not an instant shutdown because the program must still finish the loop
 	//!			it is on. Simply run it to shutoff the loop.
 	//!\note	Should be called Unicron.
-	class cWorldShutoff: public cFigment, private tOutline<cWorldShutoff>{
+	class cWorldShutoff: public cFigment{
 	public:
-		static const dPlaChar* identify(){ return "world shutoff"; }
-
 		cWorldShutoff();
 		virtual ~cWorldShutoff();
 
+		static const dPlaChar* identify(){ return "world shutoff"; }
 		virtual const dPlaChar* name() const{ return identify(); }
-		virtual dNameHash hash() const{ return tOutline<cWorldShutoff>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cWorldShutoff>(); }
 
 		virtual void run(cContext* pCon);
 	};
-}
 
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // template specializations
@@ -207,7 +249,7 @@ namespace gt{
 			return *this;
 		}
 
-		virtual bool operator== (const cBase_plug &pD){ return false; }
+		virtual bool operator== (const cBase_plug &pD) const { return false; }
 
 		cBase_plug& operator= (const tPlug<ptrFig> &other){
 			NOTSELF(&other);

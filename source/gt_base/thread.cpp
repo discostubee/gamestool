@@ -167,7 +167,7 @@ namespace gt{
 
 		static const dPlaChar* identify() { return "don't care target"; }
 		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<cShareTarget>::hash(); }
+		virtual dNameHash hash() const { return getHash<cShareTarget>(); }
 
 		cShareTarget(): hits(0) { addUpdRoster(&chatter); addUpdRoster(&hits); }
 		virtual ~cShareTarget(){}
@@ -200,14 +200,14 @@ namespace gt{
 
 		static const dPlaChar* identify(){ return "test writer"; }
 		virtual const dPlaChar* name() const { return identify(); }
-		virtual dNameHash hash() const { return tOutline<cWriter>::hash(); }
+		virtual dNameHash hash() const { return getHash<cWriter>(); }
 
 		virtual void run(cContext* pCon) {
 			start(pCon);
 			updatePlugs();
 
 				//- Really inefficient, but who cares.
-				ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite, pCon->getSig());
+				ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite);
 				writeLead->addPlug(&phrase, cShareTarget::xPT_word);
 				target.get()->jack(writeLead, pCon);
 			stop(pCon);
@@ -245,8 +245,8 @@ namespace gt{
 		GTUT_ASRT(AChatter.get().length() == BChatter.get().length(), "you didn't choose 2 strings of equal length.");
 		{
 			{
-				ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup, fakeContext.getSig());
-				ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup, fakeContext.getSig());
+				ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup);
+				ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup);
 				setupA->addPlug(&share, cWriter::xPT_target);
 				setupB->addPlug(&share, cWriter::xPT_target);
 				setupA->addPlug(&AChatter, cWriter::xPT_word);
@@ -255,17 +255,17 @@ namespace gt{
 				writerB.get()->jack(setupB, &fakeContext);
 			}
 			{
-				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig, fakeContext.getSig());
+				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 				linkTest->addPlug(&writerA, cThread::xPT_fig);
 				threadA.get()->jack(linkTest, &fakeContext);
 			}
 			{
-				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig, fakeContext.getSig());
+				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 				linkTest->addPlug(&writerB, cThread::xPT_fig);
 				threadB.get()->jack(linkTest, &fakeContext);
 			}
 
-			ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits, fakeContext.getSig());
+			ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits);
 			while(testCount < testLength){
 				threadA.get()->run(&fakeContext);
 				threadB.get()->run(&fakeContext);
@@ -277,7 +277,7 @@ namespace gt{
 
 			{
 				tPlug<dStr> chatter;
-				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter, fakeContext.getSig());
+				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter);
 				share.get()->jack(getChatter, &fakeContext);
 
 				chatter = getChatter->getPlug(cShareTarget::xPT_chatter);

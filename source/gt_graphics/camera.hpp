@@ -11,13 +11,13 @@
 
 namespace gt{
 
-	class c3DCamera: public cFigment, private tOutline<c3DCamera>{
+	class c3DCamera: public cFigment{
 	public:
 
 		//--- Required
 		static const dPlaChar* identify(){ return "3D camera"; }
 		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<c3DCamera>::hash(); }
+		virtual dNameHash hash() const { return getHash<c3DCamera>(); }
 
 		//--- Standard
 		c3DCamera();
@@ -25,13 +25,13 @@ namespace gt{
 
 	};
 
-	class c2DCamera: public cFigment, private tOutline<c2DCamera>{
+	class c2DCamera: public cFigment{
 	public:
 
 		//--- Required
 		static const dPlaChar* identify(){ return "2D camera"; }
 		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<c2DCamera>::hash(); }
+		virtual dNameHash hash() const { return getHash<c2DCamera>(); }
 
 		//--- Standard
 		c2DCamera();

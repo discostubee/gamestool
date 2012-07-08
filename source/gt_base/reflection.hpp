@@ -35,18 +35,17 @@ namespace gt{
 	//!\note	Plug hounds have a special relationship with Alucard, who will know that a plug he's trying to add is a hound, and will
 	//!			get the hound to get the plug for it.
 	//!\note	Currently only works for tagged plugs.
-	class cPlugHound : public cFigment, private tOutline<cPlugHound>{
+	class cPlugHound : public cFigment{
 	public:
 		static const cPlugTag *xPT_contextTargetID;	//!< The target to jack into and get our plug. Expects a figment hash ID, and uses it to look for the figment in the context.
 		static const cPlugTag *xPT_command;	//!< ID of the command we use to get the plug from the target.
 		static const cPlugTag *xPT_tag;		//!< Used a tag ID rather than a pointer. This is the tag we use to get the plug from the target.
 		static const cPlugTag *xPT_plug;		//!< The plug we give back.
-		static const cCommand::dUID xGoGetIt;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target. Add's the jack job that will get our plug.
-		static const cCommand::dUID xGimmie;	//!< Gimmie the ball boy! Adds the plug that was hopefully retrieved using xSetup.
+		static const cCommand::dUID xGoGetIt;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target.
 
 		static const dPlaChar* identify(){ return "plug hound"; }
 		virtual const dPlaChar* name() const { return identify(); }
-		virtual dNameHash hash() const { return tOutline<cPlugHound>::hash(); }
+		virtual dNameHash hash() const { return getHash<cPlugHound>(); }
 
 		static dNameHash extends(){ return getHash<cFigment>(); }
 		virtual dNameHash getExtension() const { return extends(); }
@@ -60,12 +59,6 @@ namespace gt{
 		tPlug<dNameHash> mTarget;
 
 		void patGoGetit(ptrLead aLead);
-		void patGimmie(ptrLead aLead);
-
-	private:
-		cPlugTag const *tmpTag;	//!< helpful to find the plug when setting up.
-		ptrLead tmpLead;
-		bool setup;
 	};
 
 	//!\brief	Opposite Dracula has a reflection. Alucard lets you form a lead by taking a command and scanning the context for some of the objects
@@ -73,7 +66,7 @@ namespace gt{
 	//!\note	Because leads can't be saved, this figment instead rebuilds them for you.
 	//!\note	Currently only works for tagged plugs, not piles.
 	//!\note	If you want to get a data plug instead of a figment plug, use the plug hound above.
-	class cAlucard : public cFigment, private tOutline<cAlucard>{
+	class cAlucard : public cFigment{
 	public:
 		static const cPlugTag *xPT_command;		//!< Expects a plug tag hash it can use to find the command in the world.
 		static const cPlugTag *xPT_target;		//!< Target of the jacking.
@@ -91,7 +84,7 @@ namespace gt{
 
 		static const dPlaChar* identify(){ return "alucard"; }
 		virtual const dPlaChar* name() const { return identify(); }
-		virtual dNameHash hash() const { return tOutline<cAlucard>::hash(); }
+		virtual dNameHash hash() const { return getHash<cAlucard>(); }
 
 		static dNameHash extends(){ return getHash<cFigment>(); }
 		virtual dNameHash getExtension() const { return extends(); }
@@ -116,7 +109,7 @@ namespace gt{
 			tPlug<ptrFig> plug;
 			cPlugTag const *tag;
 
-			sActualPlug(cBase_plug *aPlug, const cPlugTag *aTag) : tag(aTag) { plug = aPlug; }
+			sActualPlug(const cBase_plug *aPlug, const cPlugTag *aTag) : tag(aTag) { plug = aPlug; }
 		};
 
 		typedef std::list< std::list<sContextPlug>::iterator > dListOfPlugsToFind;

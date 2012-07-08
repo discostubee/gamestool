@@ -23,6 +23,7 @@
  *
  *!\note	A little bit about the short hand being used in this project.
  *! cSomething		An complex object name, either a class or struct which has methods.
+ *! iSomething		Interface, can contain some implementations but is mostly pure virtual.
  *! sSomething		A simple object or data container. In other words, a struct with no defined methods.
  *! eSomething		an enum, for both the scope and the values.
  *! mSomething		Variable data stored in a class or structure, otherwise known as a member variable.
@@ -175,6 +176,7 @@ namespace gt{
 		virtual void save(cByteBuffer* pSaveHere) =0;		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
 		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL) =0;			//!< Called load-eat because the head of the buffer is consume by the load function.
 		virtual dMigrationPattern getLoadPattern() =0;	 //!< NOT THREADSAFE.
+		virtual dStr const& requiredAddon() const =0;
 
 		//static dNameHash replaces()	// You will need these static class in your figment if you replace.
 		virtual dNameHash getReplacement() const =0;
@@ -200,7 +202,7 @@ namespace gt{
 	//!			seen by every figment-type object and offers services to them. It also designed to 
 	//!			coordinate different heaps located in addons. Must also be threadsafe when accessed by
 	//!			a mr safety.
-	//!\todo	Prevent a collection of objects become an island which is separate from the root node, and
+	//!\todo	Prevent a collection of objects becoming an island which is separate from the root node, and
 	//!			thus will never be cleaned up. This will also be a huge problem when removing addons where
 	//!			the objects made in the addon need to be blanked.
 	class cWorld{
@@ -244,6 +246,8 @@ namespace gt{
 
 		virtual void copyWorld(cWorld* pWorld);
 
+		virtual void lazyCloseAddon(const dStr &name);	//!\brief	Waits until the end of the current run loop before it actually closes the addon.
+
 		//--------------------------------------------------------
 		// Blueprint stuff
 
@@ -268,13 +272,11 @@ namespace gt{
 		ptrFig makeFig(const dNatChar *pName);
 
 		//!\brief	Makes a new lead that is managed by a smart pointer.
-		//!\param	pFigNameHash	The name hash of the figment which has the command we're after.
-		//!\param	pCommandID
-		ptrLead makeLead(unsigned int pComID, dConSig pConx);
+		ptrLead makeLead(unsigned int pComID);
 
 		//!\brief	If you don't have the context ID (possible because you're creating some kind of hard coded demo), you can still
 		//!			get a lead if you have the string name of the figment and the context it came from.
-		ptrLead makeLead(const dPlaChar *aFigName, const dPlaChar *aComName, dConSig aConx);
+		ptrLead makeLead(const dPlaChar *aFigName, const dPlaChar *aComName);
 
 		//!\brief	Makes a profile token using the profiler stored in this world.
 		//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
@@ -318,9 +320,13 @@ namespace gt{
 
 		//--------------------------------------------------------
 		// Polymorphs
-		virtual dMillisec	getAppTime	(){ return 0; }
-		virtual void		loop		(){}	//!< Enter the main program loop. Continues looping until it is told to stop.
-		virtual void		flushLines	();		//!< Process the lines to be displayed on the console. Uses cout by default
+		// Not using pure virtuals so things like unit tests can use the base world class.
+
+		virtual dMillisec getAppTime() { return 0; }
+		virtual void loop() {}	//!< Enter the main program loop. Continues looping until it is told to stop.
+		virtual void flushLines	();		//!< Process the lines to be displayed on the console. Uses std::cout by default
+		virtual void openAddon(const dStr &name) { DONT_USE_THIS; }		//!\brief	Opens an addon with the given name
+		virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }
 
 	protected:
 		#ifdef GTUT
@@ -338,6 +344,7 @@ namespace gt{
 		cProfiler* mProfiles;
 
 		ptrFig mRoot;
+		std::list<dStr> mAddonsToClose;
 
 		friend void redirectWorld(cWorld*);
 		//--------------------------------------------------------
@@ -386,16 +393,21 @@ namespace gt{
 }
 
 ////////////////////////////////////////////////////////////////////
+// Templates
+
+
+
+////////////////////////////////////////////////////////////////////
 // Macros
-#ifdef GTUT
-#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-#	define DBUG_LO(x) { std::cout << x << std::endl; }
-#elif defined DEBUG
-#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+
+#ifdef WIN32
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
+#	define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
 #else
-#	define PROFILE
-#	define DBUG_LO(x)
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
+#	define DYN_LIB_DEF(rnt) rnt
 #endif
 
 #if defined(DBUG_VERBOSE) && defined(DEBUG)
@@ -412,9 +424,18 @@ extern const char *MSG_UNKNOWN_ERROR;
 #define UNKNOWN_ERROR	WARN(MSG_UNKNOWN_ERROR);
 
 #ifdef GTUT
+#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+#	define DBUG_LO(x) { std::cout << x << std::endl; }
 #	undef GTUT_END
 #	define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
+#elif defined DEBUG
+#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+#else
+#	define PROFILE
+#	define DBUG_LO(x)
 #endif
+
 
 #endif
 

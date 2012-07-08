@@ -228,25 +228,27 @@ cWorld::cWorld():
 
 cWorld::~cWorld(){
 	try{
+		mRoot.redirect(NULL);
+		mVillageBicycle.redirect(NULL);
+
+		for(std::list<dStr>::iterator itr = mAddonsToClose.begin(); itr != mAddonsToClose.end(); ++itr)
+			closeAddon(*itr);
+
 		while(!mBlueprints.empty()){
 			mBlueprints.begin()->second.mBlueprint->mCleanup();
 			mBlueprints.erase( mBlueprints.begin() );
 		}
+
+		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
+		delete xProfiler;
+
+		//- Be super careful that we don't try and profile anything anymore.
+		lo("end of the world"); //- Ensure it exists.
+		flushLines();
+		delete xLines;
+
 	}catch(...){
 	}
-
-	{
-		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
-	}
-	delete xProfiler;
-
-	//- Be super careful that we don't try and profile anything anymore.
-	lo("end of the world"); //- Ensure it exists.
-	flushLines();
-	delete xLines;
-
-	mRoot.redirect(NULL);
-	mVillageBicycle.redirect(NULL);
 }
 
 void
@@ -292,13 +294,6 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	PROFILE;
 
 	DBUG_LO("Erasing blueprint '" << pRemoveMe->name());
-
-	//- Some figments should never be remove.
-	//if(
-	//	pRemoveMe->hash() == getHash<cFigment>()
-	//	|| pRemoveMe->hash() == getHash<cEmptyFig>()
-	//)
-	//	return;
 
 	//- If this figment replaced another, restore the original blueprint.
 	if(pRemoveMe->replace() != uDoesntReplace){
@@ -396,19 +391,33 @@ cWorld::copyWorld(cWorld* pWorld){
 	#endif
 }
 
+void
+cWorld::lazyCloseAddon(const dStr &name){
+	for(
+		std::list<dStr>::iterator itr = mAddonsToClose.begin();
+		itr != mAddonsToClose.end();
+		++itr
+	){
+		if(itr->compare(name)==0)
+			return;
+	}
+
+	mAddonsToClose.push_back(name);
+}
+
 ptrLead
-cWorld::makeLead(cCommand::dUID pComID, dConSig pConx){
+cWorld::makeLead(cCommand::dUID pComID){
 	PROFILE;
-	ptrLead rtnLead(new cLead( pComID, pConx ));
+	ptrLead rtnLead(new cLead(pComID));
 	return rtnLead;
 }
 
 ptrLead
-cWorld::makeLead(const dPlaChar *aFigName, const dPlaChar *aComName, dConSig aConx){
+cWorld::makeLead(const dPlaChar *aFigName, const dPlaChar *aComName){
 	dNatStr totalString = toNStr(aFigName);
 	totalString.t.append( toNStr(aComName) );
 	dNameHash hash = makeHash(totalString);
-	ptrLead rtnLead(new cLead( hash, aConx ));
+	ptrLead rtnLead(new cLead(hash));
 	return rtnLead;
 }
 

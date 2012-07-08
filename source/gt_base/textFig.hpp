@@ -35,7 +35,7 @@ namespace gt{
 
 		static const dPlaChar* identify(){ return "text fig"; }
 		virtual const dPlaChar* name() const{ return cTextFig::identify(); }
-		virtual dNameHash hash() const{ return tOutline<cTextFig>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cTextFig>(); }
 
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);

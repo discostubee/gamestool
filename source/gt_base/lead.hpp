@@ -67,6 +67,7 @@ namespace gt{
 
 	//----------------------------------------------------------------------------------------------------------------
 	enum eShadowMode{
+		eSM_unset,
 		eSM_read,
 		eSM_write
 	};
@@ -85,16 +86,10 @@ namespace gt{
 		//--- types
 		typedef dNameHash dPlugType;
 
-		//---
-		template<typename PLUG_TYPE> static dPlugType getPlugType(){
-			static dPlugType typeID = 0;
-			if(typeID == 0){
-				typeID = makeHash(typeid(PLUG_TYPE).name());
-			}
-			return typeID;
-		}
+		//--- statics
+		template<typename PLUG_TYPE> static dPlugType getPlugType();
 
-		//---
+		//--- implemented
 		const dPlugType mType;	//!< Must be public so the tPlug templates can use it.
 
 		cBase_plug(dPlugType pTI);
@@ -103,7 +98,7 @@ namespace gt{
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Made threadsafe in implementation.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Made threadsafe in implementation.
 
-		//--- Intended to be polymorphed by implementation.
+		//--- interface
 		virtual ~cBase_plug();
 
 		//!\brief Appends the buffer with binary data that should be understandable by any platform.
@@ -113,7 +108,7 @@ namespace gt{
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) = 0;
 
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
-		virtual bool operator== (const cBase_plug &pD) =0;
+		virtual bool operator== (const cBase_plug &pD) const =0;
 
 		template<typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
 
@@ -121,6 +116,8 @@ namespace gt{
 			virtual void updateStart() =0;
 			virtual void updateFinish() =0;
 		#endif
+
+		size_t numLeadsConnected();
 
 	protected:
 		typedef std::map<cLead*, unsigned int> dMapLeads;
@@ -138,86 +135,82 @@ namespace gt{
 	};
 
 	//--------------------------------------------------------------------------------------------------------
-	//!\brief	Figments are designed to have a generic interface, where calls to manipulate it can be saved as part of
-	//!			a users program. In order to do this, an interface call (known as jacking) uses a messenger
-	//!			class, in this case it's called a lead. A lead must have a command so the figment getting
-	//!			jacked knows what to do with it. A lead then has multiple plugs, some are labeled/tagged, while
-	//!			others are in an ordered pile.
-	//!\note	The ability to get and set plugs do not lock because they should only be used in the jack function
-	//!			which performs a single lock on the lead, which prevents the connected plugs from messing with it
-	//!			when they update or unlink.
+	//!\brief	There are 2 ways in which a figment can get data from another figments. Often it will be through
+	//!			the context, but sometimes we want data from another context or to perform more complex tasks.
+	//!			This is where the lead comes in: Figments are designed to have a generic interface, where calls
+	//!			to manipulate it can be saved as part of a users program. In order to do this, an interface
+	//!			call (known as jacking) uses a messenger class, in this case it's called a lead. A lead must
+	//!			have a command so the figment getting jacked knows what to do with it. A lead then has multiple
+	//!			plugs, some are labeled/tagged, while others are in an ordered pile.
 	//!\note	Leads can not be contained by a plug.
 	class cLead{
 	public:
 		const cCommand::dUID mCom;	//!< The command for this lead.
-		dConSig mConx;			//!< You can only have 1 lead per context which must match when jacking.
 
-		//!\brief
-		//!\param	aCom	Link to the command we want this plug to use.
-		//!\param	aConx
-		cLead(cCommand::dUID aCom, dConSig aConx);
-
-		//!\brief	Copies other lead.
+		cLead(cCommand::dUID aCom);
 		cLead(const cLead &otherLead);
-
 		~cLead();
 
-		//--- These things should only be used by the jack. Currently not protected so that unit tests can fudge use them.
-
-		//!\brief	If it has the tagged plug, it returns a pointer to it. Throws if the plug isn't found. Be careful not to store
-		//!			the pointer anywhere. Getting the plug this way is handier than passing the plug in as an argument.
+		//!\brief	If it has the tagged plug, it returns a read only pointer to it. Throws if the plug isn't found.
+		//!			Be careful not to store the pointer anywhere. Getting the plug this way is handier than passing
+		//!			the plug in as an argument.
 		//!\param	pTag	This is the tag we use to find out plug.
-		//!\note	Assumes you only want to read from the plug.
-		cBase_plug * getPlug(const cPlugTag* pTag);
+		const cBase_plug * getPlug(const cPlugTag* pTag);
 
-		void addPlug(cBase_plug *addMe, const cPlugTag *aTag);
+		void addPlug(cBase_plug *addMe, const cPlugTag *aTag);	//!< Adds a tagged reference to a plug.
 
-		void setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail = false);	//!< Handy when you want to set one of your plugs to the value of a plug that may or may not be in this lead.
+		//!\brief	if it has the tagged plug, it sets it to the value stored in the plug being passed in.
+		void setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail = false);
 
+		//!\brief	Adds a piled reference to a plug.
 		void addToPile(cBase_plug *addMe);
 
-		//!\brief	Clears target and copies the leads pile into it. Expects tPlug type
-		template<typename C> void getPile(std::vector< C > *target){
-			target->clear();
-			target->reserve(mDataPile.size());
-			for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-				target->push_back( C() );
-				#ifdef GT_THREADS
-					target->back() = (*scrPDataItr)->getShadow(mConx, eSM_read);
-				#else
-					target->back() = *scrPDataItr;
-				#endif
-			}
-		}
+		//!\brief	Appends the vector with the contents of the pile.
+		//!\note	Lists and queues are not supported because the pile is intended to be fast to index.
+		template<typename PLUG_TYPE> void getPile(std::vector< tPlug<PLUG_TYPE> > *target);
 
 		//!\brief	Lets you use direct types instead of plugs. Does this by copying to the input.
 		//!\param	input	Pointer to where you want to copy the value.
 		//!\param	tag		tag for the plug you wish to copy a value from.
 		//!\param	silentFail	If set to true, this function won't throw if it can't find the plug or it can't copy it.
 		//!				Use this if you don't care if the value was set or not.
-		template<typename C> void getValue( C *input, const cPlugTag *tag, bool silentFail = false ){
-			scrTDataItr = mTaggedData.find(tag->mID);
-			if(scrTDataItr != mTaggedData.end()){
-				#ifdef GT_THREADS
-					scrTDataItr->second->getShadow(mConx, eSM_read)->copyInto(input);
-				#else
-					scrTDataItr->second->copyInto(input);
-				#endif
-			}else if(!silentFail){
-				std::stringstream ss; ss << "plug " << &tag->mName;
-				throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
-			}
-		}
+		template<typename CONTAIN> void getValue( CONTAIN *input, const cPlugTag *tag, bool silentFail = false );
+
+		//!\brief	Appends the vector with the values contained in the pile.
+		template<typename VEC_TYPE> void getPileValues(std::vector< VEC_TYPE > *target);
 
 		//!\brief	When a plug dies, it must let the lead know it is no longer valid.
-		//!\note	Locks until finished because this can come from any thread at any time.
+		//!\brief	Needs to lock because this can come from anywhere.
 		void unplug(cBase_plug* pPlug);
 
-	protected:
+		#ifdef GT_THREADS
+			class cLemming{
+			public:
+				cLead * mParent;
+				cLemming(cLead *pLead) : mParent(pLead) { ++mParent->lemmingCount; }
+				cLemming(const cLemming& other) : mParent(other.mParent) { ++mParent->lemmingCount; }
+				~cLemming() { if(mParent) mParent->lemmingCallback(); }
+			};
 
+			cLemming startLead(cContext* pCon);	//!< Apart from the unplug function, this is only thread-locked function as it's the only way to ensure there is no thread collisions.
+		#endif
+
+	protected:
 		typedef std::map<cPlugTag::dUID, cBase_plug*> dDataMap;
 		typedef std::list<cBase_plug*> dPiledData;
 		
+		#ifdef GT_THREADS
+			typedef boost::lock_guard<boost::recursive_mutex> dUseLock;
+
+			boost::recursive_mutex mMutex;
+			cContext* mCurrentCon;
+			short lemmingCount;
+
+			void lemmingCallback();
+
+			friend class cLemming;
+		#endif
+
 		dDataMap mTaggedData; 	//!<
 		dPiledData mDataPile;	//!<
 
@@ -230,20 +223,64 @@ namespace gt{
 	};
 }
 
-namespace excep{
-	class badContext : public base_error{
-	public:
-		badContext(const char* pFile, const unsigned int pLine) :
-			base_error(pFile, pLine)
-		{ addInfo("bad context"); }
-
-		virtual ~badContext() throw() {}
-	};
-}
-
 ///////////////////////////////////////////////////////////////////////////////////
 // Templates
 namespace gt{
+
+	//--------------------------------------------------------------------------------------------------------
+	template<typename PLUG_TYPE>
+	void
+	cLead::getPile(std::vector< tPlug<PLUG_TYPE> > *target){
+		target->reserve(target->size() + mDataPile.size());
+		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
+			#ifdef GT_THREADS
+				 target->push_back( (*scrPDataItr)->getShadow(mCurrentCon->getSig(), eSM_read) );
+			#else
+				 target->push_back( (*scrPDataItr) );
+			#endif
+		}
+	}
+
+	template<typename CONTAIN>
+	void
+	cLead::getValue( CONTAIN *input, const cPlugTag *tag, bool silentFail ){
+		scrTDataItr = mTaggedData.find(tag->mID);
+		if(scrTDataItr != mTaggedData.end()){
+			#ifdef GT_THREADS
+				scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_read)->copyInto(input);
+			#else
+				scrTDataItr->second->copyInto(input);
+			#endif
+		}else if(!silentFail){
+			std::stringstream ss; ss << "plug " << &tag->mName;
+			throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
+		}
+	}
+
+	template<typename VEC_TYPE>
+	void
+	cLead::getPileValues(std::vector< VEC_TYPE > *target){
+		target->reserve(target->size() + mDataPile.size());
+		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
+			target->push_back(VEC_TYPE());
+			#ifdef GT_THREADS
+				 (*scrPDataItr)->getShadow(mCurrentCon->getSig(), eSM_read)->copyInto( &target->back() );
+			#else
+				 (*scrPDataItr)->copyInto( &target->back() );
+			#endif
+		}
+	}
+
+	//--------------------------------------------------------------------------------------------------------
+	template<typename PLUG_TYPE>
+	cBase_plug::dPlugType
+	cBase_plug::getPlugType(){
+		static dPlugType typeID = 0;
+		if(typeID == 0){
+			typeID = makeHash(typeid(PLUG_TYPE).name());
+		}
+		return typeID;
+	}
 
 	template< typename T>
 	void

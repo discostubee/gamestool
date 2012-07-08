@@ -60,6 +60,7 @@ main(void){
 
 		graphics();
 
+		gWorld.get()->loop();
 		gWorld.get()->flushLines();
 		gWorld.get()->makeProfileReport(std::cout);
 

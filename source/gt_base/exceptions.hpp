@@ -135,6 +135,7 @@ namespace excep{
 	};
 
 	class overFlow: public excep::base_error{
+	public:
 		overFlow(const char* pFile, const unsigned int pLine) throw():
 			base_error(pFile, pLine)
 		 { addInfo("buffer overflow"); }
@@ -167,7 +168,7 @@ namespace excep{
 
 #ifdef DEBUG
 	#define ASRT_NOTNULL(p) 		if(p == NULL) throw ::excep::isNull( __FILE__, __LINE__)
-	#define ASRT_INRANGE(vec, ite)	if( ite < 0 || ite >= vec.size() ) throw ::excep::outOfRange(vec.size(), ite, __FILE__, __LINE__)
+	#define ASRT_INRANGE(vec, idx)	if( idx < 0 || idx >= vec.size() ) throw ::excep::outOfRange(vec.size(), idx, __FILE__, __LINE__)
 	#define ASRT_NOTSELF(p)			if( p == this) throw ::excep::base_error("Pointer is self", __FILE__, __LINE__)
 	#define DONT_USE_THIS			throw excep::dontUseThis(__FILE__, __LINE__)
 #else

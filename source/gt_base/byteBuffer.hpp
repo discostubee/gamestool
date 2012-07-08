@@ -52,12 +52,12 @@ public:
 	cByteBuffer(const cByteBuffer& pCopy);
 	~cByteBuffer();
 
-	size_t size() const{ return mBuffSize; }
+	size_t size() const{ return mBuffSize; } //!< Returns the total byte size of the buffer.
 	void clear();
 
 	const dByte* get(const size_t pStart=0) const;
 	
-	template<typename TYPE> int fill(TYPE *pCup, size_t pStart=0) const;	//!< Fill the target based upon its TYPE using memory at the head of the buffer offset by pStart. DOES NOT call the TYPE's constructor, so be careful with. Returns the number of bytes used in filling (not always the number of bytes the object is).
+	template<typename TYPE> int fill(TYPE *pCup, size_t pStart=0) const;	//!< Fill the target based upon its TYPE using memory at the head of the buffer offset by pStart. !\return The bytes used to fill (NOT ALWAYS the same as the byte size of the container) !\note DOES NOT call the TYPE's constructor, so be careful with. Returns the number of bytes used in filling (not always the number of bytes the object is).
 
 	void copy(const dByte* pBuffIn, size_t pInSize);	//!< This buffer will free its current contents (if the size is different), and copy what's being pointed too.
 	template<typename TYPE> void copy(const TYPE *pBuffIn);
@@ -73,6 +73,8 @@ public:
 	void add( const dByte* pBuffIn, size_t pInSize);
 	void add( const cByteBuffer &pBuff ); //!< Copies itself and the content being pointed to into a new buffer that combines the two.
 	template<typename TYPE> void add(const TYPE *pIn);	//!< Copies the TYPE and adds it to the end of the buffer. Should be able to use this memory to refil a container of the same TYPE.
+
+	void overwrite(const dByte *pWriteWith, size_t pWriteSize, size_t pStart = 0);	//!< Overwrite part of the buffer with another one. Throws if you try to write past what the current buffer contains.
 
 	cByteBuffer & operator= (const cByteBuffer &pCopyMe);	//!< Alias for copy.
 	cByteBuffer & operator+= (const cByteBuffer &pCopyMe);	//!< Alias for add.

@@ -7,32 +7,28 @@
 
 namespace gt{
 
-	class cBitmap_X11GL: public cBitmap, private tOutline<cBitmap_X11GL>{
-
-	protected:
-		virtual void setMap(dColourChan){ DONT_USE_THIS; };
+	class cBitmap_X11GL: public cBitmap, public tAddonDependent<X11GLAddon>{
 
 	public:
 		//-----------------------------
-		// Defines
 
-		//-----------------------------
-		// Members
-
-
-		//-----------------------------
-		// Statics
-
-		static const char* identify(){ return "bitmap X11GL"; }
-		static dNameHash replaces(){ return getHash<cBitmap>(); }
 
 		//-----------------------------
 		cBitmap_X11GL();
 		virtual ~cBitmap_X11GL();
 
-		//-----------------------------
+		static const char* identify(){ return "bitmap X11GL"; }
 		virtual const char* name() const{ return identify(); }
+
+		static dNameHash replaces(){ return getHash<cBitmap>(); }
 		virtual dNameHash getReplacement() const{ return replaces(); }
+
+		virtual dNameHash hash() const { return getHash<cBitmap_X11GL>(); }
+
+		virtual void run(cContext *pCon);
+
+	protected:
+		virtual ptrBitmap getBitmap();
 
 	};
 }

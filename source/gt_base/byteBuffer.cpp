@@ -148,6 +148,14 @@ cByteBuffer::add(const cByteBuffer &pBuff ){
 	add( pBuff.get(), pBuff.size() );
 }
 
+void
+cByteBuffer::overwrite(const dByte *pWriteWith, size_t pWriteSize, size_t pStart){
+	if(pStart + pWriteSize > mBuffSize)
+		excep::overFlow(__FILE__, __LINE__);
+
+	memcpy(&mBuff[pStart], pWriteWith, pWriteSize);
+}
+
 cByteBuffer &
 cByteBuffer::operator = (const cByteBuffer &pCopyMe){
 	NOTSELF(&pCopyMe);

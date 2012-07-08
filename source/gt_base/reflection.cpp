@@ -35,15 +35,8 @@ const cCommand::dUID cPlugHound::xGoGetIt = tOutline<cPlugHound>::makeCommand(
 	NULL
 );
 
-const cCommand::dUID cPlugHound::xGimmie = tOutline<cPlugHound>::makeCommand(
-	"gimmie", &cPlugHound::patGimmie,
-	cPlugHound::xPT_plug,
-	NULL
-);
 
-cPlugHound::cPlugHound():
-		tmpTag(NULL), setup(false)
-{
+cPlugHound::cPlugHound(){
 	addUpdRoster(&mCom);
 	addUpdRoster(&mTag);
 	addUpdRoster(&mTarget);
@@ -59,21 +52,15 @@ cPlugHound::patGoGetit(ptrLead aLead){
 	mCom = aLead->getPlug(xPT_command);
 	mTag = aLead->getPlug(xPT_tag);
 	mTarget = aLead->getPlug(xPT_contextTargetID);
-	tmpTag = gWorld.get()->getPlugTag(mTag.get());
-	tmpLead = gWorld.get()->makeLead(mCom.get(), currentCon->getSig());
+
+	const cPlugTag *getTag = gWorld.get()->getPlugTag(mTag.get());
+	ptrLead getLead = gWorld.get()->makeLead(mCom.get());
 	ptrFig fig = currentCon->getFirstOfType(mTarget.get());
-	if(fig->hash() != getHash<cEmptyFig>()){
-		currentCon->addJackJob( tmpLead, fig );
-	}
+
+	fig->jack(getLead, currentCon);
+	//aLead->addPlug(getLead->getPlug(getTag), xPT_plug);
 }
 
-void
-cPlugHound::patGimmie(ptrLead aLead){
-	if(tmpLead.get()==NULL)
-		throw excep::isNull(__FILE__, __LINE__);
-
-	aLead->addPlug(tmpLead->getPlug(tmpTag), xPT_plug);
-}
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
@@ -170,7 +157,7 @@ void cAlucard::run(cContext* aCon){
 	start(aCon);
 
 	if(mLead.get() == NULL && mCommand.get() != cCommand::noID){
-		mLead = ptrLead(new cLead(mCommand.get(), mConx.getSig()) );
+		mLead = ptrLead( new cLead(mCommand.get()) );
 	}
 
 	if(mLead.get() != NULL){
@@ -222,8 +209,7 @@ GTUT_START(test_reflection, houndGets){
 	cContext fakeConx;
 	ptrFig testNum = gWorld.get()->makeFig(getHash<cTestNum>());
 	ptrFig hound = gWorld.get()->makeFig(getHash<cPlugHound>());
-	ptrLead sendHound = gWorld.get()->makeLead(cPlugHound::xGoGetIt, fakeConx.getSig());
-	ptrLead getFromHound = gWorld.get()->makeLead(cPlugHound::xGimmie, fakeConx.getSig());
+	ptrLead sendHound = gWorld.get()->makeLead(cPlugHound::xGoGetIt);
 	tPlug<dNameHash> targetType = getHash<cTestNum>();
 	tPlug<cCommand::dUID> comID = cTestNum::xGetData;
 	tPlug<cPlugTag::dUID> tagID = cTestNum::xPT_num->mID;
@@ -237,7 +223,6 @@ GTUT_START(test_reflection, houndGets){
 	testNum->stop(&fakeConx);
 	fakeConx.runJackJobs();
 
-	hound->jack(getFromHound, &fakeConx);
 	//GTUT_ASRT( *getFromHound->getPlug(cPlugHound::xPT_plug)->exposePtr<int>() == 42, "Didn't get the right number back from the test figment.");
 
 }GTUT_END;
@@ -250,23 +235,23 @@ GTUT_START(test_reflection, alucardBasic){
 	ptrFig alucard = gWorld.get()->makeFig(getHash<cAlucard>());
 	tPlug<ptrFig> testNum = gWorld.get()->makeFig(getHash<cTestNum>());
 
-	ptrLead setCom = gWorld.get()->makeLead(cAlucard::xAddCommand, fakeConx.getSig());
+	ptrLead setCom = gWorld.get()->makeLead(cAlucard::xAddCommand);
 	tPlug<cCommand::dUID> comID = cTestNum::xSetData;
 	setCom->addPlug(&comID, cAlucard::xPT_command);
 	alucard->jack(setCom, &fakeConx);
 
 	tPlug<int> num = 3;
-	ptrLead setPlug = gWorld.get()->makeLead(cAlucard::xAddPlug, fakeConx.getSig());
+	ptrLead setPlug = gWorld.get()->makeLead(cAlucard::xAddPlug);
 	setPlug->addPlug(&num, cAlucard::xPT_plug);
 	alucard->jack(setPlug, &fakeConx);
 
-	ptrLead setTarget = gWorld.get()->makeLead(cAlucard::xSetTarget, fakeConx.getSig());
+	ptrLead setTarget = gWorld.get()->makeLead(cAlucard::xSetTarget);
 	setTarget->addPlug(&testNum, cAlucard::xPT_target);
 	alucard->jack(setTarget, &fakeConx);
 
 	alucard->run(&fakeConx);
 
-	ptrLead getNum = gWorld.get()->makeLead( cTestNum::xGetData, fakeConx.getSig() );
+	ptrLead getNum = gWorld.get()->makeLead( cTestNum::xGetData );
 	testNum.get()->jack(getNum, &fakeConx);
 	GTUT_ASRT( *getNum->getPlug(cTestNum::xPT_num) == num, "number wasn't set.");
 

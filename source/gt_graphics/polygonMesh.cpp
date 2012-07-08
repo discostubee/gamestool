@@ -32,11 +32,7 @@ cPolyMesh::patAddVert(ptrLead aLead){
 	PROFILE;
 
 	promiseLazy();
-	std::vector< tPlug<sVertex> > verts;
-	aLead->getPile(&verts);
-	for(std::vector< tPlug<sVertex> >::iterator itr = verts.begin(); itr != verts.end(); ++itr){
-		mLazyMesh->mVertexes.push_back( itr->get() );
-	}
+	aLead->getPileValues(&mLazyMesh->mVertexes);
 }
 
 void
@@ -44,11 +40,7 @@ cPolyMesh::patAddPoly(ptrLead aLead){
 	PROFILE;
 
 	promiseLazy();
-	std::vector< tPlug<sPoly> > polys;
-	aLead->getPile(&polys);
-	for(std::vector< tPlug<sPoly> >::iterator itr = polys.begin(); itr != polys.end(); ++itr){
-		mLazyMesh->mPolys.push_back( itr->get() );
-	}
+	aLead->getPileValues(&mLazyMesh->mPolys);
 }
 
 void

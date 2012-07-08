@@ -25,7 +25,12 @@
 
 namespace gt{
 
-class cWindowFrame_X11GL: public cWindowFrame, private tOutline<cWindowFrame_X11GL>{
+class X11GLAddon{
+public:
+	static const dPlaChar* getName(){ return "X11GL"; }
+};
+
+class cWindowFrame_X11GL: public cWindowFrame, public tAddonDependent<X11GLAddon>{
 
 public:
 	cWindowFrame_X11GL();
@@ -33,7 +38,7 @@ public:
 
 	static const char* identify(){ return "window frame X11GL"; }
 	virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
-	virtual dNameHash hash() const{ return tOutline<cWindowFrame_X11GL>::hash(); }
+	virtual dNameHash hash() const{ return getHash<cWindowFrame_X11GL>(); }
 	static dNameHash replaces(){ return getHash<cWindowFrame>(); }
 	virtual dNameHash getReplacement() const{ return replaces(); }
 

@@ -34,7 +34,7 @@ namespace gt{
 	//-------------------------------------------------------------------------------------
 	//!\brief	The postman jacks into another figment using the lead it has been given. It does this
 	//!			by adding the jack to the context's jack job list.
-	class cPostman: public cFigment, private tOutline<cPostman>{
+	class cPostman: public cFigment{
 	public:
 		static const cPlugTag *xPT_target;
 		static const cPlugTag *xPT_command;
@@ -46,7 +46,7 @@ namespace gt{
 		virtual ~cPostman();
 
 		virtual const dPlaChar* name() const{ return identify(); }
-		virtual dNameHash hash() const{ return tOutline<cPostman>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cPostman>(); }
 
 		virtual void run(cContext* pCon);
 

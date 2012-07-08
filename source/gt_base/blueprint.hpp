@@ -129,7 +129,6 @@ namespace gt{
 		tOutline();
 		~tOutline();
 
-		dNameHash hash() const;
 		static void cleanup();
 
 		friend class cBlueprint;
@@ -290,13 +289,6 @@ namespace gt{
 	tOutline<T>::removeFromWorld(){
 		cleanup();
 		gWorld.get()->removeBlueprint(&xBlueprint);
-	}
-
-	template<typename T>
-	dNameHash
-	tOutline<T>::hash() const{
-		PROFILE;
-		return xBlueprint.hash();
 	}
 
 	template<typename T>
