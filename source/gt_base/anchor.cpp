@@ -45,7 +45,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 	std::list<ptrFig>*	prev = new std::list<ptrFig>();
 	std::set<iFigment*> figs;
 
-	size_t					chunkSize = 0;
+	size_t				chunkSize = 0;
 	dNameHash			chunkHash = 0;
 	dFigSaveSig			chunkSig = 0;
 
@@ -74,35 +74,49 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 		DBUG_LO(":) anchor saving " << figs.size() << " figments" );
 
+		{	//- First, we must list any required figments
+			std::list<dStr> addons;
+			for(std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i){
+				if(!(*i)->requiredAddon().empty())
+					addons.push_back( (*i)->requiredAddon() );
+			}
+
+			size_t numAddons = addons.size();
+			pAddHere->add(&numAddons);
+
+			while(!addons.empty()){
+				pAddHere->add(&addons.front());
+				addons.pop_front();
+			}
+		}
+
 		chunkSig = reinterpret_cast<dFigSaveSig>(mRoot.get().get());
 		pAddHere->add( &chunkSig ); // Save reference to the root.
 
-		for( std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i ){
+		for( std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i ){	//- Now save each figment.
 			PROFILE;
 			cByteBuffer	chunkSave;
 
-			//- Get the hash for this figment's parent, not its own. That way, when we reload this file the native replacements are used.
-			chunkHash = (*i)->getReplacement();
-			if( chunkHash == uDoesntReplace ){
-				chunkHash = (*i)->hash();
-			}
-
-			//- Get additional save data.
+			//- The process below must happen in exactly the same way when loading.
+			//- We are counting the hash as part of the chunk size as a kind of check against corruption.
 			try{
-				(*i)->save(&chunkSave);
-
-				chunkSize = sizeof(dNameHash) + sizeof(dFigSaveSig) + chunkSave.size(); // We are counting the hash as part of the chunk size as a kind of check against corruption.
-
 				DBUG_LO("	saving a " << (*i)->name());
 
-				chunkSig = reinterpret_cast<dFigSaveSig>(*i);
+				chunkHash = (*i)->getReplacement();	//- Get the hash for this figment's parent, not its own. That way, when we reload this file the native replacements are used.
+				if( chunkHash == uDoesntReplace ){
+					chunkHash = (*i)->hash();
+				}
+				chunkSave.add( &chunkHash );
 
-				//- Add it to the buffer. The process below must happen in exactly the same way when loading.
-				pAddHere->add( &chunkSize );
-				pAddHere->add( &chunkHash );
-				pAddHere->add( &chunkSig );			//- use the pointer as a way to identify all the different figments in the tree.
-				if(chunkSave.size() > 0)
-					pAddHere->add(chunkSave);
+				chunkSig = reinterpret_cast<dFigSaveSig>(*i);	//- use the pointer as a way to identify all the different figments in the tree.
+				chunkSave.add(&chunkSig);
+
+				(*i)->save(&chunkSave);
+
+				chunkSize = chunkSave.size();
+				pAddHere->add(&chunkSize);
+
+				pAddHere->add(chunkSave);
 
 			}catch(excep::base_error &e){
 				WARN(e);
@@ -126,34 +140,43 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 	dReloadMap		reloads;
 	dFigSaveSig		rootSig;
-	size_t			chunkSize;
 	dNameHash		tempHash;
 	dFigSaveSig		reloadSig;
 	size_t			readSpot=0;
+	int 			chunkStart, chunkSize;
 
 	static const size_t BLOCK_SIZE = sizeof(size_t) + sizeof(dNameHash) + sizeof(dFigSaveSig);
 
 	ASRT_NOTNULL(pBuff);
 
-	try{
+	try{	//- The process below must happen in exactly the same way in the save process.
 		DBUG_LO(":) anchor loading");
 
-		//- The process below must happen in exactly the same way in the save process.
-		pBuff->fill(&rootSig); //- the first entry in the file is the root signature.
-		readSpot += sizeof(rootSig);
+		//- first lets get all the addons we need to load these figments.
+		{
+			size_t numAddons = 0;
+			size_t readPoint = 0;
+			readPoint += pBuff->fill(&numAddons);
+			for(size_t i=0; i<numAddons; ++i){
+				dStr addonName;
+				readPoint += pBuff->fill(&addonName);
+				gWorld.get()->openAddon(addonName);
+			}
+
+		}
+
+		//- now get the root sig.
+		readSpot += pBuff->fill(&rootSig);
 
 		//- Now lets read in all the chunks.
 		while(readSpot + BLOCK_SIZE <= pBuff->size()){
-			pBuff->fill(&chunkSize, readSpot); //- First, let's get the size of this entire chunk.
-			readSpot += sizeof(chunkSize);
+			readSpot += pBuff->fill(&chunkSize, readSpot); //- First, let's get the size of this entire chunk.
+			chunkStart = readSpot;
 
-			pBuff->fill(&tempHash, readSpot);	//- now, let's get the name hash needed to spawn the figment.
-			readSpot += sizeof(tempHash);
+			readSpot += pBuff->fill(&tempHash, readSpot);	//- now, let's get the name hash needed to spawn the figment.
+			readSpot += pBuff->fill(&reloadSig, readSpot); //- next up we take the signature of this figment which will be used when figments reference each other.
 
-			pBuff->fill(&reloadSig, readSpot); //- next up we take the signature of this figment which will be used when figments reference each other.
-			readSpot += sizeof(reloadSig);
-
-			chunkSize -= (sizeof(tempHash)+sizeof(reloadSig));
+			chunkSize = (readSpot - chunkStart);
 
 			if(chunkSize>0){	//- lastly, lets make the figment and store its additional data for later.
 				reloads[reloadSig] = new cReload(
@@ -161,13 +184,14 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 					pBuff->get(readSpot),
 					chunkSize
 				);
-				readSpot += chunkSize;
-			}else{	//- No additional data appart from the figment itself.
+			}else if(chunkSize == 0){	//- No additional data appart from the figment itself.
 				reloads[reloadSig] = new cReload( ptrFig(gWorld.get()->makeFig(tempHash)) );
+			}else{
+				WARN_S("Unable to load chunk: bad size");
 			}
 		}
 
-		//- Now re-load all the figs we've made. It's done on a separate loop to the on above so that figment references can be re-created.
+		//- Now re-load all the figs we've made. It's done on a separate loop to the one above so that figment references can be re-created.
 		for(dReloadMap::iterator itr = reloads.begin(); itr != reloads.end(); ++itr){
 			DBUG_LO("		loading " << itr->second->fig->name());
 			try{
@@ -244,7 +268,7 @@ public:
 
 	static const dPlaChar* identify(){ return "save tester"; }
 	virtual const dPlaChar* name() const{ return cSaveTester::identify(); }
-	virtual dNameHash hash() const{ return tOutline<cSaveTester>::hash(); }
+	virtual dNameHash hash() const{ return getHash<cSaveTester>(); }
 
 	virtual void save(cByteBuffer* pAddHere) {
 		myStr.save(pAddHere); myNum.save(pAddHere);
@@ -291,7 +315,7 @@ GTUT_START(testAnchor, basicSave){
 
 	plugBuff = iFigment::ptrBuff( iFigment::ptrBuff(new cByteBuffer()) );
 	tester = ptrFig(new cSaveTester(testStr, 42));
-	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
+	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot);
 	add->addPlug(&tester, cAnchor::xPT_root);
 	ank->jack(add, &fakeCon);
 	ank->save(plugBuff.get().get());
@@ -301,16 +325,16 @@ GTUT_START(testAnchor, basicLoad){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	cContext fake;
 
-	ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad, fake.getSig());
+	ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad);
 	dReloadMap dontcare;
 	ank->loadEat(plugBuff.get().get(), &dontcare);
 
-	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot, fake.getSig());
+	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot);
 	ank->jack(root, &fake);
 	tPlug<ptrFig> reload;
 	reload = root->getPlug(cAnchor::xPT_root);
 
-	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData, fake.getSig());
+	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
 	reload.get()->jack(checkData, &fake);
 
 	tPlug<dStr> myStr = checkData->getPlug(cSaveTester::xPT_str);
@@ -333,20 +357,20 @@ GTUT_START(testAnchor, figmentSave){
 	tPlug<ptrFig> rlist = gWorld.get()->makeFig(getHash<cRunList>());
 
 	{
-		ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot, fakeCon.getSig());
+		ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot);
 
 		add->addPlug(&rlist, cAnchor::xPT_root);
 		ank->jack(add, &fakeCon);
 	}
 	{
 		tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
-		ptrLead add = gWorld.get()->makeLead(cRunList::xAdd, fakeCon.getSig());
+		ptrLead add = gWorld.get()->makeLead(cRunList::xAdd);
 
 		add->addToPile(&tester);
 		rlist.get()->jack(add, &fakeCon);
 	}
 	{
-		ptrLead save = gWorld.get()->makeLead(cAnchor::xSave, fakeCon.getSig());
+		ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);
 
 		plugBuff = iFigment::ptrBuff( iFigment::ptrBuff(new cByteBuffer()) );
 		save->addPlug(&plugBuff, cAnchor::xPT_serialBuff);

@@ -46,6 +46,18 @@
 #define SAFEDEL_ARR(P) if(P != NULL){ delete [] P; P=NULL; }
 
 //------------------------------------------------------------------------------------------
+// Useful for making addon functions easy to implement.
+#ifdef WIN32
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
+#	define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
+#else
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
+#	define DYN_LIB_DEF(rnt) rnt
+#endif
+
+//------------------------------------------------------------------------------------------
 // some defines which are common in this project.
 typedef unsigned int	dHash;
 typedef unsigned int	dNameHash;

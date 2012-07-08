@@ -38,7 +38,7 @@ namespace gt{
 
 		virtual const dPlaChar* name() const{ return cOSX_fileIO::identify(); }
 		virtual dNameHash getReplacement() const{ return replaces(); }
-		virtual dNameHash hash() const{ return tOutline<cOSX_fileIO>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cOSX_fileIO>(); }
 
 	protected:
 		virtual cByteBuffer& read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 );

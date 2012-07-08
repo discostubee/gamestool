@@ -33,7 +33,7 @@ namespace gt{
 	//!			actual thread to run its loop again. The figment however, doesn't wait to
 	//!			see if the thread finished or not. This is ideal for tasks which take an
 	//!			unknown amount of time to finish.
-	class cThread: public cFigment, public tOutline<cThread>{
+	class cThread: public cFigment{
 	public:
 #ifdef GT_THREADS
 		typedef boost::unique_lock<boost::mutex> dLock;
@@ -48,7 +48,7 @@ namespace gt{
 
 		static const dPlaChar* identify(){ return "thread"; }
 		virtual const dPlaChar* name() const{ return cThread::identify(); }
-		virtual dNameHash hash() const{ return tOutline<cThread>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cThread>(); }
 
 		virtual void run(cContext* pCon);	//!< Begins a new thread if the link plug is set. Threads run through once and wait until this figment is run to go again. This is opposed to running a tight loop in every thread figment.
 

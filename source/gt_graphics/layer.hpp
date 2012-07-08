@@ -14,7 +14,7 @@ namespace gt{
 	//!\note	Layers can be either fixed to the top left corner of their parent window or layer. Or they can scale around the window centre.
 	//!\note	Like other objects, we don't store any data so that our implementations are free to store things in a data format that is most
 	//!			efficient for them.
-	class cLayer: public cFigment, private tOutline<cLayer>{
+	class cLayer: public cFigment{
 	public:
 
 		//- Statics and defines
@@ -44,7 +44,7 @@ namespace gt{
 		//--- Required stuff
 		static const dPlaChar* identify(){ return "layer"; }
 		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<cLayer>::hash(); }
+		virtual dNameHash hash() const { return getHash<cLayer>(); }
 
 
 		//--- Standard

@@ -28,12 +28,13 @@ namespace gt{ //gamestool
 
 	//-----------------------------------------------------------------------------------------------
 	//!\class	cAnchor
-	//!\brief	Yarr, yea call that an anchor! An anchor can save or load all the figments it links too into/out of a buffer
+	//!\brief	Yarr, yea call that an anchor! An anchor can save or load all the figments it links too
+	//!			into/out of a buffer
 	//!\note	Because stuff is joined together like links in a chain, it makes sense to think of the
 	//!			object which forms the root of the chain as the anchor.
 	//!\todo	Rename, because we are not dealing with a chain, we are dealing with a network (which
 	//!			is not the same as dealing with a single direction tree).
-	class cAnchor: public cFigment, private tOutline<cAnchor>{
+	class cAnchor: public cFigment{
 	public:
 		static const cPlugTag*	xPT_root;
 		static const cCommand::dUID	xSetRoot;	//!\todo	Rename to linkRoot. Gotta keep the term link consistent.
@@ -45,7 +46,7 @@ namespace gt{ //gamestool
 		//- Required
 		static const dPlaChar* identify(){ return "anchor"; }
 		virtual const dPlaChar* name() const { return identify(); }	//!<
-		virtual dNameHash hash() const { return tOutline<cAnchor>::hash(); }
+		virtual dNameHash hash() const { return getHash<cAnchor>(); }
 		static dNameHash extends(){ return getHash<cFigment>(); }
 		virtual dNameHash getExtension() const { return extends(); }
 

@@ -58,6 +58,15 @@ namespace gt{
 ///////////////////////////////////////////////////////////////////////////////////
 // errors
 namespace excep{
+	class badContext : public base_error{
+	public:
+		badContext(const char* pFile, const unsigned int pLine) :
+			base_error(pFile, pLine)
+		{ addInfo("bad context"); }
+
+		virtual ~badContext() throw() {}
+	};
+
 	class stackFault: public base_error{
 	public:
 		stackFault(
@@ -87,9 +96,10 @@ namespace excep{
 namespace gt{
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	A context is used to avoid circular references and to also create a way to
-	//!			block threads from running into each other.
-	//!\note	Things get a little confusing when you copy another figment. These other
+	//!\brief	A context is used to both provide contextual data (IE get data from things
+	//!			before me), and to prevent bad situations (circular references, thread
+	//!			collisions)
+	//!\note	Things get a little confusing when you copy another figment.
 	//!			because when running a thread, the other context can finish with its figments
 	//!			and remove them. We still want to keep this stack because we still want to
 	//!			prevent circular references, we just don't want to force stop them when our
@@ -102,7 +112,7 @@ namespace gt{
 
 		bool isStacked(cFigContext *pFig);			//!< Determines if the figment is stacked.
 		dProgramStack makeStackDump();				//!< Spits out a copy of the program stack.
-		ptrFig getFirstOfType(dNameHash aType);		//!< Needs to change! Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment. \note is slow because we want all the operations to be as fast as possible.
+		ptrFig getFirstOfType(dNameHash aType);		//!< Needs to change! Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment.
 		dConSig getSig() const;						//!< Get unique signature.
 		void runJackJobs();	//!< Runs through the list of jobs for jacking. Should do this at the start of a loop. If you use a fake context as part of a unit test, consider running this function after you do any jacking.
 		void addJackJob(ptrLead aLead, ptrFig aTarget);	//!< If your figment is going to call jack from a run, it must add it as a jack job.
@@ -146,18 +156,20 @@ namespace gt{
 	};
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	Provides services to handle multithreading figments. You must add all your
-	//!			figments plugs to the update roster.
+	//!\brief	Figments use contexts so that they can access other figments upstream, and
+	//!			to prevent circular references and thread collisions.
 	class cFigContext : public iFigment{
 	public:
 		cFigContext();
 		virtual ~cFigContext();
 
+		void addUpdRoster(cBase_plug *pPlug);	//!< Adds a plug to the list of things to update when we start. Typically you can use this in the constructor. NOT threadsafe.
+		void remFromRoster(cBase_plug *pPlug);	//!< Used only if a plug is removed from a class during its jack/run functions. NOT threadsafe.
+
+		//- maybe protected
 		void start(cContext *con);	//!< Puts this figment onto the given context stack, but only if that figment isn't already stacked. Updates all plugs in the roster.
 		void stop(cContext *con);	//!< Takes the figment off the stack.
 		void updatePlugs();
-		void addUpdRoster(cBase_plug *pPlug);	//!< Adds a plug to the list of things to update when we start. Typically you can use this in the constructor. NOT threadsafe.
-		void remFromRoster(cBase_plug *pPlug);	//!< Used only if a plug is removed from a class during its jack/run functions. NOT threadsafe.
 
 	protected:
 		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.

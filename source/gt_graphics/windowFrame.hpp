@@ -13,7 +13,7 @@ namespace gt{
 	//!\class	cWindow
 	//!\brief	The window class provides a typical window interface we see in most OSs.
 	//!\note	Runs the linked figment when you close this window.
-	class cWindowFrame: public cFigment, private tOutline<cWindowFrame>{
+	class cWindowFrame: public cFigment{
 	public:
 		static const cPlugTag*	xPT_content;
 		static const cPlugTag*	xPT_closer;
@@ -33,7 +33,7 @@ namespace gt{
 		//----- Stuff we must have.
 		static const dPlaChar* identify(){ return "window frame"; }
 		virtual const dPlaChar* name() const{ return identify(); }
-		virtual dNameHash hash() const{ return tOutline<cWindowFrame>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cWindowFrame>(); }
 
 	protected:
 		tPlug<ptrFig>		mContent;	//!< Things to render in this window.

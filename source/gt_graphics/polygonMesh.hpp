@@ -43,7 +43,7 @@ namespace gt{
 	//!\brief	This class is meant to be a frontend for a native version, that takes a generic mesh format and creates a more efficient native version.
 	//!			The generic version is then deleted to save memory.
 	//!			When run, this figment should render a polygon mesh.
-	class cPolyMesh: public cFigment, private tOutline<cPolyMesh>{
+	class cPolyMesh: public cFigment{
 	public:
 		//-----------------------------
 		const static cPlugTag* xPT_Mesh;	// Expects the sMesh struct.
@@ -55,7 +55,7 @@ namespace gt{
 		// The stuff me must have.
 		static const dPlaChar* identify(){ return "polygon mesh"; }
 
-		virtual dNameHash hash() const { return tOutline<cPolyMesh>::hash(); }
+		virtual dNameHash hash() const { return getHash<cPolyMesh>(); }
 		virtual const dPlaChar* name() const{ return identify(); }		//!< Virtual version of identify.
 
 		//-----------------------------

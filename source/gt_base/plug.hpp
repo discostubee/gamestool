@@ -61,6 +61,7 @@ namespace gt{
 // Object types
 namespace gt{
 
+	template<typename A> class tShadow;
 	template<typename A> class tPlug;
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -84,22 +85,22 @@ namespace gt{
 
 		virtual A& get() = 0;
 		virtual const A& getConst() const =0;
+
+	protected:
+	friend class tShadow<A>;
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Needs to be nested in plug shadows.
 	template<typename A>
 	struct tShadow{
+		tShadow() : mMode(eSM_unset), mData(NULL) {}
 		eShadowMode mMode;
 		tPlug<A>* mData;	//!< If the shadow isn't used, this is null.
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	The plug shadow allows you to have 1 copy of a plug per thread that connects to it (as leads can only
-	//!			be used by the context that makes them. This does not make all the functions in other plug classes
-	//!			threadsafe (although any implemented here are threadsafe), unless they are accessed via the get
-	//!			shadow function, or if update is called first.
-	//!\todo	make it smart enough to not bother with shadows unless it has more than one context connected.
+	//!\brief
 	template<typename A>
 	class tPlugShadows: public tPlugFlakes<A>{
 	public:
@@ -127,7 +128,7 @@ namespace gt{
 		#endif
 
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
-		virtual bool operator== (const cBase_plug &pD) =0;
+		virtual bool operator== (const cBase_plug &pD) const =0;
 
 		virtual A& get() = 0;
 		virtual const A& getConst() const =0;
@@ -155,6 +156,8 @@ namespace gt{
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Implements cBase_plug.
+	//!\note	Refer to the cBase_plug class for more info.
 	template<typename A>
 	class tPlug: public tPlugShadows<A>{
 	public:
@@ -168,7 +171,7 @@ namespace gt{
 		virtual ~tPlug();
 
 		virtual cBase_plug& operator= (const cBase_plug &pD);
-		virtual bool operator== (const cBase_plug &pD);
+		virtual bool operator== (const cBase_plug &pD) const;
 
 		virtual cBase_plug& operator= (const tPlug<A> &other);
 		virtual cBase_plug& operator= (const A& pA);
@@ -218,10 +221,8 @@ namespace gt{
 			}
 
 			#ifdef GT_THREADS
-				for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
-					if(itrShadow->mData != NULL)
-						delete itrShadow->mData;
-				}
+				for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow)
+					delete itrShadow->mData;
 			#endif
 
 		}catch(...){
@@ -233,8 +234,19 @@ namespace gt{
 		template<typename A>
 		cBase_plug*
 		tPlugShadows<A>::getShadow(dConSig aCon, eShadowMode whatFor){
+			if(mShadows.size() < aCon){
+				dMuLock lock(muMap);
+				for(size_t i = mShadows.size(); i <= aCon; ++i)
+					mShadows.push_back( tShadow<A>() );
+			}
+
+			if(mShadows[aCon].mData == NULL){
+				dMuLock lock(muMap);
+				mShadows[aCon].mData = new tPlug<A>(get());
+			}
+
 			//- It should be fine to not lock here because this data should be independent of the other threads, and the shadow list should only be updated when all leads are locked.
-			if(mShadows[aCon].mMode == eSM_read)	//- these operations should be quick as it's a vector.
+			if(mShadows[aCon].mMode != eSM_write)	//- Don't overwrite a write operation. these operations should be quick as it's a vector.
 				mShadows[aCon].mMode = whatFor;
 			return mShadows[aCon].mData;
 		}
@@ -245,7 +257,7 @@ namespace gt{
 	tPlugShadows<A>::updateStart(){
 		#ifdef GT_THREADS
 			PROFILE;
-			muMap.lock();	//- lemming unlocks this when it dies and calls finish.
+			muMap.lock();
 
 			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
 				if(itrShadow->mData != NULL){
@@ -276,17 +288,6 @@ namespace gt{
 	tPlugShadows<A>::linkLead(cLead* pLead){
 		#ifdef GT_THREADS
 			dMuLock lock(muMap);
-
-			PROFILE;
-			ASRT_NOTNULL(pLead);
-
-			if(mShadows.size() < pLead->mConx +1){
-				tShadow<A> stamp = { eSM_read, NULL };
-				mShadows.resize(pLead->mConx +1, stamp);
-			}
-
-			itrShadow = mShadows.begin() + pLead->mConx;
-			itrShadow->mData = new tPlug<A>(get());
 		#endif
 
 		cBase_plug::linkLead(pLead);
@@ -300,6 +301,15 @@ namespace gt{
 		#endif
 
 		cBase_plug::unlinkLead(pLead);
+
+		#ifdef GT_THREADS
+			if(tPlugFlakes<A>::mLeadsConnected.empty()){
+				for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow)
+					SAFEDEL(itrShadow->mData);
+
+				mShadows.clear();
+			}
+		#endif
 	}
 
 
@@ -351,7 +361,7 @@ namespace gt{
 
 	template<typename A>
 	bool
-	tPlug<A>::operator== (const cBase_plug &pD){
+	tPlug<A>::operator== (const cBase_plug &pD) const {
 		return (pD.mType == tPlugShadows<A>::mType);
 	}
 

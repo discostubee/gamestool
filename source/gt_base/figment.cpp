@@ -63,8 +63,26 @@ cFigment::save(cByteBuffer* pSaveHere){
 	numVer = getVersion();
 	numVer.save(pSaveHere);
 
-	for(dVersionPlugs::iterator itr = loadPattern.back().begin(); itr != loadPattern.back().end(); ++itr)
-		itr->get().save(pSaveHere);
+	size_t start = pSaveHere->size();
+	size_t sizePk = 0;
+	dByte *buffSize = NULL;
+
+	try{
+		bpk::pack(&start, &buffSize, &sizePk);
+		pSaveHere->add(buffSize, sizePk);
+
+		for(dVersionPlugs::iterator itr = loadPattern.back().begin(); itr != loadPattern.back().end(); ++itr)
+			itr->get().save(pSaveHere);
+
+		size_t chunkSize = pSaveHere->size() - start;
+		bpk::pack(&chunkSize, &buffSize, &sizePk);
+		pSaveHere->overwrite(buffSize, sizePk, start);
+		SAFEDEL_ARR(buffSize);
+
+	}catch(...){
+		delete [] buffSize;
+		throw;
+	}
 }
 
 void
@@ -76,6 +94,9 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 
 	tPlug<dNumVer> numVer;
 	numVer.loadEat(pLoadFrom);
+
+	tPlug<size_t> chunkSize;
+	chunkSize.loadEat(pLoadFrom);
 
 	if(numVer.get() > loadPattern.size())
 		throw excep::fromTheFuture(__FILE__, __LINE__);
@@ -127,6 +148,12 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 	start(pCon);
 	try{
 		ASRT_NOTNULL(mBlueprint);
+		ASRT_NOTNULL(pCon);
+
+		#ifdef GT_THREADS
+			cLead::cLemming lemLock = pLead->startLead(pCon);
+		#endif
+
 		mBlueprint->getCom(pLead->mCom)->use(this, pLead);
 
 	}catch(excep::base_error &e){
