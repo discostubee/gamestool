@@ -17,6 +17,9 @@
 */
 
 #include "gt_string.hpp"
+
+//#define USE_LOCALE_GEN
+
 //--------------------------------------------------------
 
 static const char *nativeEncoding="ISO-8859-1";
@@ -24,6 +27,7 @@ static const char *textEncoding="UTF-8";
 
 //--------------------------------------------------------
 
+#ifdef USE_LOCALE_GEN
 static std::locale&
 getPlatformEncode(){
 	static bool setup = false;
@@ -65,6 +69,7 @@ getTextEncode(){
 
 	return loc;
 }
+#endif
 
 //--------------------------------------------------------
 
@@ -75,7 +80,13 @@ toPStr(const dNatStr &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, "UTF-8");//getPlatformEncode());
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getPlatformEncode());
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, "UTF-8");
+	#else
+		strRtn = pString;	//!!! temporary measure.
+	#endif
 
 	return strRtn;
 }
@@ -87,7 +98,13 @@ toText(const dNatStr &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dTextChar>(pString.t, textEncoding);//getTextEncode());
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getTextEncode());
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, textEncoding);
+	#else
+		strRtn.t = pString.t;	//!!! temporary measure.
+	#endif
 
 	return strRtn;
 }
@@ -109,7 +126,14 @@ toNStr(const dPlaChar *pString){
 	if(inLen==0)
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], nativeEncoding, boost::locale::conv::skip);//getNativeEncode());
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], nativeEncoding, boost::locale::conv::skip);
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], getNativeEncode());
+	#else
+		strRtn = pString;	//!!! temporary measure.
+	#endif
+
 
 	return strRtn;
 }
@@ -121,7 +145,14 @@ toPStr(const dText &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, "UTF-8");//getPlatformEncode());
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getPlatformEncode());
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, "UTF-8");
+	#else
+		strRtn = pString.t;	//!!! temporary measure.
+	#endif
+
 
 	return strRtn;
 }
@@ -138,7 +169,14 @@ toText(const dPlaChar *pString){
 	if(inLen==0)
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dTextChar>(pString, &pString[inLen], textEncoding);//getTextEncode());
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dTextChar>(pString, &pString[inLen], getTextEncode());
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dTextChar>(pString, &pString[inLen], textEncoding);
+	#else
+		strRtn = dText(pString);	//!!! temporary measure.
+	#endif
+
 
 	return strRtn;
 }
@@ -150,7 +188,13 @@ toNStr(const dText &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	strRtn = boost::locale::conv::to_utf<dNatChar>(pString.t, nativeEncoding, boost::locale::conv::skip);//getNativeEncode());
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dNatChar>(pString.t, getNativeEncode());
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dNatChar>(pString.t, nativeEncoding, boost::locale::conv::skip);
+	#else
+		strRtn = pString.t;	//!!! temporary measure.
+	#endif
 
 	return strRtn;
 }

@@ -49,7 +49,7 @@ namespace gt{
 
 		static const dPlaChar* identify(){ return "addon"; }
 		virtual const dPlaChar* name() const{ return identify(); }
-		virtual dNameHash hash() const{ return tOutline<cAddon>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cAddon>(); }
 		static dNumVer version(){ return 1; }
 		virtual dNumVer getVersion() const { return version(); }
 		virtual dMigrationPattern getLoadPattern();

@@ -72,7 +72,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 			}
 		}while(branches->size() > 0);
 
-		DBUG_LO(":) anchor saving " << figs.size() << " figments" );
+		DBUG_VERBOSE_LO(":) anchor saving " << figs.size() << " figments" );
 
 		{	//- First, we must list any required figments
 			std::list<dStr> addons;
@@ -100,7 +100,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 			//- The process below must happen in exactly the same way when loading.
 			//- We are counting the hash as part of the chunk size as a kind of check against corruption.
 			try{
-				DBUG_LO("	saving a " << (*i)->name());
+				DBUG_VERBOSE_LO("	saving a " << (*i)->name());
 
 				chunkHash = (*i)->getReplacement();	//- Get the hash for this figment's parent, not its own. That way, when we reload this file the native replacements are used.
 				if( chunkHash == uDoesntReplace ){
@@ -150,13 +150,16 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	ASRT_NOTNULL(pBuff);
 
 	try{	//- The process below must happen in exactly the same way in the save process.
-		DBUG_LO(":) anchor loading");
+		DBUG_VERBOSE_LO(":) anchor loading");
 
 		//- first lets get all the addons we need to load these figments.
 		{
 			size_t numAddons = 0;
 			size_t readPoint = 0;
 			readPoint += pBuff->fill(&numAddons);
+
+			DBUG_VERBOSE_LO("Number of addons: " << numAddons)
+
 			for(size_t i=0; i<numAddons; ++i){
 				dStr addonName;
 				readPoint += pBuff->fill(&addonName);

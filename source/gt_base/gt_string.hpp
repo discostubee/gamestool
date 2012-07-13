@@ -24,11 +24,14 @@
 #define STRING_HPP
 
 #include <stdio.h>
-#include <string.h>	//- C library.
-#include <string>	//- c++ library.
-#include <boost/locale.hpp>	//- Requires boost 1.49
+#include <string> //- C++ lib.
+#include <string.h>	//- C lib, for strlen
+#include <boost/version.hpp>
 #include <boost/serialization/strong_typedef.hpp>
-
+#if (BOOST_VERSION / 100 % 1000) >= 49
+#	define USE_BOOST_LOCALE
+#	include <boost/locale.hpp>
+#endif
 //--------------------------------------------------------
 
 typedef char dPlaChar;		//!< Raw buffer type most efficient (speed wise) for the target platform to use internally. Typically this is UTF-8. Note that the number of bytes isn't the number of characters.

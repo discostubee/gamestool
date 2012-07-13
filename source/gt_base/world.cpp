@@ -562,7 +562,7 @@ gt::redirectWorld(cWorld* pWorldNew){
 #ifdef GTUT
 
 //- A basic class to test out some functions of the world.
-class testDraftParent: public cFigContext, private tOutline<testDraftParent>{
+class testDraftParent: public cFigment{
 public:
 	static const cPlugTag*	xPT_A;
 	static const cCommand::dUID	xCommandA;
@@ -601,7 +601,7 @@ const cCommand::dUID testDraftParent::xCommandA = tOutline<testDraftParent>::mak
 );
 
 //- Just extends the parent.
-class testDraftChild: public testDraftParent, private tOutline<testDraftChild>{
+class testDraftChild: public testDraftParent{
 public:
 	static const dPlaChar* identify(){ return "test draft child"; }
 	virtual const dPlaChar* name() const { return identify(); };
@@ -616,14 +616,12 @@ public:
 	virtual ~testDraftChild(){}
 };
 
-class testDraftReplace: public testDraftParent, private tOutline<testDraftReplace>{
+class testDraftReplace: public testDraftParent{
 public:
 	static const dPlaChar* identify(){ return "test draft replace"; }
 	virtual const dPlaChar* name() const { return identify(); };
 
 	virtual dNameHash hash() const { return getHash<testDraftReplace>(); };
-
-	virtual dNumVer getVersion() const { return 0; }
 
 	static dNameHash replaces(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getReplacement() const { return replaces(); };

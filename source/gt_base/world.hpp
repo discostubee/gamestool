@@ -410,12 +410,6 @@ namespace gt{
 #	define DYN_LIB_DEF(rnt) rnt
 #endif
 
-#if defined(DBUG_VERBOSE) && defined(DEBUG)
-#	define DBUG_VERBOSE_LO(x) DBUG_LO(x)
-#else
-#	define DBUG_VERBOSE_LO(x)
-#endif
-
 #define WARN(x) gt::cWorld::warnError(x, __FILE__, __LINE__)
 #define WARN_S(x) {std::stringstream ss; ss << x; gt::cWorld::warnError(ss.str().c_str(), __FILE__, __LINE__);}
 
@@ -424,16 +418,22 @@ extern const char *MSG_UNKNOWN_ERROR;
 #define UNKNOWN_ERROR	WARN(MSG_UNKNOWN_ERROR);
 
 #ifdef GTUT
-#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-#	define DBUG_LO(x) { std::cout << x << std::endl; }
 #	undef GTUT_END
 #	define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
-#elif defined DEBUG
+#endif
+
+#ifdef DEBUG
 #	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
 #	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
 #else
 #	define PROFILE
 #	define DBUG_LO(x)
+#endif
+
+#if defined(DBUG_VERBOSE) && defined(DEBUG)
+#	define DBUG_VERBOSE_LO(x) DBUG_LO(x)
+#else
+#	define DBUG_VERBOSE_LO(x)
 #endif
 
 

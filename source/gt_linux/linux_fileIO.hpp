@@ -28,7 +28,7 @@ namespace gt{
 		virtual ~cLinux_fileIO();
 
 		virtual const char* name() const{ return cLinux_fileIO::identify(); }	//!<
-		virtual dNameHash hash() const{ return tOutline<cLinux_fileIO>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cLinux_fileIO>(); }
 	};
 }
 
