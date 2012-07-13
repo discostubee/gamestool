@@ -25,7 +25,8 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include <string>
+#include <string>	// c++ library
+#include <string.h> // C library for memcpy.
 #include <sstream>
 
 #ifdef GTUT
