@@ -106,7 +106,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 				if( chunkHash == uDoesntReplace ){
 					chunkHash = (*i)->hash();
 				}
-				chunkSave.add( &chunkHash );
+				chunkSave.add(&chunkHash);
 
 				chunkSig = reinterpret_cast<dFigSaveSig>(*i);	//- use the pointer as a way to identify all the different figments in the tree.
 				chunkSave.add(&chunkSig);
@@ -153,40 +153,37 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 		DBUG_VERBOSE_LO(":) anchor loading");
 
 		//- first lets get all the addons we need to load these figments.
-		{
-			size_t numAddons = 0;
-			size_t readPoint = 0;
-			readPoint += pBuff->fill(&numAddons);
+		size_t numAddons = 0;
+		readSpot += pBuff->fill(&numAddons, readSpot);
 
-			DBUG_VERBOSE_LO("Number of addons: " << numAddons)
+		DBUG_VERBOSE_LO("Number of addons: " << numAddons)
 
-			for(size_t i=0; i<numAddons; ++i){
-				dStr addonName;
-				readPoint += pBuff->fill(&addonName);
-				gWorld.get()->openAddon(addonName);
-			}
-
+		for(size_t i=0; i<numAddons; ++i){
+			dStr addonName;
+			readSpot += pBuff->fill(&addonName, readSpot);
+			gWorld.get()->openAddon(addonName);
 		}
 
 		//- now get the root sig.
-		readSpot += pBuff->fill(&rootSig);
+		readSpot += pBuff->fill(&rootSig,readSpot);
 
 		//- Now lets read in all the chunks.
 		while(readSpot + BLOCK_SIZE <= pBuff->size()){
-			readSpot += pBuff->fill(&chunkSize, readSpot); //- First, let's get the size of this entire chunk.
-			chunkStart = readSpot;
+			readSpot += pBuff->fill(&chunkSize, readSpot); //- The size of the actual chunk size value is not counted.
 
-			readSpot += pBuff->fill(&tempHash, readSpot);	//- now, let's get the name hash needed to spawn the figment.
+			chunkStart = readSpot;
+			readSpot += pBuff->fill(&tempHash, readSpot);
 			readSpot += pBuff->fill(&reloadSig, readSpot); //- next up we take the signature of this figment which will be used when figments reference each other.
 
-			chunkSize = (readSpot - chunkStart);
+			chunkSize -= (readSpot - chunkStart);
 
-			if(chunkSize>0){	//- lastly, lets make the figment and store its additional data for later.
+			if(chunkSize>0){
 				reloads[reloadSig] = new cReload(
 					ptrFig(gWorld.get()->makeFig(tempHash)),
 					pBuff->get(readSpot),
 					chunkSize
 				);
+				readSpot += chunkSize;
 			}else if(chunkSize == 0){	//- No additional data appart from the figment itself.
 				reloads[reloadSig] = new cReload( ptrFig(gWorld.get()->makeFig(tempHash)) );
 			}else{

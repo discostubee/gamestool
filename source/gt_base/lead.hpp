@@ -234,7 +234,8 @@ namespace gt{
 		target->reserve(target->size() + mDataPile.size());
 		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
 			#ifdef GT_THREADS
-				 target->push_back( (*scrPDataItr)->getShadow(mCurrentCon->getSig(), eSM_read) );
+				ASRT_NOTNULL(mCurrentCon);
+				target->push_back( (*scrPDataItr)->getShadow(mCurrentCon->getSig(), eSM_read) );
 			#else
 				 target->push_back( (*scrPDataItr) );
 			#endif
@@ -247,6 +248,7 @@ namespace gt{
 		scrTDataItr = mTaggedData.find(tag->mID);
 		if(scrTDataItr != mTaggedData.end()){
 			#ifdef GT_THREADS
+				ASRT_NOTNULL(mCurrentCon);
 				scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_read)->copyInto(input);
 			#else
 				scrTDataItr->second->copyInto(input);
@@ -264,7 +266,8 @@ namespace gt{
 		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
 			target->push_back(VEC_TYPE());
 			#ifdef GT_THREADS
-				 (*scrPDataItr)->getShadow(mCurrentCon->getSig(), eSM_read)->copyInto( &target->back() );
+				ASRT_NOTNULL(mCurrentCon);
+				(*scrPDataItr)->getShadow(mCurrentCon->getSig(), eSM_read)->copyInto( &target->back() );
 			#else
 				 (*scrPDataItr)->copyInto( &target->back() );
 			#endif

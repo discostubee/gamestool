@@ -9,9 +9,9 @@ int
 main(int argc, char **argv){
 	int result = EXIT_FAILURE;
 
-	std::cout << "Running gamestool tests. Version 0.2";
+	std::cout << "Running gamestool tests. Version 0.3";
 	#ifdef GT_THREAD
-	std::cout << " threaded";
+		std::cout << " threaded";
 	#endif
 	std::cout << std::endl;
 

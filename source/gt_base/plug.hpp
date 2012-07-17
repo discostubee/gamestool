@@ -234,7 +234,7 @@ namespace gt{
 		template<typename A>
 		cBase_plug*
 		tPlugShadows<A>::getShadow(dConSig aCon, eShadowMode whatFor){
-			if(mShadows.size() < aCon){
+			if(mShadows.size() < aCon+1){
 				dMuLock lock(muMap);
 				for(size_t i = mShadows.size(); i <= aCon; ++i)
 					mShadows.push_back( tShadow<A>() );
