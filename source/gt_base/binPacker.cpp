@@ -162,6 +162,18 @@ bpk::unpack(const dByte *unpackFrom, dText *unpackTo, size_t *sizeOut, size_t li
 // Tests
 #ifdef GTUT
 
+GTUT_START(test_string, intPacking){
+	int meaning = 42, reply = 0;
+	dByte *buff = NULL;
+	size_t sizeBuff = 0, sizeUnpack = 0;
+
+	bpk::pack(&meaning, &buff, &sizeBuff);
+	bpk::unpack(buff, &reply, &sizeUnpack, sizeBuff);
+	GTUT_ASRT(meaning == reply, "failed to pack/unpack an int");
+
+	delete [] buff;
+}GTUT_END;
+
 GTUT_START(test_string, nativePackUnpack){
 	dNatStr packMe, unpackMe;
 	dByte *buff = NULL;

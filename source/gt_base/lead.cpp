@@ -90,6 +90,10 @@ cLead::cLead(cCommand::dUID aCom):
 cLead::cLead(const cLead &otherLead):
 	mCom(otherLead.mCom)
 {
+	#ifdef GT_THREADS
+		mCurrentCon = NULL;
+	#endif
+
 	DBUG_TRACK_START("lead");
 
 	cLead *other = const_cast<cLead*>(&otherLead);
@@ -162,7 +166,8 @@ void
 cLead::setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
 	PROFILE;
 
-	ASRT_NOTNULL(setMe);	ASRT_NOTNULL(aTag);
+	ASRT_NOTNULL(setMe);
+	ASRT_NOTNULL(aTag);
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr == mTaggedData.end()){
