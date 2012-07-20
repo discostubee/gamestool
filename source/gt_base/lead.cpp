@@ -19,62 +19,8 @@
 #include "lead.hpp"
 #include "figment.hpp"
 
-using namespace gt;
-
-////////////////////////////////////////////////////////////
-cBase_plug::cBase_plug(dPlugType pTI):
-	mType(pTI)
-{
-}
-
-cBase_plug::cBase_plug(const cBase_plug &pCopy):
-	mType(pCopy.mType)
-{
-}
-
-cBase_plug::~cBase_plug(){
-}
-
-void
-cBase_plug::linkLead(cLead *pLead){
-	PROFILE;
-	ASRT_NOTNULL(pLead);
-
-	itrLead = mLeadsConnected.find(pLead);
-	if(itrLead==mLeadsConnected.end()){
-		mLeadsConnected[pLead] = 1;
-	}else{
-		++itrLead->second;
-	}
-}
-
-void
-cBase_plug::unlinkLead(cLead *pLead){
-	PROFILE;
-	ASRT_NOTNULL(pLead);
-
-	itrLead = mLeadsConnected.find(pLead);
-	if(itrLead != mLeadsConnected.end()){
-		--itrLead->second;
-		if(itrLead->second == 0){
-			mLeadsConnected.erase(itrLead);
-		}
-
-	}else{
-		WARN("lead isn't connected to this plug.");
-	}
-}
-
-size_t
-cBase_plug::numLeadsConnected(){
-	return mLeadsConnected.size();
-}
-
-
-
 ////////////////////////////////////////////////////////////
 using namespace gt;
-
 
 cLead::cLead(cCommand::dUID aCom):
 	mCom(aCom)
@@ -192,6 +138,32 @@ cLead::addToPile(cBase_plug *addMe){
 }
 
 void
+cLead::passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag){
+	PROFILE;
+
+	ASRT_NOTNULL(passTo);
+	ASRT_NOTNULL(aGetTag);
+
+	scrTDataItr = mTaggedData.find(aGetTag->mID);
+	if(scrTDataItr == mTaggedData.end()){
+		throw excep::notFound("plug", __FILE__, __LINE__);
+	}
+
+	if(aPutTag == NULL)
+		aPutTag = aGetTag;
+
+	#ifdef GT_THREADS
+		ASRT_NOTNULL(mCurrentCon);
+		passTo->addPlug(
+			scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_write),
+			aPutTag
+		);
+	#else
+		passTo->addPlug(scrTDataItr->second, aPutTag);
+	#endif
+}
+
+void
 cLead::unplug(cBase_plug* aPlug){
 
 	#ifdef GT_THREADS
@@ -249,24 +221,26 @@ GTUT_START(testLead, tagging){
 
 	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
 
-	cLead lead(fakeCom.mID);
+	ptrLead tmpLead = gWorld.get()->makeLead(fakeCom.mID);
 
 	tPlug<int> numA, numB;
 	const int magic = 3;
-	lead.addPlug(&numA, &tag);
+	tmpLead->addPlug(&numA, &tag);
 
 	numA.get() = magic;
 
 	numA.updateStart();
 	numA.updateFinish();
 
-	int testA=0;
-	lead.getPlug(&tag)->copyInto(&testA);
-	GTUT_ASRT(testA == magic, "Lead didn't store A");
+	{
+		int testA=0;
+		FAUX_JACK(tmpLead, fakeConx);	//- not using smart pointer here.
+		tmpLead->getPlug(&tag)->copyInto(&testA);
+		GTUT_ASRT(testA == magic, "Lead didn't store A");
 
-	numB = lead.getPlug(&tag);
-	GTUT_ASRT(numB.get() == magic, "B didn't get A's number");
-
+		numB = tmpLead->getPlug(&tag);
+		GTUT_ASRT(numB.get() == magic, "B didn't get A's number");
+	}
 }GTUT_END;
 
 GTUT_START(testLead, piling){

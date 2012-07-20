@@ -316,7 +316,10 @@ GTUT_START(testAnchor, basicSave){
 	plugBuff = iFigment::ptrBuff( iFigment::ptrBuff(new cByteBuffer()) );
 	tester = ptrFig(new cSaveTester(testStr, 42));
 	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot);
-	add->addPlug(&tester, cAnchor::xPT_root);
+	{
+		FAUX_JACK(add, fakeCon);
+		add->addPlug(&tester, cAnchor::xPT_root);
+	}
 	ank->jack(add, &fakeCon);
 	ank->save(plugBuff.get().get());
 }GTUT_END;
@@ -332,16 +335,20 @@ GTUT_START(testAnchor, basicLoad){
 	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot);
 	ank->jack(root, &fake);
 	tPlug<ptrFig> reload;
-	reload = root->getPlug(cAnchor::xPT_root);
+	{
+		FAUX_JACK(root, fake);
+		reload = root->getPlug(cAnchor::xPT_root);
+	}
 
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
 	reload.get()->jack(checkData, &fake);
-
-	tPlug<dStr> myStr = checkData->getPlug(cSaveTester::xPT_str);
-	tPlug<int> myNum = checkData->getPlug(cSaveTester::xPT_num);
-
-	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
-	GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
+	{
+		FAUX_JACK(checkData, fake);
+		tPlug<dStr> myStr = checkData->getPlug(cSaveTester::xPT_str);
+		tPlug<int> myNum = checkData->getPlug(cSaveTester::xPT_num);
+		GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
+		GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
+	}
 
 	plugBuff.get().reset();
 }GTUT_END;
@@ -356,26 +363,28 @@ GTUT_START(testAnchor, figmentSave){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> rlist = gWorld.get()->makeFig(getHash<cRunList>());
 
+	ptrLead addRoot = gWorld.get()->makeLead(cAnchor::xSetRoot);
 	{
-		ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot);
-
-		add->addPlug(&rlist, cAnchor::xPT_root);
-		ank->jack(add, &fakeCon);
+		FAUX_JACK(addRoot, fakeCon);
+		addRoot->addPlug(&rlist, cAnchor::xPT_root);
 	}
-	{
-		tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
-		ptrLead add = gWorld.get()->makeLead(cRunList::xAdd);
+	ank->jack(addRoot, &fakeCon);
 
+	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
+	ptrLead add = gWorld.get()->makeLead(cRunList::xAdd);
+	{
+		FAUX_JACK(add, fakeCon);
 		add->addToPile(&tester);
-		rlist.get()->jack(add, &fakeCon);
 	}
-	{
-		ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);
+	rlist.get()->jack(add, &fakeCon);
 
+	ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);
+	{
+		FAUX_JACK(save, fakeCon);
 		plugBuff = iFigment::ptrBuff( iFigment::ptrBuff(new cByteBuffer()) );
 		save->addPlug(&plugBuff, cAnchor::xPT_serialBuff);
-		ank->jack(save, &fakeCon);
 	}
+	ank->jack(save, &fakeCon);
 
 }GTUT_END;
 
