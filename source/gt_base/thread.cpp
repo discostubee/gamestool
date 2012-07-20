@@ -244,55 +244,68 @@ namespace gt{
 
 		GTUT_ASRT(AChatter.get().length() == BChatter.get().length(), "you didn't choose 2 strings of equal length.");
 		{
+			ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup);
+			ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup);
+
 			{
-				ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup);
-				ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup);
+				FAUX_JACK(setupA, fakeContext);
 				setupA->addPlug(&share, cWriter::xPT_target);
-				setupB->addPlug(&share, cWriter::xPT_target);
 				setupA->addPlug(&AChatter, cWriter::xPT_word);
+			}
+			{
+				FAUX_JACK(setupB, fakeContext);
+				setupB->addPlug(&share, cWriter::xPT_target);
 				setupB->addPlug(&BChatter, cWriter::xPT_word);
-				writerA.get()->jack(setupA, &fakeContext);
-				writerB.get()->jack(setupB, &fakeContext);
 			}
+			writerA.get()->jack(setupA, &fakeContext);
+			writerB.get()->jack(setupB, &fakeContext);
+		}
+		{
+			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 			{
-				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
+				FAUX_JACK(linkTest, fakeContext);
 				linkTest->addPlug(&writerA, cThread::xPT_fig);
-				threadA.get()->jack(linkTest, &fakeContext);
 			}
+			threadA.get()->jack(linkTest, &fakeContext);
+		}
+		{
+			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 			{
-				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
+				FAUX_JACK(linkTest, fakeContext);
 				linkTest->addPlug(&writerB, cThread::xPT_fig);
-				threadB.get()->jack(linkTest, &fakeContext);
 			}
-
-			ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits);
-			while(testCount < testLength){
-				threadA.get()->run(&fakeContext);
-				threadB.get()->run(&fakeContext);
-				share.get()->jack(getHits, &fakeContext);
-				getHits->getValue(&testCount, cShareTarget::xPT_hits);
-				++time;
-				GTUT_ASRT(time < timeout, "timeout when running.");
-			}
-
+			threadB.get()->jack(linkTest, &fakeContext);
+		}
+		ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits);
+		while(testCount < testLength){
+			threadA.get()->run(&fakeContext);
+			threadB.get()->run(&fakeContext);
+			share.get()->jack(getHits, &fakeContext);
 			{
-				tPlug<dStr> chatter;
-				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter);
-				share.get()->jack(getChatter, &fakeContext);
+				FAUX_JACK(getHits, fakeContext);
+				getHits->getValue(&testCount, cShareTarget::xPT_hits);
+			}
 
-				chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
-				DBUG_LO("chatter='" << chatter.get() << "'");
+			++time;
+			GTUT_ASRT(time < timeout, "timeout when running.");
+		}
 
-				//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
-				std::stringstream ss(chatter.get());
-				std::string token;
-				while( getline(ss, token, '.') ){
-					if(token.compare(AChatter.get()) != 0 && token.compare(BChatter.get()) != 0){
-						GTUT_ASRT(false, "found a corrupt token " << token);
-					}
+		{
+			tPlug<dStr> chatter;
+			ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter);
+			share.get()->jack(getChatter, &fakeContext);
+
+			chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
+			DBUG_LO("chatter='" << chatter.get() << "'");
+
+			//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
+			std::stringstream ss(chatter.get());
+			std::string token;
+			while( getline(ss, token, '.') ){
+				if(token.compare(AChatter.get()) != 0 && token.compare(BChatter.get()) != 0){
+					GTUT_ASRT(false, "found a corrupt token " << token);
 				}
 			}
-
 		}
 
 		tOutline<cShareTarget>::removeFromWorld();

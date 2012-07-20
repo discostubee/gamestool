@@ -28,18 +28,18 @@
 #		endif
 
 #		ifdef GTUT_GOOGLE
-
 #			include <gtest/gtest.h>	// You'll need to point your linker to the location you downloaded gtest to.
-			// These are the macros every framework needs to implement.
+
+// These are the macros every framework needs to implement.
 
 			//!\brief	If this statment is false, then it fails and displays a message as to why.
 #			define GTUT_ASRT(statement, failMsg) ASSERT_TRUE(statement) << std::endl << "Problem: " << failMsg
+
 			//!\brief	Try calling a function, reports if anything is thrown out of it.
 #			define TRYME(f) try{ f; }catch(std::exception &e){ ASSERT_TRUE(false) << e.what(); }catch(...){ ASSERT_TRUE(false) << "Unknown exception"; }
 
 #			define GTUT_START(name, args)	TEST(name, args){ try
 #			define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  }
-
 #		else
 #			define GTUT_START(t)
 #			define GTUT_END

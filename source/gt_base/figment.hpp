@@ -48,47 +48,6 @@ namespace excep{
 // classes
 namespace gt{
 
-	//---------------------------------------------------------------------------------------------------
-	//!\brief	Gives you an idea of what class to use to specialize the addon template below.
-	class iAddon{
-	public:
-		static const dPlaChar* getName(){ return ""; };
-	};
-
-	//---------------------------------------------------------------------------------------------------
-	//!\brief	Any figments that come from an addon are dependent on that addon (so you inherit from it).
-	//!			Provides a way to see what addon a figment is dependent on, and informs the world when
-	//!			there are no more figments dependent on an addon.
-	template<typename ADDON>
-	class tAddonDependent{
-	private:
-		static const dStr nameAddon;
-		static int instCount;
-
-	public:
-		tAddonDependent(){
-			//- chicken or the egg?
-			//if(instCount==0){
-			//	gWorld.get()->openAddon( nameAddon );
-			//}
-			++instCount;
-		}
-
-		virtual ~tAddonDependent(){
-			--instCount;
-			try{
-				if(instCount<=0)
-					gWorld.get()->lazyCloseAddon( nameAddon );
-			}catch(...){}
-		}
-
-		virtual dStr const & requiredAddon() const { return nameAddon; }	//!< Returns name of addon that this figment comes from. An empty string means that no addon is required.
-
-
-	};
-	template<typename ADDON> int tAddonDependent<ADDON>::instCount = 0;
-	template<typename ADDON> const dStr tAddonDependent<ADDON>::nameAddon = dStr(ADDON::getName());
-
 	//-------------------------------------------------------------------------------------
 	//!\brief	A figment of your imagination! More specifically, it's the base class type
 	//!			for all the funky new stuff you'll make.

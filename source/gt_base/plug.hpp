@@ -23,10 +23,6 @@
 #include "binPacker.hpp"
 #include <vector>
 
-///////////////////////////////////////////////////////////////////////////////////
-//
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -87,17 +83,22 @@ namespace gt{
 		virtual const A& getConst() const =0;
 
 	protected:
-	friend class tShadow<A>;
+
+	#ifdef GT_THREADS
+		friend class tShadow<A>;
+	#endif
 	};
 
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Needs to be nested in plug shadows.
-	template<typename A>
-	struct tShadow{
-		tShadow() : mMode(eSM_unset), mData(NULL) {}
-		eShadowMode mMode;
-		tPlug<A>* mData;	//!< If the shadow isn't used, this is null.
-	};
+	#ifdef GT_THREADS
+		//----------------------------------------------------------------------------------------------------------------
+		//!\brief	Needs to be nested in plug shadows.
+		template<typename A>
+		struct tShadow{
+			tShadow() : mMode(eSM_unset), mData(NULL) {}
+			eShadowMode mMode;
+			tPlug<A>* mData;	//!< If the shadow isn't used, this is null.
+		};
+	#endif
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief
