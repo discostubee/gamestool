@@ -1,5 +1,5 @@
 /*
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -46,7 +46,7 @@ class cComTestFig: public cFigment, private tOutline<cComTestFig>{
 public:
 	static const cPlugTag* xPT_testTag;
 
-	static const dNatChar* identify(){ return "command test figment"; }
+	static const dPlaChar* identify(){ return "command test figment"; }
 
 	cComTestFig(){}
 	~cComTestFig(){}
@@ -56,7 +56,6 @@ const cPlugTag* cComTestFig::xPT_testTag = tOutline<cComTestFig>::makePlugTag("t
 
 GTUT_START(command, nothing){
 
-}
-GTUT_END;
+}GTUT_END;
 
 #endif

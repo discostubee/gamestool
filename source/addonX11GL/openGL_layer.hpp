@@ -13,12 +13,12 @@
 
 namespace gt{
 
-	class cLayer_X11GL: public cLayer, private tOutline<cLayer_X11GL>{
+	class cLayer_X11GL: public cLayer, public tAddonDependent<X11GLAddon>{
 	public:
 
 		//--- Required
 		static const char* identify(){ return "layer X11GL"; }
-		virtual dNameHash hash() const{ return tOutline<cLayer_X11GL>::hash(); }
+		virtual dNameHash hash() const{ return getHash<cLayer_X11GL>(); }
 		virtual const char* name() const{ return identify(); }
 
 		//--- Regular.

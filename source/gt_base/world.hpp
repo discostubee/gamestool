@@ -22,7 +22,9 @@
  *
  *
  *!\note	A little bit about the short hand being used in this project.
- *! oSomething		An object name, either a class or struct.
+ *! cSomething		An complex object name, either a class or struct which has methods.
+ *! iSomething		Interface, can contain some implementations but is mostly pure virtual.
+ *! sSomething		A simple object or data container. In other words, a struct with no defined methods.
  *! eSomething		an enum, for both the scope and the values.
  *! mSomething		Variable data stored in a class or structure, otherwise known as a member variable.
  *! aSomething		An argument passed into a function call.
@@ -38,15 +40,16 @@
  *
  *!\note		A little bit about some of the terms used around the place. This isn't shorthand exactly, so it get's it's own note coz it's special.
  *! set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.
- *! copy	Copy a stream/buffer
+ *! copy		Copy a stream/buffer
  *! get		Return a primitive by copy, return a stream/buffer copy, return a reference to an object
- *! pass	Passes back something as a reference.
- *! link	Set a smart pointer to different, already existing, reference.
+ *! pass		Passes back something as a reference.
+ *! link		Set a smart pointer to different, already existing, reference.
  *! make	Return a fresh new instance of an object from a factory.
  *! clone	Make a duplicate of an object instance and return a smart pointer to the new clone.
- *! clear	Empty something so that it doesn't contain any data.
+ *! clear		Empty something so that it doesn't contain any data.
  *! blank	Change a link to being a blank or dead end (terminator) object.
- *! take	The function will clean up the memory it is being passed. The object becomes the custodian of this memory.
+ *! take		The function will clean up the memory it is being passed. In other word the object or function becomes the custodian of this memory.
+ *! eat		A function that consumes a buffer parameter.
  *
  *!\note	Some notes about the terminology for the jack interface
  *!	When manipulating a figment, we use the jack function, which reads a command, which contains plugs, which are wrappers to data. In a sense
@@ -62,18 +65,21 @@
 #ifndef	WORLD_HPP
 #define WORLD_HPP
 
-#include "threadTools.hpp"
-#include "ptrTools.hpp"
-#include "dirPtr.hpp"
-#include "gt_string.hpp"
-#include "utils.hpp"
-#include "profiler.hpp"
-#include "byteBuffer.hpp"
+///////////////////////////////////////////////////////////////////////////////////
+// Preprocessor config
+#ifdef DEBUG
+	//!\brief	Defined so that all debug versions are verbose at the moment.
+#	define DBUG_VERBOSE
+#endif
 
-#include <list>
+///////////////////////////////////////////////////////////////////////////////////
+#include "iFigment.hpp"
+#include "threadTools.hpp"
+#include "profiler.hpp"
+
 #include <set>
 #include <stdarg.h>
-#include <boost/shared_ptr.hpp>
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 // forward declarations
@@ -84,16 +90,12 @@ namespace gt{
 	class cBlueprint;
 	class cCommand;
 	class cContext;
-	class iFigment;
-	class ptrFig;
 }
 
 ////////////////////////////////////////////////////////////////////
 // Typedefs
 namespace gt{
 	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
-	typedef long long dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
-	typedef boost::shared_ptr<cLead> ptrLead;	//!<
 }
 
 
@@ -101,88 +103,13 @@ namespace gt{
 // Classes
 namespace gt{
 
-	//-------------------------------------------------------------------------------------
-	//!\brief	Can be used as a clone sample, where it no longer cleans
-	//!			up director or counts towards the total.
-	class ptrFig : public tDirPtr<iFigment>{
-	public:
-		ptrFig();	//!< Starts without a link.
-		ptrFig(iFigment* pFig);	//!< Creates a new director and passes it the content.
-		ptrFig(const ptrFig &pPtr);
-		~ptrFig();
-
-		ptrFig& operator = (ptrFig const &pPtr);				//!< creates another link to the director.
-		bool operator == (ptrFig const &pPtr) const;		//!< Compares memory address to see if two pointers are pointing at the same thing.
-		bool operator != (ptrFig const &pPtr) const;		//!< Same.
-
-	protected:
-		void linkDir(tDirector<iFigment> *aDirector);
-		tDirector<iFigment> *getDir();
-
-		friend class cBlueprint;	//!< gives access to director.
-		friend class iFigment;
-	};
-
-	//-------------------------------------------------------------------------------------
-	//!\brief	An individual entry for a figment.
-	class cReload{
-	public:
-		ptrFig		fig;
-		cByteBuffer	data;	//!< Accompanying reload data. Applied after all figments have been remade.
-
-		cReload();
-
-		//!\brief	Stores a figment before it has been passed the rest of its reloaded data. This is so that figment plugs
-		//!			can see all the reloaded figments when they are passed the buffer.
-		//!\param	pFig	Reference to the newly made figment (it's not reloaded until it has been passed the buffer.
-		//!\param	copyMe	This is the accompanying reload buffer which has yet to be applied to the figment. The data
-		//!					being pointed to is copied so that it exists at the right time.
-		cReload(ptrFig pFig, const dByte* copyMe = NULL, size_t buffSize = 0);
-
-		//!\brief	Cleans up the data it has copied.
-		~cReload();
-	};
-	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
-
-	//-------------------------------------------------------------------------------------
-	//!\brief	Figment interface, put here so we have a complete interface for the ptrFig type. Refer to the implementations of this
-	//!			class to get the low down on what all these methods mean (cFigContext, cFigment).
-	class iFigment{
-	public:
-		virtual ~iFigment() {}
-		virtual const dNatChar* name() const =0;
-		virtual dNameHash hash() const =0;
-
-		virtual void jack(ptrLead pLead, cContext* pCon)=0;
-		virtual void run(cContext* pCon)=0;
-		virtual void save(cByteBuffer* pAddHere)=0;
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL)=0;
-		virtual void getLinks(std::list<ptrFig>* pOutLinks)=0;
-		virtual void start(cContext *con)=0;
-		virtual void stop(cContext *con)=0;
-
-		//static dNameHash replaces(){ return uDoesntReplace; }	// You will need these static class in your figment if you replace.
-		virtual dNameHash getReplacement() const =0;
-
-		//static dNameHash extends(){ return uDoesntExtend; }	// You will need this static class in your figment if you extend.
-		virtual dNameHash getExtension() const =0;
-
-		virtual ptrFig getSmart();		//!< Figments are cleaned up using smart pointers, so the only way to hand out references to yourself is to use this function.
-
-	protected:
-		cBlueprint* mBlueprint;
-		tDirector<iFigment> *self;	//!< used by getSmart.
-
-	friend class cBlueprint;
-	};
-
 	//---------------------------------------------------------------------------------------------------
 	//!\brief	The world is a single object that ties the program together, as well as being the main 
 	//!			factory that creates figment-type objects. The world object is also a singleton that is 
 	//!			seen by every figment-type object and offers services to them. It also designed to 
 	//!			coordinate different heaps located in addons. Must also be threadsafe when accessed by
 	//!			a mr safety.
-	//!\todo	Prevent a collection of objects become an island which is separate from the root node, and
+	//!\todo	Prevent a collection of objects becoming an island which is separate from the root node, and
 	//!			thus will never be cleaned up. This will also be a huge problem when removing addons where
 	//!			the objects made in the addon need to be blanked.
 	class cWorld{
@@ -205,10 +132,14 @@ namespace gt{
 		static void lo(const dStr& pLine);
 
 		//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
+		static void warnError(const char *msg, const char* pFile, const unsigned int pLine);
+
+		//!\brief	Allows you to pass the error type directly.
 		static void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
 
-		//!\brief
-		static void warnError(const char *msg, const char* pFile, const unsigned int pLine);
+		#ifdef GTUT
+			static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
+		#endif
 
 		//!\todo	Make threadsafe.
 		static void makeProfileReport(std::ostream &log);
@@ -221,6 +152,8 @@ namespace gt{
 		void setRoot(ptrFig pNewRoot);
 
 		virtual void copyWorld(cWorld* pWorld);
+
+		virtual void lazyCloseAddon(const dStr &name);	//!\brief	Waits until the end of the current run loop before it actually closes the addon.
 
 		//--------------------------------------------------------
 		// Blueprint stuff
@@ -242,14 +175,15 @@ namespace gt{
 		//!\brief	Makes a new figment that is managed by a smart pointer.
 		ptrFig makeFig(dNameHash pNameHash);
 
+		//!\brief	Handy function if you want to use literal strings in a demo.
+		ptrFig makeFig(const dNatChar *pName);
+
 		//!\brief	Makes a new lead that is managed by a smart pointer.
-		//!\param	pFigNameHash	The name hash of the figment which has the command we're after.
-		//!\param	pCommandID
-		ptrLead makeLead(unsigned int pComID, dConSig pConx);
+		ptrLead makeLead(unsigned int pComID);
 
 		//!\brief	If you don't have the context ID (possible because you're creating some kind of hard coded demo), you can still
 		//!			get a lead if you have the string name of the figment and the context it came from.
-		ptrLead makeLead(const dNatChar *aFigName, const dNatChar *aComName, dConSig aConx);
+		ptrLead makeLead(const dPlaChar *aFigName, const dPlaChar *aComName);
 
 		//!\brief	Makes a profile token using the profiler stored in this world.
 		//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
@@ -276,7 +210,7 @@ namespace gt{
 		const cPlugTag* getPlugTag(dNameHash pFigHash, unsigned int pPTHash);
 
 		//!\note	Useful when writing demos where you are using addons and you don't want to include the headers
-		const cPlugTag* getPlugTag(const dNatChar *figName, const dNatChar *tagName);
+		const cPlugTag* getPlugTag(const dPlaChar *figName, const dPlaChar *tagName);
 
 		//!\breif	Tries to find a plug tag in all the current blueprints it has.
 		//!\note	Throws if not found.
@@ -293,11 +227,18 @@ namespace gt{
 
 		//--------------------------------------------------------
 		// Polymorphs
-		virtual dMillisec	getAppTime	(){ return 0; }
-		virtual void		loop		(){}	//!< Enter the main program loop. Continues looping until it is told to stop.
-		virtual void		flushLines	();		//!< Process the lines to be displayed on the console. Uses cout by default
+		// Not using pure virtuals so things like unit tests can use the base world class.
+
+		virtual dMillisec getAppTime() { return 0; }
+		virtual void loop() {}	//!< Enter the main program loop. Continues looping until it is told to stop.
+		virtual void flushLines	();		//!< Process the lines to be displayed on the console. Uses std::cout by default
+		virtual void openAddon(const dStr &name) { DONT_USE_THIS; }		//!\brief	Opens an addon with the given name
+		virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }
 
 	protected:
+		#ifdef GTUT
+			static bool mSuppressError;	//!<
+		#endif
 
 		//--------------------------------------------------------
 		// Data which must be redirected if this is an addon's heap.
@@ -310,6 +251,7 @@ namespace gt{
 		cProfiler* mProfiles;
 
 		ptrFig mRoot;
+		std::list<dStr> mAddonsToClose;
 
 		friend void redirectWorld(cWorld*);
 		//--------------------------------------------------------
@@ -324,6 +266,11 @@ namespace gt{
 			static boost::recursive_mutex *xLineGuard;
 			boost::recursive_mutex *mProfileGuard;
 			boost::recursive_mutex *mLineGuard;
+
+			#ifdef GTUT
+				static boost::recursive_mutex *xSuppressGuard;
+				boost::recursive_mutex *mSuppressGuard;
+			#endif
 		#endif
 
 		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).
@@ -343,7 +290,7 @@ namespace gt{
 ///////////////////////////////////////////////////////////////////////////////////
 // Typedefs
 namespace gt{
-	typedef tPtrRef<iFigment> refFig;	//!< Used when you want access to a figment
+	//typedef tPtrRef<iFigment> refFig;	//!< Used when you want access to a figment
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -352,33 +299,46 @@ namespace gt{
 	void redirectWorld(cWorld* pWorldNew);
 }
 
+
 ////////////////////////////////////////////////////////////////////
 // Macros
-#ifdef DEBUG
-	#define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-	#define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
-	//#define DBUG_LO(x) { std::cout << x << std::endl; }
 
+#ifdef WIN32
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
+#	define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
 #else
-	#define PROFILE
-	#define DBUG_LO(x)
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
+#	define DYN_LIB_DEF(rnt) rnt
+#endif
+
+#define WARN(x) gt::cWorld::warnError(x, __FILE__, __LINE__)
+#define WARN_S(x) {std::stringstream ss; ss << x; gt::cWorld::warnError(ss.str().c_str(), __FILE__, __LINE__);}
+
+// Handy for all those (...) catch blocks.
+extern const char *MSG_UNKNOWN_ERROR;
+#define UNKNOWN_ERROR	WARN(MSG_UNKNOWN_ERROR);
+
+#ifdef GTUT
+#	undef GTUT_END
+#	define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
+#endif
+
+#ifdef DEBUG
+#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+#else
+#	define PROFILE
+#	define DBUG_LO(x)
 #endif
 
 #if defined(DBUG_VERBOSE) && defined(DEBUG)
-	#define DBUG_VERBOSE_LO(x) DBUG_LO(x)
+#	define DBUG_VERBOSE_LO(x) DBUG_LO(x)
 #else
-	#define DBUG_VERBOSE_LO(x)
+#	define DBUG_VERBOSE_LO(x)
 #endif
 
-#define WARN(x)	gt::cWorld::warnError(x, __FILE__, __LINE__)
-
-// Handy for all those (...) catch blocks.
-#define UNKNOWN_ERROR	WARN("unknown error")
-
-#ifdef GTUT
-	#undef GTUT_END
-	#define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
-#endif
 
 #endif
 

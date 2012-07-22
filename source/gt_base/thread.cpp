@@ -41,15 +41,15 @@ cThread::runThread(cThread *me, cContext* pCon){
 
 		while(!me->threadStop){
 			newContext.runJackJobs();
-			me->link.mD->run(&newContext);
+			me->link.get()->run(&newContext);
 			me->sync.wait(syncLock);
 		}
 	}catch(excep::base_error &e){
-		std::cout << e.what() << std::endl;	//!!!
+		WARN(e);//std::cout << e.what() << std::endl;	//!!!
 	}catch(std::exception &e){
-		std::cout << e.what() << std::endl;	//!!!
+		//std::cout << e.what() << std::endl;	//!!!
 	}catch(...){
-		std::cout << "unknown error in thread" << std::endl;	//!!!
+		UNKNOWN_ERROR; //std::cout << "unknown error in thread" << std::endl;	//!!!
 	}
 #else
 	DUMB_REF_ARG(me); DUMB_REF_ARG(pCon);
@@ -58,26 +58,24 @@ cThread::runThread(cThread *me, cContext* pCon){
 
 #ifdef GT_THREADS
 cThread::cThread() :
-	threadStop(true), firstRun(true)
-{}
+	threadStop(true), threading(false)
 #else
 cThread::cThread()
-{}
 #endif
+{
+	addUpdRoster(&link);
+}
 
 cThread::~cThread(){
 #ifdef GT_THREADS
-	if(!firstRun){
+	if(threading){
 		{
 			dLock lockReady(syncMu);
 			threadStop = true;
 			sync.notify_all();
 		}
-		{
-			dLock lockFinish(finishMu); // wait for the thread to finish.
-
-			myThread.join();
-		}
+		dLock lockFinish(finishMu); // wait for the thread to finish.
+		myThread.join();
 	}
 #endif
 }
@@ -87,28 +85,42 @@ cThread::run(cContext* pCon){
 	PROFILE;
 
 	start(pCon);
-	PLUGUP(link);
+	updatePlugs();
+
 #ifdef GT_THREADS
-	if(firstRun){
+	if(!threading && link.get().valid()){
 		dLock lockMake(syncMu); // If we don't wait for the thread to be made, it can be possible to deadlock.
-		firstRun = false;
 		threadStop = false;
+		threading = true;
 
 		isMultithreading::nowThreading();
 		myThread = boost::thread(cThread::runThread, this, pCon);
 		sync.wait(lockMake);
-	}else{
 
-		sync.notify_all();
+	}else{
+		sync.notify_all();	// Run the thread once.
 	}
 #else
-	link.mD->run(pCon);
+	link.get()->run(pCon);
 #endif
 	stop(pCon);
 }
 
 void
 cThread::patLink(ptrLead aLead){
+	#ifdef GT_THREADS
+	if(threading){
+		{
+			dLock lockReady(syncMu);
+			threadStop = true;
+			sync.notify_all();
+		}
+		dLock lockFinish(finishMu); // wait for the thread to finish.
+		myThread.join();
+		threading = false;
+	}
+	#endif
+
 	link = aLead->getPlug(xPT_fig);
 }
 
@@ -117,9 +129,34 @@ cThread::patLink(ptrLead aLead){
 // Tests
 #if defined(GTUT) && defined(GT_THREADS)
 
+GTUT_START(test_cThread, test_suit){
+	figmentTestSuit<cThread>();
+}GTUT_END;
+
 namespace gt{
 
 	class cShareTarget : public cFigment, private tOutline<cShareTarget>{
+	protected:
+		tPlug<std::string> chatter;
+		tPlug<int> hits;
+
+		void patWrite(ptrLead aLead){
+			tPlug<std::string> tmp = aLead->getPlug(xPT_word);
+			chatter.get().append( tmp.get() );
+
+			chatter.get().append( "." );
+			++hits.get();
+			#ifndef GT_SPEEDTEST
+				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+			#endif
+		}
+		void patHits(ptrLead aLead){
+			aLead->addPlug(&hits, xPT_hits);
+		}
+		void patGetChatter(ptrLead aLead){
+			aLead->addPlug(&chatter, xPT_chatter);
+		}
+
 	public:
 		static const cPlugTag* xPT_word;
 		static const cPlugTag* xPT_hits;
@@ -128,33 +165,12 @@ namespace gt{
 		static const cCommand::dUID xGetHits;
 		static const cCommand::dUID xGetChatter;
 
-		static const dNatChar* identify() { return "don't care target"; }
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<cShareTarget>::hash(); }
+		static const dPlaChar* identify() { return "don't care target"; }
+		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
+		virtual dNameHash hash() const { return getHash<cShareTarget>(); }
 
-		cShareTarget(): hits(0) {}
+		cShareTarget(): hits(0) { addUpdRoster(&chatter); addUpdRoster(&hits); }
 		virtual ~cShareTarget(){}
-
-	protected:
-		tPlug<std::string> chatter;
-		tPlug<int> hits;
-
-		void patWrite(ptrLead aLead){
-			chatter.mD.append( *aLead->getPlug(xPT_word)->exposePtr<std::string>() );
-			chatter.mD.append( "." );
-			++hits.mD;
-			#ifndef GT_SPEEDTEST
-				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-			#endif
-		}
-		void patHits(ptrLead aLead){
-			PLUGUP(hits);
-			aLead->addPlug(&hits, xPT_hits);
-		}
-		void patGetChatter(ptrLead aLead){
-			PLUGUP(chatter);
-			aLead->addPlug(&chatter, xPT_chatter);
-		}
 
 	};
 	const cPlugTag* cShareTarget::xPT_word = tOutline<cShareTarget>::makePlugTag("word");
@@ -166,29 +182,6 @@ namespace gt{
 
 	//- The following are shallow test classes not meant for rugged use.
 	class cWriter : public cFigment, private tOutline<cWriter>{
-	public:
-		static const cCommand::dUID xSetup;
-		static const cPlugTag *xPT_word, *xPT_target;
-
-		cWriter(){}
-		cWriter(cShareTarget *inT, std::string inS) : target(inT), phrase(inS) {}
-		virtual ~cWriter() {}
-
-		static const dNatChar* identify(){ return "test writer"; }
-		virtual const dNatChar* name() const { return identify(); }
-		virtual dNameHash hash() const { return tOutline<cWriter>::hash(); }
-
-		virtual void run(cContext* pCon) {
-			start(pCon);
-			{
-				//- Really inefficient, but who cares.
-				ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite, pCon->getSig());
-				writeLead->addPlug(&phrase, cShareTarget::xPT_word);
-				target.mD->jack(writeLead, pCon);
-			}
-			stop(pCon);
-		}
-
 	private:
 		tPlug<ptrFig> target;
 		tPlug<std::string> phrase;
@@ -197,6 +190,29 @@ namespace gt{
 			target = aLead->getPlug(xPT_target);
 			phrase = aLead->getPlug(xPT_word);
 		}
+	public:
+		static const cCommand::dUID xSetup;
+		static const cPlugTag *xPT_word, *xPT_target;
+
+		cWriter(){ addUpdRoster(&target); addUpdRoster(&phrase); }
+		cWriter(cShareTarget *inT, std::string inS) : target(inT), phrase(inS) {}
+		virtual ~cWriter() {}
+
+		static const dPlaChar* identify(){ return "test writer"; }
+		virtual const dPlaChar* name() const { return identify(); }
+		virtual dNameHash hash() const { return getHash<cWriter>(); }
+
+		virtual void run(cContext* pCon) {
+			start(pCon);
+			updatePlugs();
+
+				//- Really inefficient, but who cares.
+				ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite);
+				writeLead->addPlug(&phrase, cShareTarget::xPT_word);
+				target.get()->jack(writeLead, pCon);
+			stop(pCon);
+		}
+
 	};
 
 	const cPlugTag* cWriter::xPT_word = tOutline<cWriter>::makePlugTag("word");
@@ -210,10 +226,10 @@ namespace gt{
 		tOutline<cWriter>::draft();
 		tOutline<cThread>::draft();
 
-		const short timeout = 10000;
-		const short testLength = 20;
-		short testCount = 0;
-		short time = 0;
+		const int timeout = 10000;
+		const int testLength = 20;
+		int testCount = 0;
+		int time = 0;
 		cContext fakeContext;
 		tPlug<std::string> AChatter;
 		tPlug<std::string> BChatter;
@@ -226,56 +242,73 @@ namespace gt{
 		AChatter = std::string("cat");
 		BChatter = std::string("dog");
 
-		GTUT_ASRT(AChatter.mD.length() == BChatter.mD.length(), "you didn't choose 2 strings of equal length.");
+		GTUT_ASRT(AChatter.get().length() == BChatter.get().length(), "you didn't choose 2 strings of equal length.");
 		{
+			ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup);
+			ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup);
+
 			{
-				ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup, fakeContext.getSig());
-				ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup, fakeContext.getSig());
+				FAUX_JACK(setupA, fakeContext);
 				setupA->addPlug(&share, cWriter::xPT_target);
-				setupB->addPlug(&share, cWriter::xPT_target);
 				setupA->addPlug(&AChatter, cWriter::xPT_word);
+			}
+			{
+				FAUX_JACK(setupB, fakeContext);
+				setupB->addPlug(&share, cWriter::xPT_target);
 				setupB->addPlug(&BChatter, cWriter::xPT_word);
-				writerA.mD->jack(setupA, &fakeContext);
-				writerB.mD->jack(setupB, &fakeContext);
 			}
+			writerA.get()->jack(setupA, &fakeContext);
+			writerB.get()->jack(setupB, &fakeContext);
+		}
+		{
+			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 			{
-				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig, fakeContext.getSig());
+				FAUX_JACK(linkTest, fakeContext);
 				linkTest->addPlug(&writerA, cThread::xPT_fig);
-				threadA.mD->jack(linkTest, &fakeContext);
 			}
+			threadA.get()->jack(linkTest, &fakeContext);
+		}
+		{
+			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 			{
-				ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig, fakeContext.getSig());
+				FAUX_JACK(linkTest, fakeContext);
 				linkTest->addPlug(&writerB, cThread::xPT_fig);
-				threadB.mD->jack(linkTest, &fakeContext);
+			}
+			threadB.get()->jack(linkTest, &fakeContext);
+		}
+		ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits);
+		while(testCount < testLength){
+			threadA.get()->run(&fakeContext);
+			threadB.get()->run(&fakeContext);
+			share.get()->jack(getHits, &fakeContext);
+			{
+				FAUX_JACK(getHits, fakeContext);
+				getHits->getValue(&testCount, cShareTarget::xPT_hits);
 			}
 
-			ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits, fakeContext.getSig());
-			while(testCount < testLength){
-				threadA.mD->run(&fakeContext);
-				threadB.mD->run(&fakeContext);
-				share.mD->jack(getHits, &fakeContext);
-				getHits->getValue(&testCount, cShareTarget::xPT_hits);
-				++time;
-				GTUT_ASRT(time < timeout, "timeout when running.");
-			}
+			++time;
+			GTUT_ASRT(time < timeout, "timeout when running.");
+		}
+
+		{
+			tPlug<dStr> chatter;
+			ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter);
+			share.get()->jack(getChatter, &fakeContext);
 
 			{
-				ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter, fakeContext.getSig());
-				share.mD->jack(getChatter, &fakeContext);
-				const char* ptrChatter = getChatter->getPlug(cShareTarget::xPT_chatter)->exposePtr<std::string>()->c_str();
-				DBUG_LO("chatter='" << ptrChatter << "'");
-
-				//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
-				std::stringstream ss(ptrChatter);
-				std::string token;
-				while( getline(ss, token, '.') ){
-					if(token.compare(AChatter.mD) != 0 && token.compare(BChatter.mD) != 0){
-						GTUT_ASRT(false, "found a corrupt token " << token);
-					}
-				}
-
+				FAUX_JACK(getChatter, fakeContext);
+				chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
+				DBUG_LO("chatter='" << chatter.get() << "'");
 			}
 
+			//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
+			std::stringstream ss(chatter.get());
+			std::string token;
+			while( getline(ss, token, '.') ){
+				if(token.compare(AChatter.get()) != 0 && token.compare(BChatter.get()) != 0){
+					GTUT_ASRT(false, "found a corrupt token " << token);
+				}
+			}
 		}
 
 		tOutline<cShareTarget>::removeFromWorld();
@@ -286,9 +319,11 @@ namespace gt{
 		const short testLength = 5;
 		for(short i=0; i < testLength; ++i){
 			cContext fakeContext;
-			cThread threadA;
+			cThread A, B, C;
 			for(short j=0; j < testLength; ++j){
-				threadA.run(&fakeContext);
+				A.run(&fakeContext);
+				B.run(&fakeContext);
+				C.run(&fakeContext);
 			}
 		}
 	}GTUT_END;

@@ -1,3 +1,21 @@
+/*
+ **********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+*/
+
 #include "byteBuffer.hpp"
 
 cByteBuffer::cByteBuffer():
@@ -5,29 +23,40 @@ cByteBuffer::cByteBuffer():
 	mBuffSize(0)
 {}
 
+cByteBuffer::cByteBuffer(const cByteBuffer& pCopy):
+	mBuff(NULL),
+	mBuffSize(0)
+{
+	copyBuff(pCopy);
+}
+
 cByteBuffer::~cByteBuffer(){
-	if(mBuff != NULL)
-		::free(mBuff);
+	delete [] mBuff;
 }
 
 const dByte*
 cByteBuffer::get(const size_t pStart) const{
-	if(pStart > mBuffSize || mBuff == NULL)
-		throw excep::notFound("buffer, while getting", __FILE__, __LINE__);
+	if(pStart > mBuffSize)
+		throw excep::underFlow(__FILE__, __LINE__);
+
+	if(mBuff == NULL)
+		return NULL;
 
 	return &mBuff[pStart];
 }
 
 void
 cByteBuffer::copy(const dByte* pBuffIn, const size_t pInSize){
-	if(pBuffIn == NULL || pInSize == 0)
-		throw excep::cantCopy("buffer", "empty buffer", __FILE__, __LINE__);
+	if(pBuffIn == NULL || pInSize == 0){
+		delete [] mBuff;
+		mBuff = NULL;
+		mBuffSize = 0;
+		return;
+	}
 
 	if(mBuffSize != pInSize){	//- Only re-allocate if the new buffer is a different size.
-		if(mBuff!=NULL)
-			::free(mBuff);
-
-		mBuff = reinterpret_cast<dByte*>(::malloc(pInSize));
+		delete [] mBuff;
+		mBuff = new dByte[pInSize];
 		mBuffSize = pInSize;
 	}
 
@@ -53,8 +82,7 @@ cByteBuffer::take(dByte* pBuffIn, size_t pInSize){
 	if(pInSize == 0)
 		throw excep::base_error("can't be zero, while taking", __FILE__, __LINE__);
 
-	if(mBuff!=NULL)
-		::free(mBuff);
+	delete [] mBuff;
 
 	mBuff = pBuffIn;
 	mBuffSize = pInSize;
@@ -86,7 +114,7 @@ cByteBuffer::trimHead(size_t pSize, size_t pStart){
 		}
 
 		mBuffSize = mBuffSize - (pStart+pSize);
-		::free(orig);
+		delete [] orig;
 	}
 }
 
@@ -94,7 +122,7 @@ cByteBuffer::trimHead(size_t pSize, size_t pStart){
 void 
 cByteBuffer::clear(){
 	if(mBuff!=NULL)
-		::free(mBuff);
+		delete [] mBuff;
 
 	mBuff = NULL;
 	mBuffSize = 0;
@@ -102,15 +130,12 @@ cByteBuffer::clear(){
 
 void
 cByteBuffer::add( const dByte* pBuffIn, size_t pInSize){
-
 	dByte* oldBuff = mBuff;
-	mBuff = reinterpret_cast<dByte*>(
-		::malloc(mBuffSize + pInSize)
-	);
+	mBuff = new dByte[pInSize+mBuffSize];
 
 	if(oldBuff != NULL){
 		::memcpy(mBuff, oldBuff, mBuffSize);
-		::free(oldBuff);
+		delete [] oldBuff;
 		::memcpy( &mBuff[mBuffSize], pBuffIn, pInSize );
 	}else{
 		::memcpy(mBuff, pBuffIn, pInSize);
@@ -121,6 +146,14 @@ cByteBuffer::add( const dByte* pBuffIn, size_t pInSize){
 void
 cByteBuffer::add(const cByteBuffer &pBuff ){
 	add( pBuff.get(), pBuff.size() );
+}
+
+void
+cByteBuffer::overwrite(const dByte *pWriteWith, size_t pWriteSize, size_t pStart){
+	if(pStart + pWriteSize > mBuffSize)
+		excep::overFlow(__FILE__, __LINE__);
+
+	memcpy(&mBuff[pStart], pWriteWith, pWriteSize);
 }
 
 cByteBuffer &
@@ -138,28 +171,6 @@ cByteBuffer::operator+= (const cByteBuffer &pCopyMe){
 	add(pCopyMe);
 	return *this;
 }
-
-//void*
-//cByteBuffer::barf(const size_t pHowMuch){
-//
-//	if(mBuff == NULL)
-//		throw excep::notFound("buffer, while barfing", __FILE__, __LINE__);
-//
-//	if(pHowMuch == 0 || pHowMuch > mBuffSize)
-//		throw excep::base_error(__FILE__, __LINE__);	//!\todo
-//
-//	scrTail = reinterpret_cast<dByte*>( ::malloc(mBuffSize-pHowMuch) );
-//	::memcpy( scrTail, &mBuff[pHowMuch], mBuffSize-pHowMuch );
-//
-//	scrHead = reinterpret_cast<dByte*>(
-//		::realloc(mBuff, pHowMuch )
-//	);
-//
-//	mBuffSize -= pHowMuch;
-//	mBuff = scrTail;
-//
-//	return scrHead;
-//}
 
 
 ////////////////////////////////////////////////////////////

@@ -1,12 +1,46 @@
 /*
- * utils.cpp
+**********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
  *
- *  Created on: 08/07/2010
- *      Author: stuandlou
- */
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+*/
 
 #include "utils.hpp"
 
+////////////////////////////////////////////////////////////
+dHash makeHash(const char *pString){
+	dNameHash hash = 0;
+
+	if(pString==NULL)
+		return 0;
+
+	while(*pString!='\0'){
+		hash = ((hash << 5) + hash) ^ *pString;
+		++pString;
+	}
+
+	return hash;
+}
+
+dNameHash makeHash(const dNatStr &pString){
+	dNameHash hash = 0;
+
+	for(size_t i=0; i < pString.t.size(); ++i)
+		hash = ((hash << 5) + hash) ^ pString.t[i];
+
+	return hash;
+}
 
 ////////////////////////////////////////////////////////////
 cTracker::dItemMap* 			cTracker::xObjectsActive;	// Don't assign here.
@@ -51,9 +85,6 @@ cTracker::start(const char* pName){
 
 void
 cTracker::stop(const char* pName){
-#ifdef GT_THREADS
-	return;
-#endif
 	ensureSetup();
 
 	xTempHash = makeHash(pName);
@@ -62,9 +93,6 @@ cTracker::stop(const char* pName){
 
 void
 cTracker::makeReport(std::ostream &report){
-#ifdef GT_THREADS
-	return;
-#endif
 	ensureSetup();
 
 	report << " Tracker report" << std::endl;

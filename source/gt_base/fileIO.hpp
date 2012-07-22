@@ -33,8 +33,7 @@ namespace gt{
 	//!\class	cBase_fileIO
 	//!\brief	Interface for file IO, be it a local file or one
 	//!			that's online.
-	class cBase_fileIO: public cFigment, private tOutline<cBase_fileIO>{
-
+	class cBase_fileIO: public cFigment{
 
 	public:
 
@@ -56,9 +55,9 @@ namespace gt{
 		cBase_fileIO();
 		virtual ~cBase_fileIO();
 
-		static const dNatChar* identify(){ return "base file IO"; }
-		virtual const dNatChar* name() const { return identify(); }		//!<
-		virtual dNameHash hash() const{ return tOutline<cBase_fileIO>::hash(); }
+		static const dPlaChar* identify(){ return "base file IO"; }
+		virtual const dPlaChar* name() const { return identify(); }		//!<
+		virtual dNameHash hash() const{ return getHash<cBase_fileIO>(); }
 
 	protected:
 		tPlug<dStr> mPath; //!< This is the path to the file.

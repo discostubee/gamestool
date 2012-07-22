@@ -2,11 +2,11 @@
 
 using namespace gt;
 
-cPolyMesh_GL::cPolyMesh_GL():
+cPolyMesh_X11GL::cPolyMesh_X11GL():
 		vbuff(NULL), ibuff(NULL), mVBO(0), mIBO(0), polyCount(0), vertCount(0)
 {}
 
-cPolyMesh_GL::~cPolyMesh_GL(){
+cPolyMesh_X11GL::~cPolyMesh_X11GL(){
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &mIBO);
@@ -16,7 +16,7 @@ cPolyMesh_GL::~cPolyMesh_GL(){
 }
 
 void
-cPolyMesh_GL::run(cContext *pCon){
+cPolyMesh_X11GL::run(cContext *pCon){
 	PROFILE;
 
 	start(pCon);
@@ -38,7 +38,7 @@ cPolyMesh_GL::run(cContext *pCon){
 		glColor3f(1.0f, 1.0f, 0.0f);
 		//!!!
 
-		glDrawArrays(GL_TRIANGLES, 0, vertCount);	//glDrawElements(GL_TRIANGLES, polyCount, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+	glDrawElements(GL_TRIANGLES, polyCount*DIMENSIONS, GL_UNSIGNED_INT, 0);
 
 	glPopMatrix();
 
@@ -46,17 +46,17 @@ cPolyMesh_GL::run(cContext *pCon){
 }
 
 void
-cPolyMesh_GL::formatGLMesh(){
+cPolyMesh_X11GL::formatGLMesh(){
 	PROFILE;
 
 	if(mLazyMesh->mVertexes.empty())
-		throw excep::base_error("lazy mesh has no vertexes", __FILE__, __LINE__);
+		THROW_BASEERROR("lazy mesh has no vertexes");
 
 	if(mLazyMesh->mPolys.empty())
-		throw excep::base_error("lazy mesh has no polies", __FILE__, __LINE__);
+		THROW_BASEERROR("lazy mesh has no polies");
 
 	polyCount = mLazyMesh->mPolys.size();
-	vertCount = polyCount * 3;
+	vertCount = mLazyMesh->mVertexes.size();
 
 	if(mIBO){
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -69,73 +69,64 @@ cPolyMesh_GL::formatGLMesh(){
 		delete [] vbuff;
 	}
 
-	vbuff = new sGLFloatVert[vertCount];
-	ibuff = new dIdxV[polyCount];
-
-	size_t lazyVertCnt = mLazyMesh->mVertexes.size();
+	vbuff = new dGLFloat[vertCount * DIMENSIONS];
+	ibuff = new dIdxV[polyCount * DIMENSIONS];
 
 	try{
-		sPoly *tempPoly;
-		sVertex *tempVert;
-		size_t idxV, idxABC;
-		sGLFloatVert *itrVBuff = vbuff;
-
-		for(dIdxV idxPoly = 0; idxPoly < polyCount; ++idxPoly){
-			tempPoly = &mLazyMesh->mPolys[idxPoly];
-
-			for(idxV = 0; idxV < 3; ++idxV){
-				switch(idxV){
-					case 0: idxABC = tempPoly->a; break;
-					case 1: idxABC = tempPoly->b; break;
-					case 2: idxABC = tempPoly->c; break;
-				}
-
-				if(idxABC >= lazyVertCnt)
-					throw excep::base_error("bad index to vertex array", __FILE__, __LINE__);
-
-				tempVert = &mLazyMesh->mVertexes[idxABC];
-
-				itrVBuff->x = tempVert->x;
-				itrVBuff->y = tempVert->y;
-				itrVBuff->z = tempVert->z;
-				//!\todo	assign normals.
-				//!\todo	assign mapping.
-
-				++itrVBuff;
-
-			}
-			ibuff[idxPoly] = idxPoly;
+		for(size_t iVert=0; iVert < vertCount; ++iVert){
+			vbuff[iVert + IOA_X] = static_cast<dGLFloat>( mLazyMesh->mVertexes[iVert].x );
+			vbuff[iVert + IOA_Y] = static_cast<dGLFloat>( mLazyMesh->mVertexes[iVert].y );
+			vbuff[iVert + IOA_Z] = static_cast<dGLFloat>( mLazyMesh->mVertexes[iVert].z );
 		}
 
 		glGenBuffers(1, &mVBO);		// Generate 1 vertex array.
 		glBindBuffer(GL_ARRAY_BUFFER, mVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(sGLFloatVert)*vertCount, vbuff, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);	//- positions in stream 0.
+		glVertexPointer(DIMENSIONS, GL_FLOAT, 0, NULL);
+		glBufferData(
+			GL_ARRAY_BUFFER,
+			sizeof(dGLFloat) * vertCount * DIMENSIONS,
+			vbuff,
+			GL_STATIC_DRAW
+		);
+
+		size_t iPoly=0;
+		for(
+			std::vector<sPoly>::iterator itrP = mLazyMesh->mPolys.begin();
+			itrP != mLazyMesh->mPolys.end();
+			++itrP
+		){
+			ASRT_INRANGE(mLazyMesh->mVertexes, itrP->a);
+			ibuff[iPoly++] = static_cast<dIdxV>(itrP->a);
+
+			ASRT_INRANGE(mLazyMesh->mVertexes, itrP->b);
+			ibuff[iPoly++] = static_cast<dIdxV>(itrP->b);
+
+			ASRT_INRANGE(mLazyMesh->mVertexes, itrP->c);
+			ibuff[iPoly++] = static_cast<dIdxV>(itrP->c);
+		}
 
 		glGenBuffers(1, &mIBO);		// Generate 1 index buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(dIdxV)*polyCount, ibuff, GL_STATIC_DRAW);
-
-		//- We can assume this will always be the same for every buffer.
-		glVertexPointer(3, GL_FLOAT, sizeof(sGLFloatVert), BUFFER_OFFSET(0));
-		//glNormalPointer(GL_FLOAT, 64, BUFFER_OFFSET(12));
-		//glClientActiveTexture(GL_TEXTURE0);
-		//glTexCoordPointer(2, GL_FLOAT, 64, BUFFER_OFFSET(24));
-		//glClientActiveTexture(GL_TEXTURE1);
-		//glTexCoordPointer(2, GL_FLOAT, 64, BUFFER_OFFSET(32));
-		//glClientActiveTexture(GL_TEXTURE2);
-		//glTexCoordPointer(2, GL_FLOAT, 64, BUFFER_OFFSET(40));
+		glBufferData(
+			GL_ELEMENT_ARRAY_BUFFER,
+			sizeof(dIdxV) * polyCount * DIMENSIONS,
+			ibuff,
+			GL_STATIC_DRAW
+		);
 
 	}catch(excep::base_error &e){
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glDeleteBuffers(1, &mIBO);
-		delete [] ibuff;
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glDeleteBuffers(1, &mVBO);
-		delete [] vbuff;
 
 		WARN(e);
 	}
+
+	SAFEDEL_ARR(ibuff);
+	SAFEDEL_ARR(vbuff);
 
 	cleanLazy();
 }

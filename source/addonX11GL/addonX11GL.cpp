@@ -17,7 +17,11 @@ draftAll(gt::cWorld *pWorld){
 		gt::tOutline<gt::cLayer>::draft();
 		gt::tOutline<gt::cLayer_X11GL>::draft();
 		gt::tOutline<gt::cPolyMesh>::draft();
-		gt::tOutline<gt::cPolyMesh_GL>::draft();
+		gt::tOutline<gt::cPolyMesh_X11GL>::draft();
+		gt::tOutline<gt::c3DCamera>::draft();
+		gt::tOutline<gt::c3DCamera_X11GL>::draft();
+		gt::tOutline<gt::c2DCamera>::draft();
+		gt::tOutline<gt::c2DCamera_X11GL>::draft();
 
 		DBUG_LO("x11 addon open.");
 
@@ -37,7 +41,11 @@ closeLib(){
 		gt::tOutline<gt::cLayer_X11GL>::removeFromWorld();
 		gt::tOutline<gt::cLayer>::removeFromWorld();
 		gt::tOutline<gt::cPolyMesh>::removeFromWorld();
-		gt::tOutline<gt::cPolyMesh_GL>::removeFromWorld();
+		gt::tOutline<gt::cPolyMesh_X11GL>::removeFromWorld();
+		gt::tOutline<gt::c3DCamera>::removeFromWorld();
+		gt::tOutline<gt::c3DCamera_X11GL>::removeFromWorld();
+		gt::tOutline<gt::c2DCamera>::removeFromWorld();
+		gt::tOutline<gt::c2DCamera_X11GL>::removeFromWorld();
 
 		DBUG_LO("closed x11 addon.");
 

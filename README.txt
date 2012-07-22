@@ -1,12 +1,14 @@
 Gamestool readme. April 2011
 ----------------------------------------------------
-Hi all, the software in this repository is presented as is and makes no promises or guarantees. All stuff in here that is claimed to be my stuff
+Hi all, the software in this repository is presented as is and makes no 
+promises or guarantees. All stuff in here that is claimed to be my stuff
 is protected under the GNU (version 3) license. There is however, plenty of
 other peoples stuff made use of in this project (for instance, boost and
 openGL), so please be kind to their software licenses as well.
 
-If there are any problems or questions regarding the software use, please visit www.frontiergraphics.com.au/gamestool and don't be afraid to sign up
-and flame away for us failing in some way.
+If there are any problems or questions regarding the software use, 
+please visit www.frontiergraphics.com.au/gamestool and don't be afraid to 
+sign up and flame away for us failing in some way.
 
 
 Supported environments
@@ -17,8 +19,8 @@ the gamestool running on these OSs, there is also a list of supported
 IDEs.
 
 Windows 7: Visual Studio Express 2010.
-Ubuntu 9->11L: Eclipse
-OS X 10.6: Eclipse
+Ubuntu 11: Eclipse 3.5
+OS X 10.6: Eclipse 3.6
 
 If you want to expand the list of supported stuff, feel free to jump on
 the forum or source forge and let us know.
@@ -36,13 +38,6 @@ But we already have a write once, run anywhere language you retort! It's
 called Java, Ruby, Mr fantastics do anything language. Well, you sir don't
 understand the zen of lolz do you!
 
-Jumping in
-----------------------------------------------------
-Check out the example app project. This should be 
-easier to compile and run than the unit tests or
-any of the multi-threaded apps because you wont
-need to compile the google test library or the boost
-library.
 
 
 Directories
@@ -86,9 +81,9 @@ exists.
 
 Make sure you ...
 
-- Download boost library
+--- Download boost library 1.49
 You'll need to have boost installed in order to compile the games tool.
-You can download it from:
+Google for boost c++ and use their homepage to find a download mirror.
 
 Once downloaded, all you need to do is unzip it and chuck it somewhere your
 compiler can find it. If can't install it somewhere that any compiler can
@@ -96,9 +91,83 @@ find it, you'll need to direct your compiler to it (read below)
 
 It may be a good idea to keep the boost lib, root directory with a name
 that includes the version number and not just naming it 'boost'. For 
-instance, I've got mine under: linux:~/includes/boost_1_46
+instance, I've got mine under: linux:~/includes/boost_1_49
 
-- compile boost lib in OSX
+--- Compile boost lib 1.49
+Read the index html file that's in the boost root directory, and follow the
+instructions for making 'b2' from the shell script and then use the
+normal build using b2.
+
+gamestool includes all boost libraries as statics so you'll need the
+option: link=static to build static versions of the libs.
+
+In OSX it's likely you'll need to run b2 as an admin so it can link to
+the system libraries.
+
+To make things easy on yourself, it may be a good idea to install
+boost to a specific location rather than your system includes/libs.
+This means passing a prefix into the bootstrap script and then
+point the compiler to your headers and static libs (see below).
+
+--- Download and compile google test (if building the testing app)
+The google testing framework needs to be downloaded and put somewhere
+for you to be able to run unit tests. You'll also need to place the built 
+gtest library into the gamestool include directory. Make sure the library 
+is named libgtest_main.a because that's what the project is expecting.
+
+To build the static lib just read the guide that comes with it, but
+in case you miss it (which is easy to do), simply add link==static
+to the bjam line, so it'll read something like this:
+
+sudo ./bjam link=static
+
+
+--- Link external includes in Eclipse
+For eclipse you'll need to point your IDE to the spot you unzipped the 
+lib. You can do this in eclipse by adding an Environment variable under 
+the property manager (Properties->C/C++->Build->Environment). This 
+variable must be named CPATH and its value needs to be the location of 
+your boost directory. You can have as many directories as you like, so 
+long as you use a colon to separate each path.
+
+There are a few includes you need:
+Boost
+x11 for OSX (linux is already visible)
+gtest (if building for testing apps)
+
+--- Link external static libs in Eclipse
+You will sometimes need to link to some static libraries, and in an effort
+not to put specific paths in the eclipse project, the paths to these 
+libraries you'll need to add symbolic links inside the follow directory:
+
+projects/shared/eclipse-(version)-(OSX or linux)/lib_links/(boost or opengl)
+
+use the terminal command to create the symbolic link:
+ln -s your_boost_install_dir/stage/lib gamestool_dir/projects/shared/eclipse-someversion/lib_links/boost
+
+note:
+I couldn't use the PATH environment variable in OSX because it destroyed
+'make' for some reason.
+
+--- for OSX, get X11 
+You'll need to install X11 for OSX (google for it) first, then add the 
+path to the includes directory to the Eclipse environment, just like 
+you do for the boost library. 
+
+--- other OSX issues
+OSX has issues, and you'll need to fix some things.
+
+If iconv symbols are missing, you'll need to install from here:
+http://www.gnu.org/software/libiconv/#downloading
+
+An example of a mirror to download the package is:
+ftp://www.mirrorservice.org/sites/ftp.gnu.org/gnu/libiconv/
+
+Read the GNU docs Then make sure it goes into your usr/local directory.
+
+
+
+--- (OLD) compile boost lib 1.46 in OSX
 Reading the online 'getting started' guide for boost you'll find a spot 
 about compiling, but for OSX the part about running the shell script
 requires you to explicitly call 'sh' to run a shell script.
@@ -129,33 +198,6 @@ As every project at the moment is debug, you'll need this to be turned
 onto debug.
 
 The library is located under YOUR_BOOST_DIR/stage/lib which you will need
-to add to your IDE.
+to add to your IDE. I'll give details below
 
 Props to Matt from Technobroia for the bjam tip: http://www.technoboria.com/2009/07/simple-guide-to-installing-boost-on-mac-os-x/
-
-- download and compile google test (if building the testing app)
-The google testing framework needs to be downloaded and put somewhere
-for you to be able to run unit tests. You'll also need to place the built 
-gtest library into the gamestool include directory. Make sure the library 
-is named libgtest_main.a because that's what the project is expecting.
-
-To build the static lib just read the guide that comes with it.
-
-- Link external includes in Eclipse
-For eclipse you'll need to point your IDE to the spot you unzipped the 
-lib. You can do this in eclipse by adding an Environment variable under 
-the property manager (Properties->C/C++->Build->Environment). This 
-variable must be named CPATH and its value needs to be the location of 
-your boost directory. You can have as many directories as you like, so 
-long as you use a colon to separate each path.
-
-There are a few includes you need:
-Boost
-x11 for OSX (linux is already visible)
-gtest (if building for testing apps)
-
-- for OSX, get X11 
-You'll need to install X11 for OSX (google for it) first, then add the 
-path to the includes directory to the Eclipse environment, just like 
-you do for the boost library. 
-

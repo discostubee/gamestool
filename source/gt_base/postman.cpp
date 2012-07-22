@@ -29,9 +29,19 @@ const cPlugTag *cPostman::xPT_command = tOutline<cPostman>::makePlugTag("command
 //		"setup", &cPostman::patSetup, cPostman::xPT_target, cPostman::xPT_command, NULL
 //);
 
+cPostman::cPostman(){
+	addUpdRoster(&mTarget);
+}
+
+cPostman::~cPostman(){
+
+}
+
 void
 cPostman::run(cContext* pCon){
-
+	start(pCon);
+	updatePlugs();
+	stop(pCon);
 }
 
 void

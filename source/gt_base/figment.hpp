@@ -28,20 +28,39 @@
 #include "plug.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////
+// exceptions
+namespace excep{
+
+	//!\brief	Thrown when data is detected thats from a version that is greater than what this version can handle.
+	class fromTheFuture: public base_error{
+	public:
+		fromTheFuture(const char* pFunc, const unsigned int pLine) throw():
+            base_error(pFunc, pLine)
+        {
+		    addInfo("I am from the future, and unable to load.");
+		}
+		virtual ~fromTheFuture() throw(){}
+
+	};
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 // classes
 namespace gt{
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	A figment of your imagination! More specifically, it's the base class type
 	//!			for all the funky new stuff you'll make.
-	class cFigment: public cFigContext, private tOutline<cFigment>{
+	class cFigment: public cFigContext{
 	public:
+
 		//-----------------------------
 		// Commands and plug tags
-		static const cPlugTag*	xPT_saveData;	//!<
+		static const cPlugTag*	xPT_serialBuff;	//!< A smart pointer to the buffer where we load from, and save to.
+		static const cPlugTag* xPT_loadingParty;	//!< This is a special group of figments relevant to loading.
 
-		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability.
-		static const cCommand::dUID	xLoad;	//!< Ditto above.
+		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability. Expects a xPT_serialBuff.
+		static const cCommand::dUID	xLoad;	//!< Expects a xPT_serialBuff and xPT_loadingParty
 
 		#if defined(DEBUG) && defined(GT_SPEED)
 			static const cCommand::dUID xTestJack;
@@ -53,7 +72,11 @@ namespace gt{
 		virtual ~cFigment();
 
 		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this.
+		//!\note	Threadsafe, so you can be running a this figment at the same time your are jacking.
 		virtual void jack(ptrLead pLead, cContext* pCon);
+
+		//!\brief	Unless this figment comes from an addon, only an empty string should be returned.
+		virtual dStr const & requiredAddon() const { static const dStr noRequirement(""); return noRequirement; }
 
 		//-----------------------------
 		// These things are REQUIRED for any figment class.
@@ -61,16 +84,16 @@ namespace gt{
 		//!\brief	Used to define the string name of this object. It is also hashed to give the unique number
 		//!			used to quickly compare objects.
 		//!\note	You MUST replace this to identify your own
-		static const dNatChar* identify(){ return "figment"; }
+		static const dPlaChar* identify(){ return "figment"; }
 
 		//- Not sure how I could eliminate this. I should be able to.
-		virtual const dNatChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return tOutline<cFigment>::hash(); }
+		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
+		virtual dNameHash hash() const { return getHash<cFigment>(); }
 
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
 
-		virtual void run(cContext* pCon);				//!< Gives the figment some runtime to do whatever it is that it normally does. Uses context to ensure it doesn't run into itself or other threads.
+		virtual void run(cContext* pCon);	//!< Gives the figment some runtime to do whatever it is that it normally does. Uses context to ensure it doesn't run into itself or other threads.
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
@@ -84,21 +107,22 @@ namespace gt{
 		static dNameHash extends(){ return uDoesntExtend; }
 		virtual dNameHash getExtension() const { return extends(); }	//!\<	You'll need to override this if you are replacing stuff.
 
-		//- These are currently not threadsafe.
-		virtual void save(cByteBuffer* pAddHere);		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL);			//!< Called load-eat because the head of the buffer is consume by the load function.
-		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program.
+		//!\brief	Version number used when loading. 0 Means that this version has no member plugs to load.
+		//!\note	Migration is done in a manual fashion as demo-ed in the testMigration class.
+		static dNumVer version(){ return 0; }
+		virtual dNumVer getVersion() const { return version(); }
+
+		virtual dMigrationPattern getLoadPattern();	//!< Load patterns offer you a way to migrate an older version of a figment to the current version. Override this function to pass back different load patterns. \note NOT threadsafe.
+		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.
+		virtual void save(cByteBuffer* pSaveHere);	//!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
+		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL); //!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
 
 	protected:
 
 		//-----------------------------
 		// Patch through functions for use with command.
 		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
-		void patLoad(ptrLead aLead);	//!< Same asa the patSave function above.
-
-		#if defined(DEBUG) && defined(GT_SPEED)
-			void patTestJack(ptrLead aLead);
-		#endif
+		void patLoad(ptrLead aLead);	//!< Same as the patSave function above.
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -106,15 +130,14 @@ namespace gt{
 	//!			objects to still function by referencing this dummy instead of null.
 	//!\note	This is an example of the bare minimum that you have to do in order to make
 	//!			a new figment type class.
-	class cEmptyFig: public cFigment, private tOutline<cEmptyFig>{
+	class cEmptyFig: public cFigment{
 	public:
-		static const dNatChar* identify(){ return "empty figment"; }
-
 		cEmptyFig();
 		virtual ~cEmptyFig();
 
-		virtual const dNatChar* name() const{ return cEmptyFig::identify(); }
-		virtual dNameHash hash() const{ return tOutline<cEmptyFig>::hash(); }
+		static const dPlaChar* identify(){ return "empty figment"; }
+		virtual const dPlaChar* name() const{ return cEmptyFig::identify(); }
+		virtual dNameHash hash() const{ return getHash<cEmptyFig>(); }
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -122,91 +145,88 @@ namespace gt{
 	//!			this is not an instant shutdown because the program must still finish the loop
 	//!			it is on. Simply run it to shutoff the loop.
 	//!\note	Should be called Unicron.
-	class cWorldShutoff: public cFigment, private tOutline<cWorldShutoff>{
+	class cWorldShutoff: public cFigment{
 	public:
-		static const dNatChar* identify(){ return "world shutoff"; }
-
 		cWorldShutoff();
 		virtual ~cWorldShutoff();
 
-		virtual const dNatChar* name() const{ return identify(); }
-		virtual dNameHash hash() const{ return tOutline<cWorldShutoff>::hash(); }
+		static const dPlaChar* identify(){ return "world shutoff"; }
+		virtual const dPlaChar* name() const{ return identify(); }
+		virtual dNameHash hash() const{ return getHash<cWorldShutoff>(); }
 
 		virtual void run(cContext* pCon);
 	};
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 // template specializations
 namespace gt{
 
-	//--------------------------------------
+	//-----------------------------------------------------------------------------------
+	//!\brief	This thing is slightly odd. I say odd as opposed to dangerous because
+	//!			a figment pointer plug is only threadsafe because the interface to
+	//!			figment is. Plugs use shadows to be threadsafe, but only if the contained
+	//!			data doesn't have a reference that's outside a copy. Put another way, if
+	//!			your plug is for a class that has a smart pointer, what that smart
+	//!			pointer refers to won't be protected by the shadow strategy.
 	template<>
 	class tPlug<ptrFig>: public tPlugShadows<ptrFig>{
 	public:
-		ptrFig mD;
+		typedef void (*fuCopyInto)(const ptrFig *copyFrom, void *copyTo);
+		typedef std::map<cBase_plug::dPlugType, fuCopyInto> dMapCopiers;
 
-		tPlug() : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(gWorld.get()->getEmptyFig()){
+		tPlug():
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
+		{
+			mD = gWorld.get()->getEmptyFig();
 		}
 
-		tPlug(ptrFig pA) : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(pA){
+		tPlug(const ptrFig& pA):
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
+		{
+			mD = pA;
 		}
 
-		tPlug(const tPlug<ptrFig> &other) : tPlugShadows<ptrFig>(typeid(ptrFig)), mD(other.mD){
+		tPlug(const tPlug<ptrFig> &other):
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
+		{
+			mD = other.mD;
+		}
+
+		tPlug(const cBase_plug *other):
+			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
+		{
+			other->copyInto(&mD);
 		}
 
 		virtual ~tPlug(){}
 
 		virtual cBase_plug& operator= (const cBase_plug &pD){
 			NOTSELF(&pD);
-			PROFILE;
-
-			//!\todo figure out a way to prevent code duplication.
-			if( mType == pD.mType ){	// we can just cast
-				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
-				mD = dynamic_cast< tPlug<ptrFig>* >(
-					const_cast<cBase_plug*>(&pD)
-				)->mD;
-			}else{
-				PLUG_CANT_COPY_ID(mType, pD.mType);
-			}
-
+			pD.copyInto(&mD);
 			return *this;
 		}
 
-		virtual cBase_plug& operator= (const cBase_plug* pD){
-			NOTSELF(pD);
-			PROFILE;
+		virtual bool operator== (const cBase_plug &pD) const { return false; }
 
-			//!\todo figure out a way to prevent code duplication.
-			if( mType == pD->mType ){	// we can just cast
-				//cBase_plug* temp = const_cast<cBase_plug*>(&pD);
-				mD = dynamic_cast< tPlug<ptrFig>* >(
-					const_cast<cBase_plug*>(pD)
-				)->mD;
-			}else{
-				PLUG_CANT_COPY_ID(mType, pD->mType);
-			}
-
+		cBase_plug& operator= (const tPlug<ptrFig> &other){
+			NOTSELF(&other);
+			mD = other.mD;
 			return *this;
 		}
 
-		virtual bool operator== (const cBase_plug &pD){
-			return ( mD.get() == const_cast<cBase_plug*>(&pD)->exposePtr<ptrFig>()->get() );
+		cBase_plug& operator= (const ptrFig& pA){
+			mD = pA;
+			return *this;
 		}
-
-		cBase_plug& operator= (ptrFig pA){ mD = pA; return *this; }
-
-		cBase_plug& operator= (const tPlug<ptrFig> &other){ if(this != &other) mD = other.mD; return *this; }
 
 		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;
 
 			//- Using the pointer as a unique number to identify the referenced figment.
-			dFigSaveSig saveSig = reinterpret_cast<dFigSaveSig>( mD.get() );
+			dFigSaveSig saveSig = reinterpret_cast<dFigSaveSig>( get().get() );
 			pAddHere->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
-
-			//DBUG_LO("	Saved as" << reinterpret_cast<unsigned long>(saveSig));
 		}
 
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
@@ -221,20 +241,46 @@ namespace gt{
 			if(itr == aReloads->end())
 				throw excep::notFound("signature of reloaded figment", __FILE__, __LINE__);	//- figment remains empty.
 
-			mD = itr->second->fig;
+			get() = itr->second->fig;
 		}
 
-		virtual void reset(cContext* context){
-			DUMB_REF_ARG(context);
-			mD = gWorld.get()->getEmptyFig();
+		virtual ptrFig& get(){
+			return mD;
+		}
+
+		virtual const ptrFig& getConst() const{
+			return mD;
 		}
 
 	protected:
-		#ifdef GT_THREADS
-			virtual ptrFig& getMD() { return mD; }
-		#endif
+		virtual void actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const{
+			dMapCopiers::iterator itrCopiers = getPlugCopiers<ptrFig>()->find(getPlugType<ptrFig>());
+			if(itrCopiers != getPlugCopiers<ptrFig>()->end()){
+				itrCopiers->second( &mD, pContainer );
+			}else{
+				throw excep::cantCopy(typeid(ptrFig).name(), "unknown", __FILE__, __LINE__);
+			}
+		}
+
+	private:
+		ptrFig mD;	//!< Data
+
+
 	};
 
 }
+
+
+#ifdef GTUT
+	namespace gt{
+		//!\brief	Used to run a series of standard tests.
+		template<typename FIGTYPE>
+		void figmentTestSuit(){
+			tOutline<FIGTYPE>::draft();
+			tPlug<ptrFig> me = gWorld.get()->makeFig(getHash<FIGTYPE>());
+			//tOutline<FIGTYPE>::removeFromWorld();
+		}
+	}
+#endif
 
 #endif

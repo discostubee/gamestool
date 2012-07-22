@@ -33,7 +33,7 @@ namespace gt{
 	//!			actual thread to run its loop again. The figment however, doesn't wait to
 	//!			see if the thread finished or not. This is ideal for tasks which take an
 	//!			unknown amount of time to finish.
-	class cThread: public cFigment, public tOutline<cThread>{
+	class cThread: public cFigment{
 	public:
 #ifdef GT_THREADS
 		typedef boost::unique_lock<boost::mutex> dLock;
@@ -46,12 +46,11 @@ namespace gt{
 		cThread();
 		virtual ~cThread();
 
-		static const dNatChar* identify(){ return "thread"; }
-		virtual const dNatChar* name() const{ return cThread::identify(); }
-		virtual dNameHash hash() const{ return tOutline<cThread>::hash(); }
+		static const dPlaChar* identify(){ return "thread"; }
+		virtual const dPlaChar* name() const{ return cThread::identify(); }
+		virtual dNameHash hash() const{ return getHash<cThread>(); }
 
-
-		virtual void run(cContext* pCon);
+		virtual void run(cContext* pCon);	//!< Begins a new thread if the link plug is set. Threads run through once and wait until this figment is run to go again. This is opposed to running a tight loop in every thread figment.
 
 	protected:
 		tPlug<ptrFig> link;
@@ -61,10 +60,11 @@ namespace gt{
 #ifdef GT_THREADS
 		boost::thread myThread;
 		boost::mutex syncMu;
+		boost::mutex finishMu;				//!< The destructor must wait for the thread to finish.
 		boost::condition_variable sync;		//!< sync the thread to the calling of the run function.
 		bool threadStop;					//!< Stops the thread loop.
-		bool firstRun;
-		boost::mutex finishMu;				//!< The destructor must wait for the thread to finish.
+		bool threading;						//!< Is this figment currently running a thread?
+
 #endif
 
 		static void runThread(cThread *me, cContext* pCon);

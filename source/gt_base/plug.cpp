@@ -19,8 +19,21 @@
 #include "plug.hpp"
 #include "figment.hpp"
 
+////////////////////////////////////////////////////////////
 using namespace gt;
 
+void
+gt::voidCopiers::textToNStr(const dText *pFrom, void *pTo){
+	*reinterpret_cast<dNatStr*>(pTo) = ::toNStr(*pFrom);
+}
+
+void
+gt::voidCopiers::textToPStr(const dText *pFrom, void *pTo){
+	*reinterpret_cast<dStr*>(pTo) = ::toPStr(*pFrom);
+}
+
+////////////////////////////////////////////////////////////
+using namespace gt;
 
 cReload::cReload(){
 }
@@ -34,44 +47,30 @@ cReload::~cReload(){
 }
 
 ////////////////////////////////////////////////////////////
-cBase_plug::cBase_plug(PLUG_TYPE_ID pTI):
-	mType(pTI)
-{
-}
-
-cBase_plug::cBase_plug(const cBase_plug& pCopy):
-	mType(pCopy.mType)
-{
-}
-
-cBase_plug::~cBase_plug(){
-}
-
-
-
-////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
 
-GTUT_START(testPlug, copy){
-	tPlug<int> A;
-	cBase_plug *B = new tPlug<int>();
-	int C = 0;
-	char D = 'a';
-	
-	A = 5;
-	TRYME( *B = A );
+GTUT_START(testPlug, copyMem){
+	const long magic = 3;
 
-	TRYME( B->copyInto(&C) );
-	GTUT_ASRT(C == 5, "B didn't copy A");
+	tPlug<long> A;
+	cBase_plug *refA = &A;
+	long numA;
 
-	try{
-		B->copyInto(&D);
-	}catch(std::exception){
-		GTUT_ASRT(true, "");
-	}
+	A.get() = magic;
+	refA->copyInto(&numA);
+	GTUT_ASRT(numA == magic, "A didn't copy into the target correctly.");
 
-	delete(B);
+}GTUT_END;
+
+GTUT_START(testPlug, copyPlugs){
+	const short magic = 3;
+
+	tPlug<short> A, B;
+
+	B.get() = magic;
+	A = B;
+	GTUT_ASRT(A.get() == magic, "A didn't copy B.");
 }GTUT_END;
 
 GTUT_START(testPlug, saveLoad){
@@ -79,10 +78,10 @@ GTUT_START(testPlug, saveLoad){
 	cByteBuffer buff;
 	dReloadMap dontCare;
 
-	A.mD = 42;
+	A = 42;
 	A.save(&buff);
 	B.loadEat(&buff, &dontCare);
-	GTUT_ASRT(B.mD == A.mD, "A didn't save, or B didn't load, correctly.");
+	GTUT_ASRT(B.get() == A.get(), "A didn't save, or B didn't load, correctly.");
 }GTUT_END;
 
 
