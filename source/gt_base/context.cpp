@@ -1,5 +1,5 @@
 /*
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -190,6 +190,11 @@ cContext::runJackJobs(){
 cFigContext::cFigContext() :
 	currentCon(NULL)
 {
+	#ifdef GT_THREADS
+		updating = false;
+		locked = false;
+	#endif
+
 	mBlueprint = NULL;
 	self  = NULL;
 }
@@ -200,7 +205,8 @@ cFigContext::~cFigContext(){
 			currentCon->finished(this);
 
 		#ifdef GT_THREADS
-			conMu.unlock();
+			if(locked)
+				conMu.unlock();
 		#endif
 	}catch(excep::base_error &e){
 		WARN(e);
@@ -218,6 +224,7 @@ cFigContext::start(cContext *con){
 
 	#ifdef GT_THREADS
 		conMu.lock();
+		locked = true;
 	#endif
 
 	con->add(this);
@@ -235,12 +242,53 @@ cFigContext::stop(cContext *con){
 		if(!con->isStacked(this)){
 			currentCon = NULL;
 		}
+
+		#ifdef GT_THREADS
+			if(updating){
+				for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
+					(*itrRos)->updateFinish();
+				updating = false;
+			}
+		#endif
 	}else{
 		WARN("tried to stop a figment with a context that wasn't right. Really odd");
 	}
 
 	#ifdef GT_THREADS
+		locked = false;
 		conMu.unlock();
+	#endif
+}
+
+void
+cFigContext::updatePlugs(){
+	#ifdef GT_THREADS
+		if(locked){
+			updating = true;
+			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
+				(*itrRos)->updateStart();
+		}
+	#endif
+}
+
+void
+cFigContext::addUpdRoster(cBase_plug *pPlug){
+	#ifdef GT_THREADS
+		updateRoster.push_back(pPlug);
+	#endif
+}
+
+void
+cFigContext::remFromRoster(cBase_plug *pPlug){
+	#ifdef GT_THREADS
+		if(!updating){
+			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos){
+				if(*itrRos == pPlug){
+					updateRoster.erase(itrRos);
+					return;
+				}
+			}
+		}
 	#endif
 }
 
@@ -248,6 +296,12 @@ void
 cFigContext::emergencyStop(){
 	currentCon = NULL;
 	#ifdef GT_THREADS
+		if(updating){
+			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
+				(*itrRos)->updateFinish();
+			updating = false;
+		}
+		locked = false;
 		conMu.unlock();
 	#endif
 	WARN("Emergency stop pulled");

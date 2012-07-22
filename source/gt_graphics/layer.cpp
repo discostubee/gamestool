@@ -36,6 +36,9 @@ const cCommand::dUID cLayer::xGetLayout = tOutline<cLayer>::makeCommand(
 );
 
 cLayer::cLayer(){
+	addUpdRoster(&mLink);
+	addUpdRoster(&mArrangement);
+	addUpdRoster(&mCropStyle);
 }
 
 cLayer::~cLayer(){
@@ -69,15 +72,15 @@ cLayer::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	pos.loadEat(pBuff, pReloads);
 	crop.loadEat(pBuff, pReloads);
 
-	setSize(size.mD);
-	setPos(pos.mD);
-	setCrop(crop.mD);
+	setSize(size.get());
+	setPos(pos.get());
+	setCrop(crop.get());
 }
 
 void
 cLayer::getLinks(std::list<ptrFig>* pOutLinks){
-	if(mLink.mD->hash() != getHash<cEmptyFig>() )
-		pOutLinks->push_back(mLink.mD);
+	if(mLink.get()->hash() != getHash<cEmptyFig>() )
+		pOutLinks->push_back(mLink.get());
 }
 
 void

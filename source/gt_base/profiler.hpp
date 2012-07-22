@@ -87,7 +87,7 @@ public:
 private:
 	class cEntry{
 	public:
-		dPlaStr mInfo;
+		dStr mInfo;
 		dMillisec mTimesProfiled;
 		dMillisec mAveTime;
 		dMillisec mMaxTime;

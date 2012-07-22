@@ -18,9 +18,9 @@
 				cTestNum();
 				virtual ~cTestNum();
 
-				static const dNatChar* identify(){ return "test number"; }
-				virtual const dNatChar* name() const{ return cTestNum::identify(); }
-				virtual dNameHash hash() const{ return tOutline<cTestNum>::hash(); }
+				static const dPlaChar* identify(){ return "test number"; }
+				virtual const dPlaChar* name() const{ return cTestNum::identify(); }
+				virtual dNameHash hash() const{ return getHash<cTestNum>(); }
 
 				virtual void save(cByteBuffer* pAddHere);
 				virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);

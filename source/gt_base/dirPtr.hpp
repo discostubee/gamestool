@@ -2,7 +2,7 @@
  * !\file	dirPtr.hpp
  * !\brief	Contains the directional pointer.
  *
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@
 #include <memory>
 
 #ifdef GTUT
-#include "unitTests.hpp"
+#	include "unitTests.hpp"
 #endif
 
 namespace gt{
@@ -73,6 +73,7 @@ namespace gt{
 		void redirect(T* pNewContent);		//!< Allows you to redirect to a totally new memory location.
 		T* get() const;				//!< Return pointer to the content. Please don't delete it.
 		bool unique() const;		//!< Is this the last pointer?
+		bool valid() const;			//!< not null?
 
 		T* operator->() const;		//!< Alias for get().
 		tDirPtr<T>& operator=(tDirPtr<T> const &pFDir);	//!< creates another link to the director.
@@ -140,6 +141,12 @@ namespace gt{
 	tDirPtr<T>::unique() const{
 		ASRT_NOTNULL(mDir);
 		return mDir->getCount()<=1;
+	}
+
+	template<typename T>
+	bool
+	tDirPtr<T>::valid() const{
+		return mDir != NULL;
 	}
 
 	template<typename T>
@@ -280,7 +287,6 @@ namespace gt{
 		if(mRedirect){
 			return mRedirect->getCount();
 		}else{
-			ASRT_NOTNULL(mContent);
 			return mCount;
 		}
 	}

@@ -30,11 +30,15 @@ const cCommand::dUID cWindowFrame::xSetDim = tOutline<cWindowFrame>::makeCommand
 	NULL
 );
 
-cWindowFrame::cWindowFrame(){
-	mX = 10;
-	mY = 10;
-	mWidth = 100;
-	mHeight = 100;
+cWindowFrame::cWindowFrame() :
+	mX(10), mY(10), mWidth(100), mHeight(100)
+{
+	addUpdRoster(&mContent);
+	addUpdRoster(&mClosing);
+	addUpdRoster(&mX);
+	addUpdRoster(&mY);
+	addUpdRoster(&mWidth);
+	addUpdRoster(&mHeight);
 }
 
 cWindowFrame::~cWindowFrame(){
@@ -48,7 +52,7 @@ cWindowFrame::patLink(ptrLead aLead){
 void
 cWindowFrame::patSetCloser(ptrLead aLead){
 	mClosing = aLead->getPlug(cWindowFrame::xPT_closer);
-	DBUG_LO("The closer is now " << mClosing.mD->name());
+	DBUG_LO("The closer is now " << mClosing.get()->name());
 }
 
 void

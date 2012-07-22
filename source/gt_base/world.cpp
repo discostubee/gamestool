@@ -25,6 +25,8 @@ using namespace gt;
 // Globals and statics
 using namespace gt;
 
+const char *MSG_UNKNOWN_ERROR = "unknown error";
+
 tMrSafety<cWorld> gt::gWorld;
 
 //- Don't assign anything to the stuff below.
@@ -34,6 +36,10 @@ cProfiler* cWorld::xProfiler;
 #ifdef GT_THREADS
 	boost::recursive_mutex *cWorld::xProfileGuard;
 	boost::recursive_mutex *cWorld::xLineGuard;
+
+	#ifdef GTUT
+		boost::recursive_mutex *cWorld::xSuppressGuard;
+	#endif
 #endif
 
 bool cWorld::thereCanBeOnlyOne = false;
@@ -64,85 +70,6 @@ struct cWorld::sBlueprintHeader{
 	//	return *this;
 	//}
 };
-
-////////////////////////////////////////////////////////////
-
-ptrFig::ptrFig() :
-	tDirPtr<iFigment>()
-{}
-
-ptrFig::ptrFig(iFigment* pFig):
-	tDirPtr<iFigment>(pFig)
-{}
-
-ptrFig::ptrFig(const ptrFig &pPtr) :
-	tDirPtr<iFigment>(pPtr)
-{}
-
-ptrFig::~ptrFig(){
-}
-
-ptrFig&
-ptrFig::operator=(ptrFig const &pPtr){
-	if(!pPtr.mDir)
-		return *this;
-
-	if(mDir == pPtr.mDir)	// Should also handle self reference.
-		return *this;
-
-	if(mDir){
-		if(unique())
-			delete mDir;
-		else
-			mDir->unlink();
-	}
-
-	mDir = pPtr.mDir;
-	mDir->link();
-
-	return *this;
-}
-
-bool
-ptrFig::operator==(ptrFig const &pPtr) const{
-	if(mDir==NULL){
-		if(pPtr.mDir==NULL) return true; else return false;
-	}else if(pPtr.mDir==NULL){
-		return false;
-	}
-	return mDir->get() == pPtr.mDir->get();
-}
-
-bool
-ptrFig::operator!=(ptrFig const &pPtr) const{
-	if(mDir==NULL){
-		if(pPtr.mDir==NULL) return false; else return true;
-	}else if(pPtr.mDir==NULL){
-		return true;
-	}
-	return mDir->get() != pPtr.mDir->get();
-}
-
-void
-ptrFig::linkDir(tDirector<iFigment> *aDirector){
-	if(mDir == NULL){
-		mDir = aDirector;
-		mDir->link();
-	}
-}
-
-tDirector<iFigment> *ptrFig::getDir(){
-	return mDir;
-}
-
-////////////////////////////////////////////////////////////
-ptrFig
-iFigment::getSmart(){
-	ASRT_NOTNULL(self);
-	ptrFig rtnFig;
-	rtnFig.linkDir(self);
-	return rtnFig;
-}
 
 ////////////////////////////////////////////////////////////
 // World
@@ -196,7 +123,7 @@ cWorld::cWorld():
 	mBicycleSetup(false)
 {
 	if(thereCanBeOnlyOne)
-		throw excep::base_error("can only create the world once", __FILE__, __LINE__);
+		THROW_BASEERROR("can only create the world once");
 
 	thereCanBeOnlyOne = true;
 
@@ -213,59 +140,62 @@ cWorld::cWorld():
 		//- Used so external modules can use the location
 		mProfileGuard = xProfileGuard;
 		mLineGuard = xLineGuard;
+
+		#ifdef GTUT
+			mSuppressGuard = xSuppressGuard;
+		#endif
 	#endif
 }
 
 cWorld::~cWorld(){
 	try{
+		mRoot.redirect(NULL);
+		mVillageBicycle.redirect(NULL);
+
+		for(std::list<dStr>::iterator itr = mAddonsToClose.begin(); itr != mAddonsToClose.end(); ++itr)
+			closeAddon(*itr);
+
 		while(!mBlueprints.empty()){
 			mBlueprints.begin()->second.mBlueprint->mCleanup();
 			mBlueprints.erase( mBlueprints.begin() );
 		}
+
+		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
+		delete xProfiler;
+
+		//- Be super careful that we don't try and profile anything anymore.
+		lo("end of the world"); //- Ensure it exists.
+		flushLines();
+		delete xLines;
+
 	}catch(...){
 	}
-
-	{
-		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
-	}
-	delete xProfiler;
-
-	DBUG_LO(reinterpret_cast<long>(this));
-
-	//- Be super careful that we don't try and profile anything anymore.
-	lo("end of the world"); //- Ensure it exists.
-	flushLines();
-	delete xLines;
-
-	mRoot.redirect(NULL);
-	mVillageBicycle.redirect(NULL);
 }
 
 void
 cWorld::addBlueprint(cBlueprint* pAddMe){
 	PROFILE;
 
-	// Archive the old blueprint being replaced.
-	if( pAddMe->replace() != uDoesntReplace ){
-		mScrBMapItr = mBlueprints.find(pAddMe->replace());
-		if(mScrBMapItr != mBlueprints.end()){
-			mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);
-			DBUG_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mScrBMapItr->second.mBlueprint->name() << "'");
-		}
-
-		mBlueprints[pAddMe->replace()] = sBlueprintHeader( pAddMe, pAddMe->replace() );		
-	}
-
 	// Even if this figment replaces another, it still appears under its own name hash.
 	if( mBlueprints.find(pAddMe->hash()) == mBlueprints.end()){	//new blueprint
 		mBlueprints[pAddMe->hash()] = sBlueprintHeader( pAddMe, uDoesntReplace );
 		DBUG_LO("Blueprint '" << pAddMe->name() << "' added to library");
-		
+
 	}else{
-		DBUG_LO("Blueprint '" <<  pAddMe->name() 
-			<< "' with hash "<< pAddMe->name()
-			<< ", has already been added"
-		);
+		DBUG_LO("Blueprint '" <<  pAddMe->name() << "', has already been added");
+		return;
+	}
+
+	if( pAddMe->replace() != uDoesntReplace ){
+		mScrBMapItr = mBlueprints.find(pAddMe->replace());
+		if(mScrBMapItr != mBlueprints.end()){
+			mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);	// Archive the old blueprint being replaced.
+
+			mScrBMapItr->second = sBlueprintHeader( pAddMe, mScrBMapItr->second.mReplaced );
+			DBUG_VERBOSE_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mBlueArchive[ mScrBMapItr->first ].mBlueprint->name() << "'");
+		}else{
+			WARN_S(pAddMe->name() << " missing parent");
+		}
 	}
 }
 
@@ -275,7 +205,7 @@ cWorld::getBlueprint(dNameHash pNameHash){
 
 	mScrBMapItr = mBlueprints.find(pNameHash);
 	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("bad name hash", __FILE__, __LINE__);
+		throw excep::base_error("couldn't find blueprint", __FILE__, __LINE__);
 
 	return mScrBMapItr->second.mBlueprint;
 }
@@ -285,13 +215,6 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	PROFILE;
 
 	DBUG_LO("Erasing blueprint '" << pRemoveMe->name());
-
-	//- Some figments should never be remove.
-	//if(
-	//	pRemoveMe->hash() == getHash<cFigment>()
-	//	|| pRemoveMe->hash() == getHash<cEmptyFig>()
-	//)
-	//	return;
 
 	//- If this figment replaced another, restore the original blueprint.
 	if(pRemoveMe->replace() != uDoesntReplace){
@@ -364,6 +287,11 @@ cWorld::makeFig(dNameHash pNameHash){
 	return mScrBMapItr->second.mBlueprint->make();
 }
 
+ptrFig
+cWorld::makeFig(const dPlaChar *pName){
+	return makeFig(makeHash(toNStr(pName)));
+}
+
 void
 cWorld::copyWorld(cWorld* pWorld){
 	if(!pWorld->mLines->empty())
@@ -376,22 +304,41 @@ cWorld::copyWorld(cWorld* pWorld){
 		mLineGuard = pWorld->mLineGuard;
 		xProfileGuard = pWorld->mProfileGuard;
 		xLineGuard = pWorld->mLineGuard;
+
+		#ifdef GTUT
+			xSuppressGuard = pWorld->xSuppressGuard;
+			mSuppressGuard = pWorld->mSuppressGuard;
+		#endif
 	#endif
 }
 
+void
+cWorld::lazyCloseAddon(const dStr &name){
+	for(
+		std::list<dStr>::iterator itr = mAddonsToClose.begin();
+		itr != mAddonsToClose.end();
+		++itr
+	){
+		if(itr->compare(name)==0)
+			return;
+	}
+
+	mAddonsToClose.push_back(name);
+}
+
 ptrLead
-cWorld::makeLead(cCommand::dUID pComID, dConSig pConx){
+cWorld::makeLead(cCommand::dUID pComID){
 	PROFILE;
-	ptrLead rtnLead(new cLead( pComID, pConx ));
+	ptrLead rtnLead(new cLead(pComID));
 	return rtnLead;
 }
 
 ptrLead
-cWorld::makeLead(const dNatChar *aFigName, const dNatChar *aComName, dConSig aConx){
-	dStr tmpStr = aFigName;
-	tmpStr.append(aComName);
-	dNameHash hash = makeHash(tmpStr.c_str());
-	ptrLead rtnLead(new cLead( hash, aConx ));
+cWorld::makeLead(const dPlaChar *aFigName, const dPlaChar *aComName){
+	dNatStr totalString = toNStr(aFigName);
+	totalString.t.append( toNStr(aComName) );
+	dNameHash hash = makeHash(totalString);
+	ptrLead rtnLead(new cLead(hash));
 	return rtnLead;
 }
 
@@ -402,14 +349,17 @@ cWorld::getPlugTag(dNameHash pFigHash, cPlugTag::dUID pPTHash){
 	mScrBMapItr =  mBlueprints.find(pFigHash);
 
 	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("figment wasn't found", __FILE__, __LINE__);
+		THROW_BASEERROR("figment wasn't found");
 
 	return mScrBMapItr->second.mBlueprint->getPlugTag(pPTHash);
 }
 
 const cPlugTag*
 cWorld::getPlugTag(const dNatChar *figName, const dNatChar *tagName){
-	return getPlugTag(makeHash(figName), makeHash(tagName));
+	return getPlugTag(
+		makeHash(toNStr(figName)),
+		makeHash(toNStr(tagName))
+	);
 }
 
 const cPlugTag*
@@ -446,18 +396,40 @@ cWorld::makeProfileReport(std::ostream &log){
 }
 
 void
-cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
-	std::stringstream ss;
-	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << pE.what();
-	lo(ss.str());
-}
-
-void
 cWorld::warnError(const char *msg, const char* pFile, const unsigned int pLine){
+	#ifdef GTUT
+		if(mSuppressError){
+			mSuppressError = false;
+			return;
+		}
+	#endif
 	std::stringstream ss;
 	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << msg;
 	lo(ss.str());
 }
+
+void
+cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
+	warnError(pE.what(), pFile, pLine);
+}
+
+#ifdef GTUT
+	bool cWorld::mSuppressError = false;
+
+	void
+	cWorld::suppressNextError(){
+		#ifdef GT_THREADS
+			static bool setup = false;
+			if(!setup){
+				setup = true;
+				xSuppressGuard = new boost::recursive_mutex();
+			}
+
+			boost::lock_guard<boost::recursive_mutex> lock(*xSuppressGuard);
+		#endif
+		mSuppressError = true;
+	}
+#endif
 
 ptrFig
 cWorld::getEmptyFig(){
@@ -511,13 +483,13 @@ gt::redirectWorld(cWorld* pWorldNew){
 #ifdef GTUT
 
 //- A basic class to test out some functions of the world.
-class testDraftParent: public cFigContext, private tOutline<testDraftParent>{
+class testDraftParent: public cFigment{
 public:
 	static const cPlugTag*	xPT_A;
 	static const cCommand::dUID	xCommandA;
 
-	static const dNatChar* identify(){ return "test draft parent"; }
-	virtual const dNatChar* name() const { return identify(); }
+	static const dPlaChar* identify(){ return "test draft parent"; }
+	virtual const dPlaChar* name() const { return identify(); }
 
 	virtual dNameHash hash() const { return getHash<testDraftParent>(); }
 
@@ -532,37 +504,50 @@ public:
 	virtual void save(cByteBuffer* pAddHere) {}
 	virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL) {}
 	virtual void getLinks(std::list<ptrFig>* pOutLinks) {}
+	virtual dMigrationPattern getLoadPattern() { return dMigrationPattern(); }
+	virtual dNumVer getVersion() const { return 0; }
 
+	virtual ~testDraftParent(){}
+
+protected:
 	void patA(ptrLead aLead){
-
 	}
 };
 
 const cPlugTag*	testDraftParent::xPT_A = tOutline<testDraftParent>::makePlugTag("A");
+
 const cCommand::dUID testDraftParent::xCommandA = tOutline<testDraftParent>::makeCommand(
 	"command A", &testDraftParent::patA, testDraftParent::xPT_A,
 	NULL
 );
 
 //- Just extends the parent.
-class testDraftChild: public testDraftParent, private tOutline<testDraftChild>{
+class testDraftChild: public testDraftParent{
 public:
-	static const dNatChar* identify(){ return "test draft child"; }
-	virtual const dNatChar* name() const { return identify(); };
+	static const dPlaChar* identify(){ return "test draft child"; }
+	virtual const dPlaChar* name() const { return identify(); };
 
 	virtual dNameHash hash() const { return getHash<testDraftChild>(); };
 
+	virtual dNumVer getVersion() const { return 0; }
+
 	static dNameHash extends(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getExtension() const { return extends(); }
+
+	virtual ~testDraftChild(){}
 };
 
-class testDraftReplace: public testDraftParent, private tOutline<testDraftReplace>{
+class testDraftReplace: public testDraftParent{
 public:
-	static const dNatChar* identify(){ return "test draft replace"; }
-	virtual const dNatChar* name() const { return identify(); };
+	static const dPlaChar* identify(){ return "test draft replace"; }
+	virtual const dPlaChar* name() const { return identify(); };
+
 	virtual dNameHash hash() const { return getHash<testDraftReplace>(); };
+
 	static dNameHash replaces(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getReplacement() const { return replaces(); };
+
+	virtual ~testDraftReplace(){}
 };
 
 GTUT_START(test_figInterface, getSmart){

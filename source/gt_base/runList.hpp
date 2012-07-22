@@ -29,7 +29,7 @@ namespace gt{ //gamestool
 
 	//-----------------------------------------------------------------------------------------------
 	//!\brief	When you run this figment, you also run every figment in its list.
-	class cRunList: public cFigment, private tOutline<cRunList>{
+	class cRunList: public cFigment{
 	public:
 		static const cCommand::dUID	xAdd;
 
@@ -37,12 +37,14 @@ namespace gt{ //gamestool
 		virtual ~cRunList();
 
 		//- Required
-		static const dNatChar* identify(){ return "run list"; }
-		virtual const dNatChar* name() const{ return identify(); }
-		virtual dNameHash hash() const{ return tOutline<cRunList>::hash(); }
+		static const dPlaChar* identify(){ return "run list"; }
+		virtual const dPlaChar* name() const{ return identify(); }
+		virtual dNameHash hash() const{ return getHash<cRunList>(); }
+		static dNameHash extends(){ return getHash<cFigment>(); }
+		virtual dNameHash getExtension() const { return extends(); }
 
 		//- Optional
-		virtual void run(cContext* pCon);				//!< runs every element in the list
+		virtual void run(cContext* pCon);	//!< runs every element in the list
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
@@ -57,10 +59,10 @@ namespace gt{ //gamestool
 	};
 
 	//-----------------------------------------------------------------------------------------------
-	//!\brief Running or not running an object is controlled by this valve station (still keeping
-	//		that plumbing analogy going). Use the jack to change what objects will be run every
-	//		time this figment is run.
-	class cValves: public cRunList, private tOutline<cValves>{
+	//!\brief Running or not running an object is controlled by this valve station. Use the jack to
+	//!		change what objects will be run every time this figment is run.
+	//!\todo	Save and Load.
+	class cValves: public cRunList{
 	protected:
 		std::map< dListItr, tPlug<bool> > mStates;	//!< Maps states to the list entries. These states control which objects are run.
 
@@ -74,9 +76,9 @@ namespace gt{ //gamestool
 		virtual ~cValves();
 
 		//- Required
-		static const dNatChar* identify(){ return "valve station"; }
-		virtual const dNatChar* name() const { return identify(); }
-		virtual dNameHash hash() const { return tOutline<cValves>::hash(); }
+		static const dPlaChar* identify(){ return "valve station"; }
+		virtual const dPlaChar* name() const { return identify(); }
+		virtual dNameHash hash() const { return getHash<cValves>(); }
 
 		//- Optional
 		virtual void run(cContext* pCon);				//!< runs every element in the list

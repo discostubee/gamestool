@@ -78,11 +78,11 @@ namespace gt{
 
 		elements = gWorld.get()->makeFig(getHash<cRunList>());
 
-		addonGL.mD = gWorld.get()->makeFig(getHash<cAddon>());
+		addonGL.get() = gWorld.get()->makeFig(getHash<cAddon>());
 		setPath->addPlug(&path, cAddon::xPT_addonName);
-		addonGL.mD->jack(setPath, &fake);
+		addonGL.get()->jack(setPath, &fake);
 
-		window.mD = gWorld.get()->makeFig(getHash<cWindowFrame>());
+		window.get() = gWorld.get()->makeFig(getHash<cWindowFrame>());
 
 		addElements->addToPile(&addonGL);
 		addElements->addToPile(&window);

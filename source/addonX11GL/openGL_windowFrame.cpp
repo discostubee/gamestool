@@ -89,8 +89,8 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
 		for (int i = 0; i < modeNum; i++)
 		{
 			if (
-				modes[i]->hdisplay == static_cast<unsigned int>(mWidth.mD)
-				&& modes[i]->vdisplay == static_cast<unsigned int>(mHeight.mD)
+				modes[i]->hdisplay == static_cast<unsigned int>(mWidth.get())
+				&& modes[i]->vdisplay == static_cast<unsigned int>(mHeight.get())
 				&& XF86VidModeValidateModeLine(mDisplay, 0, modes[i])==0/*MODE_OK*/
 			)
 				bestMode = i;
@@ -140,7 +140,7 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         	mDisplay,
         	RootWindow(mDisplay, vi->screen),
             0, 0,
-            static_cast<unsigned int>(mWidth.mD), static_cast<unsigned int>(mHeight.mD),
+            static_cast<unsigned int>(mWidth.get()), static_cast<unsigned int>(mHeight.get()),
             0,
             vi->depth,
             InputOutput,
@@ -165,7 +165,7 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
         );
 
         XMapRaised(mDisplay, mWindow);
-        DBUG_LO("window created ("<<mWidth.mD<<","<<mHeight.mD<<") gl = "<<GL_VERSION);
+        DBUG_LO("window created ("<<mWidth.get()<<","<<mHeight.get()<<") gl = "<<GL_VERSION);
     }
 
     glXMakeCurrent(mDisplay, mWindow, mContext);
@@ -236,8 +236,8 @@ cWindowFrame_X11GL::run(cContext* pCon){
 			case ClientMessage:{
 				DBUG_LO("client message " << XGetAtomName( mDisplay, mEvent.xclient.message_type ));
 				if( isDestroyWindowAtom(mEvent.xclient.message_type) ){
-					DBUG_LO("destroy message. Calling " << mClosing.mD->name());
-					mClosing.mD->run(pCon);
+					DBUG_LO("destroy message. Calling " << mClosing.get()->name());
+					mClosing.get()->run(pCon);
 				}
 			}break;
 
@@ -267,10 +267,10 @@ cWindowFrame_X11GL::run(cContext* pCon){
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if(mContent.mD->hash()==getHash<cEmptyFig>()){
+    if(mContent.get()->hash()==getHash<cEmptyFig>()){
     	testPattern();
     }else{
-		mContent.mD->run(pCon);
+		mContent.get()->run(pCon);
     }
 
 	if(mDoubleBuffered) glXSwapBuffers(mDisplay, mWindow); else glFlush();
@@ -297,17 +297,17 @@ cWindowFrame_X11GL::isDestroyWindowAtom(const ::Atom& pAtom){
 
 void
 cWindowFrame_X11GL::refreshDim(){
-	if(mWidth.mD==0 || mHeight.mD==0)
+	if(mWidth.get()==0 || mHeight.get()==0)
 		return;
 
-	glViewport(0, 0, static_cast<GLdouble>(mWidth.mD), static_cast<GLdouble>(mHeight.mD));
+	glViewport(0, 0, static_cast<GLdouble>(mWidth.get()), static_cast<GLdouble>(mHeight.get()));
 
 	//!\todo needs to be moved into a camera class.
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(
 		45.0,	// Field of view.
-		static_cast<GLdouble>(mWidth.mD / mHeight.mD), // aspect ratio.
+		static_cast<GLdouble>(mWidth.get() / mHeight.get()), // aspect ratio.
 		0.1, // z near clip.
 		100.0 // z far clip.
 	);
@@ -317,8 +317,8 @@ cWindowFrame_X11GL::refreshDim(){
 
 		XMoveResizeWindow(
 			mDisplay, mWindow,
-			static_cast<int>(mX.mD), static_cast<int>(mY.mD),
-			static_cast<unsigned int>(mWidth.mD), static_cast<unsigned int>(mHeight.mD)
+			static_cast<int>(mX.get()), static_cast<int>(mY.get()),
+			static_cast<unsigned int>(mWidth.get()), static_cast<unsigned int>(mHeight.get())
 		);
 
 		//DBUG_LO("refresh "<<mWidth.mD<<","<<mHeight.mD);

@@ -1,5 +1,5 @@
 /*
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *********************************************************************************************************
-*/
+ */
 
 #include "addon.hpp"
 
@@ -34,8 +34,11 @@ const cCommand::dUID cAddon::xLoadAddon = tOutline<cAddon>::makeCommand(
 	NULL
 );
 
-cAddon::cAddon()
-{}
+cAddon::cAddon():
+	mAddonHash(0)
+{
+	addUpdRoster(&mAddonName);
+}
 
 cAddon::~cAddon(){
 	try{
@@ -51,25 +54,51 @@ cAddon::~cAddon(){
 	}
 }
 
-void cAddon::patLoadAddon(ptrLead aLead){
-	if(mAddonName.mD.empty()){
-		dTimesOpened::iterator found;
+void
+cAddon::run(cContext* pCon){
+	start(pCon);
+	updatePlugs();
 
-		mAddonName = aLead->getPlug(xPT_addonName);
+	if(mAddonHash == 0){
+		mAddonHash = makeHash(
+			toNStr(
+				mAddonName.get()
+			)
+		);
 
-		if(mAddonName.mD.empty())
-			throw excep::base_error("No name given for loading addon", __FILE__, __LINE__);
-
-		mAddonHash = makeHash(mAddonName.mD.c_str());
-
-		found = xOpenAddons.find(mAddonHash);
+		dTimesOpened::iterator found = xOpenAddons.find(mAddonHash);
 		if(found != xOpenAddons.end()){
 			++found->second;
 		}else{
-			draftAddon(mAddonName.mD);
+			draftAddon(mAddonName.get());
 			++xOpenAddons[mAddonHash];
 		}
 	}
+	stop(pCon);
 }
 
+iFigment::dMigrationPattern
+cAddon::getLoadPattern(){
+	dMigrationPattern mp;
+	dVersionPlugs vp;
+	vp.push_back(mAddonName);
+	mp.push_back(vp);
+	return mp;
+}
+
+void
+cAddon::patLoadAddon(ptrLead aLead){
+	if(mAddonHash == 0){
+		mAddonName = aLead->getPlug(xPT_addonName);
+	}
+}
+
+#ifdef GTUT
+
+GTUT_START(test_cAddon, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cAddon>();
+}GTUT_END;
+
+#endif
 

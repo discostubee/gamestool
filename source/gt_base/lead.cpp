@@ -1,5 +1,5 @@
 /*
-**********************************************************************************************************
+ **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -22,35 +22,27 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-cUpdateLemming::cUpdateLemming(cBase_plug *callBack) : callMe(callBack)
-{}
-
-cUpdateLemming::~cUpdateLemming() {
-	#ifdef GT_THREADS
-		callMe->finishUpdate();
-	#endif
-}
-
-////////////////////////////////////////////////////////////
-using namespace gt;
-
-
-cLead::cLead(cCommand::dUID aCom, dConSig aConx):
-	mCom(aCom), mConx(aConx)
+cLead::cLead(cCommand::dUID aCom):
+	mCom(aCom)
 {
+	#ifdef GT_THREADS
+		mCurrentCon = NULL;
+		lemmingCount = 0;
+	#endif
+
 	DBUG_TRACK_START("lead");
 }
 
 cLead::cLead(const cLead &otherLead):
-	mCom(otherLead.mCom), mConx(otherLead.mConx)
+	mCom(otherLead.mCom)
 {
+	#ifdef GT_THREADS
+		mCurrentCon = NULL;
+	#endif
+
 	DBUG_TRACK_START("lead");
 
 	cLead *other = const_cast<cLead*>(&otherLead);
-	#ifdef GT_THREADS
-			dLockLead lockMe(muLead);
-			dLockLead lockOther(other->muLead);
-	#endif
 
 	for(dDataMap::iterator itr = other->mTaggedData.begin(); itr != other->mTaggedData.end(); ++itr){
 		mTaggedData[itr->first] = itr->second;
@@ -65,10 +57,6 @@ cLead::cLead(const cLead &otherLead):
 
 cLead::~cLead(){
 	try{
-		#ifdef GT_THREADS
-			dLockLead lock(muLead);
-		#endif
-
 		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
 			scrTDataItr->second->unlinkLead(this);
 		}
@@ -84,7 +72,7 @@ cLead::~cLead(){
 	}
 }
 
-cBase_plug*
+const cBase_plug*
 cLead::getPlug(const cPlugTag* pTag){
 	PROFILE;
 
@@ -92,12 +80,12 @@ cLead::getPlug(const cPlugTag* pTag){
 
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr == mTaggedData.end()){
-		std::stringstream ss; ss << "plug " << pTag->mName;
-		throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
+		throw excep::notFound(pTag->mName.c_str(), __FILE__, __LINE__);
 	}
 
 	#ifdef GT_THREADS
-		return scrTDataItr->second->getShadow(mConx, eSM_read);
+		ASRT_NOTNULL(mCurrentCon);
+		return scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_read);
 	#else
 		return scrTDataItr->second;
 	#endif
@@ -124,18 +112,23 @@ void
 cLead::setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
 	PROFILE;
 
-	ASRT_NOTNULL(setMe);	ASRT_NOTNULL(aTag);
+	ASRT_NOTNULL(setMe);
+	ASRT_NOTNULL(aTag);
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
-	if(scrTDataItr != mTaggedData.end()){
-		#ifdef GT_THREADS
-			*scrTDataItr->second->getShadow(mConx, eSM_write) = setMe;
-		#else
-			*scrTDataItr->second = setMe;
-		#endif
-	}else if(!silentFail){
+	if(scrTDataItr == mTaggedData.end()){
+		if(silentFail)
+			return;
+
 		throw excep::notFound("plug", __FILE__, __LINE__);
 	}
+
+	#ifdef GT_THREADS
+		ASRT_NOTNULL(mCurrentCon);
+		*scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_write) = *setMe;
+	#else
+		*scrTDataItr->second = *setMe;
+	#endif
 }
 
 void
@@ -145,88 +138,71 @@ cLead::addToPile(cBase_plug *addMe){
 }
 
 void
-cLead::unplug(cBase_plug* aPlug){
+cLead::passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag){
+	PROFILE;
+
+	ASRT_NOTNULL(passTo);
+	ASRT_NOTNULL(aGetTag);
+
+	scrTDataItr = mTaggedData.find(aGetTag->mID);
+	if(scrTDataItr == mTaggedData.end()){
+		throw excep::notFound("plug", __FILE__, __LINE__);
+	}
+
+	if(aPutTag == NULL)
+		aPutTag = aGetTag;
+
 	#ifdef GT_THREADS
-		dLockLead lock(muLead);
+		ASRT_NOTNULL(mCurrentCon);
+		passTo->addPlug(
+			scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_write),
+			aPutTag
+		);
+	#else
+		passTo->addPlug(scrTDataItr->second, aPutTag);
+	#endif
+}
+
+void
+cLead::unplug(cBase_plug* aPlug){
+
+	#ifdef GT_THREADS
+		dUseLock unplugLock(mMutex);
 	#endif
 
 	PROFILE;
 
 	//- Search for plug.
-	if(!mTaggedData.empty()){
-		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
-			if(scrTDataItr->second == aPlug){
-				mTaggedData.erase(scrTDataItr);
-			}
+	for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
+		if(scrTDataItr->second == aPlug){
+			mTaggedData.erase(scrTDataItr);
 		}
 	}
 
-	if(!mDataPile.empty()){
-		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-			if(*scrPDataItr == aPlug){
-				mDataPile.erase(scrPDataItr);
-			}
+	for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
+		if(*scrPDataItr == aPlug){
+			mDataPile.erase(scrPDataItr);
 		}
 	}
 }
 
-
-
-/*
-void
-cLead::add(cBase_plug* aPlug, const cPlugTag* pTag){
-	add(aPlug, pTag->mID);
-}
-
-void
-cLead::add(cBase_plug *aPlug, cPlugTag::dUID ID){
-	PROFILE;
-
-	scrTDataItr = mTaggedData.find(ID);
-	if(scrTDataItr != mTaggedData.end()){
-		scrTDataItr->second->unlinkLead(this);
-		scrTDataItr->second = aPlug;
-	}else{
-		mTaggedData[ID] = aPlug;
+#ifdef GT_THREADS
+	cLead::cLemming
+	cLead::startLead(cContext* pCon){
+		mMutex.lock();
+		mCurrentCon = pCon;
+		return cLemming(this);
 	}
-	aPlug->linkLead(this);
-}
 
-void
-cLead::addToPile(cBase_plug* pData){
-	PROFILE;
-
-	mDataPile.push_back(pData);
-	pData->linkLead(this);
-}
-
-cBase_plug*
-cLead::getPlug(const cPlugTag* pTag){
-	PROFILE;
-
-	scrTDataItr = mTaggedData.find(pTag->mID);
-	if(scrTDataItr == mTaggedData.end())
-		throw excep::notFound(pTag->mName.c_str(), __FILE__, __LINE__);
-
-	return scrTDataItr->second;
-}
-
-cLead::cPileItr
-cLead::getPiledDItr(){
-	return cPileItr(&mDataPile);
-}
-
-
-void
-cLead::setPlug(cBase_plug *aPlug, const cPlugTag *aTag){
-	*getPlug(aTag) = *aPlug;
-}
-
-void
-cLead::setPlug(cBase_plug &aPlug, const cPlugTag *aTag){
-	*getPlug(aTag) = aPlug;
-}
-*/
+	void
+	cLead::lemmingCallback(){
+		--lemmingCount;
+		if(lemmingCount <= 0){
+			mMutex.unlock();
+			mCurrentCon = NULL;
+		}
+	}
+#endif
 
 
 
@@ -245,49 +221,61 @@ GTUT_START(testLead, tagging){
 
 	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
 
-	cLead lead(fakeCom.mID, fakeConx.getSig());
+	ptrLead tmpLead = gWorld.get()->makeLead(fakeCom.mID);
 
 	tPlug<int> numA, numB;
 	const int magic = 3;
-	lead.addPlug(&numA, &tag);
-	numA.mD = magic;
+	tmpLead->addPlug(&numA, &tag);
+
+	numA.get() = magic;
+
+	numA.updateStart();
+	numA.updateFinish();
+
 	{
-		PLUGUP(numA);
+		int testA=0;
+		FAUX_JACK(tmpLead, fakeConx);	//- not using smart pointer here.
+		tmpLead->getPlug(&tag)->copyInto(&testA);
+		GTUT_ASRT(testA == magic, "Lead didn't store A");
+
+		numB = tmpLead->getPlug(&tag);
+		GTUT_ASRT(numB.get() == magic, "B didn't get A's number");
 	}
-
-	numB = lead.getPlug(&tag);
-	GTUT_ASRT(numB.mD == magic, "B didn't get A's number");
-
 }GTUT_END;
 
 GTUT_START(testLead, piling){
 }GTUT_END;
 
 GTUT_START(testLead, shadowUpdate){
-	cContext conxA, conxB;
-	tPlug<int> numA, numB;
-	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
-	cPlugTag tag("some tag");
-	cLead leadA(fakeCom.mID, conxA.getSig()), leadB(fakeCom.mID, conxB.getSig());
-	const int magic = 3;
-	const int magicSquare = magic*magic;
+	#ifdef GT_TREADS
+		cContext conxA, conxB;
+		tPlug<int> numA, numB;
+		tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
+		cPlugTag tag("some tag");
+		cLead leadA(fakeCom.mID, conxA.getSig()), leadB(fakeCom.mID, conxB.getSig());
+		const int magic = 3;
+		const int magicSquare = magic*magic;
 
-	GTUT_ASRT(conxA.getSig() != conxB.getSig(), "contexts have same signature");
+		GTUT_ASRT(conxA.getSig() != conxB.getSig(), "contexts have same signature");
 
-	numA.mD = 0;
+		numA.get() = 0;
 
-	leadA.addPlug(&numA, &tag);
-	leadB.addPlug(&numA, &tag);
-	numB.mD = magic;
-	leadA.setPlug(&numB, &tag);
-	{
-		PLUGUP(numA);
-		numA.mD *= numA.mD;
-	}
-	GTUT_ASRT(numA.mD == magicSquare, "A didn't get B's number");
-	numB = leadB.getPlug(&tag);
-	GTUT_ASRT(numB.mD == numA.mD, "something went wrong using multiple shadows");
+		leadA.addPlug(&numA, &tag);
+		leadA.setPlug(&numB, &tag);
+		leadB.addPlug(&numA, &tag);
 
+		numB.get() = magic;
+		numB.updateStart();
+		numB.updateFinish();
+
+		numA.get() *= numA.get();
+		numA.updateStart();
+		numA.updateFinish();
+
+		GTUT_ASRT(numA.get() == magicSquare, "A didn't get B's number");
+		numB = leadB.getPlug(&tag);
+		GTUT_ASRT(numB.get() == numA.get(), "something went wrong using multiple shadows");
+	#endif
 }GTUT_END;
 
 #endif

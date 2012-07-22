@@ -43,7 +43,7 @@ namespace gt{
 	//!\brief	This class is meant to be a frontend for a native version, that takes a generic mesh format and creates a more efficient native version.
 	//!			The generic version is then deleted to save memory.
 	//!			When run, this figment should render a polygon mesh.
-	class cPolyMesh: public cFigment, private tOutline<cPolyMesh>{
+	class cPolyMesh: public cFigment{
 	public:
 		//-----------------------------
 		const static cPlugTag* xPT_Mesh;	// Expects the sMesh struct.
@@ -53,10 +53,10 @@ namespace gt{
 
 		//-----------------------------
 		// The stuff me must have.
-		static const char* identify(){ return "polygon mesh"; }
+		static const dPlaChar* identify(){ return "polygon mesh"; }
 
-		virtual dNameHash hash() const { return tOutline<cPolyMesh>::hash(); }
-		virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
+		virtual dNameHash hash() const { return getHash<cPolyMesh>(); }
+		virtual const dPlaChar* name() const{ return identify(); }		//!< Virtual version of identify.
 
 		//-----------------------------
 		cPolyMesh();
@@ -81,50 +81,42 @@ namespace gt{
 // template specializations
 namespace gt{
 
-	//!\brief	sMesh requires a special plug in order to work.
-	//!\todo	Everything.
+	//!\brief	Saving any class that is a dynamic size, we need a special plug flake type.
 	template<>
-	class tPlug<sMesh>: public cBase_plug{
+	class tPlugFlakes<sMesh>: public cBase_plug{
 	public:
-		sMesh mD;
+		tPlugFlakes(dPlugType pTI) :
+			cBase_plug(pTI)
+		{}
 
-		tPlug() : cBase_plug(typeid(sMesh)){}
+		virtual ~tPlugFlakes(){}
 
-		tPlug(const sMesh& pMesh) : cBase_plug(typeid(sMesh)), mD(pMesh){}
+		//!\todo
+		virtual void save(cByteBuffer* pSaveHere){
+			sMesh &m = get();
+			size_t tmpSize, outSize;
+			dByte *tmpBuff=NULL;
 
-		virtual ~tPlug(){}
+			tmpSize = m.mPolys.size();
+			bpk::pack(&tmpSize, &tmpBuff, &outSize);
+			pSaveHere->add(tmpBuff, outSize);
+			SAFEDEL_ARR(tmpBuff);
 
-		virtual cBase_plug& operator= (const cBase_plug &pD){
-			return operator=(&pD);
-		}
-
-		virtual cBase_plug& operator= (const cBase_plug *pD){
-			if(pD != this){
-				if(mType != pD->mType)
-				{	PLUG_CANT_COPY_ID(mType, pD->mType); }
-
-				mD = dynamic_cast< tPlug<sMesh>* >( const_cast<cBase_plug*>(pD) )->mD;
+			for(std::vector<sPoly>::iterator itr = m.mPolys.begin(); itr != m.mPolys.end(); ++itr){
+				bpk::pack(&itr->a, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
+				bpk::pack(&itr->b, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
+				bpk::pack(&itr->c, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
 			}
-			return *this;
 		}
 
-		void operator= (const sMesh& pA){
-			mD = pA;
+		//!\todo
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
+
 		}
 
-		void save(cByteBuffer* pAddHere){
-			//!\todo
-		}
-
-		void loadEat(cByteBuffer* pChewToy, dReloadMap* pReloads){
-			//!\todo
-		}
-
-		void reset(){
-			mD = sMesh();
-		}
-
+		virtual sMesh& get() = 0;
 	};
+
 }
 
 #endif

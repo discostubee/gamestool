@@ -17,7 +17,7 @@ cOSX_fileIO::read(const dFilePoint pStartPoint, const size_t pReadAmount ){
 
 	try{
 		DBUG_LO("reading");
-		stream.open(mPath.mD.c_str(), std::fstream::in | std::fstream::binary );
+		stream.open(mPath.get().c_str(), std::fstream::in | std::fstream::binary );
 
 		stream.seekg(0, std::fstream::end);
 		fileSize = stream.tellg();
@@ -58,7 +58,7 @@ cOSX_fileIO::write(const cByteBuffer* pBuff){
 
 	try{
 		DBUG_LO("writing");
-		stream.open(mPath.mD.c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc );
+		stream.open(mPath.get().c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc );
 		stream.write( pBuff->get(), pBuff->size() );
 
 		if(stream.bad())
@@ -80,7 +80,7 @@ cOSX_fileIO::insert(const cByteBuffer* pBuff, dFilePoint pStartPoint){
 		size_t fileSize=0;
 		DBUG_LO("inserting");
 
-		stream.open(mPath.mD.c_str(), std::fstream::out | std::fstream::in | std::fstream::binary | std::fstream::app );
+		stream.open(mPath.get().c_str(), std::fstream::out | std::fstream::in | std::fstream::binary | std::fstream::app );
 		stream.seekg(0, std::fstream::end);
 
 		fileSize = stream.tellg();
@@ -116,7 +116,7 @@ cOSX_fileIO::insert(const cByteBuffer* pBuff, dFilePoint pStartPoint){
 void
 cOSX_fileIO::deleteFile(){
 	DBUG_LO("deleting");
-	::remove(mPath.mD.c_str());
+	::remove(mPath.get().c_str());
 }
 
 size_t
@@ -124,7 +124,7 @@ cOSX_fileIO::getFileSize(){
 	std::fstream stream;
 	size_t fileSize = 0;
 
-	stream.open(mPath.mD.c_str(), std::fstream::in | std::fstream::binary);
+	stream.open(mPath.get().c_str(), std::fstream::in | std::fstream::binary);
 	stream.seekg(0, std::fstream::end);
 	fileSize = stream.tellg();
 	stream.close();

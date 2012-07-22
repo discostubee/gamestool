@@ -25,6 +25,7 @@ using namespace gt;
 cBlueprint::cBlueprint():
 	mHash(0),
 	mReplaces(uDoesntReplace),
+	mExtends(uDoesntExtend),
 	mFuncMake(NULL),
 	mGetName(NULL),
 	mGetCom(NULL),
@@ -50,7 +51,7 @@ cBlueprint::hash() const{
 	return mHash;
 }
 
-const dNatChar*
+const dPlaChar*
 cBlueprint::name() const{
 	return mGetName();
 }
@@ -58,6 +59,11 @@ cBlueprint::name() const{
 dNameHash
 cBlueprint::replace() const{
 	return mReplaces;
+}
+
+dNameHash
+cBlueprint::extend() const{
+	return mExtends;
 }
 
 const cCommand*
@@ -84,7 +90,14 @@ cBlueprint::getAllTags() const{
 	return mGetAllTags();
 }
 
-bool cBlueprint::hasPlugTag(cPlugTag::dUID pPT) const{
+dExtensions
+cBlueprint::getExtensions() const{
+	ASRT_NOTNULL(mGetExtensions);
+	return mGetExtensions();
+}
+
+bool
+cBlueprint::hasPlugTag(cPlugTag::dUID pPT) const{
 	ASRT_NOTNULL(mHasPlugTag);
 	return mHasPlugTag(pPT);
 }

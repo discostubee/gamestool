@@ -1,12 +1,14 @@
 
 /*
- * !\file
+ * !\file	openGL_windowFrame.hpp
+ * !\brief	This is sort of the start file for the X11GL addon.
  * !\note	This code comes from 'The game programmers wiki', so big props to them. http://gpwiki.org/index.php/OpenGL:Tutorials:Setting_up_OpenGL_on_X11
  * !\note	Will have to install: libxxf86vm-dev, libgl1-mesa-dev
  */
 #ifndef OPENGL_WINDOWFRAME_HPP
 #define OPENGL_WINDOWFRAME_HPP
 
+#include "gt_base/addon.hpp"
 #include "gt_graphics/windowFrame.hpp"
 
 #include <GL/gl.h>
@@ -25,17 +27,21 @@
 
 namespace gt{
 
-class cWindowFrame_X11GL: public cWindowFrame, private tOutline<cWindowFrame_X11GL>{
+class X11GLAddon{
+public:
+	static const dPlaChar* getName(){ return "X11GL"; }
+};
+
+class cWindowFrame_X11GL: public cWindowFrame, public tAddonDependent<X11GLAddon>{
 
 public:
-	static const char* identify(){ return "window frame X11GL"; }
-	static dNameHash replaces(){ return getHash<cWindowFrame>(); }
-
 	cWindowFrame_X11GL();
 	virtual ~cWindowFrame_X11GL();
 
+	static const char* identify(){ return "window frame X11GL"; }
 	virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
-	virtual dNameHash hash() const{ return tOutline<cWindowFrame_X11GL>::hash(); }
+	virtual dNameHash hash() const{ return getHash<cWindowFrame_X11GL>(); }
+	static dNameHash replaces(){ return getHash<cWindowFrame>(); }
 	virtual dNameHash getReplacement() const{ return replaces(); }
 
 	virtual void run(cContext* pCon);

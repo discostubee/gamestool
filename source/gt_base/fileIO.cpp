@@ -67,6 +67,8 @@ const cCommand::dUID	cBase_fileIO::xGetSize = tOutline<cBase_fileIO>::makeComman
 
 
 cBase_fileIO::cBase_fileIO(){
+	addUpdRoster(&mPath);
+	addUpdRoster(&mFileSize);
 }
 
 cBase_fileIO::~cBase_fileIO(){
@@ -85,13 +87,17 @@ cBase_fileIO::patRead(ptrLead aLead){
 	aLead->getValue(&readStart, xPT_readSize, true);
 	aLead->getValue(&readSize, xPT_startSpot, true);
 
-	read( aLead->getPlug(xPT_buffer)->exposePtr<cByteBuffer>(), readSize, readStart );
+	tPlug<cByteBuffer> readInto;
+	read(&readInto.get(), readSize, readStart);
+	aLead->setPlug(&readInto, xPT_buffer, false);
 }
 
 void
 cBase_fileIO::patWrite(ptrLead aLead){
 
-	write( aLead->getPlug(xPT_buffer)->exposePtr<cByteBuffer>() );
+	tPlug<cByteBuffer>  writeHere;
+	write(&writeHere.get());
+	aLead->setPlug(&writeHere, xPT_buffer, false);
 }
 
 void
@@ -99,8 +105,9 @@ cBase_fileIO::patInsert(ptrLead aLead){
 	size_t startSpot = 0;
 
 	aLead->getValue(&startSpot, xPT_startSpot, true);
-
-	insert( aLead->getPlug(xPT_buffer)->exposePtr<cByteBuffer>(), startSpot );
+	tPlug<cByteBuffer> current = aLead->getPlug(xPT_buffer);
+	insert( &current.get(), startSpot );
+	aLead->setPlug(&current, xPT_buffer);
 }
 
 void
@@ -115,3 +122,11 @@ cBase_fileIO::patGetFileSize(ptrLead aLead){
 	aLead->setPlug(&mFileSize, xPT_fileSize);
 }
 
+#ifdef GTUT
+
+GTUT_START(test_cBase_fileIO, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cBase_fileIO>();
+}GTUT_END;
+
+#endif

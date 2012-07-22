@@ -1,4 +1,19 @@
 /*
+**********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
  * !\file	utils.hpp
  * !\brief	Contains all kinds of stand alone tools. This is mostly a grab bag where something will get it's own file once it matures.
  */
@@ -6,19 +21,17 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include "gt_string.hpp"
 #include "exceptions.hpp"
 #include <iostream>
 #include <vector>
 #include <map>
-#include <string>
+#include <string>	// c++ library
+#include <string.h> // C library for memcpy.
 #include <sstream>
 
 #ifdef GTUT
 	#include "unitTests.hpp"
 #endif
-
-using namespace std;
 
 //------------------------------------------------------------------------------------------
 //!\brief	useful for those odd occasions when you need a parameter in a function 
@@ -30,29 +43,37 @@ using namespace std;
 #endif
 
 //------------------------------------------------------------------------------------------
-#define SAFEDEL(P) if(P != NULL){ delete(P); P=NULL; }
+#define SAFEDEL(P) if(P != NULL){ delete P; P=NULL; }
+#define SAFEDEL_ARR(P) if(P != NULL){ delete [] P; P=NULL; }
 
+//------------------------------------------------------------------------------------------
+// Useful for making addon functions easy to implement.
+#ifdef WIN32
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
+#	define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
+#else
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
+#	define DYN_LIB_DEF(rnt) rnt
+#endif
 
 //------------------------------------------------------------------------------------------
 // some defines which are common in this project.
+typedef unsigned int	dHash;
 typedef unsigned int	dNameHash;
 typedef unsigned int	dMillisec;
 
+#if CHAR_BIT == 8 || __CHAR_BIT__ == 8
+	typedef char		dByte;		//!< This is the gametool's most basic byte type. It is always 8 bits.
+#else
+	#error "the byte buffer is not 8 bits, and I'm too lazy to write something for your environment to enforce 8 bit buffers."
+#endif
+
 //------------------------------------------------------------------------------------------
 // !\note	Code taken from http://cboard.cprogramming.com/tech-board/114650-string-hashing-algorithm.html
-template<typename T> dNameHash makeHash(T const * pString){
-	dNameHash hash = 0;
-
-	if(pString==NULL)
-		return 0;
-
-	while(*pString!='\0'){
-		hash = ((hash << 5) + hash) ^ *pString;
-		++pString;
-	}
-
-	return hash;
-}
+dHash makeHash(const char *pString);	//!< Make hash from literal string
+dNameHash makeHash(const dNatStr &pString);	//!< Should be used when dealing with a hash identifier that we need to be consistent across platforms.
 
 //------------------------------------------------------------------------------------------
 //!\brief	Handy if you don't want to expose the container, but you want access to its elements.
@@ -97,7 +118,7 @@ private:
 //!\brief	Handy little function for just seeing if a value is in a vector.
 template<typename T>
 bool
-isIn(const T &pFindMe, const vector<T> &pFindIn){
+isIn(const T &pFindMe, const std::vector<T> &pFindIn){
 
 	//for(size_t idx = 0; idx < pFindIn.size(); ++idx){
 	//	if(pFindMe == pFindIn[idx]){
@@ -106,7 +127,7 @@ isIn(const T &pFindMe, const vector<T> &pFindIn){
 	//}
 	//return false;
 
-	for(typename vector<T>::const_iterator itr = pFindIn.begin(); itr != pFindIn.end(); ++itr){
+	for(typename std::vector<T>::const_iterator itr = pFindIn.begin(); itr != pFindIn.end(); ++itr){
 		if(*itr == pFindMe){
 			return true;
 		}
@@ -142,8 +163,8 @@ private:
 		friend class cTracker;
 	};
 
-	typedef map<dNameHash, sItem> dItemMap;
-	typedef pair<dNameHash, sItem> dItemPair;
+	typedef std::map<dNameHash, sItem> dItemMap;
+	typedef std::pair<dNameHash, sItem> dItemPair;
 
 	static dItemMap* xObjectsActive;
 	static dItemMap::iterator xItemItr;
