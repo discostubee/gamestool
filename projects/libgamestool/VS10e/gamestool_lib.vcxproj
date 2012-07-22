@@ -86,7 +86,9 @@
     <ClInclude Include="..\..\..\source\gt_base\precompiledHeader.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\profiler.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\ptrTools.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\reflection.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\runList.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\selectah.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\textFig.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\thread.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\threadTools.hpp" />
@@ -111,7 +113,9 @@
     <ClCompile Include="..\..\..\source\gt_base\precompiledHeader.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\profiler.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\ptrTools.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\reflection.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\runList.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\selectah.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\textFig.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\thread.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\threadTools.cpp" />
