@@ -1379,6 +1379,7 @@
 									<listOptionValue builtIn="false" value="/Developer/SDKs/MacOSX10.6.sdk/usr/X11/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/libpng"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.230758323" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -1392,6 +1393,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/libpng"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1337382864" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -1409,6 +1411,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/libpng"/>
+									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1102472736" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -1422,32 +1425,7 @@
 					</folderInfo>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
-				<externalSettings containerId="addonOSXGL;cdt.managedbuild.config.gnu.macosx.exe.debug.651958957.1816926180" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/addonOSXGL"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/addonOSXGL/Debug"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/addonOSXGL/Debug_threading"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="addonX11GL_dt"/>
-					</externalSetting>
-				</externalSettings>
-				<externalSettings containerId="libOSX;cdt.managedbuild.config.gnu.cross.exe.debug.723909878.1740984416" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libOSX"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libOSX/Debug"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libOSX/Debug_threading"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libOSX_dt"/>
-					</externalSetting>
-				</externalSettings>
-				<externalSettings containerId="libgamestool;cdt.managedbuild.config.gnu.exe.debug.297269935.1080972856" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libgamestool"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libgamestool/Debug"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libgamestool/Debug_threading"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libgamestool_dt"/>
-					</externalSetting>
-				</externalSettings>
-			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 			<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 			<storageModule moduleId="scannerConfiguration">

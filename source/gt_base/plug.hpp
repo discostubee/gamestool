@@ -205,23 +205,7 @@ namespace gt{
 		try{
 			#ifdef GT_THREADS
 				dMuLock lock(muMap);
-			#endif
 
-			for(
-				tPlugFlakes<A>::itrLead = tPlugFlakes<A>::mLeadsConnected.begin();
-				tPlugFlakes<A>::itrLead != tPlugFlakes<A>::mLeadsConnected.end();
-				++tPlugFlakes<A>::itrLead
-			){
-				try{
-					tPlugFlakes<A>::itrLead->first->unplug(this);	//- the count is irrelevant.
-				}catch(excep::base_error &e){
-					WARN(e);
-				}catch(...){
-					//- carry on removing.
-				}
-			}
-
-			#ifdef GT_THREADS
 				for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow)
 					delete itrShadow->mData;
 			#endif

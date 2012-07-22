@@ -20,10 +20,11 @@
 
 //#define USE_LOCALE_GEN
 
-//--------------------------------------------------------
 
-static const char *nativeEncoding="ISO-8859-1";
-static const char *textEncoding="UTF-8";
+#if defined(USE_BOOST_LOCALE) || defined(USE_LOCALE_GEN)
+	static const char *nativeEncoding="ISO-8859-1";
+	static const char *textEncoding="UTF-8";
+#endif
 
 //--------------------------------------------------------
 
@@ -129,7 +130,7 @@ toNStr(const dPlaChar *pString){
 	#if defined(USE_LOCALE_GEN)
 		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], nativeEncoding, boost::locale::conv::skip);
 	#elif defined(USE_BOOST_LOCALE)
-		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], getNativeEncode());
+		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], nativeEncoding);
 	#else
 		strRtn = pString;	//!!! temporary measure.
 	#endif

@@ -285,6 +285,35 @@ namespace gt{
 	};
 
 	extern tMrSafety<cWorld> gWorld;	//!< Gives you threadsafe access to the world.
+
+	//---------------------------------------------------------------------------------------------------
+	//!\brief	Any figments that come from an addon are dependent on that addon (so you inherit from it).
+	//!			Provides a way to see what addon a figment is dependent on, and informs the world when
+	//!			there are no more figments dependent on an addon.S
+	template<typename ADDON>
+	class tAddonDependent{
+	private:
+		static int instCount;
+
+	public:
+		tAddonDependent(){
+			//- chicken or the egg?
+			//if(instCount==0){
+			//	gWorld.get()->openAddon( ADDON::getName() );
+			//}
+			++instCount;
+		}
+
+		virtual ~tAddonDependent(){
+	   	   	   --instCount;
+			try{
+	   	   	   if(instCount<=0)
+	   	   		   gWorld.get()->lazyCloseAddon( ADDON::getName() );
+			}catch(...){}
+		}
+   		virtual dStr const & requiredAddon() const { return ADDON::getName(); }	//!< Returns name of addon that this figment comes from. An empty string means that no addon is required.
+	};
+	template<typename ADDON> int tAddonDependent<ADDON>::instCount = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
