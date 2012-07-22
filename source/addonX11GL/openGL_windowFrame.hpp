@@ -1,12 +1,14 @@
 
 /*
- * !\file
+ * !\file	openGL_windowFrame.hpp
+ * !\brief	This is sort of the start file for the X11GL addon.
  * !\note	This code comes from 'The game programmers wiki', so big props to them. http://gpwiki.org/index.php/OpenGL:Tutorials:Setting_up_OpenGL_on_X11
  * !\note	Will have to install: libxxf86vm-dev, libgl1-mesa-dev
  */
 #ifndef OPENGL_WINDOWFRAME_HPP
 #define OPENGL_WINDOWFRAME_HPP
 
+#include "gt_base/addon.hpp"
 #include "gt_graphics/windowFrame.hpp"
 
 #include <GL/gl.h>
