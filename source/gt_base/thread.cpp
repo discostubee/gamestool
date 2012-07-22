@@ -295,8 +295,11 @@ namespace gt{
 			ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter);
 			share.get()->jack(getChatter, &fakeContext);
 
-			chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
-			DBUG_LO("chatter='" << chatter.get() << "'");
+			{
+				FAUX_JACK(getChatter, fakeContext);
+				chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
+				DBUG_LO("chatter='" << chatter.get() << "'");
+			}
 
 			//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
 			std::stringstream ss(chatter.get());

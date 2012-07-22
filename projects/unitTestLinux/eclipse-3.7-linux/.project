@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>libgraphics</name>
+	<name>unitTestLinux</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -31,7 +31,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildLocation</key>
-					<value>${workspace_loc:/libgraphics/Debug}</value>
+					<value>${workspace_loc:/unitTestLinux/Debug}</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.cleanBuildTarget</key>
@@ -82,12 +82,26 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>gt_graphics</name>
+			<name>gt_base</name>
 			<type>2</type>
-			<locationURI>BaseSourceDir/gt_graphics</locationURI>
+			<locationURI>BaseSourceDir/gt_base</locationURI>
+		</link>
+		<link>
+			<name>gt_linux</name>
+			<type>2</type>
+			<locationURI>BaseSourceDir/gt_linux</locationURI>
+		</link>
+		<link>
+			<name>source</name>
+			<type>2</type>
+			<locationURI>BaseProjectDir/unitTestLinux/source</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>
+		<variable>
+			<name>BaseProjectDir</name>
+			<value>$%7BPARENT-2-PROJECT_LOC%7D</value>
+		</variable>
 		<variable>
 			<name>BaseSourceDir</name>
 			<value>$%7BPARENT-3-PROJECT_LOC%7D/source</value>

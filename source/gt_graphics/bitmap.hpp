@@ -30,8 +30,6 @@ namespace gt{
 			virtual void relate(dStreamChannel &in, size_t startInPos, dStreamChannel &out, size_t startOutPos) =0;	//!< copy one stream into another.
 		};
 
-		static const size_t COLRNG_MAX = USHRT_MAX;
-
 		static const cPlugTag *xPT_bitmap;
 		static const cPlugTag *xPT_addSpot;	//!< Where to put the top left corner of the bitmap we are adding. Relative to the parent's top left corner.
 		static const cCommand::dUID xSetRelation;	//!< Sets channel relations which are used when adding. Adds them as a pile.
@@ -64,7 +62,7 @@ namespace gt{
 		dListDirty mPendingAdds;		//!< List of dirty rectangles, ooo, that need to be copied into this bitmap.
 		dRelations channelRelation;		//!< How channels from each dirty rect are copied into this bitmap.
 
-		virtual ptrBitmap getBitmap(){ DONT_USE_THIS; };	//!< The implementation converts its native format into the portable channel streams format and outputs it.
+		virtual ptrBitmap getBitmap(){ DONT_USE_THIS; return ptrBitmap(NULL); };	//!< The implementation converts its native format into the portable channel streams format and outputs it.
 
 		void patSetRelation(ptrLead aLead);
 		void patAdd(ptrLead aLead);
