@@ -506,6 +506,7 @@ public:
 	virtual void getLinks(std::list<ptrFig>* pOutLinks) {}
 	virtual dMigrationPattern getLoadPattern() { return dMigrationPattern(); }
 	virtual dNumVer getVersion() const { return 0; }
+	virtual dStr const& requiredAddon() const { DONT_USE_THIS; };
 
 	virtual ~testDraftParent(){}
 
@@ -530,7 +531,7 @@ public:
 	virtual dNameHash hash() const { return getHash<testDraftChild>(); };
 
 	virtual dNumVer getVersion() const { return 0; }
-
+	virtual dStr const& requiredAddon() const { DONT_USE_THIS; };
 	static dNameHash extends(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getExtension() const { return extends(); }
 
@@ -544,6 +545,8 @@ public:
 
 	virtual dNameHash hash() const { return getHash<testDraftReplace>(); };
 
+	virtual dNumVer getVersion() const { return 0; }
+	virtual dStr const& requiredAddon() const { DONT_USE_THIS; };
 	static dNameHash replaces(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getReplacement() const { return replaces(); };
 

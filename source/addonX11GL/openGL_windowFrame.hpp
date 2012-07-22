@@ -8,7 +8,6 @@
 #ifndef OPENGL_WINDOWFRAME_HPP
 #define OPENGL_WINDOWFRAME_HPP
 
-#include "gt_base/addon.hpp"
 #include "gt_graphics/windowFrame.hpp"
 
 #include <GL/gl.h>

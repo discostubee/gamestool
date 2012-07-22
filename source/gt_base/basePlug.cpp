@@ -16,7 +16,7 @@
  *********************************************************************************************************
 */
 
-#include "basePlug.hpp"
+#include "lead.hpp"
 
 using namespace gt;
 
@@ -31,7 +31,19 @@ cBase_plug::cBase_plug(const cBase_plug &pCopy):
 {
 }
 
-cBase_plug::~cBase_plug(){
+cBase_plug::~cBase_plug(){for(
+		itrLead = mLeadsConnected.begin();
+		itrLead != mLeadsConnected.end();
+		++itrLead
+	){
+		try{
+			itrLead->first->unplug(this);	//- the count is irrelevant.
+		}catch(excep::base_error &e){
+			WARN(e);
+		}catch(...){
+			//- carry on removing.
+		}
+	}
 }
 
 void

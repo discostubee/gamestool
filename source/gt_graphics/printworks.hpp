@@ -3,8 +3,8 @@
  * !\brief	Contains the polygon figment as well as all its data types.
  */
 
-#ifndef BITMAP_HPP
-#define BITMAP_HPP
+#ifndef PRINTWORKS_HPP
+#define PRINTWORKSS_HPP
 
 #include "gt_base/figment.hpp"
 
