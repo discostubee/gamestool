@@ -100,7 +100,7 @@ void
 cByteBuffer::copy(const TYPE *pBuffIn){
 	ASRT_NOTNULL(pBuffIn);
 
-	delete mBuff;
+	delete [] mBuff;
 	mBuff = NULL;
 	mBuffSize = 0;
 	bpk::pack(pBuffIn, &mBuff, &mBuffSize, sizeof(TYPE));
@@ -115,7 +115,7 @@ cByteBuffer::take(TYPE *pBuffIn){
 	mBuff=NULL;
 	mBuffSize=0;
 	bpk::pack(pBuffIn, &mBuff, &mBuffSize, sizeof(TYPE));
-	delete pBuffIn;
+	delete [] pBuffIn;
 }
 
 template<typename TYPE>
@@ -127,7 +127,7 @@ cByteBuffer::add(const TYPE *pIn){
 	size_t sizePacked=0;
 	bpk::pack(pIn, &packed, &sizePacked);
 	add( packed, sizePacked );
-	delete packed;
+	delete [] packed;
 }
 
 #endif
