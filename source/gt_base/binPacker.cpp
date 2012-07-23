@@ -27,10 +27,10 @@ bpk::pack(const dNatStr *packMe, dByte **output, size_t *sizeOut){
 	if(ref->empty()){
 		(*sizeOut) = sizeof(size_t);
 	}else{
-		(*sizeOut) = ((ref->length() + 1)) + sizeof(size_t);	//- Assume 8 bits per char
+		(*sizeOut) = ((ref->length() + 1) * sizeof(dNatChar)) + sizeof(size_t);
 	}
 
-	delete(*output);
+	delete [] (*output);
 	(*output) = new dByte[*sizeOut];
 	*reinterpret_cast<size_t*>(*output) = ref->length();
 
@@ -38,14 +38,14 @@ bpk::pack(const dNatStr *packMe, dByte **output, size_t *sizeOut){
 		memcpy(
 			(*output)+sizeof(size_t),
 			ref->data(),
-			(*sizeOut) - sizeof(size_t) - sizeof(dNatChar)	//- std::string::data() doesn't use a null terminator
+			ref->length() * sizeof(dNatChar)
+		);
+		memset(
+			(*output) +sizeof(size_t) + (ref->length() * sizeof(dNatChar)),
+			0,
+			sizeof(dNatChar)
 		);
 	}
-	memset(
-		((*output)+sizeof(size_t)) + ref->length(),	//- Assume 8 bits per char
-		0,
-		sizeof(dNatChar)
-	);
 }
 
 void
@@ -106,25 +106,25 @@ bpk::pack(const dText *packMe, dByte **output, size_t *sizeOut){
 	if(ref->empty()){
 		(*sizeOut) = sizeof(size_t);
 	}else{
-		(*sizeOut) = ((ref->length() + 1)) + sizeof(size_t);
+		(*sizeOut) = ((ref->length() + 1) * sizeof(dTextChar)) + sizeof(size_t);
 	}
 
-	delete(*output);
+	delete [] (*output);
 	(*output) = new dByte[*sizeOut];
 	*reinterpret_cast<size_t*>(*output) = ref->length();
 
 	if(!ref->empty()){
 		memcpy(
-			(*output)+sizeof(size_t),
+			(*output) + sizeof(size_t),
 			ref->data(),
-			(*sizeOut) - sizeof(size_t) - sizeof(dTextChar)
+			ref->length() * sizeof(dTextChar)
+		);
+		memset(
+			(*output) + sizeof(size_t) + (ref->length() * sizeof(dTextChar)),
+			0,
+			sizeof(dTextChar)
 		);
 	}
-	memset(
-		((*output)+sizeof(size_t)) + ref->length(),
-		0,
-		sizeof(dTextChar)
-	);
 }
 
 void

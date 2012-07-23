@@ -350,11 +350,10 @@ namespace gt{
 	tOutline<T>::makePlugTag(const dPlaChar* pName){
 		PROFILE;
 
-		dMapPTag::iterator itrTag = xPlugTags->end();
-
 		DBUG_VERBOSE_LO("Making plug tag '" << pName << "' for figment '" << T::identify() << "'");
 
 		readyTags();
+		dMapPTag::iterator itrTag = xPlugTags->end();
 
 		{
 			dNameHash tagUID = makeHash( toNStr(pName).t.c_str() );
