@@ -57,7 +57,7 @@ cLinuxWorld::openAddon(const dStr &name){
 		return;
 	}
 
-	dStr libPath = "addon" + name;
+	dStr libPath = "./addon" + name;
 	#if defined(DEBUG) && defined(GT_THREADS)
 		libPath += "_dt";
 	#elif defined(DEBUG)
@@ -107,6 +107,8 @@ cLinuxWorld::closeAddon(const dStr &name){
 		}else{
 			DBUG_LO("unable to close shared library '" << name << "' because " << dlerror() );
 		}
+		flushLines();	//- Make sure there are no lines from the external heap still to processes.
+		//- At this stage there shouldn't be any profile tags left from the external heap.
 		dlclose(found->second);
 
 	}else{

@@ -79,7 +79,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}_dt" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.874382960.651599925" name="DebugThreading" parent="cdt.managedbuild.config.gnu.exe.debug" postbuildStep="cp ${ProjDirPath}/${ConfigName}/${ProjName}_dt ${ProjDirPath}/../../../include">
+				<configuration artifactName="${ProjName}_dt" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.874382960.651599925" name="DebugThreading" parent="cdt.managedbuild.config.gnu.exe.debug" postbuildStep="cp ${ProjDirPath}/${ConfigName}/${ProjName}_dt ${ProjDirPath}/../../../bin">
 					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.874382960.651599925." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.145153205" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.897695989" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>

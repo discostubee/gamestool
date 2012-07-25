@@ -10,7 +10,7 @@ main(int argc, char **argv){
 	int result = EXIT_FAILURE;
 
 	std::cout << "Running gamestool tests. Version 0.3";
-	#ifdef GT_THREAD
+	#ifdef GT_THREADS
 		std::cout << " threaded";
 	#endif
 	std::cout << std::endl;
