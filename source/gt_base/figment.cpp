@@ -209,7 +209,6 @@ cWorldShutoff::run(cContext* pCon){
 	start(pCon);
 	gWorld.get()->mKeepLooping = false;
 	stop(pCon);
-
 }
 
 ////////////////////////////////////////////////////////////

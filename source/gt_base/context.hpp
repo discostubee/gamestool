@@ -52,7 +52,7 @@
 namespace gt{
 	class cFigContext;
 
-	typedef std::deque<cFigContext*> dProgramStack;	//!< This is the entire stack of figments. The pancake map below doesn't copy this stack (in case you're wondering).
+	typedef std::deque<cFigContext*> dProgramStack;	//!< This is the entire stack of figments.
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -110,12 +110,11 @@ namespace gt{
 		cContext(const cContext & copyMe);
 		~cContext();
 
-		bool isStacked(cFigContext *pFig);			//!< Determines if the figment is stacked.
+		bool isStacked(cFigContext *pFig, bool considerJackmode = true);			//!< Determines if the figment is stacked.
 		dProgramStack makeStackDump();				//!< Spits out a copy of the program stack.
 		ptrFig getFirstOfType(dNameHash aType);		//!< Needs to change! Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment.
 		dConSig getSig() const;						//!< Get unique signature.
-		void runJackJobs();	//!< Runs through the list of jobs for jacking. Should do this at the start of a loop. If you use a fake context as part of a unit test, consider running this function after you do any jacking.
-		void addJackJob(ptrLead aLead, ptrFig aTarget);	//!< If your figment is going to call jack from a run, it must add it as a jack job.
+		void jackMode();							//!< Starts jackmode, where previously stacked figments don't count when checking for self reference. Stops being in jack mode once the stack unwinds back to where jackMode was called.
 
 	protected:
 		void add(cFigContext *pFig);					//!< Adds a figment reference to the stack.
@@ -124,23 +123,19 @@ namespace gt{
 		friend class cFigContext;
 
 	private:
+		static const int ORIGINAL = -1;	//!< used when preventing an unwind into another context's stack.
+		static const int RUN_MODE = -1;
 
 		struct sInfo{
 			unsigned int timesStacked;
 			dNameHash realID;	//!< Lets you determine what sort of class is on the stack.
-			bool fromOtherStack;	//!< We don't want to force stop figments that came from another stack.
 
-			sInfo(unsigned int pTime, dNameHash pID) : timesStacked(pTime), realID(pID), fromOtherStack(false) {}
-			sInfo() : timesStacked(0), realID(0), fromOtherStack(false) {}
-		};
 
-		struct sJackJob{
-			ptrLead mLead;
-			ptrFig mTarget;
+			sInfo(unsigned int pTime, dNameHash pID) : timesStacked(pTime), realID(pID) {}
+			sInfo() : timesStacked(0), realID(0) {}
 		};
 
 		typedef std::map<const cFigContext*, sInfo> dMapInfo;		//!<
-		typedef std::list<sJackJob> dJackJobs;
 
 		#ifdef GT_THREADS
 			const dThreadID mThreadID;
@@ -150,9 +145,10 @@ namespace gt{
 		dConSig mSig;	//!<
 		dProgramStack mStack;	//!< This is the entire stack of figments in the order that they were added in.
 		dMapInfo mSigInfo;	//!< Stores more info about different items on the stack.
-		dJackJobs mJobs;	//!< Favour list building speed over iteration speed.
+		int mCopyIdx;	//!< used when preventing an unwind into another context's stack.
+		int mJackStartIdx;	//!< This stores where the top of the stack was when jackmode was engaged.
 
-		dMapInfo::iterator itrInfo;
+		dMapInfo::iterator itrInfo;	//!< scratch space.
 	};
 
 	//-------------------------------------------------------------------------------------

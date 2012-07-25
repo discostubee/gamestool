@@ -57,6 +57,7 @@ cPlugHound::patGoGetit(ptrLead aLead){
 	ptrLead getLead = gWorld.get()->makeLead(mCom.get());
 	ptrFig fig = currentCon->getFirstOfType(mTarget.get());
 
+	currentCon->jackMode();
 	fig->jack(getLead, currentCon);
 	getLead->passPlug(aLead.get(), getTag, xPT_plug);
 }
@@ -181,6 +182,7 @@ void cAlucard::run(cContext* aCon){
 		}
 
 		if(mTarget.get()->hash() != getHash<cEmptyFig>()){
+			mConx.jackMode();
 			mTarget.get()->jack(mLead, &mConx);
 		}
 	}
@@ -226,8 +228,8 @@ GTUT_START(test_reflection, houndGets){
 	hound->jack(sendHound, &fakeConx);
 	testNum->stop(&fakeConx);
 
-	//GTUT_ASRT( *getFromHound->getPlug(cPlugHound::xPT_plug)->exposePtr<int>() == 42, "Didn't get the right number back from the test figment.");
-
+	tPlug<int> num = sendHound->getPlug(cPlugHound::xPT_plug);
+	GTUT_ASRT( num.get() == 42, "Didn't get the right number back from the test figment.");
 }GTUT_END;
 
 GTUT_START(test_reflection, alucardBasic){

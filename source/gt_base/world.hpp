@@ -27,7 +27,7 @@
  *! sSomething		A simple object or data container. In other words, a struct with no defined methods.
  *! eSomething		an enum, for both the scope and the values.
  *! mSomething		Variable data stored in a class or structure, otherwise known as a member variable.
- *! aSomething		An argument passed into a function call.
+ *! pSomething		A parameter passed into a function call.
  *! uSomething		Constant and constant static data where the u stands for unchanging. Not to replace p when constant data is passed to a function.
  *! tSomething		A template class or struct.
  *! xSomething		Static data as either a class member or a function variable.

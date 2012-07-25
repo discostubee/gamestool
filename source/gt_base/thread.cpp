@@ -40,16 +40,14 @@ cThread::runThread(cThread *me, cContext* pCon){
 		me->sync.notify_one();	// let the figment know we're ready.
 
 		while(!me->threadStop){
-			newContext.runJackJobs();
 			me->link.get()->run(&newContext);
 			me->sync.wait(syncLock);
 		}
 	}catch(excep::base_error &e){
-		WARN(e);//std::cout << e.what() << std::endl;	//!!!
+		WARN(e);
 	}catch(std::exception &e){
-		//std::cout << e.what() << std::endl;	//!!!
 	}catch(...){
-		UNKNOWN_ERROR; //std::cout << "unknown error in thread" << std::endl;	//!!!
+		UNKNOWN_ERROR;
 	}
 #else
 	DUMB_REF_ARG(me); DUMB_REF_ARG(pCon);

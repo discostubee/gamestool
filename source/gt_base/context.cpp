@@ -47,30 +47,31 @@ using namespace gt;
 
 #ifdef GT_THREADS
 cContext::cContext() :
-		mThreadID(boost::this_thread::get_id())
+	mThreadID(boost::this_thread::get_id())
 #else
 cContext::cContext()
 #endif
 {
+	mCopyIdx = ORIGINAL;
+	mJackStartIdx = RUN_MODE;
 	mSig = gWorld.get()->regContext(this);
 }
 
 
 cContext::cContext(const cContext & copyMe) :
 	mStack(copyMe.mStack),
-	mSigInfo(copyMe.mSigInfo)
+	mSigInfo(copyMe.mSigInfo),
+	mCopyIdx(copyMe.mStack.size()-1),
+	mJackStartIdx(copyMe.mJackStartIdx)
 {
 	mSig = gWorld.get()->regContext(this);
-	for(dMapInfo::iterator itr = mSigInfo.begin(); itr != mSigInfo.end(); ++itr){
-		itr->second.fromOtherStack = true;
-	}
 }
 
 cContext::~cContext(){
 	try{
 		while(!mStack.empty()){
 			itrInfo = mSigInfo.find(mStack.back());
-			if(itrInfo != mSigInfo.end() && !itrInfo->second.fromOtherStack)
+			if(itrInfo != mSigInfo.end())
 				mStack.back()->emergencyStop();
 			mStack.pop_back();
 		}
@@ -109,7 +110,7 @@ cContext::finished(cFigContext *pFig){
 			throw excep::stackFault(mStack, "context stack underflow.", __FILE__, __LINE__);
 
 		if(mStack.back() != pFig){
-			//WARN("Figment on top of the stack is correct. Forcibly unwinding until we find the right one.");	//- You'll see the warnings from the emergency stop.
+			//WARN_S("Figment on top of the stack is correct. Forcibly unwinding until we find the right one.");	//- You'll see the warnings from the emergency stop.
 			mStack.back()->emergencyStop();
 			mKeepPopping = true;
 		}else{
@@ -127,21 +128,38 @@ cContext::finished(cFigContext *pFig){
 
 		(void)mStack.pop_back();
 
-		if(mKeepPopping && mStack.empty())
+		if( mJackStartIdx <= static_cast<int>(mStack.size()) )
+			mJackStartIdx = RUN_MODE;
+
+		if(mStack.empty())
+			mKeepPopping = false;
+
+		if( mCopyIdx < static_cast<int>(mStack.size()) )
 			mKeepPopping = false;
 
 	}while(mKeepPopping);
 }
 
 bool
-cContext::isStacked(cFigContext *pFig){
+cContext::isStacked(cFigContext *pFig, bool considerJackmode){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
 
 	itrInfo = mSigInfo.find(pFig);
-	if(itrInfo != mSigInfo.end())
+	if(itrInfo != mSigInfo.end()){
+		if(!considerJackmode)
+			return true;
+
+		if(mJackStartIdx==RUN_MODE)
+			return true;
+
+		for(int q = mStack.size()-1; q > mJackStartIdx; --q){
+			if(mStack[q] == pFig)
+				return false;
+		}
 		return true;
+	}
 
 	return false;
 }
@@ -172,19 +190,10 @@ cContext::getSig() const{
 }
 
 void
-cContext::addJackJob(ptrLead aLead, ptrFig aTarget){
-	mJobs.push_back(sJackJob());
-	mJobs.back().mLead = aLead;
-	mJobs.back().mTarget = aTarget;
+cContext::jackMode() {
+	mJackStartIdx = mStack.size();
 }
 
-void
-cContext::runJackJobs(){
-	while(!mJobs.empty()){
-		mJobs.front().mTarget->jack(mJobs.front().mLead, this);
-		mJobs.pop_front();
-	}
-}
 
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
@@ -219,16 +228,15 @@ void
 cFigContext::start(cContext *con){
 	PROFILE;
 
-	if(currentCon != NULL && con->isStacked(this))
-		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
-
 	#ifdef GT_THREADS
 		conMu.lock();
 		locked = true;
 	#endif
 
-	con->add(this);
+	if(currentCon != NULL && con->isStacked(this))
+		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
 
+	con->add(this);
 	currentCon = con;
 }
 

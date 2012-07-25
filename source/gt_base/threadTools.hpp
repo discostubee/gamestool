@@ -99,6 +99,7 @@ namespace gt{
 	protected:
 		#ifdef GT_THREADS
 			boost::recursive_mutex muData;
+			typedef boost::lock_guard<boost::recursive_mutex> dMuLock;
 		#endif
 
 		void deadLemming(tSafeLem<T>* corpse);	//!<	If this is the last lemming for this thread, release the lock for next thread in queue.
@@ -189,16 +190,18 @@ tMrSafety<T>::~tMrSafety()
 template<typename T>
 void
 tMrSafety<T>::take(T* takeMe) {
-	tSafeLem<T> internal(this);
-	getLockData(&internal);
+	#ifdef GT_THREADS
+		dMuLock lock(muData);
+	#endif
 	mData = takeMe;
 }
 
 template<typename T>
 void
 tMrSafety<T>::cleanup() {
-	tSafeLem<T> internal(this);
-	getLockData(&internal);
+	#ifdef GT_THREADS
+		dMuLock lock(muData);
+	#endif
 	delete mData;
 	mData = NULL;
 }
@@ -206,16 +209,19 @@ tMrSafety<T>::cleanup() {
 template<typename T>
 void
 tMrSafety<T>::drop() {
-	tSafeLem<T> internal(this);
-	getLockData(&internal);
+	#ifdef GT_THREADS
+		dMuLock lock(muData);
+	#endif
 	mData = NULL;
 }
 
 template<typename T>
 void
 tMrSafety<T>::set(const T& data) {
-	tSafeLem<T> internal(this);
-	delete getLockData(&internal);
+	#ifdef GT_THREADS
+		dMuLock lock(muData);
+	#endif
+	delete mData;
 	mData = new T;
 	*mData = data;
 }
