@@ -47,8 +47,7 @@ namespace gt{
 
 		virtual const dPlaChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return getHash<cPostman>(); }
-
-		virtual void run(cContext* pCon);
+		virtual void work(cContext* pCon);
 
 	private:
 		tPlug<ptrFig> mTarget;

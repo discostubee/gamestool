@@ -25,10 +25,10 @@ using namespace gt;
 cLead::cLead(cCommand::dUID aCom):
 	mCom(aCom)
 {
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		mCurrentCon = NULL;
 		lemmingCount = 0;
-	#endif
+#	endif
 
 	DBUG_TRACK_START("lead");
 }
@@ -36,9 +36,9 @@ cLead::cLead(cCommand::dUID aCom):
 cLead::cLead(const cLead &otherLead):
 	mCom(otherLead.mCom)
 {
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		mCurrentCon = NULL;
-	#endif
+#	endif
 
 	DBUG_TRACK_START("lead");
 
@@ -57,6 +57,10 @@ cLead::cLead(const cLead &otherLead):
 
 cLead::~cLead(){
 	try{
+#		ifdef GT_THREADS
+			dLock unplugLock(mu);
+#		endif
+
 		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
 			scrTDataItr->second->unlinkLead(this);
 		}
@@ -72,30 +76,12 @@ cLead::~cLead(){
 	}
 }
 
-const cBase_plug*
-cLead::getPlug(const cPlugTag* pTag){
-	PROFILE;
-
-	ASRT_NOTNULL(pTag);
-
-	scrTDataItr = mTaggedData.find(pTag->mID);
-	if(scrTDataItr == mTaggedData.end()){
-		throw excep::notFound(pTag->mName.c_str(), __FILE__, __LINE__);
-	}
-
-	#ifdef GT_THREADS
-		ASRT_NOTNULL(mCurrentCon);
-		return scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_read);
-	#else
-		return scrTDataItr->second;
-	#endif
-}
-
 void
 cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 	PROFILE;
 
-	ASRT_NOTNULL(addMe);	ASRT_NOTNULL(aTag);
+	ASRT_NOTNULL(addMe);
+	ASRT_NOTNULL(aTag);
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr != mTaggedData.end()){
@@ -108,27 +94,75 @@ cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 	addMe->linkLead(this);
 }
 
-void
-cLead::setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail){
+bool
+cLead::getPlug(cBase_plug *setMe, const cPlugTag* pTag){
+	PROFILE;
+
+	ASRT_NOTNULL(pTag);
+
+	scrTDataItr = mTaggedData.find(pTag->mID);
+	if(scrTDataItr == mTaggedData.end())
+		return false;
+
+#	ifdef GT_THREADS
+		ASRT_NOTNULL(mCurrentCon);
+		scrTDataItr->second->readShadow(setMe, mCurrentCon->getSig());
+#	else
+		*setMe = *scrTDataItr->second;
+#	endif
+
+	return true;
+}
+
+bool
+cLead::setPlug(const cBase_plug *setMe, const cPlugTag *aTag){
 	PROFILE;
 
 	ASRT_NOTNULL(setMe);
 	ASRT_NOTNULL(aTag);
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
-	if(scrTDataItr == mTaggedData.end()){
-		if(silentFail)
-			return;
+	if(scrTDataItr == mTaggedData.end())
+		return false;
 
-		throw excep::notFound("plug", __FILE__, __LINE__);
+#	ifdef GT_THREADS
+		ASRT_NOTNULL(mCurrentCon);
+		scrTDataItr->second->writeShadow(setMe, mCurrentCon->getSig());
+#	else
+		*scrTDataItr->second = *setMe;
+#	endif
+
+	return true;
+}
+
+bool
+cLead::passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag){
+	PROFILE;
+
+	ASRT_NOTNULL(passTo);
+	ASRT_NOTNULL(aGetTag);
+
+	scrTDataItr = mTaggedData.find(aGetTag->mID);
+	if(scrTDataItr == mTaggedData.end()){
+		return false;
 	}
 
-	#ifdef GT_THREADS
-		ASRT_NOTNULL(mCurrentCon);
-		*scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_write) = *setMe;
-	#else
-		*scrTDataItr->second = *setMe;
-	#endif
+	if(aPutTag == NULL)
+		aPutTag = aGetTag;
+
+	passTo->addPlug(scrTDataItr->second, aPutTag);
+
+	return true;
+}
+
+void
+cLead::remPlug(const cPlugTag *pGetTag){
+	scrTDataItr = mTaggedData.find(pGetTag->mID);
+
+	if(scrTDataItr == mTaggedData.end())
+		return;
+
+	scrTDataItr->second->unlinkLead(this);
 }
 
 void
@@ -138,39 +172,37 @@ cLead::addToPile(cBase_plug *addMe){
 }
 
 void
-cLead::passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag){
-	PROFILE;
+cLead::passToPile(cLead *passTo, const cPlugTag *pGetTag){
+	scrTDataItr = mTaggedData.find(pGetTag->mID);
 
-	ASRT_NOTNULL(passTo);
-	ASRT_NOTNULL(aGetTag);
+	if(scrTDataItr == mTaggedData.end())
+		return;
 
-	scrTDataItr = mTaggedData.find(aGetTag->mID);
-	if(scrTDataItr == mTaggedData.end()){
-		throw excep::notFound("plug", __FILE__, __LINE__);
-	}
+	scrTDataItr->second->linkLead(passTo);
+	passTo->mDataPile.push_back(scrTDataItr->second);
+}
 
-	if(aPutTag == NULL)
-		aPutTag = aGetTag;
+void
+cLead::addPile(cLead *passTo){
+	for(scrPDataItr = passTo->mDataPile.begin(); scrPDataItr != passTo->mDataPile.end(); ++scrPDataItr)
+		mDataPile.push_back(*scrPDataItr);
+}
 
-	#ifdef GT_THREADS
-		ASRT_NOTNULL(mCurrentCon);
-		passTo->addPlug(
-			scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_write),
-			aPutTag
-		);
-	#else
-		passTo->addPlug(scrTDataItr->second, aPutTag);
-	#endif
+void
+cLead::clearPile(){
+	for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr)
+		(*scrPDataItr)->unlinkLead(this);
+
+	mDataPile.clear();
 }
 
 void
 cLead::unplug(cBase_plug* aPlug){
-
-	#ifdef GT_THREADS
-		dUseLock unplugLock(mMutex);
-	#endif
-
 	PROFILE;
+
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
 
 	//- Search for plug.
 	for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
@@ -189,7 +221,7 @@ cLead::unplug(cBase_plug* aPlug){
 #ifdef GT_THREADS
 	cLead::cLemming
 	cLead::startLead(cContext* pCon){
-		mMutex.lock();
+		mu.lock();
 		mCurrentCon = pCon;
 		return cLemming(this);
 	}
@@ -198,9 +230,16 @@ cLead::unplug(cBase_plug* aPlug){
 	cLead::lemmingCallback(){
 		--lemmingCount;
 		if(lemmingCount <= 0){
-			mMutex.unlock();
+			mu.unlock();
 			mCurrentCon = NULL;
 		}
+	}
+
+	dConSig cLead::getCurrentSig() const{
+		if(mCurrentCon==NULL)
+			return (SL_NO_ENTRY);
+
+		return mCurrentCon->getSig();
 	}
 #endif
 
@@ -235,10 +274,10 @@ GTUT_START(testLead, tagging){
 	{
 		int testA=0;
 		FAUX_JACK(tmpLead, fakeConx);	//- not using smart pointer here.
-		tmpLead->getPlug(&tag)->copyInto(&testA);
+		tmpLead->getValue(&testA, &tag);
 		GTUT_ASRT(testA == magic, "Lead didn't store A");
 
-		numB = tmpLead->getPlug(&tag);
+		tmpLead->getPlug(&numB, &tag);
 		GTUT_ASRT(numB.get() == magic, "B didn't get A's number");
 	}
 }GTUT_END;

@@ -278,9 +278,6 @@ namespace gt{
 			gWorld.get()->addBlueprint(&xBlueprint);
 
 			xDrafted=true;
-
-		//}else{
-		//	WARN_S("already drafted " << T::identify());
 		}
 	}
 

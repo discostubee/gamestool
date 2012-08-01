@@ -56,8 +56,6 @@ namespace gt{
 ///////////////////////////////////////////////////////////////////////////////////
 // Object types
 namespace gt{
-
-	template<typename A> class tShadow;
 	template<typename A> class tPlug;
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -84,49 +82,39 @@ namespace gt{
 
 	protected:
 
-	#ifdef GT_THREADS
-		friend class tShadow<A>;
-	#endif
 	};
 
-	#ifdef GT_THREADS
-		//----------------------------------------------------------------------------------------------------------------
-		//!\brief	Needs to be nested in plug shadows.
-		template<typename A>
-		struct tShadow{
-			tShadow() : mMode(eSM_unset), mData(NULL) {}
-			eShadowMode mMode;
-			tPlug<A>* mData;	//!< If the shadow isn't used, this is null.
-		};
-	#endif
+#	ifdef GT_THREADS
+
+	//!\brief	Used to indicate how shadows are effects, and how the effect the source.
+	enum eShadowMode{
+		eSM_init,	//!< Initial value.
+		eSM_read,	//!< The data has only be read from, or nothing has happened. So just update the shadow and nothing else.
+		eSM_link,	//!< The links have changed and the source needs to change accordingly.
+		eSM_write,	//!< Data is written to the source.
+		eSM_all		//!< Update both the data and the link
+	};
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief
+	//!\brief	The shadow plug allows you to manipulate a plug in a multi-threaded environment, while avoiding deadlocks.
+	//!			It does this by using copies/shadows of its data per thread that tries to access it via the lead. When it runs,
+	//!			it then updates these copies/shadows and the origin depending on what was done to the copy.
 	template<typename A>
-	class tPlugShadows: public tPlugFlakes<A>{
+	class tShadowPlug: public tPlugFlakes<A>{
 	public:
-		tPlugShadows(cBase_plug::dPlugType pTI);
-		virtual ~tPlugShadows();
+		tShadowPlug(cBase_plug::dPlugType pTI);
+		virtual ~tShadowPlug();
 
-		virtual void linkLead(cLead* pLead);	//!<\note Threadsafe
-		virtual void unlinkLead(cLead* pLead);	//!<\note Threadsafe
-
+		virtual void linkLead(cLead* pLead);	//!< Adds the link as a shadow update.
+		virtual void unlinkLead(cLead* pLead);	//!< Adds the unlink as a shadow update.
 		virtual void updateStart();
 		virtual void updateFinish();
 
-		#ifdef GT_THREADS
-			virtual void save(cByteBuffer* pSaveHere){
-				updateStart();
-				tPlugFlakes<A>::save(pSaveHere);
-				updateFinish();
-			}
-
-			virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
-				updateStart();
-				tPlugFlakes<A>::loadEat(pChewToy, aReloads);
-				updateFinish();
-			}
-		#endif
+		virtual void save(cByteBuffer* pSaveHere){
+			updateStart();
+			tPlugFlakes<A>::save(pSaveHere);
+			updateFinish();
+		}
 
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
 		virtual bool operator== (const cBase_plug &pD) const =0;
@@ -135,32 +123,57 @@ namespace gt{
 		virtual const A& getConst() const =0;
 
 	protected:
-
-		#ifdef GT_THREADS
-			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor);
-		#endif
+		virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon);
+		virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon);
 
 	friend class cLead;
 
 	private:
-		tPlugShadows& operator=(const tPlugShadows<A> &other){ return *this; }
+		struct tShadow{
+			eShadowMode mMode;
+			std::list<cLead*> links, unlinks;
+			A mData;	//!< If the shadow isn't used, this is null.
+		};
 
-		#ifdef GT_THREADS
-			typedef boost::lock_guard<boost::recursive_mutex> dMuLock;
-			typedef std::vector< tShadow<A> > dVecShadow;
+		typedef boost::lock_guard<boost::recursive_mutex> dLock;
+		typedef std::vector< tShadow* > dVecShadow;
 
-			boost::recursive_mutex muMap;
+		boost::recursive_mutex guardShadows;
+		dVecShadow mShadows;
+		typename dVecShadow::iterator itrShadow;	//!< handy.
+		tShadow *tmpSRef;	//!< handy.
+		std::list<cLead*>::iterator itrSLeads;
 
-			dVecShadow mShadows;
-			typename dVecShadow::iterator itrShadow;	//!< handy.
-		#endif
+		tShadowPlug& operator=(const tShadowPlug<A> &other){ return *this; }	//!< Banned.
+		void setTmpShadowRef(dConSig pSig);
 	};
+#	endif
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Handy way to select which parent to use. Can't typedef and macro is evil, so the next best thing to do
+	//!			is this.
+#	ifdef GT_THREADS
+		template<typename A>
+		class tPlugParent : public tShadowPlug<A> {
+		public:
+			tPlugParent(cBase_plug::dPlugType pTI) : tShadowPlug<A>(pTI) {}
+			virtual ~tPlugParent() {}
+		};
+#	else
+		template<typename A>
+		class tPlugParent : public tPlugFlakes<A> {
+		public:
+			tPlugParent(cBase_plug::dPlugType pTI) : tPlugFlakes<A>(pTI) {}
+			virtual ~tPlugParent() {}
+		};
+#	endif
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Implements cBase_plug.
 	//!\note	Refer to the cBase_plug class for more info.
 	template<typename A>
-	class tPlug: public tPlugShadows<A>{
+	class tPlug: public tPlugParent<A>
+	{
 	public:
 		typedef void (*fuCopyInto)(const A *copyFrom, void *copyTo);
 		typedef std::map<cBase_plug::dPlugType, fuCopyInto> dMapCopiers;
@@ -183,6 +196,7 @@ namespace gt{
 
 	protected:
 		virtual void actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const;
+		virtual void actualCopyFrom(const void* pContainer, cBase_plug::dPlugType pType);
 
 	private:
 		A mD;	//!< Data
@@ -194,132 +208,177 @@ namespace gt{
 // Templates
 namespace gt{
 
-	//--------------------------------------
-	template<typename A>
-	tPlugShadows<A>::tPlugShadows(cBase_plug::dPlugType pTI) :
-		tPlugFlakes<A>(pTI)
-	{}
+#	ifdef GT_THREADS
 
-	template<typename A>
-	tPlugShadows<A>::~tPlugShadows(){
-		try{
-			#ifdef GT_THREADS
-				dMuLock lock(muMap);
-
-				for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow)
-					delete itrShadow->mData;
-			#endif
-
-		}catch(...){
-			WARN("Unknown error when destroying a plug");
-		}
-	}
-
-	#ifdef GT_THREADS
+		//--------------------------------------
 		template<typename A>
-		cBase_plug*
-		tPlugShadows<A>::getShadow(dConSig aCon, eShadowMode whatFor){
-			if(mShadows.size() < aCon+1){
-				dMuLock lock(muMap);
-				for(size_t i = mShadows.size(); i <= aCon; ++i)
-					mShadows.push_back( tShadow<A>() );
-			}
+		tShadowPlug<A>::tShadowPlug(cBase_plug::dPlugType pTI) :
+			tPlugFlakes<A>(pTI)
+		{}
 
-			if(mShadows[aCon].mData == NULL){
-				dMuLock lock(muMap);
-				mShadows[aCon].mData = new tPlug<A>(get());
-			}
+		template<typename A>
+		tShadowPlug<A>::~tShadowPlug(){
+			typedef tPlugFlakes<A> p;
+			try{
+				dLock lock(guardShadows);
 
-			//- It should be fine to not lock here because this data should be independent of the other threads, and the shadow list should only be updated when all leads are locked.
-			if(mShadows[aCon].mMode != eSM_write)	//- Don't overwrite a write operation. these operations should be quick as it's a vector.
-				mShadows[aCon].mMode = whatFor;
-			return mShadows[aCon].mData;
-		}
-	#endif
+				//- We need to unplug first before destroying shadows.
+				for(
+					p::itrLead = p::mLeadsConnected.begin();
+					p::itrLead != p::mLeadsConnected.end();
+					++p::itrLead
+				)
+					p::itrLead->first->unplug(this);
 
-	template<typename A>
-	void
-	tPlugShadows<A>::updateStart(){
-		#ifdef GT_THREADS
-			PROFILE;
-			muMap.lock();
+				p::mLeadsConnected.clear();
 
-			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
-				if(itrShadow->mData != NULL){
-					if(itrShadow->mMode == eSM_write)
-						get() = itrShadow->mData->get();
-				}
-			}
-		#endif
-	}
-
-	template<typename A>
-	void
-	tPlugShadows<A>::updateFinish(){
-		#ifdef GT_THREADS
-			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
-				if(itrShadow->mData != NULL){
-					itrShadow->mMode = eSM_read;
-					itrShadow->mData->get() = get();
-				}
-			}
-
-			muMap.unlock();
-		#endif
-	}
-
-	template<typename A>
-	void
-	tPlugShadows<A>::linkLead(cLead* pLead){
-		#ifdef GT_THREADS
-			dMuLock lock(muMap);
-		#endif
-
-		cBase_plug::linkLead(pLead);
-	}
-
-	template<typename A>
-	void
-	tPlugShadows<A>::unlinkLead(cLead* pLead){
-		#ifdef GT_THREADS
-			dMuLock lock(muMap);
-		#endif
-
-		cBase_plug::unlinkLead(pLead);
-
-		#ifdef GT_THREADS
-			if(tPlugFlakes<A>::mLeadsConnected.empty()){
 				for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow)
-					SAFEDEL(itrShadow->mData);
+					delete (*itrShadow);
 
-				mShadows.clear();
+			}catch(...){
+				WARN_S("Unknown error when destroying a plug");
 			}
-		#endif
-	}
+		}
 
+
+		template<typename A>
+		void
+		tShadowPlug<A>::linkLead(cLead* pLead){
+			PROFILE;
+
+			dLock lock(guardShadows);
+			setTmpShadowRef(pLead->getCurrentSig());
+			tmpSRef->links.push_back(pLead);
+			//- may not be needed.
+			/*if(tmpSRef->mMode != eSM_read)
+				tmpSRef->mMode = eSM_all;
+			else
+				tmpSRef->mMode = eSM_link;*/
+		}
+
+		template<typename A>
+		void
+		tShadowPlug<A>::unlinkLead(cLead* pLead){
+			PROFILE;
+
+			dLock lock(guardShadows);
+			setTmpShadowRef(pLead->getCurrentSig());
+			tmpSRef->unlinks.push_back(pLead);
+			/*if(tmpSRef->mMode != eSM_read)
+				tmpSRef->mMode = eSM_all;
+			else
+				tmpSRef->mMode = eSM_link;*/
+		}
+
+		template<typename A>
+		void
+		tShadowPlug<A>::updateStart(){
+			PROFILE;
+
+			dLock lock(guardShadows);
+
+			for(itrSLeads = tmpSRef->links.begin(); itrSLeads != tmpSRef->links.end(); ++itrSLeads)
+				cBase_plug::linkLead(*itrSLeads);
+
+			for(itrSLeads = tmpSRef->unlinks.begin(); itrSLeads != tmpSRef->unlinks.end(); ++itrSLeads)
+				cBase_plug::unlinkLead(*itrSLeads);
+
+			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
+				if(*itrShadow != NULL && ((*itrShadow)->mMode == eSM_write || (*itrShadow)->mMode == eSM_all)){
+					get() = (*itrShadow)->mData;
+				}
+			}
+		}
+
+		template<typename A>
+		void
+		tShadowPlug<A>::updateFinish(){
+			typedef tPlugParent<A> p;
+
+			PROFILE;
+
+			dLock lock(guardShadows);
+
+			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
+				if(*itrShadow != NULL){
+					(*itrShadow)->mData = get();
+					(*itrShadow)->mMode = eSM_read;
+				}
+			}
+		}
+
+		template<typename A>
+		void
+		tShadowPlug<A>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
+			if(tPlugFlakes<A>::mType != pWriteTo->mType)
+				return;
+
+			setTmpShadowRef(aCon);
+
+			if(tmpSRef->mMode == eSM_init){	//- may be a bad idea.
+				dLock lock(guardShadows);
+				tmpSRef->mData = get();
+			}
+
+			pWriteTo->copyFrom(&tmpSRef->mData);
+		}
+
+		template<typename A>
+		void
+		tShadowPlug<A>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
+			if(tPlugFlakes<A>::mType != pReadFrom->mType)
+				return;
+
+			setTmpShadowRef(aCon);
+			pReadFrom->copyInto(&tmpSRef->mData);
+			tmpSRef->mMode = eSM_write;
+		}
+
+		template<typename A>
+		void
+		tShadowPlug<A>::setTmpShadowRef(dConSig pSig){
+			ASRT_TRUE(pSig != SL_NO_ENTRY, "lead has no current context.");
+
+			size_t s = static_cast<dConSig>(pSig);
+			if(s > mShadows.size() ){
+				dLock lock(guardShadows);
+				while(s > mShadows.size())
+					mShadows.push_back( NULL );
+			}
+
+			tmpSRef = mShadows[pSig];
+
+			if(tmpSRef==NULL){
+				dLock lock(guardShadows);
+				tmpSRef = new tShadow();
+				tmpSRef->mMode = eSM_init;
+			}
+		}
+
+#	endif
 
 	//--------------------------------------
 
 	template<typename A>
 	tPlug<A>::tPlug():
-		tPlugShadows<A>(cBase_plug::getPlugType<A>())
+		tPlugParent<A>(cBase_plug::getPlugType<A>())
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const A& pA):
-		tPlugShadows<A>(cBase_plug::getPlugType<A>()),
+		tPlugParent<A>(cBase_plug::getPlugType<A>()),
 		mD(pA)
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const tPlug<A> &other) :
-		tPlugShadows<A>(cBase_plug::getPlugType<A>()),
+		tPlugParent<A>(other.mType),
 		mD(other.mD)
 	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const cBase_plug *other) :
-		tPlugShadows<A>(other->mType)
+		tPlugParent<A>(other->mType)
 	{
 		other->copyInto(&mD);
 	}
@@ -347,7 +406,7 @@ namespace gt{
 	template<typename A>
 	bool
 	tPlug<A>::operator== (const cBase_plug &pD) const {
-		return (pD.mType == tPlugShadows<A>::mType);
+		return (pD.mType == tPlugFlakes<A>::mType);
 	}
 
 	template<typename A>
@@ -372,12 +431,25 @@ namespace gt{
 	template<typename A>
 	void
 	tPlug<A>::actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const{
-		typename dMapCopiers::iterator itrCopiers = getPlugCopiers<A>()->find( cBase_plug::getPlugType<A>() );
+		PROFILE;
+
+		typename dMapCopiers::iterator itrCopiers = getPlugCopiers<A>()->find( pType );
 		if(itrCopiers != getPlugCopiers<A>()->end()){
-			itrCopiers->second( &mD, pContainer );
+			itrCopiers->second(&mD, pContainer);
 		}else{
 			throw excep::cantCopy(typeid(A).name(), "unknown", __FILE__, __LINE__);
 		}
+	}
+
+	template<typename A>
+	void
+	tPlug<A>::actualCopyFrom(const void* pContainer, cBase_plug::dPlugType pType){
+		PROFILE;
+
+		if(pType != tPlugParent<A>::mType)
+			throw excep::cantCopy(typeid(A).name(), "unknown", __FILE__, __LINE__);
+
+		mD = *reinterpret_cast<const A*>(pContainer);
 	}
 }
 
@@ -387,8 +459,7 @@ namespace gt{
 
 	//!\brief	plug leads are illegal. Don't make much sense anyhow.
 	template<>
-	class tPlug<cLead>: public tPlugShadows<cLead>{
-		//--- I AM BANNED COZ I BREAK THINGS ---///
+	class tPlug<cLead>: public tPlugParent<cLead>{
 	};
 
 	template<>

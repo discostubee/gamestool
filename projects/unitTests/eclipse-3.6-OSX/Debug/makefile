@@ -44,7 +44,7 @@ all: unitTests_d
 unitTests_d: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MacOS X C++ Linker'
-	g++ -L"/Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTests/eclipse-3.6-OSX/../../../includes" -L"/Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTests/eclipse-3.6-OSX/../../shared/eclipse-3.6-OSX/lib_links" -L/Developer/SDKs/boost_1_49_0/stage/lib -o "unitTests_d" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTests/eclipse-3.6-OSX/../../../includes" -L"/Users/stuandlou/Documents/workspace/gamestool_hg/projects/unitTests/eclipse-3.6-OSX/../../shared/eclipse-3.6-OSX/lib_links/boost" -o "unitTests_d" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build

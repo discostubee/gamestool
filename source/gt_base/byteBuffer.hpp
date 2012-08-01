@@ -78,6 +78,7 @@ public:
 
 	cByteBuffer & operator= (const cByteBuffer &pCopyMe);	//!< Alias for copy.
 	cByteBuffer & operator+= (const cByteBuffer &pCopyMe);	//!< Alias for add.
+	bool operator== (const cByteBuffer &pOther) const;	//!< Compares start memory address, for now.
 
 protected:
 	dByte*	mBuff;

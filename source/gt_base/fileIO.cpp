@@ -76,7 +76,7 @@ cBase_fileIO::~cBase_fileIO(){
 
 void
 cBase_fileIO::patSetPath(ptrLead aLead){
-	mPath = aLead->getPlug(xPT_filePath);
+	aLead->getPlug(&mPath, xPT_filePath);
 }
 
 void
@@ -84,12 +84,12 @@ cBase_fileIO::patRead(ptrLead aLead){
 	size_t readSize = 0;
 	size_t readStart = 0;
 
-	aLead->getValue(&readStart, xPT_readSize, true);
-	aLead->getValue(&readSize, xPT_startSpot, true);
+	aLead->getValue(&readStart, xPT_readSize);
+	aLead->getValue(&readSize, xPT_startSpot);
 
 	tPlug<cByteBuffer> readInto;
 	read(&readInto.get(), readSize, readStart);
-	aLead->setPlug(&readInto, xPT_buffer, false);
+	aLead->setPlug(&readInto, xPT_buffer);
 }
 
 void
@@ -97,15 +97,16 @@ cBase_fileIO::patWrite(ptrLead aLead){
 
 	tPlug<cByteBuffer>  writeHere;
 	write(&writeHere.get());
-	aLead->setPlug(&writeHere, xPT_buffer, false);
+	aLead->setPlug(&writeHere, xPT_buffer);
 }
 
 void
 cBase_fileIO::patInsert(ptrLead aLead){
 	size_t startSpot = 0;
+	tPlug<cByteBuffer> current;
 
-	aLead->getValue(&startSpot, xPT_startSpot, true);
-	tPlug<cByteBuffer> current = aLead->getPlug(xPT_buffer);
+	aLead->getValue(&startSpot, xPT_startSpot);
+	aLead->getPlug(&current, xPT_buffer);
 	insert( &current.get(), startSpot );
 	aLead->setPlug(&current, xPT_buffer);
 }

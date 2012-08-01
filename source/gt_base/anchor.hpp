@@ -51,7 +51,7 @@ namespace gt{ //gamestool
 		virtual dNameHash getExtension() const { return extends(); }
 
 		//- Optional
-		virtual void run(cContext* pCon);
+		virtual void work(cContext* pCon);
 		virtual void save(cByteBuffer* pAddHereb);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);

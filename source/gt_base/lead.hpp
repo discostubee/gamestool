@@ -51,41 +51,54 @@ namespace gt{
 		cLead(const cLead &otherLead);
 		~cLead();
 
-		//!\brief	If it has the tagged plug, it returns a read only pointer to it. Throws if the plug isn't found.
-		//!			Be careful not to store the pointer anywhere. Getting the plug this way is handier than passing
-		//!			the plug in as an argument.
-		//!\param	pTag	This is the tag we use to find our plug.
-		const cBase_plug * getPlug(const cPlugTag* pTag);
-
 		//!\brief	Adds a tagged reference to a plug to our lead.
-		void addPlug(cBase_plug *addMe, const cPlugTag *aTag);
+		//!\param	addMe	Plug to connect to lead.
+		//!\param	pTag	This is the tag we use to find our plug.
+		void addPlug(cBase_plug *addMe, const cPlugTag *pTag);
+
+		//!\brief	Get a plug from a lead by copying its value into another plug.
+		//!\param	setMe	The plug we want to copy into.
+		//!\param	pTag	This is the tag we use to find our plug.
+		//!\return	False if plug not found
+		bool getPlug(cBase_plug *setMe, const cPlugTag* pTag);
 
 		//!\brief	If it has the tagged plug, it sets it to the value stored in the plug being passed in.
-		void setPlug(cBase_plug *setMe, const cPlugTag *aTag, bool silentFail = false);
+		//!\param	pTag	This is the tag we use to find our plug.
+		bool setPlug(const cBase_plug *copyMe, const cPlugTag *pTag);
 
 		//!\brief	If you want to pass a plug from one lead to another, here's how you do it.
 		//!\param	passTo	This is the lead that will get the plug from this lead.
-		//!\param	aGetTag	This is the tag used to find the plug in this lead.
-		//!\param	aPutTag	(optional) If specified, the target lead will be assigned the plug using a tag
-		//!				different to the tag used to get it.
-		void passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag = NULL);
-
-		//!\brief	Adds a piled reference to a plug.
-		void addToPile(cBase_plug *addMe);
-
-		//!\brief	Appends the vector with the contents of the pile.
-		//!\note	Lists and queues are not supported because the pile is intended to be fast to index.
-		template<typename PLUG_TYPE> void getPile(std::vector< tPlug<PLUG_TYPE> > *target);
+		//!\param	pGetTag	This is the tag used to find the plug in this lead.
+		//!\param	pPutTag	(optional) If specified, the target lead will be assigned the plug using this
+		//!				put tag instead
+		//!\return	false if the plug wasn't found using the get tag.
+		bool passPlug(cLead *passTo, const cPlugTag *pGetTag, const cPlugTag *pPutTag = NULL);
 
 		//!\brief	Lets you use direct types instead of plugs. Does this by copying to the input.
 		//!\param	input	Pointer to where you want to copy the value.
 		//!\param	tag		tag for the plug you wish to copy a value from.
-		//!\param	silentFail	If set to true, this function won't throw if it can't find the plug or it can't copy it.
-		//!				Use this if you don't care if the value was set or not.
-		template<typename CONTAIN> void getValue( CONTAIN *input, const cPlugTag *tag, bool silentFail = false );
+		//!\return	false if it couldn't find the plug
+		template<typename CONTAIN> bool getValue( CONTAIN *input, const cPlugTag *tag);
 
-		//!\brief	Appends the vector with the values contained in the pile.
-		template<typename VEC_TYPE> void getPileValues(std::vector< VEC_TYPE > *target);
+		//!\brief	If you don't want to re-create a lead without this plug, or you don't want to over-ride it, you
+		//!			can remove it with this.
+		void remPlug(const cPlugTag *pGetTag);
+
+		//!\brief	Adds a piled reference to a plug.
+		void addToPile(cBase_plug *addMe);
+
+		//!\brief	If you need to add a tagged plug to another lead's pile, do this:
+		void passToPile(cLead *passTo, const cPlugTag *pGetTag);
+
+		//!\brief	Adds one lead's pile to the end of this lead.
+		void addPile(cLead *passTo);
+
+		//!\brief
+		template<typename PLUG_TYPE> void getPile(std::vector< tPlug<PLUG_TYPE> > *target);
+
+		//!\brief	Clears out the pile. Provided for those times when instead of making a new lead, you want to keep
+		//!			the tagged data.
+		void clearPile();
 
 		//!\brief	When a plug dies, it must let the lead know it is no longer valid.
 		//!\brief	Needs to lock because this can come from anywhere.
@@ -100,7 +113,8 @@ namespace gt{
 				~cLemming() { if(mParent) mParent->lemmingCallback(); }
 			};
 
-			cLemming startLead(cContext* pCon);	//!< Apart from the unplug function, this is only thread-locked function as it's the only way to ensure there is no thread collisions.
+			cLemming startLead(cContext* pCon);
+			dConSig getCurrentSig() const;
 		#endif
 
 	protected:
@@ -108,9 +122,9 @@ namespace gt{
 		typedef std::list<cBase_plug*> dPiledData;
 		
 		#ifdef GT_THREADS
-			typedef boost::lock_guard<boost::recursive_mutex> dUseLock;
+			typedef boost::lock_guard<boost::recursive_mutex> dLock;
 
-			boost::recursive_mutex mMutex;
+			boost::recursive_mutex mu;
 			cContext* mCurrentCon;
 			short lemmingCount;
 
@@ -135,53 +149,35 @@ namespace gt{
 // Templates
 namespace gt{
 
-	//--------------------------------------------------------------------------------------------------------
-	template<typename PLUG_TYPE>
+	template<typename CONTAIN>
+	bool
+	cLead::getValue( CONTAIN *input, const cPlugTag *tag){
+		scrTDataItr = mTaggedData.find(tag->mID);
+
+		if(scrTDataItr == mTaggedData.end())
+			return false;
+
+		scrTDataItr->second->copyInto(input);
+		return true;
+	}
+
+  	template<typename PLUG_TYPE>
 	void
 	cLead::getPile(std::vector< tPlug<PLUG_TYPE> > *target){
 		target->reserve(target->size() + mDataPile.size());
 		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-			#ifdef GT_THREADS
+#			ifdef GT_THREADS
 				ASRT_NOTNULL(mCurrentCon);
-				target->push_back( (*scrPDataItr)->getShadow(mCurrentCon->getSig(), eSM_read) );
-			#else
+				target->push_back( tPlug<PLUG_TYPE>() );
+				(*scrPDataItr)->readShadow( &target->back(), mCurrentCon->getSig() );
+#			else
 				 target->push_back( (*scrPDataItr) );
-			#endif
+#			endif
 		}
 	}
 
-	template<typename CONTAIN>
-	void
-	cLead::getValue( CONTAIN *input, const cPlugTag *tag, bool silentFail ){
-		scrTDataItr = mTaggedData.find(tag->mID);
-		if(scrTDataItr != mTaggedData.end()){
-			#ifdef GT_THREADS
-				ASRT_NOTNULL(mCurrentCon);
-				scrTDataItr->second->getShadow(mCurrentCon->getSig(), eSM_read)->copyInto(input);
-			#else
-				scrTDataItr->second->copyInto(input);
-			#endif
-		}else if(!silentFail){
-			std::stringstream ss; ss << "plug " << &tag->mName;
-			throw excep::notFound(ss.str().c_str(), __FILE__, __LINE__);
-		}
-	}
-
-	template<typename VEC_TYPE>
-	void
-	cLead::getPileValues(std::vector< VEC_TYPE > *target){
-		target->reserve(target->size() + mDataPile.size());
-		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-			target->push_back(VEC_TYPE());
-			#ifdef GT_THREADS
-				ASRT_NOTNULL(mCurrentCon);
-				(*scrPDataItr)->getShadow(mCurrentCon->getSig(), eSM_read)->copyInto( &target->back() );
-			#else
-				 (*scrPDataItr)->copyInto( &target->back() );
-			#endif
-		}
-	}
-
+}
+/*
 	//--------------------------------------------------------------------------------------------------------
 	template<typename PLUG_TYPE>
 	cBase_plug::dPlugType
@@ -193,15 +189,6 @@ namespace gt{
 		return typeID;
 	}
 
-	template< typename T>
-	void
-	cBase_plug::copyInto(T *container) const{
-		actualCopyInto(reinterpret_cast<void*>(container), getPlugType<T>());
-	}
-
-}
-
-/*
 //!\brief
 struct sSortDMap{
 	bool operator () (const dDataMap::iterator &pA, const dDataMap::iterator &pB) const {

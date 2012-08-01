@@ -74,6 +74,7 @@ namespace gt{
 
 		virtual void jack(ptrLead pLead, cContext* pCon)=0;
 		virtual void run(cContext* pCon)=0;
+		virtual void work(cContext* pCon)=0;
 		virtual void getLinks(std::list<ptrFig>* pOutLinks)=0;
 		virtual void start(cContext *con)=0;
 		virtual void stop(cContext *con)=0;

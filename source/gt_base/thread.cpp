@@ -35,7 +35,6 @@ cThread::runThread(cThread *me, cContext* pCon){
 #ifdef GT_THREADS
 	try{
 		dLock syncLock(me->syncMu);
-		dLock lockFinish(me->finishMu);
 		cContext newContext(*pCon);
 		me->sync.notify_one();	// let the figment know we're ready.
 
@@ -46,12 +45,14 @@ cThread::runThread(cThread *me, cContext* pCon){
 	}catch(excep::base_error &e){
 		WARN(e);
 	}catch(std::exception &e){
+		WARN_S(e.what());
 	}catch(...){
 		UNKNOWN_ERROR;
 	}
 #else
 	DUMB_REF_ARG(me); DUMB_REF_ARG(pCon);
 #endif
+	me->threading = false;
 }
 
 #ifdef GT_THREADS
@@ -65,25 +66,12 @@ cThread::cThread()
 }
 
 cThread::~cThread(){
-#ifdef GT_THREADS
-	if(threading){
-		{
-			dLock lockReady(syncMu);
-			threadStop = true;
-			sync.notify_all();
-		}
-		dLock lockFinish(finishMu); // wait for the thread to finish.
-		myThread.join();
-	}
-#endif
+	stopThread();
 }
 
 void
-cThread::run(cContext* pCon){
+cThread::work(cContext* pCon){
 	PROFILE;
-
-	start(pCon);
-	updatePlugs();
 
 #ifdef GT_THREADS
 	if(!threading && link.get().valid()){
@@ -101,25 +89,31 @@ cThread::run(cContext* pCon){
 #else
 	link.get()->run(pCon);
 #endif
-	stop(pCon);
 }
 
 void
 cThread::patLink(ptrLead aLead){
-	#ifdef GT_THREADS
-	if(threading){
-		{
-			dLock lockReady(syncMu);
-			threadStop = true;
-			sync.notify_all();
-		}
-		dLock lockFinish(finishMu); // wait for the thread to finish.
-		myThread.join();
-		threading = false;
-	}
-	#endif
+	stopThread();
+	aLead->getPlug(&link, xPT_fig);
+}
 
-	link = aLead->getPlug(xPT_fig);
+
+void
+cThread::stopThread(){
+#	ifdef GT_THREADS
+		if(threading){
+			PROFILE;
+			try{
+				threadStop = true;
+				sync.notify_all();
+
+				if(myThread.joinable())
+					myThread.timed_join( boost::posix_time::milliseconds(5000) );
+			}catch(...){
+				WARN_S("Error stopping thread");
+			}
+		}
+#	endif
 }
 
 
@@ -139,7 +133,8 @@ namespace gt{
 		tPlug<int> hits;
 
 		void patWrite(ptrLead aLead){
-			tPlug<std::string> tmp = aLead->getPlug(xPT_word);
+			tPlug<std::string> tmp;
+			aLead->getPlug(&tmp, xPT_word);
 			chatter.get().append( tmp.get() );
 
 			chatter.get().append( "." );
@@ -185,8 +180,8 @@ namespace gt{
 		tPlug<std::string> phrase;
 
 		void patSetup(ptrLead aLead){
-			target = aLead->getPlug(xPT_target);
-			phrase = aLead->getPlug(xPT_word);
+			aLead->getPlug(&target, xPT_target);
+			aLead->getPlug(&phrase, xPT_word);
 		}
 	public:
 		static const cCommand::dUID xSetup;
@@ -295,7 +290,7 @@ namespace gt{
 
 			{
 				FAUX_JACK(getChatter, fakeContext);
-				chatter = getChatter->getPlug(cShareTarget::xPT_chatter);
+				getChatter->getPlug(&chatter, cShareTarget::xPT_chatter);
 				DBUG_LO("chatter='" << chatter.get() << "'");
 			}
 

@@ -73,12 +73,52 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
+// Includes
 #include "iFigment.hpp"
 #include "threadTools.hpp"
 #include "profiler.hpp"
 
 #include <set>
 #include <stdarg.h>
+
+////////////////////////////////////////////////////////////////////
+// Macros
+
+#ifdef WIN32
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
+#	define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
+#else
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
+#	define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
+#	define DYN_LIB_DEF(rnt) rnt
+#endif
+
+#define WARN(x) gt::cWorld::warnError(x, __FILE__, __LINE__)
+#define WARN_S(x) {std::stringstream ss; ss << x; gt::cWorld::warnError(ss.str().c_str(), __FILE__, __LINE__);}
+
+// Handy for all those (...) catch blocks.
+extern const char *MSG_UNKNOWN_ERROR;
+#define UNKNOWN_ERROR	WARN_S(MSG_UNKNOWN_ERROR);
+
+#ifdef GTUT
+#	undef GTUT_END
+#	define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
+#endif
+
+#ifdef DEBUG
+#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
+#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+#else
+#	define PROFILE
+#	define DBUG_LO(x)
+#endif
+
+#if defined(DBUG_VERBOSE) && defined(DEBUG)
+#	define DBUG_VERBOSE_LO(x) DBUG_LO(x)
+#else
+#	define DBUG_VERBOSE_LO(x)
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -327,46 +367,6 @@ namespace gt{
 namespace gt{
 	void redirectWorld(cWorld* pWorldNew);
 }
-
-
-////////////////////////////////////////////////////////////////////
-// Macros
-
-#ifdef WIN32
-	//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
-#	define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
-#	define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
-#else
-	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
-#	define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
-#	define DYN_LIB_DEF(rnt) rnt
-#endif
-
-#define WARN(x) gt::cWorld::warnError(x, __FILE__, __LINE__)
-#define WARN_S(x) {std::stringstream ss; ss << x; gt::cWorld::warnError(ss.str().c_str(), __FILE__, __LINE__);}
-
-// Handy for all those (...) catch blocks.
-extern const char *MSG_UNKNOWN_ERROR;
-#define UNKNOWN_ERROR	WARN(MSG_UNKNOWN_ERROR);
-
-#ifdef GTUT
-#	undef GTUT_END
-#	define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
-#endif
-
-#ifdef DEBUG
-#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
-#else
-#	define PROFILE
-#	define DBUG_LO(x)
-#endif
-
-#if defined(DBUG_VERBOSE) && defined(DEBUG)
-#	define DBUG_VERBOSE_LO(x) DBUG_LO(x)
-#else
-#	define DBUG_VERBOSE_LO(x)
-#endif
 
 
 #endif

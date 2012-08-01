@@ -84,7 +84,11 @@ GTUT_START(testPlug, saveLoad){
 	GTUT_ASRT(B.get() == A.get(), "A didn't save, or B didn't load, correctly.");
 }GTUT_END;
 
+#	ifdef GT_THREADS
+	GTUT_START(testShadowPlug, meh){
 
+	}GTUT_END;
+#	endif
 
 
 #endif

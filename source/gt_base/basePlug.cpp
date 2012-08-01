@@ -31,7 +31,8 @@ cBase_plug::cBase_plug(const cBase_plug &pCopy):
 {
 }
 
-cBase_plug::~cBase_plug(){for(
+cBase_plug::~cBase_plug(){
+	for(
 		itrLead = mLeadsConnected.begin();
 		itrLead != mLeadsConnected.end();
 		++itrLead
@@ -72,7 +73,7 @@ cBase_plug::unlinkLead(cLead *pLead){
 		}
 
 	}else{
-		WARN("lead isn't connected to this plug.");
+		WARN_S("lead isn't connected to this plug.");
 	}
 }
 

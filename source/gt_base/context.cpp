@@ -53,16 +53,14 @@ cContext::cContext()
 #endif
 {
 	mCopyIdx = ORIGINAL;
-	mJackStartIdx = RUN_MODE;
 	mSig = gWorld.get()->regContext(this);
 }
 
 
 cContext::cContext(const cContext & copyMe) :
 	mStack(copyMe.mStack),
-	mSigInfo(copyMe.mSigInfo),
-	mCopyIdx(copyMe.mStack.size()-1),
-	mJackStartIdx(copyMe.mJackStartIdx)
+	mStackInfo(copyMe.mStackInfo),
+	mCopyIdx(copyMe.mStack.size()-1)
 {
 	mSig = gWorld.get()->regContext(this);
 }
@@ -70,8 +68,8 @@ cContext::cContext(const cContext & copyMe) :
 cContext::~cContext(){
 	try{
 		while(!mStack.empty()){
-			itrInfo = mSigInfo.find(mStack.back());
-			if(itrInfo != mSigInfo.end())
+			itrInfo = mStackInfo.find(mStack.back());
+			if(itrInfo != mStackInfo.end())
 				mStack.back()->emergencyStop();
 			mStack.pop_back();
 		}
@@ -79,7 +77,7 @@ cContext::~cContext(){
 	}catch(excep::base_error &e){
 		WARN(e);
 	}catch(...){
-		WARN("unkown error when destroying a context.");
+		WARN_S("unkown error when destroying a context.");
 	}
 }
 
@@ -91,9 +89,9 @@ cContext::add(cFigContext *pFig){
 
 	mStack.push_back(pFig);
 
-	itrInfo = mSigInfo.find(pFig);
-	if(itrInfo == mSigInfo.end()){
-		mSigInfo[pFig] = sInfo(1, pFig->hash());
+	itrInfo = mStackInfo.find(pFig);
+	if(itrInfo == mStackInfo.end()){
+		mStackInfo[pFig] = sInfo(1, pFig->hash());
 	}else{
 		++itrInfo->second.timesStacked;
 	}
@@ -110,26 +108,23 @@ cContext::finished(cFigContext *pFig){
 			throw excep::stackFault(mStack, "context stack underflow.", __FILE__, __LINE__);
 
 		if(mStack.back() != pFig){
-			//WARN_S("Figment on top of the stack is correct. Forcibly unwinding until we find the right one.");	//- You'll see the warnings from the emergency stop.
+			//WARN_S("Figment on top of the stack is incorrect. Forcibly unwinding until we find the right one.");	//- You'll see the warnings from the emergency stop.
 			mStack.back()->emergencyStop();
 			mKeepPopping = true;
 		}else{
 			mKeepPopping = false;
 		}
 
-		itrInfo = mSigInfo.find(mStack.back());
-		if(itrInfo == mSigInfo.end())
+		itrInfo = mStackInfo.find(mStack.back());
+		if(itrInfo == mStackInfo.end())
 			throw excep::stackFault(mStack, "Expected to find signature on info map", __FILE__, __LINE__);
 
 		--itrInfo->second.timesStacked;
 		if(itrInfo->second.timesStacked == 0){
-			mSigInfo.erase(itrInfo);
+			mStackInfo.erase(itrInfo);
 		}
 
 		(void)mStack.pop_back();
-
-		if( mJackStartIdx <= static_cast<int>(mStack.size()) )
-			mJackStartIdx = RUN_MODE;
 
 		if(mStack.empty())
 			mKeepPopping = false;
@@ -141,27 +136,13 @@ cContext::finished(cFigContext *pFig){
 }
 
 bool
-cContext::isStacked(cFigContext *pFig, bool considerJackmode){
+cContext::isStacked(cFigContext *pFig){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
 
-	itrInfo = mSigInfo.find(pFig);
-	if(itrInfo != mSigInfo.end()){
-		if(!considerJackmode)
-			return true;
-
-		if(mJackStartIdx==RUN_MODE)
-			return true;
-
-		for(int q = mStack.size()-1; q > mJackStartIdx; --q){
-			if(mStack[q] == pFig)
-				return false;
-		}
-		return true;
-	}
-
-	return false;
+	itrInfo = mStackInfo.find(pFig);
+	return (itrInfo != mStackInfo.end());
 }
 
 
@@ -177,6 +158,8 @@ cContext::makeStackDump(){
 
 ptrFig
 cContext::getFirstOfType(dNameHash aType){
+	PROFILE;
+
 	for(dProgramStack::iterator itr = mStack.begin(); itr != mStack.end(); ++itr){
 		if((*itr)->hash() == aType)
 			return (*itr)->getSmart();
@@ -189,12 +172,6 @@ cContext::getSig() const{
 	return mSig;
 }
 
-void
-cContext::jackMode() {
-	mJackStartIdx = mStack.size();
-}
-
-
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
 	currentCon(NULL)
@@ -202,6 +179,8 @@ cFigContext::cFigContext() :
 	#ifdef GT_THREADS
 		updating = false;
 		locked = false;
+		bufferLeads = &ALeads;
+		flushMe = NULL;
 	#endif
 
 	mBlueprint = NULL;
@@ -215,12 +194,12 @@ cFigContext::~cFigContext(){
 
 		#ifdef GT_THREADS
 			if(locked)
-				conMu.unlock();
+				muCon.unlock();
 		#endif
 	}catch(excep::base_error &e){
 		WARN(e);
 	}catch(...){
-		WARN("unknown error while destroying a figment");
+		WARN_S("unknown error while destroying a figment");
 	}
 }
 
@@ -228,13 +207,14 @@ void
 cFigContext::start(cContext *con){
 	PROFILE;
 
-	#ifdef GT_THREADS
-		conMu.lock();
-		locked = true;
-	#endif
-
-	if(currentCon != NULL && con->isStacked(this))
+	if(currentCon != NULL && con->isStacked(this))	//- prevent deadlocks.
 		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
+
+	#ifdef GT_THREADS
+		muCon.lock();
+		locked = true;
+		flushMe = NULL;
+	#endif
 
 	con->add(this);
 	currentCon = con;
@@ -259,23 +239,12 @@ cFigContext::stop(cContext *con){
 			}
 		#endif
 	}else{
-		WARN("tried to stop a figment with a context that wasn't right. Really odd");
+		WARN_S("tried to stop a figment with a context that wasn't right. Really odd");
 	}
 
 	#ifdef GT_THREADS
 		locked = false;
-		conMu.unlock();
-	#endif
-}
-
-void
-cFigContext::updatePlugs(){
-	#ifdef GT_THREADS
-		if(locked){
-			updating = true;
-			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
-				(*itrRos)->updateStart();
-		}
+		muCon.unlock();
 	#endif
 }
 
@@ -287,7 +256,20 @@ cFigContext::addUpdRoster(cBase_plug *pPlug){
 }
 
 void
+cFigContext::updatePlugs(){
+	PROFILE;
+	#ifdef GT_THREADS
+		if(locked){
+			updating = true;
+			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
+				(*itrRos)->updateStart();
+		}
+	#endif
+}
+
+void
 cFigContext::remFromRoster(cBase_plug *pPlug){
+	PROFILE;
 	#ifdef GT_THREADS
 		if(!updating){
 			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos){
@@ -300,21 +282,67 @@ cFigContext::remFromRoster(cBase_plug *pPlug){
 	#endif
 }
 
+
+
 void
 cFigContext::emergencyStop(){
+	PROFILE;
 	currentCon = NULL;
 	#ifdef GT_THREADS
-		if(updating){
-			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
-				(*itrRos)->updateFinish();
-			updating = false;
+		if(locked){
+			if(updating){
+				for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
+					(*itrRos)->updateFinish();
+				updating = false;
+			}
+			locked = false;
+			muCon.unlock();
 		}
-		locked = false;
-		conMu.unlock();
 	#endif
-	WARN("Emergency stop pulled");
+	WARN_S("Emergency stop pulled");
 }
 
+bool
+cFigContext::differedLead(ptrLead pLead){
+	PROFILE;
+#ifdef GT_THREADS
+	if(locked){
+		dLock leadLock(muLeads);
+		bufferLeads->push_back( ptrLead(new cLead(*pLead)) );
+		return true;
+	}
+#endif
+	return false;
+}
+
+ptrLead
+cFigContext::processLeads(){
+	PROFILE;
+	ptrLead rtnLead;
+#ifdef GT_THREADS
+	if(flushMe == NULL){
+		dLock leadLock(muLeads);
+
+		flushMe = bufferLeads;
+
+		if(bufferLeads == &ALeads)
+			bufferLeads = &BLeads;
+		else
+			bufferLeads = &ALeads;
+	}
+
+	if(flushMe->empty()){
+		flushMe = NULL;
+
+	}else{
+		rtnLead = flushMe->front();
+		flushMe->pop_front();
+	}
+
+#endif
+	return rtnLead;
+
+}
 
 //--- PLEASE NOTE ---//
 //- Testing for these classes is done inside the figment source file.
