@@ -33,11 +33,8 @@ cRunList::~cRunList(){
 }
 
 void
-cRunList::run(cContext* pCon){
+cRunList::work(cContext* pCon){
 	PROFILE;
-
-	start(pCon);
-	updatePlugs();
 
 	for(
 		std::vector< tPlug<ptrFig> >::iterator i = mList.begin();
@@ -46,8 +43,6 @@ cRunList::run(cContext* pCon){
 	){
 		(*i).get()->run(pCon);
 	}
-
-	stop(pCon);
 }
 
 void
@@ -99,10 +94,8 @@ cRunList::patAdd(ptrLead aLead){
 	dList plugs;
 	aLead->getPile(&plugs);
 
-	//!\todo use append
 	for(dList::iterator itr = plugs.begin(); itr != plugs.end(); ++itr){
 		mList.push_back( *itr );
-		// DANGER
 		addUpdRoster( &(*itr) );
 	}
 }
@@ -126,11 +119,9 @@ cValves::~cValves(){
 }
 
 void
-cValves::run(cContext* pCon){
+cValves::work(cContext* pCon){
 	PROFILE;
 
-	start(pCon);
-	updatePlugs();
 	for(
 		std::vector< tPlug<ptrFig> >::iterator itr = mList.begin();
 		itr != mList.end();
@@ -139,8 +130,6 @@ cValves::run(cContext* pCon){
 		if( mStates[itr].get() )
 			(*itr).get()->run(pCon);
 	}
-
-	stop(pCon);
 }
 
 void

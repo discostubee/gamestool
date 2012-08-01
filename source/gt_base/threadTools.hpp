@@ -30,8 +30,8 @@
 #include "utils.hpp"
 
 #ifdef GT_THREADS
-	#include <boost/thread/locks.hpp>
-	#include <boost/thread.hpp>
+#	include <boost/thread/locks.hpp>
+#	include <boost/thread.hpp>
 #endif
 
 namespace gt{
@@ -47,17 +47,17 @@ namespace gt{
 	//!\brief	Because this is a read only functions, and because this
 	//!			is updated once before starting threads, it doesn't need to be mutex locked
 	class isMultithreading{
-#ifdef GT_THREADS
-	public:
-		static bool yes() { return xThreading; }
-		static void nowThreading() { xThreading = true; }
-	private:
-		static bool xThreading;
-#else
-	public:
-		static bool yes() { return false; }
-		static void nowThreading() {}
-#endif
+#		ifdef GT_THREADS
+			public:
+				static bool yes() { return xThreading; }
+				static void nowThreading() { xThreading = true; }
+			private:
+				static bool xThreading;
+#		else
+			public:
+				static bool yes() { return false; }
+				static void nowThreading() {}
+#		endif
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -97,12 +97,12 @@ namespace gt{
 		tSafeLem<T> get();
 
 	protected:
-		#ifdef GT_THREADS
+#		ifdef GT_THREADS
 			boost::recursive_mutex muData;
 			typedef boost::lock_guard<boost::recursive_mutex> dMuLock;
-		#endif
+#		endif
 
-		void deadLemming(tSafeLem<T>* corpse);	//!<	If this is the last lemming for this thread, release the lock for next thread in queue.
+		void deadLemming();	//!<	If this is the last lemming for this thread, release the lock for next thread in queue.
 		void changedLem(const tSafeLem<T>* from, const tSafeLem<T>* to);	//!<
 		T* getLockData(tSafeLem<T>* requester);	//!<	Acquires lock for current thread. Blocks and waits to acquire lock if request comes from another thread.
 		bool isSameThread();
@@ -136,7 +136,7 @@ tSafeLem<T>::tSafeLem(tSafeLem<T> &lem) :
 template<typename T>
 tSafeLem<T>::~tSafeLem(){
 	if(mParent!=NULL)
-		mParent->deadLemming(this);
+		mParent->deadLemming();
 }
 
 
@@ -176,32 +176,34 @@ tMrSafety<T>::tMrSafety() :
 template<typename T>
 tMrSafety<T>::~tMrSafety()
 {
-#ifdef GT_THREADS
-	while(inWild > 0){
-		muData.unlock();
-		--inWild;
-	}
-	delete mData;
-#else
-	delete mData;
-#endif
+#	ifdef GT_THREADS
+		while(inWild > 0){
+			muData.unlock();
+			--inWild;
+		}
+		delete mData;
+#	else
+		delete mData;
+#	endif
 }
 
 template<typename T>
 void
 tMrSafety<T>::take(T* takeMe) {
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		dMuLock lock(muData);
-	#endif
+#	endif
+
 	mData = takeMe;
 }
 
 template<typename T>
 void
 tMrSafety<T>::cleanup() {
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		dMuLock lock(muData);
-	#endif
+#	endif
+
 	delete mData;
 	mData = NULL;
 }
@@ -209,18 +211,20 @@ tMrSafety<T>::cleanup() {
 template<typename T>
 void
 tMrSafety<T>::drop() {
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		dMuLock lock(muData);
-	#endif
+#	endif
+
 	mData = NULL;
 }
 
 template<typename T>
 void
 tMrSafety<T>::set(const T& data) {
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		dMuLock lock(muData);
-	#endif
+#	endif
+
 	delete mData;
 	mData = new T;
 	*mData = data;
@@ -236,14 +240,12 @@ tMrSafety<T>::get() {
 
 template<typename T>
 void
-tMrSafety<T>::deadLemming(tSafeLem<T>* corpse){
+tMrSafety<T>::deadLemming(){
 
-#ifdef GT_THREADS
-	muData.unlock();
-	--inWild;
-#else
-	DUMB_REF_ARG(corpse);
-#endif
+#	ifdef GT_THREADS
+		muData.unlock();
+		--inWild;
+#	endif
 }
 
 template<typename T>
@@ -255,10 +257,10 @@ tMrSafety<T>::changedLem(const tSafeLem<T>* from, const tSafeLem<T>* to){
 template<typename T>
 T*
 tMrSafety<T>::getLockData(tSafeLem<T>* requester){
-#ifdef GT_THREADS
-	muData.lock();
-	++inWild;
-#endif
+#	ifdef GT_THREADS
+		muData.lock();
+		++inWild;
+#	endif
 
 	return mData;
 }
@@ -266,17 +268,17 @@ tMrSafety<T>::getLockData(tSafeLem<T>* requester){
 template<typename T>
 bool
 tMrSafety<T>::isSameThread(){
-#ifdef GT_THREADS
-	return true;//current == boost::this_thread::get_id();
-#else
-	return true;
-#endif
+#	ifdef GT_THREADS
+		return true;//current == boost::this_thread::get_id();
+#	else
+		return true;
+#	endif
 }
 
 }
 
 #ifdef DEBUG
-void threadTestFoo();
+	void threadTestFoo();
 #endif
 
 

@@ -110,11 +110,10 @@ namespace gt{
 		cContext(const cContext & copyMe);
 		~cContext();
 
-		bool isStacked(cFigContext *pFig, bool considerJackmode = true);			//!< Determines if the figment is stacked.
+		bool isStacked(cFigContext *pFig);			//!< Determines if the figment is stacked.
 		dProgramStack makeStackDump();				//!< Spits out a copy of the program stack.
 		ptrFig getFirstOfType(dNameHash aType);		//!< Needs to change! Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment.
 		dConSig getSig() const;						//!< Get unique signature.
-		void jackMode();							//!< Starts jackmode, where previously stacked figments don't count when checking for self reference. Stops being in jack mode once the stack unwinds back to where jackMode was called.
 
 	protected:
 		void add(cFigContext *pFig);					//!< Adds a figment reference to the stack.
@@ -124,7 +123,6 @@ namespace gt{
 
 	private:
 		static const int ORIGINAL = -1;	//!< used when preventing an unwind into another context's stack.
-		static const int RUN_MODE = -1;
 
 		struct sInfo{
 			unsigned int timesStacked;
@@ -144,9 +142,8 @@ namespace gt{
 		bool mKeepPopping;
 		dConSig mSig;	//!<
 		dProgramStack mStack;	//!< This is the entire stack of figments in the order that they were added in.
-		dMapInfo mSigInfo;	//!< Stores more info about different items on the stack.
+		dMapInfo mStackInfo;	//!< Stores more info about different items on the stack.
 		int mCopyIdx;	//!< used when preventing an unwind into another context's stack.
-		int mJackStartIdx;	//!< This stores where the top of the stack was when jackmode was engaged.
 
 		dMapInfo::iterator itrInfo;	//!< scratch space.
 	};
@@ -159,18 +156,20 @@ namespace gt{
 		cFigContext();
 		virtual ~cFigContext();
 
+		void start(cContext *con);	//!< If threaded, this figment is locked. Puts this figment onto the given context stack, but only if that figment isn't already stacked. Updates all plugs in the roster.
+		void stop(cContext *con);	//!< If threaded, this figment is unlocked. Takes the figment off the stack.
 		void addUpdRoster(cBase_plug *pPlug);	//!< Adds a plug to the list of things to update when we start. Typically you can use this in the constructor. NOT threadsafe.
 		void remFromRoster(cBase_plug *pPlug);	//!< Used only if a plug is removed from a class during its jack/run functions. NOT threadsafe.
-
-		//- maybe protected
-		void start(cContext *con);	//!< Puts this figment onto the given context stack, but only if that figment isn't already stacked. Updates all plugs in the roster.
-		void stop(cContext *con);	//!< Takes the figment off the stack.
-		void updatePlugs();
 
 	protected:
 		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
 
 		void emergencyStop();	//!< If there is a problem, we want the figment to be able to stop using a context.
+
+		//- It is hoped that the compiler will reduce the cost to call these to 0 if we use a un-threaded version.
+		void updatePlugs();	//!< Update all the plug shadows.
+		bool differedLead(ptrLead pLead);	//!< If the figment is locked, add the lead to the buffer and jack later.
+		ptrLead processLeads();	//!< Keep calling to flush the lead buffer. Returns a smart pointer containing null when empty. Swap buffers when you call it the first time
 
 		friend class cContext;
 		friend class cBlueprint;
@@ -178,11 +177,18 @@ namespace gt{
 	private:
 
 		#ifdef GT_THREADS
-			boost::recursive_mutex conMu;
+			typedef std::deque<ptrLead> dListLeads;
+			typedef boost::lock_guard<boost::recursive_mutex> dLock;
+
+			boost::recursive_mutex muCon;	//!< Mutex for start and stop.
+			boost::recursive_mutex muLeads;	//!< Mutex for the differed leads buffers.
 			std::vector<cBase_plug*> updateRoster;	//!< Reference to plugs that need to update. DO NOT delete the contents, even on destruction.
 			std::vector<cBase_plug*>::iterator itrRos;
 			bool locked;	//!< Used mostly to ensure we only update plugs when locked.
 			bool updating;
+			dListLeads ALeads, BLeads;
+			dListLeads *bufferLeads;
+			dListLeads *flushMe;
 
 			//- for ref
 			//boost::condition_variable conSync;

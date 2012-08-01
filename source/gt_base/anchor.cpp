@@ -36,6 +36,11 @@ const cCommand::dUID cAnchor::xGetRoot = tOutline<cAnchor>::makeCommand(
 );
 
 void
+cAnchor::work(cContext* pCon) {
+	mRoot.get()->run(pCon);
+}
+
+void
 cAnchor::save(cByteBuffer* pAddHere){
 	PROFILE;
 
@@ -224,16 +229,8 @@ cAnchor::~cAnchor() {
 }
 
 void
-cAnchor::run(cContext* pCon) {
-	start(pCon);
-	updatePlugs();
-	mRoot.get()->run(pCon);
-	stop(pCon);
-}
-
-void
 cAnchor::patSetRoot(ptrLead aLead){
-	mRoot = aLead->getPlug(cAnchor::xPT_root);
+	aLead->getPlug(&mRoot, cAnchor::xPT_root);
 }
 
 void
@@ -337,15 +334,17 @@ GTUT_START(testAnchor, basicLoad){
 	tPlug<ptrFig> reload;
 	{
 		FAUX_JACK(root, fake);
-		reload = root->getPlug(cAnchor::xPT_root);
+		root->getPlug(&reload, cAnchor::xPT_root);
 	}
 
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
 	reload.get()->jack(checkData, &fake);
 	{
 		FAUX_JACK(checkData, fake);
-		tPlug<dStr> myStr = checkData->getPlug(cSaveTester::xPT_str);
-		tPlug<int> myNum = checkData->getPlug(cSaveTester::xPT_num);
+		tPlug<dStr> myStr;
+		tPlug<int> myNum;
+		checkData->getPlug(&myStr, cSaveTester::xPT_str);
+		checkData->getPlug(&myNum, cSaveTester::xPT_num);
 		GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
 		GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
 	}

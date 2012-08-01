@@ -44,7 +44,7 @@ namespace gt{ //gamestool
 		virtual dNameHash getExtension() const { return extends(); }
 
 		//- Optional
-		virtual void run(cContext* pCon);	//!< runs every element in the list
+		virtual void work(cContext* pCon);	//!< runs every element in the list
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
@@ -81,7 +81,7 @@ namespace gt{ //gamestool
 		virtual dNameHash hash() const { return getHash<cValves>(); }
 
 		//- Optional
-		virtual void run(cContext* pCon);				//!< runs every element in the list
+		virtual void work(cContext* pCon);				//!< runs every element in the list
 		virtual void save(cByteBuffer* pAddHere);
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 

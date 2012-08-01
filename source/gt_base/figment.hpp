@@ -17,7 +17,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *********************************************************************************************************
- *
  */
 
 #ifndef FIGMENT_HPP
@@ -62,12 +61,8 @@ namespace gt{
 		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability. Expects a xPT_serialBuff.
 		static const cCommand::dUID	xLoad;	//!< Expects a xPT_serialBuff and xPT_loadingParty
 
-		#if defined(DEBUG) && defined(GT_SPEED)
-			static const cCommand::dUID xTestJack;
-			static const cPlugTag* xPT_life;
-		#endif
-
 		//-----------------------------
+		// Implemented
 		cFigment();
 		virtual ~cFigment();
 
@@ -75,8 +70,7 @@ namespace gt{
 		//!\note	Threadsafe, so you can be running a this figment at the same time your are jacking.
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
-		//!\brief	Unless this figment comes from an addon, only an empty string should be returned.
-		virtual dStr const & requiredAddon() const { static const dStr noRequirement(""); return noRequirement; }
+		void run(cContext* pCon);	//!< Performs all the normal stuff needed before doing work, such as using the context to ensure it doesn't run into itself or other threads.
 
 		//-----------------------------
 		// These things are REQUIRED for any figment class.
@@ -93,7 +87,7 @@ namespace gt{
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
 
-		virtual void run(cContext* pCon);	//!< Gives the figment some runtime to do whatever it is that it normally does. Uses context to ensure it doesn't run into itself or other threads.
+		virtual void work(cContext* pCon);	//!< Gives the childen figments some runtime to do whatever it is that they normally do.
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
@@ -108,10 +102,12 @@ namespace gt{
 		virtual dNameHash getExtension() const { return extends(); }	//!\<	You'll need to override this if you are replacing stuff.
 
 		//!\brief	Version number used when loading. 0 Means that this version has no member plugs to load.
-		//!\note	Migration is done in a manual fashion as demo-ed in the testMigration class.
+		//!\note	Migration is demo-ed in the testMigration class.
 		static dNumVer version(){ return 0; }
 		virtual dNumVer getVersion() const { return version(); }
 
+
+		virtual dStr const & requiredAddon() const;	//!<	Unless this figment comes from an addon, only an empty string should be returned.
 		virtual dMigrationPattern getLoadPattern();	//!< Load patterns offer you a way to migrate an older version of a figment to the current version. Override this function to pass back different load patterns. \note NOT threadsafe.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.
 		virtual void save(cByteBuffer* pSaveHere);	//!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
@@ -123,6 +119,7 @@ namespace gt{
 		// Patch through functions for use with command.
 		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
 		void patLoad(ptrLead aLead);	//!< Same as the patSave function above.
+
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -154,7 +151,7 @@ namespace gt{
 		virtual const dPlaChar* name() const{ return identify(); }
 		virtual dNameHash hash() const{ return getHash<cWorldShutoff>(); }
 
-		virtual void run(cContext* pCon);
+		virtual void work(cContext* pCon);
 	};
 
 }
@@ -171,31 +168,32 @@ namespace gt{
 	//!			your plug is for a class that has a smart pointer, what that smart
 	//!			pointer refers to won't be protected by the shadow strategy.
 	template<>
-	class tPlug<ptrFig>: public tPlugShadows<ptrFig>{
+	class tPlug<ptrFig>: public tPlugParent<ptrFig>
+	{
 	public:
 		typedef void (*fuCopyInto)(const ptrFig *copyFrom, void *copyTo);
 		typedef std::map<cBase_plug::dPlugType, fuCopyInto> dMapCopiers;
 
 		tPlug():
-			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
+			tPlugParent<ptrFig>(cBase_plug::getPlugType<ptrFig>())
 		{
 			mD = gWorld.get()->getEmptyFig();
 		}
 
 		tPlug(const ptrFig& pA):
-			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
+			tPlugParent<ptrFig>(cBase_plug::getPlugType<ptrFig>())
 		{
 			mD = pA;
 		}
 
 		tPlug(const tPlug<ptrFig> &other):
-			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
+			tPlugParent<ptrFig>(cBase_plug::getPlugType<ptrFig>())
 		{
 			mD = other.mD;
 		}
 
 		tPlug(const cBase_plug *other):
-			tPlugShadows<ptrFig>(cBase_plug::getPlugType<ptrFig>())
+			tPlugParent<ptrFig>(cBase_plug::getPlugType<ptrFig>())
 		{
 			other->copyInto(&mD);
 		}
@@ -260,6 +258,15 @@ namespace gt{
 			}else{
 				throw excep::cantCopy(typeid(ptrFig).name(), "unknown", __FILE__, __LINE__);
 			}
+		}
+
+		virtual void actualCopyFrom(const void* pContainer, cBase_plug::dPlugType pType){
+			PROFILE;
+
+			if(pType != tPlugParent<ptrFig>::mType)
+				throw excep::cantCopy(typeid(ptrFig).name(), "unknown", __FILE__, __LINE__);
+
+			mD = *reinterpret_cast<const ptrFig*>(pContainer);
 		}
 
 	private:

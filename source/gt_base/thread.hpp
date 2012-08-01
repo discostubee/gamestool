@@ -35,9 +35,6 @@ namespace gt{
 	//!			unknown amount of time to finish.
 	class cThread: public cFigment{
 	public:
-#ifdef GT_THREADS
-		typedef boost::unique_lock<boost::mutex> dLock;
-#endif
 
 		static const cPlugTag *xPT_fig;	//!< The figment to link.
 		static const cCommand::dUID xLinkFig;	//!< Link figment to run in the separate thread.
@@ -50,7 +47,7 @@ namespace gt{
 		virtual const dPlaChar* name() const{ return cThread::identify(); }
 		virtual dNameHash hash() const{ return getHash<cThread>(); }
 
-		virtual void run(cContext* pCon);	//!< Begins a new thread if the link plug is set. Threads run through once and wait until this figment is run to go again. This is opposed to running a tight loop in every thread figment.
+		virtual void work(cContext* pCon);	//!< Begins a new thread if the link plug is set. Threads run through once and wait until this figment is run to go again. This is opposed to running a tight loop in every thread figment.
 
 	protected:
 		tPlug<ptrFig> link;
@@ -58,16 +55,17 @@ namespace gt{
 		void patLink(ptrLead aLead);
 
 #ifdef GT_THREADS
+		typedef boost::unique_lock<boost::mutex> dLock;
+
 		boost::thread myThread;
 		boost::mutex syncMu;
-		boost::mutex finishMu;				//!< The destructor must wait for the thread to finish.
 		boost::condition_variable sync;		//!< sync the thread to the calling of the run function.
 		bool threadStop;					//!< Stops the thread loop.
 		bool threading;						//!< Is this figment currently running a thread?
-
 #endif
 
 		static void runThread(cThread *me, cContext* pCon);
+		void stopThread();
 	};
 }
 

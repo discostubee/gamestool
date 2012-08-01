@@ -49,17 +49,15 @@ void
 cPlugHound::patGoGetit(ptrLead aLead){
 	PROFILE;
 
-	mCom = aLead->getPlug(xPT_command);
-	mTag = aLead->getPlug(xPT_tag);
-	mTarget = aLead->getPlug(xPT_contextTargetID);
+	aLead->getPlug(&mCom, xPT_command);
+	aLead->getPlug(&mTag, xPT_tag);
+	aLead->getPlug(&mTarget, xPT_contextTargetID);
 
 	const cPlugTag *getTag = gWorld.get()->getPlugTag(mTag.get());
 	ptrLead getLead = gWorld.get()->makeLead(mCom.get());
 	ptrFig fig = currentCon->getFirstOfType(mTarget.get());
 
-	currentCon->jackMode();
-	fig->jack(getLead, currentCon);
-	getLead->passPlug(aLead.get(), getTag, xPT_plug);
+
 }
 
 
@@ -106,39 +104,22 @@ cAlucard::~cAlucard(){
 
 void
 cAlucard::patAddCom(ptrLead aLead){
-	mCommand = aLead->getPlug(xPT_command);
+	aLead->getPlug(&mCommand, xPT_command);
 }
 
 void cAlucard::patSetTarget(ptrLead aLead){
-	mTarget = aLead->getPlug(xPT_target);
+	aLead->getPlug(&mTarget, xPT_target);
 }
 
 void cAlucard::patAddPlug(ptrLead aLead){
 	PROFILE;
 
-	cPlugTag::dUID tagID;
-	aLead->getPlug(xPT_tag)->copyInto(&tagID);
-	cPlugTag const *tag = gWorld.get()->getPlugTag(tagID);
-	mActualPlugs.push_back( sActualPlug(
-		aLead->getPlug(xPT_plug), tag
-	) );
-
-	mNewPlugsToAdd.push_back( mNewPlugsToAdd.back() );
 }
 
 void cAlucard::patAddConxPlug(ptrLead aLead){
 	PROFILE;
 
-	cPlugTag::dUID tagID;
-	dNameHash fig;
 
-	aLead->getPlug(xPT_tag)->copyInto(&tagID);
-	aLead->getPlug(xPT_contextFig)->copyInto(&fig);
-	cPlugTag const *tag = gWorld.get()->getPlugTag(tagID);
-
-	mContextPlugs.push_back( sContextPlug(fig, tag) );
-
-	mNewPlugsToFind.push_back( mNewPlugsToFind.back() );
 }
 
 void cAlucard::patSetConxTarget(ptrLead aLead){
@@ -182,7 +163,6 @@ void cAlucard::run(cContext* aCon){
 		}
 
 		if(mTarget.get()->hash() != getHash<cEmptyFig>()){
-			mConx.jackMode();
 			mTarget.get()->jack(mLead, &mConx);
 		}
 	}
@@ -228,7 +208,8 @@ GTUT_START(test_reflection, houndGets){
 	hound->jack(sendHound, &fakeConx);
 	testNum->stop(&fakeConx);
 
-	tPlug<int> num = sendHound->getPlug(cPlugHound::xPT_plug);
+	tPlug<int> num;
+	sendHound->getPlug(&num, cPlugHound::xPT_plug);
 	GTUT_ASRT( num.get() == 42, "Didn't get the right number back from the test figment.");
 }GTUT_END;
 
@@ -270,7 +251,9 @@ GTUT_START(test_reflection, alucardBasic){
 	testNum.get()->jack(getNum, &fakeConx);
 	{
 		FAUX_JACK(getNum, fakeConx);
-		GTUT_ASRT( *getNum->getPlug(cTestNum::xPT_num) == num, "number wasn't set.");
+		tPlug<int> a;
+		getNum->getPlug(&a, cTestNum::xPT_num);
+		GTUT_ASRT( a == num, "number wasn't set.");
 	}
 
 }GTUT_END;

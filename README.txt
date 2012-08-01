@@ -121,6 +121,8 @@ to the bjam line, so it'll read something like this:
 
 sudo ./bjam link=static
 
+For windows, you can build the gtest lib using the visual studio
+project located in the 'msvc' directory of gtest.
 
 --- Link external includes in Eclipse
 For eclipse you'll need to point your IDE to the spot you unzipped the 

@@ -46,20 +46,6 @@ namespace gt{
 	template<typename T> class tPlug;
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-// Other types
-namespace gt{
-	#ifdef GT_THREADS
-		//!\brief	Used to indicate how shadows are effects, and how the effect the source.
-		enum eShadowMode{
-			eSM_unset,
-			eSM_read,	//!< Data read
-			eSM_link,	//!< The links have changed and the source needs to change accordingly.
-			eSM_write,	//!< Data is written to the source.
-			eSM_all		//!< Update both the data and the link
-		};
-	#endif
-}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Classes
@@ -113,42 +99,44 @@ namespace gt{
 		const dPlugType mType;	//!< Must be public so the tPlug templates can use it.
 
 		cBase_plug(dPlugType pTI);
-		cBase_plug(const cBase_plug& pCopy);
+		cBase_plug(const cBase_plug& pCopy);	//!< Only copies the type. Assume later implementations will copy contents.
+		virtual ~cBase_plug();
 
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Made threadsafe in implementation.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Made threadsafe in implementation.
 
-		//--- interface
-		virtual ~cBase_plug();
+		template<typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
+		template<typename T> void copyFrom(const T *container);	//!< The plug will try and copy the value from the container.
 
+		size_t numLeadsConnected();
+
+		//--- interface
 		//!\brief Appends the buffer with binary data that should be understandable by any platform.
 		virtual void save(cByteBuffer* pSaveHere) = 0;
 
 		//!\brief Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) = 0;
 
-		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
+		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, does not copy any linked lead info.
 		virtual bool operator== (const cBase_plug &pD) const =0;
-
-		template<typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
 
 		#ifdef GT_THREADS
 			virtual void updateStart() =0;
-			virtual void updateFinish() =0;
+			virtual void updateFinish() =0;	//!< This MUST be called if update is started.
 		#endif
 
-		size_t numLeadsConnected();
-
-	protected:
+		//---
 		typedef std::map<cLead*, unsigned int> dMapLeads;
 
 		dMapLeads mLeadsConnected;		//!< Lead connections are not copied when copy plug values.
 		dMapLeads::iterator itrLead;	//!< handy.
 
 		virtual void actualCopyInto(void* pContainer, dPlugType pType) const =0;
+		virtual void actualCopyFrom(const void* pContainer, dPlugType pType) =0;
 
 		#ifdef GT_THREADS
-			virtual cBase_plug* getShadow(dConSig aCon, eShadowMode whatFor) =0; //!< Leads must always work with shadows.
+			virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon) =0;
+			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon) =0;
 		#endif
 
 	friend class cLead;
@@ -156,5 +144,31 @@ namespace gt{
 
 }
 
+
+namespace gt{
+
+	template<typename PLUG_TYPE>
+	cBase_plug::dPlugType
+	cBase_plug::getPlugType(){
+		static dPlugType typeID = 0;
+
+		if(typeID == 0)
+			typeID = makeHash(typeid(PLUG_TYPE).name());
+
+		return typeID;
+	}
+
+	template<typename T>
+	void
+	cBase_plug::copyInto(T *container) const{
+		actualCopyInto(static_cast<void*>(container), getPlugType<T>());
+	}
+
+	template<typename T>
+	void
+	cBase_plug::copyFrom(const T *container){
+		actualCopyFrom(static_cast<const void*>(container), getPlugType<T>());
+	}
+}
 
 #endif

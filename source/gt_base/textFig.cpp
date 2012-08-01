@@ -49,7 +49,7 @@ cTextFig::patSetText(ptrLead aLead){
 
 void
 cTextFig::patGetText(ptrLead aLead){
-	mText = aLead->getPlug(xPT_text);
+	aLead->getPlug(&mText, xPT_text);
 }
 
 void

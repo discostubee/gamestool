@@ -172,6 +172,11 @@ cByteBuffer::operator+= (const cByteBuffer &pCopyMe){
 	return *this;
 }
 
+bool
+cByteBuffer::operator== (const cByteBuffer &pOther) const{
+	return (mBuff == pOther.mBuff);
+}
+
 
 ////////////////////////////////////////////////////////////
 

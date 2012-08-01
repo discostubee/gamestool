@@ -129,14 +129,18 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 
 void
 cFigment::patSave(ptrLead aLead){
-	tPlug<ptrBuff> buffer = aLead->getPlug(xPT_serialBuff);
+	tPlug<ptrBuff> buffer;
+
+	aLead->getPlug(&buffer, xPT_serialBuff);
 
 	save(buffer.get().get());
 }
 
 void
 cFigment::patLoad(ptrLead aLead){
-	tPlug<ptrBuff> buffer = aLead->getPlug(xPT_serialBuff);
+	tPlug<ptrBuff> buffer;
+
+	aLead->getPlug(&buffer, xPT_serialBuff);
 
 	loadEat(buffer.get().get());
 }
@@ -144,6 +148,9 @@ cFigment::patLoad(ptrLead aLead){
 void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
+
+	if(differedLead(pLead))
+		return;
 
 	start(pCon);
 	try{
@@ -155,6 +162,14 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 		#endif
 
 		mBlueprint->getCom(pLead->mCom)->use(this, pLead);
+
+		#ifdef GT_THREADS
+			pLead = processLeads();	//- Should be able to use aLead like this and avoid creating another variable while also avoiding accessing the original parameter.
+			while(pLead.get() != NULL){
+				mBlueprint->getCom(pLead->mCom)->use(this, pLead);
+				pLead = processLeads();
+			}
+		#endif
 
 	}catch(excep::base_error &e){
 		WARN_S(name() << e.what());
@@ -171,12 +186,23 @@ cFigment::run(cContext* pCon){
 	//- Run these in case the child figment doesn't have a run function but has plugs to update.
 	start(pCon);
 	updatePlugs();
+	work(pCon);
 	stop(pCon);
+}
+
+void
+cFigment::work(cContext* pCon){
 }
 
 cFigment::dMigrationPattern
 cFigment::getLoadPattern(){
 	return dMigrationPattern();
+}
+
+dStr const &
+cFigment::requiredAddon() const {
+	static const dStr noRequirement("");
+	return noRequirement;
 }
 
 void 
@@ -205,10 +231,8 @@ cWorldShutoff::~cWorldShutoff(){
 }
 
 void
-cWorldShutoff::run(cContext* pCon){
-	start(pCon);
+cWorldShutoff::work(cContext* pCon){
 	gWorld.get()->mKeepLooping = false;
-	stop(pCon);
 }
 
 ////////////////////////////////////////////////////////////

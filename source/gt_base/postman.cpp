@@ -38,10 +38,7 @@ cPostman::~cPostman(){
 }
 
 void
-cPostman::run(cContext* pCon){
-	start(pCon);
-	updatePlugs();
-	stop(pCon);
+cPostman::work(cContext* pCon){
 }
 
 void

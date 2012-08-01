@@ -16,8 +16,7 @@
  *********************************************************************************************************
 */
 
-#include "world.hpp"
-#include "figment.hpp"
+#include "figment.hpp"	//- so we get all implementation.
 
 using namespace gt;
 
@@ -480,10 +479,10 @@ gt::redirectWorld(cWorld* pWorldNew){
 
 ////////////////////////////////////////////////////////////
 
-#ifdef GTUT
+#ifdef DONTGTUT
 
 //- A basic class to test out some functions of the world.
-class testDraftParent: public cFigment{
+class testDraftParent: public iFigment{
 public:
 	static const cPlugTag*	xPT_A;
 	static const cCommand::dUID	xCommandA;
@@ -501,6 +500,7 @@ public:
 
 	virtual void jack(ptrLead pLead, cContext* pCon) {}
 	virtual void run(cContext* pCon) {}
+	virtual void world(cContext* pCon) {}
 	virtual void save(cByteBuffer* pAddHere) {}
 	virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL) {}
 	virtual void getLinks(std::list<ptrFig>* pOutLinks) {}
