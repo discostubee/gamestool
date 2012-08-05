@@ -211,6 +211,8 @@ public:
 
 	T* getRaw();	//!< Be careful with this. Intended for really fast lookups where we're sure we can't go out of bounds or use a free-ed slot.
 
+	bool valid(dIDSLookup aID);	//!< True if the ID is in range and the slot is not free, in other words is this slot valid.
+
 	dIDSLookup add(T &aData);
 
 	void del(dIDSLookup aID);
@@ -256,6 +258,15 @@ template<typename T>
 T*
 tShortLookup<T>::getRaw(){
 	return table;
+}
+
+template<typename T>
+bool
+tShortLookup<T>::valid(dIDSLookup aID){
+	if(aID > size)
+		return false;
+
+	return !table[aID].free;
 }
 
 template<typename T>

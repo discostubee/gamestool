@@ -197,12 +197,9 @@ GTUT_START(test_reflection, houndGets){
 	tPlug<cCommand::dUID> comID = cTestNum::xGetData;
 	tPlug<cPlugTag::dUID> tagID = cTestNum::xPT_num->mID;
 
-	{
-		FAUX_JACK(sendHound, fakeConx);
-		sendHound->addPlug(&targetType, cPlugHound::xPT_contextTargetID);
-		sendHound->addPlug(&comID, cPlugHound::xPT_command);
-		sendHound->addPlug(&tagID, cPlugHound::xPT_tag);
-	}
+	sendHound->addPlug(&targetType, cPlugHound::xPT_contextTargetID);
+	sendHound->addPlug(&comID, cPlugHound::xPT_command);
+	sendHound->addPlug(&tagID, cPlugHound::xPT_tag);
 
 	testNum->start(&fakeConx);
 	hound->jack(sendHound, &fakeConx);
@@ -224,37 +221,28 @@ GTUT_START(test_reflection, alucardBasic){
 
 	ptrLead setCom = gWorld.get()->makeLead(cAlucard::xAddCommand);
 	tPlug<cCommand::dUID> comID = cTestNum::xSetData;
-	{
-		FAUX_JACK(setCom, fakeConx);
-		setCom->addPlug(&comID, cAlucard::xPT_command);
-	}
+	setCom->addPlug(&comID, cAlucard::xPT_command);
+
 	alucard->jack(setCom, &fakeConx);
 
 	tPlug<int> num = 3;
 	ptrLead setPlug = gWorld.get()->makeLead(cAlucard::xAddPlug);
-	{
-		FAUX_JACK(setCom, fakeConx);
-		setPlug->addPlug(&num, cAlucard::xPT_plug);
-	}
+	setPlug->addPlug(&num, cAlucard::xPT_plug);
 	alucard->jack(setPlug, &fakeConx);
 
 	ptrLead setTarget = gWorld.get()->makeLead(cAlucard::xSetTarget);
-	{
-		FAUX_JACK(setTarget, fakeConx);
-		setTarget->addPlug(&testNum, cAlucard::xPT_target);
-	}
+	setTarget->addPlug(&testNum, cAlucard::xPT_target);
 	alucard->jack(setTarget, &fakeConx);
 
 	alucard->run(&fakeConx);
 
 	ptrLead getNum = gWorld.get()->makeLead( cTestNum::xGetData );
 	testNum.get()->jack(getNum, &fakeConx);
-	{
-		FAUX_JACK(getNum, fakeConx);
-		tPlug<int> a;
-		getNum->getPlug(&a, cTestNum::xPT_num);
-		GTUT_ASRT( a == num, "number wasn't set.");
-	}
+
+	tPlug<int> a;
+	getNum->getPlug(&a, cTestNum::xPT_num);
+	GTUT_ASRT( a == num, "number wasn't set.");
+
 
 }GTUT_END;
 

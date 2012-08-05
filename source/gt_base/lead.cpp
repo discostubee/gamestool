@@ -25,22 +25,17 @@ using namespace gt;
 cLead::cLead(cCommand::dUID aCom):
 	mCom(aCom)
 {
-#	ifdef GT_THREADS
-		mCurrentCon = NULL;
-		lemmingCount = 0;
-#	endif
-
 	DBUG_TRACK_START("lead");
 }
 
 cLead::cLead(const cLead &otherLead):
 	mCom(otherLead.mCom)
 {
-#	ifdef GT_THREADS
-		mCurrentCon = NULL;
-#	endif
-
 	DBUG_TRACK_START("lead");
+
+#	ifdef GT_THREADS
+	mCurrentSig = SL_NO_ENTRY;
+#	endif
 
 	cLead *other = const_cast<cLead*>(&otherLead);
 
@@ -57,21 +52,27 @@ cLead::cLead(const cLead &otherLead):
 
 cLead::~cLead(){
 	try{
-#		ifdef GT_THREADS
-			dLock unplugLock(mu);
-#		endif
-
 		for(scrTDataItr = mTaggedData.begin(); scrTDataItr != mTaggedData.end(); ++scrTDataItr){
-			scrTDataItr->second->unlinkLead(this);
+			try{
+				scrTDataItr->second->unlinkLead(this);
+			}catch(excep::base_error &e){
+				WARN(e);
+			}
 		}
 
 		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
-			(*scrPDataItr)->unlinkLead(this);
+			try{
+				(*scrPDataItr)->unlinkLead(this);
+			}catch(excep::base_error &e){
+				WARN(e);
+			}
 		}
 
 		DBUG_TRACK_END("lead");
+	}catch(std::exception &e){
+		WARN_S("Destroying lead " << e.what());
 	}catch(...){
-		excep::base_error e("Unknown error when destroying a lead", __FILE__, __LINE__);
+		excep::base_error e("Unknown exception when destroying a lead", __FILE__, __LINE__);
 		WARN(e);
 	}
 }
@@ -82,6 +83,10 @@ cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 
 	ASRT_NOTNULL(addMe);
 	ASRT_NOTNULL(aTag);
+
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
 
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr != mTaggedData.end()){
@@ -100,13 +105,17 @@ cLead::getPlug(cBase_plug *setMe, const cPlugTag* pTag){
 
 	ASRT_NOTNULL(pTag);
 
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
+
 	scrTDataItr = mTaggedData.find(pTag->mID);
 	if(scrTDataItr == mTaggedData.end())
 		return false;
 
 #	ifdef GT_THREADS
-		ASRT_NOTNULL(mCurrentCon);
-		scrTDataItr->second->readShadow(setMe, mCurrentCon->getSig());
+		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
+		scrTDataItr->second->readShadow(setMe, mCurrentSig);
 #	else
 		*setMe = *scrTDataItr->second;
 #	endif
@@ -121,13 +130,17 @@ cLead::setPlug(const cBase_plug *setMe, const cPlugTag *aTag){
 	ASRT_NOTNULL(setMe);
 	ASRT_NOTNULL(aTag);
 
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
+
 	scrTDataItr = mTaggedData.find(aTag->mID);
 	if(scrTDataItr == mTaggedData.end())
 		return false;
 
 #	ifdef GT_THREADS
-		ASRT_NOTNULL(mCurrentCon);
-		scrTDataItr->second->writeShadow(setMe, mCurrentCon->getSig());
+		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
+		scrTDataItr->second->writeShadow(setMe, mCurrentSig);
 #	else
 		*scrTDataItr->second = *setMe;
 #	endif
@@ -141,6 +154,10 @@ cLead::passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag)
 
 	ASRT_NOTNULL(passTo);
 	ASRT_NOTNULL(aGetTag);
+
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
 
 	scrTDataItr = mTaggedData.find(aGetTag->mID);
 	if(scrTDataItr == mTaggedData.end()){
@@ -157,6 +174,10 @@ cLead::passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag)
 
 void
 cLead::remPlug(const cPlugTag *pGetTag){
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
+
 	scrTDataItr = mTaggedData.find(pGetTag->mID);
 
 	if(scrTDataItr == mTaggedData.end())
@@ -167,12 +188,20 @@ cLead::remPlug(const cPlugTag *pGetTag){
 
 void
 cLead::addToPile(cBase_plug *addMe){
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
+
 	addMe->linkLead(this);
 	mDataPile.push_back(addMe);
 }
 
 void
 cLead::passToPile(cLead *passTo, const cPlugTag *pGetTag){
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
+
 	scrTDataItr = mTaggedData.find(pGetTag->mID);
 
 	if(scrTDataItr == mTaggedData.end())
@@ -184,12 +213,20 @@ cLead::passToPile(cLead *passTo, const cPlugTag *pGetTag){
 
 void
 cLead::addPile(cLead *passTo){
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
+
 	for(scrPDataItr = passTo->mDataPile.begin(); scrPDataItr != passTo->mDataPile.end(); ++scrPDataItr)
 		mDataPile.push_back(*scrPDataItr);
 }
 
 void
 cLead::clearPile(){
+#	ifdef GT_THREADS
+		dLock unplugLock(mu);
+#	endif
+
 	for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr)
 		(*scrPDataItr)->unlinkLead(this);
 
@@ -219,32 +256,18 @@ cLead::unplug(cBase_plug* aPlug){
 }
 
 #ifdef GT_THREADS
-	cLead::cLemming
-	cLead::startLead(cContext* pCon){
-		mu.lock();
-		mCurrentCon = pCon;
-		return cLemming(this);
+	void
+	cLead::start(dConSig pSig){
+		ASRT_TRUE(mCurrentSig == SL_NO_ENTRY, "signature already set.");
+		mCurrentSig = pSig;
 	}
 
 	void
-	cLead::lemmingCallback(){
-		--lemmingCount;
-		if(lemmingCount <= 0){
-			mu.unlock();
-			mCurrentCon = NULL;
-		}
-	}
-
-	dConSig cLead::getCurrentSig() const{
-		if(mCurrentCon==NULL)
-			return (SL_NO_ENTRY);
-
-		return mCurrentCon->getSig();
+	cLead::stop(){
+		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Signature not set.");
+		mCurrentSig = SL_NO_ENTRY;
 	}
 #endif
-
-
-
 
 
 ////////////////////////////////////////////////////////////
@@ -268,12 +291,8 @@ GTUT_START(testLead, tagging){
 
 	numA.get() = magic;
 
-	numA.updateStart();
-	numA.updateFinish();
-
 	{
 		int testA=0;
-		FAUX_JACK(tmpLead, fakeConx);	//- not using smart pointer here.
 		tmpLead->getValue(&testA, &tag);
 		GTUT_ASRT(testA == magic, "Lead didn't store A");
 

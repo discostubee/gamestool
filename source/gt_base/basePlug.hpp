@@ -108,8 +108,6 @@ namespace gt{
 		template<typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
 		template<typename T> void copyFrom(const T *container);	//!< The plug will try and copy the value from the container.
 
-		size_t numLeadsConnected();
-
 		//--- interface
 		//!\brief Appends the buffer with binary data that should be understandable by any platform.
 		virtual void save(cByteBuffer* pSaveHere) = 0;
@@ -121,8 +119,8 @@ namespace gt{
 		virtual bool operator== (const cBase_plug &pD) const =0;
 
 		#ifdef GT_THREADS
-			virtual void updateStart() =0;
-			virtual void updateFinish() =0;	//!< This MUST be called if update is started.
+			virtual void updateStart() =0;	//!< Write shadow updates to origin.
+			virtual void updateFinish() =0;	//!< Update all shadows using the origin. Any shadow writes after the update was started are overwritten.
 		#endif
 
 		//---

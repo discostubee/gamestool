@@ -120,6 +120,8 @@ namespace gt{
 		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
 		void patLoad(ptrLead aLead);	//!< Same as the patSave function above.
 
+	private:
+		ptrLead tmpLead;	//!< Avoids mem alloc.
 	};
 
 	//-------------------------------------------------------------------------------------

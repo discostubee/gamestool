@@ -157,19 +157,13 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 		ASRT_NOTNULL(mBlueprint);
 		ASRT_NOTNULL(pCon);
 
-		#ifdef GT_THREADS
-			cLead::cLemming lemLock = pLead->startLead(pCon);
-		#endif
-
-		mBlueprint->getCom(pLead->mCom)->use(this, pLead);
-
-		#ifdef GT_THREADS
-			pLead = processLeads();	//- Should be able to use aLead like this and avoid creating another variable while also avoiding accessing the original parameter.
-			while(pLead.get() != NULL){
-				mBlueprint->getCom(pLead->mCom)->use(this, pLead);
-				pLead = processLeads();
-			}
-		#endif
+#		ifdef GT_THREADS
+			pLead->start(pCon->getSig());
+			mBlueprint->getCom(pLead->mCom)->use(this, pLead);
+			pLead->stop();
+#		else
+			mBlueprint->getCom(pLead->mCom)->use(this, pLead);
+#		endif
 
 	}catch(excep::base_error &e){
 		WARN_S(name() << e.what());
@@ -178,6 +172,9 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 		UNKNOWN_ERROR;
 	}
 	stop(pCon);
+
+	for(tmpLead = processLeads(); tmpLead.get() != NULL; tmpLead = processLeads())
+		jack(tmpLead, pCon);
 }
 
 
@@ -187,6 +184,8 @@ cFigment::run(cContext* pCon){
 	start(pCon);
 	updatePlugs();
 	work(pCon);
+	for(tmpLead = processLeads(); tmpLead.get() != NULL; tmpLead = processLeads())
+		jack(tmpLead, pCon);
 	stop(pCon);
 }
 

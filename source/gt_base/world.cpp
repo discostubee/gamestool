@@ -108,13 +108,18 @@ cWorld::makeProfileToken(const char* pFile, unsigned int pLine){
 }
 
 dConSig
-cWorld::regContext(cContext* aCon){
-	return mContexts.add(aCon);
+cWorld::regContext(cContext* pCon){
+	return mContexts.add(pCon);
 }
 
 void
-cWorld::unregContext(dConSig aConx){
-	mContexts.del(aConx);
+cWorld::unregContext(dConSig pSig){
+	mContexts.del(pSig);
+}
+
+bool
+cWorld::activeContext(dConSig pSig){
+	return mContexts.valid(pSig);
 }
 
 cWorld::cWorld():

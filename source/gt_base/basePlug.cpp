@@ -77,8 +77,4 @@ cBase_plug::unlinkLead(cLead *pLead){
 	}
 }
 
-size_t
-cBase_plug::numLeadsConnected(){
-	return mLeadsConnected.size();
-}
 

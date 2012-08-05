@@ -115,6 +115,8 @@ namespace gt{
 		ptrFig getFirstOfType(dNameHash aType);		//!< Needs to change! Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment.
 		dConSig getSig() const;						//!< Get unique signature.
 
+		cContext& operator=(const cContext &pCon);
+
 	protected:
 		void add(cFigContext *pFig);					//!< Adds a figment reference to the stack.
 		void finished(cFigContext *pFig);				//!< Removes a figment reference from the stack.
@@ -175,24 +177,22 @@ namespace gt{
 		friend class cBlueprint;
 
 	private:
+		typedef std::deque<ptrLead> dListLeads;
+
+		bool locked;
+		dListLeads ALeads, BLeads;
+		dListLeads *bufferLeads;
+		dListLeads *flushMe;
 
 		#ifdef GT_THREADS
-			typedef std::deque<ptrLead> dListLeads;
+
 			typedef boost::lock_guard<boost::recursive_mutex> dLock;
 
 			boost::recursive_mutex muCon;	//!< Mutex for start and stop.
 			boost::recursive_mutex muLeads;	//!< Mutex for the differed leads buffers.
 			std::vector<cBase_plug*> updateRoster;	//!< Reference to plugs that need to update. DO NOT delete the contents, even on destruction.
 			std::vector<cBase_plug*>::iterator itrRos;
-			bool locked;	//!< Used mostly to ensure we only update plugs when locked.
 			bool updating;
-			dListLeads ALeads, BLeads;
-			dListLeads *bufferLeads;
-			dListLeads *flushMe;
-
-			//- for ref
-			//boost::condition_variable conSync;
-			//boost::unique_lock<boost::mutex> lock;
 		#endif
 	};
 }

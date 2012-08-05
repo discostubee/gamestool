@@ -42,6 +42,7 @@ namespace gt{
 	//!			call (known as jacking) uses a messenger class, in this case it's called a lead. A lead must
 	//!			have a command so the figment getting jacked knows what to do with it. A lead then has multiple
 	//!			plugs, some are labeled/tagged, while others are in an ordered pile.
+	//!\note	The interface is all threadsafe because an unplug call can come at any time.
 	//!\note	Leads can not be contained by a plug.
 	class cLead{
 	public:
@@ -101,43 +102,29 @@ namespace gt{
 		void clearPile();
 
 		//!\brief	When a plug dies, it must let the lead know it is no longer valid.
-		//!\brief	Needs to lock because this can come from anywhere.
 		void unplug(cBase_plug* pPlug);
-
-		#ifdef GT_THREADS
-			class cLemming{
-			public:
-				cLead * mParent;
-				cLemming(cLead *pLead) : mParent(pLead) { ++mParent->lemmingCount; }
-				cLemming(const cLemming& other) : mParent(other.mParent) { ++mParent->lemmingCount; }
-				~cLemming() { if(mParent) mParent->lemmingCallback(); }
-			};
-
-			cLemming startLead(cContext* pCon);
-			dConSig getCurrentSig() const;
-		#endif
 
 	protected:
 		typedef std::map<cPlugTag::dUID, cBase_plug*> dDataMap;
 		typedef std::list<cBase_plug*> dPiledData;
 		
-		#ifdef GT_THREADS
+#		ifdef GT_THREADS
 			typedef boost::lock_guard<boost::recursive_mutex> dLock;
 
 			boost::recursive_mutex mu;
-			cContext* mCurrentCon;
-			short lemmingCount;
+			dConSig mCurrentSig;
 
-			void lemmingCallback();
-
-			friend class cLemming;
-		#endif
+			void start(dConSig);
+			void stop();
+#		endif
 
 		dDataMap mTaggedData; 	//!<
 		dPiledData mDataPile;	//!<
 
 		dDataMap::iterator scrTDataItr;
 		dPiledData::iterator scrPDataItr;
+
+	friend class cFigment;
 
 	private:
 		//!\brief	bad
@@ -167,9 +154,8 @@ namespace gt{
 		target->reserve(target->size() + mDataPile.size());
 		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
 #			ifdef GT_THREADS
-				ASRT_NOTNULL(mCurrentCon);
 				target->push_back( tPlug<PLUG_TYPE>() );
-				(*scrPDataItr)->readShadow( &target->back(), mCurrentCon->getSig() );
+				(*scrPDataItr)->readShadow( &target->back(), mCurrentSig );
 #			else
 				 target->push_back( (*scrPDataItr) );
 #			endif
@@ -177,6 +163,21 @@ namespace gt{
 	}
 
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+// Macros
+#	ifdef GT_THREADS
+#		define START_LEAD(p, c) p->startLead(c)
+#		define END_LEAD(p) p->endLead()
+#	else
+#		define START_LEAD(p, c)
+#		define END_LEAD(p)
+#	endif
+
+
+
+
+
 /*
 	//--------------------------------------------------------------------------------------------------------
 	template<typename PLUG_TYPE>
@@ -210,15 +211,5 @@ struct sSortPile{
 };
 */
 
-///////////////////////////////////////////////////////////////////////////////////
-// Macros
-#ifdef GTUT
-#	ifdef GT_THREADS
-		//!\brief	Used so you can get and set plugs inside a unit test, where normally this can only be done within a jack function.
-#		define FAUX_JACK(lead, context) cLead::cLemming lemLock = lead->startLead(&context);
-#	else
-#		define FAUX_JACK(lead, context)
-#	endif
-#endif
 
 #endif

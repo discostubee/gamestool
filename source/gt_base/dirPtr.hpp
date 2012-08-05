@@ -91,7 +91,7 @@ namespace gt{
 	tDirPtr<T>::tDirPtr(): mDir(NULL){}
 
 	template<typename T>
-	tDirPtr<T>::tDirPtr(T* pNewContent): mDir( new tDirector<T>(pNewContent) ){
+	tDirPtr<T>::tDirPtr(T * pNewContent): mDir( new tDirector<T>(pNewContent) ){
 		mDir->link();
 	}
 
@@ -212,7 +212,7 @@ namespace gt{
 ////////////////////////////////////////////////////////////
 namespace gt{
 	template<typename T>
-	tDirector<T>::tDirector(T* pContent):
+	tDirector<T>::tDirector(T * pContent):
 		mContent(pContent), mRedirect(NULL), mCount(0)
 	{
 	}

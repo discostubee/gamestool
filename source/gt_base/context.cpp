@@ -172,19 +172,33 @@ cContext::getSig() const{
 	return mSig;
 }
 
+cContext&
+cContext::operator=(const cContext &pCon){
+	ASRT_NOTSELF(&pCon);
+
+	mStack = pCon.mStack;
+	mStackInfo = pCon.mStackInfo;
+	mCopyIdx = pCon.mCopyIdx;
+
+	return *this;
+}
+
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
-	currentCon(NULL)
+	currentCon(NULL),
+	locked(false),
+	flushMe(NULL)
 {
-	#ifdef GT_THREADS
-		updating = false;
-		locked = false;
-		bufferLeads = &ALeads;
-		flushMe = NULL;
-	#endif
-
+	//- From parent.
 	mBlueprint = NULL;
-	self  = NULL;
+	self = NULL;
+
+	//-
+	bufferLeads = &ALeads;
+
+#	ifdef GT_THREADS
+		updating = false;
+#	endif
 }
 
 cFigContext::~cFigContext(){
@@ -192,10 +206,10 @@ cFigContext::~cFigContext(){
 		if(currentCon!=NULL)
 			currentCon->finished(this);
 
-		#ifdef GT_THREADS
+#		ifdef GT_THREADS
 			if(locked)
 				muCon.unlock();
-		#endif
+#		endif
 	}catch(excep::base_error &e){
 		WARN(e);
 	}catch(...){
@@ -210,11 +224,12 @@ cFigContext::start(cContext *con){
 	if(currentCon != NULL && con->isStacked(this))	//- prevent deadlocks.
 		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
 
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		muCon.lock();
-		locked = true;
-		flushMe = NULL;
-	#endif
+#	endif
+
+	locked = true;
+	flushMe = NULL;
 
 	con->add(this);
 	currentCon = con;
@@ -231,46 +246,46 @@ cFigContext::stop(cContext *con){
 			currentCon = NULL;
 		}
 
-		#ifdef GT_THREADS
+#		ifdef GT_THREADS
 			if(updating){
 				for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
 					(*itrRos)->updateFinish();
 				updating = false;
 			}
-		#endif
+#		endif
 	}else{
 		WARN_S("tried to stop a figment with a context that wasn't right. Really odd");
 	}
 
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		locked = false;
 		muCon.unlock();
-	#endif
+#	endif
 }
 
 void
 cFigContext::addUpdRoster(cBase_plug *pPlug){
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		updateRoster.push_back(pPlug);
-	#endif
+#	endif
 }
 
 void
 cFigContext::updatePlugs(){
 	PROFILE;
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		if(locked){
 			updating = true;
 			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
 				(*itrRos)->updateStart();
 		}
-	#endif
+#	endif
 }
 
 void
 cFigContext::remFromRoster(cBase_plug *pPlug){
 	PROFILE;
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		if(!updating){
 			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos){
 				if(*itrRos == pPlug){
@@ -279,7 +294,7 @@ cFigContext::remFromRoster(cBase_plug *pPlug){
 				}
 			}
 		}
-	#endif
+#	endif
 }
 
 
@@ -288,8 +303,9 @@ void
 cFigContext::emergencyStop(){
 	PROFILE;
 	currentCon = NULL;
-	#ifdef GT_THREADS
-		if(locked){
+
+	if(locked){
+#		ifdef GT_THREADS
 			if(updating){
 				for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
 					(*itrRos)->updateFinish();
@@ -297,21 +313,26 @@ cFigContext::emergencyStop(){
 			}
 			locked = false;
 			muCon.unlock();
-		}
-	#endif
-	WARN_S("Emergency stop pulled");
+#		else
+			locked = false;
+#		endif
+	}
+
+	WARN_S("Emergency stop pulled for" << name());
 }
 
 bool
 cFigContext::differedLead(ptrLead pLead){
 	PROFILE;
-#ifdef GT_THREADS
+
 	if(locked){
-		dLock leadLock(muLeads);
-		bufferLeads->push_back( ptrLead(new cLead(*pLead)) );
+#		ifdef GT_THREADS
+			dLock lockList(muLeads);
+#		endif
+
+		bufferLeads->push_back(pLead);
 		return true;
 	}
-#endif
 	return false;
 }
 
@@ -319,9 +340,11 @@ ptrLead
 cFigContext::processLeads(){
 	PROFILE;
 	ptrLead rtnLead;
-#ifdef GT_THREADS
+
 	if(flushMe == NULL){
-		dLock leadLock(muLeads);
+#		ifdef GT_THREADS
+			dLock lockList(muLeads);
+#		endif
 
 		flushMe = bufferLeads;
 
@@ -338,8 +361,6 @@ cFigContext::processLeads(){
 		rtnLead = flushMe->front();
 		flushMe->pop_front();
 	}
-
-#endif
 	return rtnLead;
 
 }

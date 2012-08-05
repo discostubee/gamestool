@@ -30,15 +30,19 @@ const cCommand::dUID cThread::xLinkFig = tOutline<cThread>::makeCommand(
 );
 
 void
-cThread::runThread(cThread *me, cContext* pCon){
-	ASRT_NOTNULL(me);	ASRT_NOTNULL(pCon);
+cThread::runThread(cThread *me){
+	ASRT_NOTNULL(me);
 #ifdef GT_THREADS
 	try{
-		dLock syncLock(me->syncMu);
-		cContext newContext(*pCon);
-		me->sync.notify_one();	// let the figment know we're ready.
 
+		dLock syncLock(me->muSync);	//- wait for lock.
+
+		cContext newContext;
 		while(!me->threadStop){
+			{
+				dLock lockConx(me->muConx);
+				newContext = me->mSharedConx;
+			}
 			me->link.get()->run(&newContext);
 			me->sync.wait(syncLock);
 		}
@@ -49,10 +53,10 @@ cThread::runThread(cThread *me, cContext* pCon){
 	}catch(...){
 		UNKNOWN_ERROR;
 	}
-#else
-	DUMB_REF_ARG(me); DUMB_REF_ARG(pCon);
-#endif
 	me->threading = false;
+#else
+	DUMB_REF_ARG(me);
+#endif
 }
 
 #ifdef GT_THREADS
@@ -75,15 +79,19 @@ cThread::work(cContext* pCon){
 
 #ifdef GT_THREADS
 	if(!threading && link.get().valid()){
-		dLock lockMake(syncMu); // If we don't wait for the thread to be made, it can be possible to deadlock.
+		dLock lockMake(muSync); // If we don't wait for the thread to be made, it can be possible to deadlock.
 		threadStop = false;
 		threading = true;
 
+		mSharedConx = *pCon;
 		isMultithreading::nowThreading();
-		myThread = boost::thread(cThread::runThread, this, pCon);
-		sync.wait(lockMake);
+		myThread = boost::thread(cThread::runThread, this);
 
 	}else{
+		{
+			dLock lockConx(muConx);
+			mSharedConx = *pCon;
+		}
 		sync.notify_all();	// Run the thread once.
 	}
 #else
@@ -196,14 +204,10 @@ namespace gt{
 		virtual dNameHash hash() const { return getHash<cWriter>(); }
 
 		virtual void run(cContext* pCon) {
-			start(pCon);
-			updatePlugs();
-
-				//- Really inefficient, but who cares.
-				ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite);
-				writeLead->addPlug(&phrase, cShareTarget::xPT_word);
-				target.get()->jack(writeLead, pCon);
-			stop(pCon);
+			//- Really inefficient, but who cares.
+			ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite);
+			writeLead->addPlug(&phrase, cShareTarget::xPT_word);
+			target.get()->jack(writeLead, pCon);
 		}
 
 	};
@@ -240,33 +244,25 @@ namespace gt{
 			ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup);
 			ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup);
 
-			{
-				FAUX_JACK(setupA, fakeContext);
-				setupA->addPlug(&share, cWriter::xPT_target);
-				setupA->addPlug(&AChatter, cWriter::xPT_word);
-			}
-			{
-				FAUX_JACK(setupB, fakeContext);
-				setupB->addPlug(&share, cWriter::xPT_target);
-				setupB->addPlug(&BChatter, cWriter::xPT_word);
-			}
+			setupA->addPlug(&share, cWriter::xPT_target);
+			setupA->addPlug(&AChatter, cWriter::xPT_word);
+
+			setupB->addPlug(&share, cWriter::xPT_target);
+			setupB->addPlug(&BChatter, cWriter::xPT_word);
+
 			writerA.get()->jack(setupA, &fakeContext);
 			writerB.get()->jack(setupB, &fakeContext);
 		}
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
-			{
-				FAUX_JACK(linkTest, fakeContext);
-				linkTest->addPlug(&writerA, cThread::xPT_fig);
-			}
+			linkTest->addPlug(&writerA, cThread::xPT_fig);
 			threadA.get()->jack(linkTest, &fakeContext);
 		}
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
-			{
-				FAUX_JACK(linkTest, fakeContext);
-				linkTest->addPlug(&writerB, cThread::xPT_fig);
-			}
+
+			linkTest->addPlug(&writerB, cThread::xPT_fig);
+
 			threadB.get()->jack(linkTest, &fakeContext);
 		}
 		ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits);
@@ -274,10 +270,7 @@ namespace gt{
 			threadA.get()->run(&fakeContext);
 			threadB.get()->run(&fakeContext);
 			share.get()->jack(getHits, &fakeContext);
-			{
-				FAUX_JACK(getHits, fakeContext);
-				getHits->getValue(&testCount, cShareTarget::xPT_hits);
-			}
+			getHits->getValue(&testCount, cShareTarget::xPT_hits);
 
 			++time;
 			GTUT_ASRT(time < timeout, "timeout when running.");
@@ -287,12 +280,8 @@ namespace gt{
 			tPlug<dStr> chatter;
 			ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter);
 			share.get()->jack(getChatter, &fakeContext);
-
-			{
-				FAUX_JACK(getChatter, fakeContext);
-				getChatter->getPlug(&chatter, cShareTarget::xPT_chatter);
-				DBUG_LO("chatter='" << chatter.get() << "'");
-			}
+			getChatter->getPlug(&chatter, cShareTarget::xPT_chatter);
+			DBUG_LO("chatter='" << chatter.get() << "'");
 
 			//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
 			std::stringstream ss(chatter.get());
