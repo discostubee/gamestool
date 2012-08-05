@@ -177,9 +177,9 @@ namespace gt{
 		//!\brief	Allows you to pass the error type directly.
 		static void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
 
-		#ifdef GTUT
+#		ifdef GTUT
 			static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
-		#endif
+#		endif
 
 		//!\todo	Make threadsafe.
 		static void makeProfileReport(std::ostream &log);
@@ -236,11 +236,14 @@ namespace gt{
 
 		//!\brief	We need to keep track of the number of contexts so we can make a context lookup.
 		//!\note	Locks all contexts while the lookup table is changed.
-		dConSig regContext(cContext* aCon);
+		dConSig regContext(cContext* pCon);
 
 		//!\brief	NEVER forget to do this. Locks all contexts while the table is updated. Previous context signatures
 		//!			(apart from the one being unregged) remain valid.
-		void unregContext(dConSig aConx);
+		void unregContext(dConSig pSig);
+
+		//!\brief	Is this context still alive?
+		bool activeContext(dConSig pSig);
 
 		//--------------------------------------------------------
 		// Get stuff
@@ -276,9 +279,9 @@ namespace gt{
 		virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }
 
 	protected:
-		#ifdef GTUT
+#		ifdef GTUT
 			static bool mSuppressError;	//!<
-		#endif
+#		endif
 
 		//--------------------------------------------------------
 		// Data which must be redirected if this is an addon's heap.
@@ -301,17 +304,17 @@ namespace gt{
 
 		typedef std::map<dNameHash, sBlueprintHeader> dBlueprintMap;
 
-		#ifdef GT_THREADS
+#		ifdef GT_THREADS
 			static boost::recursive_mutex *xProfileGuard;
 			static boost::recursive_mutex *xLineGuard;
 			boost::recursive_mutex *mProfileGuard;
 			boost::recursive_mutex *mLineGuard;
 
-			#ifdef GTUT
+#			ifdef GTUT
 				static boost::recursive_mutex *xSuppressGuard;
 				boost::recursive_mutex *mSuppressGuard;
-			#endif
-		#endif
+#			endif
+#		endif
 
 		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).
 

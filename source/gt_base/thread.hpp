@@ -58,13 +58,14 @@ namespace gt{
 		typedef boost::unique_lock<boost::mutex> dLock;
 
 		boost::thread myThread;
-		boost::mutex syncMu;
+		boost::mutex muSync, muConx;
 		boost::condition_variable sync;		//!< sync the thread to the calling of the run function.
 		bool threadStop;					//!< Stops the thread loop.
 		bool threading;						//!< Is this figment currently running a thread?
+		cContext mSharedConx;
 #endif
 
-		static void runThread(cThread *me, cContext* pCon);
+		static void runThread(cThread *me);
 		void stopThread();
 	};
 }

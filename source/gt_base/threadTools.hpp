@@ -66,12 +66,12 @@ namespace gt{
 	class tSafeLem{
 	public:
 		tSafeLem(tMrSafety<T> *mr);
-		tSafeLem(tSafeLem<T> &lem);
+		tSafeLem(const tSafeLem<T> &lem);
 		~tSafeLem<T>();
 
 		T* get ();
 		T* operator -> ();
-		tSafeLem<T>& operator = (tSafeLem<T> &copy);
+		tSafeLem<T>& operator = (const tSafeLem<T> &copy);
 
 	protected:
 
@@ -103,7 +103,7 @@ namespace gt{
 #		endif
 
 		void deadLemming();	//!<	If this is the last lemming for this thread, release the lock for next thread in queue.
-		void changedLem(const tSafeLem<T>* from, const tSafeLem<T>* to);	//!<
+		void changedLem(tSafeLem<T>* from, tSafeLem<T>* to);	//!< Makes the 'from' lemming empty and makes the 'to' lemming linked to this manager.
 		T* getLockData(tSafeLem<T>* requester);	//!<	Acquires lock for current thread. Blocks and waits to acquire lock if request comes from another thread.
 		bool isSameThread();
 
@@ -126,11 +126,10 @@ tSafeLem<T>::tSafeLem(tMrSafety<T> *mr) :
 }
 
 template<typename T>
-tSafeLem<T>::tSafeLem(tSafeLem<T> &lem) :
+tSafeLem<T>::tSafeLem(const tSafeLem<T> &lem) :
 	mParent(lem.mParent)
 {
-	mParent->changedLem(&lem, this);
-	lem.mParent = NULL;
+	mParent->changedLem(const_cast<tSafeLem*>(&lem), this);
 }
 
 template<typename T>
@@ -156,12 +155,11 @@ tSafeLem<T>::operator -> () {
 
 template<typename T>
 tSafeLem<T>&
-tSafeLem<T>::operator = (tSafeLem &copy){
-	if(&copy != this){
-		mParent = copy.mParent;
-		mParent->changedLem(&copy, this);
-		copy.mParent = NULL;
-	}
+tSafeLem<T>::operator = (const tSafeLem &copy){
+	ASRT_NOTSELF(&copy);
+
+	mParent->changedLem(static_cast<tSafeLem*>(&copy), this);
+
 	return *this;
 }
 
@@ -176,6 +174,7 @@ tMrSafety<T>::tMrSafety() :
 template<typename T>
 tMrSafety<T>::~tMrSafety()
 {
+	try{
 #	ifdef GT_THREADS
 		while(inWild > 0){
 			muData.unlock();
@@ -185,6 +184,8 @@ tMrSafety<T>::~tMrSafety()
 #	else
 		delete mData;
 #	endif
+	}catch(...){
+	}
 }
 
 template<typename T>
@@ -241,17 +242,36 @@ tMrSafety<T>::get() {
 template<typename T>
 void
 tMrSafety<T>::deadLemming(){
+	ASRT_TRUE(inWild > 0, "Lemming underflow.");
 
 #	ifdef GT_THREADS
 		muData.unlock();
-		--inWild;
 #	endif
+
+	--inWild;
 }
 
 template<typename T>
 void
-tMrSafety<T>::changedLem(const tSafeLem<T>* from, const tSafeLem<T>* to){
+tMrSafety<T>::changedLem(tSafeLem<T>* from, tSafeLem<T>* to){
 	DUMB_REF_ARG(from); DUMB_REF_ARG(to);
+	ASRT_TRUE(from->mParent == this, "Tried to change from a lemming that didn't come from this manager.");
+
+	if(to->mParent != NULL){
+		++inWild;
+
+	}else if(to->mParent != this){
+		--to->mParent->inWild;
+		++inWild;
+
+#		ifdef GT_THREADS
+			to->mParent->muData.unlock();
+			muData.lock();	//- add to lock again
+#		endif
+	}
+
+	to->mParent = this;
+	from->mParent = NULL;
 }
 
 template<typename T>
@@ -259,9 +279,9 @@ T*
 tMrSafety<T>::getLockData(tSafeLem<T>* requester){
 #	ifdef GT_THREADS
 		muData.lock();
-		++inWild;
 #	endif
 
+	++inWild;
 	return mData;
 }
 
@@ -276,10 +296,6 @@ tMrSafety<T>::isSameThread(){
 }
 
 }
-
-#ifdef DEBUG
-	void threadTestFoo();
-#endif
 
 
 #endif
