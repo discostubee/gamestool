@@ -19,13 +19,43 @@
 #include "lead.hpp"
 #include "figment.hpp"
 
-////////////////////////////////////////////////////////////
 using namespace gt;
+
+////////////////////////////////////////////////////////////
+#ifdef GT_THREADS
+	void gt::startLead(ptrLead lead, dConSig pSig){
+		lead->start(pSig);
+	}
+
+	void gt::stopLead(ptrLead lead){
+		lead->stop();
+	}
+
+	void gt::startLead(cLead &lead, dConSig sig){
+		lead.start(sig);
+	}
+
+	void gt::stopLead(cLead &lead){
+		lead.stop();
+	}
+
+#else
+	void gt::startLead(ptrLead lead, dConSig pSig){}
+	void gt::stopLead(ptrLead lead){}
+	void startLead(cLead &lead, dConSig sig){}
+	void stopLead(cLead &lead){}
+#endif
+
+////////////////////////////////////////////////////////////
 
 cLead::cLead(cCommand::dUID aCom):
 	mCom(aCom)
 {
 	DBUG_TRACK_START("lead");
+
+#	ifdef GT_THREADS
+		mCurrentSig = SL_NO_ENTRY;
+#	endif
 }
 
 cLead::cLead(const cLead &otherLead):
@@ -34,7 +64,7 @@ cLead::cLead(const cLead &otherLead):
 	DBUG_TRACK_START("lead");
 
 #	ifdef GT_THREADS
-	mCurrentSig = SL_NO_ENTRY;
+		mCurrentSig = SL_NO_ENTRY;
 #	endif
 
 	cLead *other = const_cast<cLead*>(&otherLead);
@@ -217,8 +247,10 @@ cLead::addPile(cLead *passTo){
 		dLock unplugLock(mu);
 #	endif
 
-	for(scrPDataItr = passTo->mDataPile.begin(); scrPDataItr != passTo->mDataPile.end(); ++scrPDataItr)
+	for(scrPDataItr = passTo->mDataPile.begin(); scrPDataItr != passTo->mDataPile.end(); ++scrPDataItr){
 		mDataPile.push_back(*scrPDataItr);
+		(*scrPDataItr)->linkLead(this);
+	}
 }
 
 void
@@ -296,7 +328,10 @@ GTUT_START(testLead, tagging){
 		tmpLead->getValue(&testA, &tag);
 		GTUT_ASRT(testA == magic, "Lead didn't store A");
 
+		startLead(tmpLead, fakeConx.getSig());
 		tmpLead->getPlug(&numB, &tag);
+		stopLead(tmpLead);
+
 		GTUT_ASRT(numB.get() == magic, "B didn't get A's number");
 	}
 }GTUT_END;
@@ -318,9 +353,14 @@ GTUT_START(testLead, shadowUpdate){
 
 		numA.get() = 0;
 
+		startLead(leadA, conxA.getSig());
 		leadA.addPlug(&numA, &tag);
 		leadA.setPlug(&numB, &tag);
+		stopLead(leadA);
+
+		startLead(leadB, conxB.getSig());
 		leadB.addPlug(&numA, &tag);
+		stopLead(leadB);
 
 		numB.get() = magic;
 		numB.updateStart();

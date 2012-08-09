@@ -67,10 +67,17 @@ cContext::cContext(const cContext & copyMe) :
 
 cContext::~cContext(){
 	try{
-		while(!mStack.empty()){
+		while( static_cast<int>(mStack.size()) > (mCopyIdx + 1)){
 			itrInfo = mStackInfo.find(mStack.back());
-			if(itrInfo != mStackInfo.end())
-				mStack.back()->emergencyStop();
+			if(itrInfo == mStackInfo.end())
+				throw excep::stackFault(mStack, "Expected to find signature on info map", __FILE__, __LINE__);
+
+			--itrInfo->second.timesStacked;
+			if(itrInfo->second.timesStacked == 0){
+				mStackInfo.erase(itrInfo);
+			}
+
+			mStack.back()->emergencyStop();
 			mStack.pop_back();
 		}
 		gWorld.get()->unregContext(mSig);
