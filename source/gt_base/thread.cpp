@@ -113,10 +113,16 @@ cThread::stopThread(){
 			PROFILE;
 			try{
 				threadStop = true;
-				sync.notify_all();
 
-				if(myThread.joinable())
+				if(myThread.joinable()){
+					std::cout << "joining" << std::endl;//!!!
+					muSync.lock();	//- Wait until we have sync
+					muSync.unlock();
+					sync.notify_all();
 					myThread.timed_join( boost::posix_time::milliseconds(5000) );
+				}else{
+					WARN_S("Unable to join thread even though we are threading");
+				}
 			}catch(...){
 				WARN_S("Error stopping thread");
 			}
@@ -218,6 +224,19 @@ namespace gt{
 		"setup", &cWriter::patSetup, xPT_word, xPT_target, NULL
 	);
 
+	GTUT_START(test_Thread, threadDestruction){
+		const short testLength = 5;
+		for(short i=0; i < testLength; ++i){
+			cContext fakeContext;
+			cThread A, B, C;
+			for(short j=0; j < testLength; ++j){
+				A.run(&fakeContext);
+				B.run(&fakeContext);
+				C.run(&fakeContext);
+			}
+		}
+	}GTUT_END;
+
 	GTUT_START(test_Thread, sharedData){
 		tOutline<cShareTarget>::draft();
 		tOutline<cWriter>::draft();
@@ -244,33 +263,47 @@ namespace gt{
 			ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup);
 			ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup);
 
+			startLead(setupA, fakeContext.getSig());
 			setupA->addPlug(&share, cWriter::xPT_target);
 			setupA->addPlug(&AChatter, cWriter::xPT_word);
+			stopLead(setupA);
 
+			startLead(setupB, fakeContext.getSig());
 			setupB->addPlug(&share, cWriter::xPT_target);
 			setupB->addPlug(&BChatter, cWriter::xPT_word);
+			stopLead(setupB);
 
 			writerA.get()->jack(setupA, &fakeContext);
 			writerB.get()->jack(setupB, &fakeContext);
 		}
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
+
+			startLead(linkTest, fakeContext.getSig());
 			linkTest->addPlug(&writerA, cThread::xPT_fig);
+			stopLead(linkTest);
+
 			threadA.get()->jack(linkTest, &fakeContext);
 		}
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 
+			startLead(linkTest, fakeContext.getSig());
 			linkTest->addPlug(&writerB, cThread::xPT_fig);
+			stopLead(linkTest);
 
 			threadB.get()->jack(linkTest, &fakeContext);
 		}
+
 		ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits);
 		while(testCount < testLength){
 			threadA.get()->run(&fakeContext);
 			threadB.get()->run(&fakeContext);
 			share.get()->jack(getHits, &fakeContext);
+
+			startLead(getHits, fakeContext.getSig());
 			getHits->getValue(&testCount, cShareTarget::xPT_hits);
+			stopLead(getHits);
 
 			++time;
 			GTUT_ASRT(time < timeout, "timeout when running.");
@@ -279,8 +312,13 @@ namespace gt{
 		{
 			tPlug<dStr> chatter;
 			ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter);
+
 			share.get()->jack(getChatter, &fakeContext);
+
+			startLead(getChatter, fakeContext.getSig());
 			getChatter->getPlug(&chatter, cShareTarget::xPT_chatter);
+			stopLead(getChatter);
+
 			DBUG_LO("chatter='" << chatter.get() << "'");
 
 			//- Thanks Dave Sinkula: http://www.daniweb.com/software-development/cpp/threads/27905
@@ -295,19 +333,6 @@ namespace gt{
 
 		tOutline<cShareTarget>::removeFromWorld();
 		tOutline<cWriter>::removeFromWorld();
-	}GTUT_END;
-
-	GTUT_START(test_Thread, threadDestruction){
-		const short testLength = 5;
-		for(short i=0; i < testLength; ++i){
-			cContext fakeContext;
-			cThread A, B, C;
-			for(short j=0; j < testLength; ++j){
-				A.run(&fakeContext);
-				B.run(&fakeContext);
-				C.run(&fakeContext);
-			}
-		}
 	}GTUT_END;
 
 }

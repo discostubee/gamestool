@@ -206,7 +206,11 @@ GTUT_START(test_reflection, houndGets){
 	testNum->stop(&fakeConx);
 
 	tPlug<int> num;
+
+	startLead(sendHound, fakeConx.getSig());
 	sendHound->getPlug(&num, cPlugHound::xPT_plug);
+	stopLead(sendHound);
+
 	GTUT_ASRT( num.get() == 42, "Didn't get the right number back from the test figment.");
 }GTUT_END;
 
@@ -240,7 +244,11 @@ GTUT_START(test_reflection, alucardBasic){
 	testNum.get()->jack(getNum, &fakeConx);
 
 	tPlug<int> a;
+
+	startLead(getNum, fakeConx.getSig());
 	getNum->getPlug(&a, cTestNum::xPT_num);
+	stopLead(getNum);
+
 	GTUT_ASRT( a == num, "number wasn't set.");
 
 

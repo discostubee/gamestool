@@ -145,7 +145,7 @@ namespace gt{
 		dConSig mSig;	//!<
 		dProgramStack mStack;	//!< This is the entire stack of figments in the order that they were added in.
 		dMapInfo mStackInfo;	//!< Stores more info about different items on the stack.
-		int mCopyIdx;	//!< used when preventing an unwind into another context's stack.
+		int mCopyIdx;	//!< Index of the last element copied from another context. -1 means nothing was copied. used when preventing an unwind into another context's stack.
 
 		dMapInfo::iterator itrInfo;	//!< scratch space.
 	};

@@ -1,3 +1,4 @@
+
 /**********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -331,15 +332,22 @@ GTUT_START(testAnchor, basicLoad){
 	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot);
 	ank->jack(root, &fake);
 	tPlug<ptrFig> reload;
+
+	startLead(root, fake.getSig());
 	root->getPlug(&reload, cAnchor::xPT_root);
+	stopLead(root);
 
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
 	reload.get()->jack(checkData, &fake);
 
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
+
+	startLead(checkData, fake.getSig());
 	checkData->getPlug(&myStr, cSaveTester::xPT_str);
 	checkData->getPlug(&myNum, cSaveTester::xPT_num);
+	stopLead(checkData);
+
 	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
 	GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
 

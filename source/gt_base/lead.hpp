@@ -31,6 +31,15 @@
 #include <boost/smart_ptr.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////////
+// Forward dec.
+namespace gt{
+	void startLead(ptrLead, dConSig);
+	void stopLead(ptrLead);
+	void startLead(cLead &, dConSig);
+	void stopLead(cLead &);
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 // Classes
 namespace gt{
 
@@ -114,8 +123,15 @@ namespace gt{
 			boost::recursive_mutex mu;
 			dConSig mCurrentSig;
 
-			void start(dConSig);
+			void start(dConSig pSig);
 			void stop();
+
+#			ifdef GTUT
+				friend void startLead(ptrLead, dConSig);
+				friend void stopLead(ptrLead);
+				friend void startLead(cLead &, dConSig);
+				friend void stopLead(cLead &);
+#			endif
 #		endif
 
 		dDataMap mTaggedData; 	//!<
@@ -166,16 +182,8 @@ namespace gt{
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Macros
-#	ifdef GT_THREADS
-#		define START_LEAD(p, c) p->startLead(c)
-#		define END_LEAD(p) p->endLead()
-#	else
-#		define START_LEAD(p, c)
-#		define END_LEAD(p)
-#	endif
-
-
-
+namespace gt{
+}
 
 
 /*

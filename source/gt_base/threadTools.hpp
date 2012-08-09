@@ -74,8 +74,6 @@ namespace gt{
 		tSafeLem<T>& operator = (const tSafeLem<T> &copy);
 
 	protected:
-
-
 		tMrSafety<T> *mParent;
 
 	friend class tMrSafety<T>;
@@ -234,9 +232,15 @@ tMrSafety<T>::set(const T& data) {
 template<typename T>
 tSafeLem<T>
 tMrSafety<T>::get() {
-	tSafeLem<T> temp(this);
-	return temp;
-	//return tSafeLem<T>(this);
+#	ifdef GT_THREADS
+		muData.lock();
+#	endif
+
+	++inWild;
+
+	//tSafeLem<T> temp(this);
+	//return temp;
+	return tSafeLem<T>(this);
 }
 
 template<typename T>
@@ -254,15 +258,10 @@ tMrSafety<T>::deadLemming(){
 template<typename T>
 void
 tMrSafety<T>::changedLem(tSafeLem<T>* from, tSafeLem<T>* to){
-	DUMB_REF_ARG(from); DUMB_REF_ARG(to);
 	ASRT_TRUE(from->mParent == this, "Tried to change from a lemming that didn't come from this manager.");
 
-	if(to->mParent != NULL){
-		++inWild;
-
-	}else if(to->mParent != this){
+	if(to->mParent != this){
 		--to->mParent->inWild;
-		++inWild;
 
 #		ifdef GT_THREADS
 			to->mParent->muData.unlock();
@@ -277,11 +276,7 @@ tMrSafety<T>::changedLem(tSafeLem<T>* from, tSafeLem<T>* to){
 template<typename T>
 T*
 tMrSafety<T>::getLockData(tSafeLem<T>* requester){
-#	ifdef GT_THREADS
-		muData.lock();
-#	endif
-
-	++inWild;
+	ASRT_TRUE(requester->mParent == this, "A lemming requested data from the wrong manager");
 	return mData;
 }
 
@@ -296,6 +291,5 @@ tMrSafety<T>::isSameThread(){
 }
 
 }
-
 
 #endif
