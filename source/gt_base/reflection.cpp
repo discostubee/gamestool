@@ -45,6 +45,20 @@ cPlugHound::cPlugHound(){
 cPlugHound::~cPlugHound(){
 }
 
+cFigment::dMigrationPattern
+cPlugHound::getLoadPattern(){
+	dMigrationPattern pattern;
+	dVersionPlugs version1;
+
+
+	version1.push_back(mCom);
+	version1.push_back(mTag);
+	version1.push_back(mTarget);
+
+	pattern.push_back(version1);
+	return pattern;
+}
+
 void
 cPlugHound::patGoGetit(ptrLead aLead){
 	PROFILE;
@@ -53,11 +67,17 @@ cPlugHound::patGoGetit(ptrLead aLead){
 	aLead->getPlug(&mTag, xPT_tag);
 	aLead->getPlug(&mTarget, xPT_contextTargetID);
 
-	const cPlugTag *getTag = gWorld.get()->getPlugTag(mTag.get());
 	ptrLead getLead = gWorld.get()->makeLead(mCom.get());
 	ptrFig fig = currentCon->getFirstOfType(mTarget.get());
 
+	const cPlugTag *tagTarget = gWorld.get()->getPlugTag(mTag.get());
 
+	fig->jack(getLead, currentCon);
+	getLead->passPlug(
+		aLead.get(),
+		tagTarget,
+		xPT_plug
+	);
 }
 
 
@@ -134,7 +154,7 @@ void cAlucard::loadEat(cByteBuffer* pBuff, dReloadMap *aReloads){
 void cAlucard::getLinks(std::list<ptrFig>* pOutLinks){
 }
 
-void cAlucard::run(cContext* aCon){
+void cAlucard::work(cContext* aCon){
 	PROFILE;
 	start(aCon);
 

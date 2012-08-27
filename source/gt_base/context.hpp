@@ -98,8 +98,8 @@ namespace gt{
 	//-------------------------------------------------------------------------------------
 	//!\brief	A context is used to both provide contextual data (IE get data from things
 	//!			before me), and to prevent bad situations (circular references, thread
-	//!			collisions)
-	//!\note	Things get a little confusing when you copy another figment.
+	//!			collisions).
+	//!\note	Things get a little confusing when you copy another context.
 	//!			because when running a thread, the other context can finish with its figments
 	//!			and remove them. We still want to keep this stack because we still want to
 	//!			prevent circular references, we just don't want to force stop them when our
@@ -111,9 +111,11 @@ namespace gt{
 		~cContext();
 
 		bool isStacked(cFigContext *pFig);			//!< Determines if the figment is stacked.
+		bool canStack(cFigContext *pFig);			//!< Determines if the figment can be stacked.
 		dProgramStack makeStackDump();				//!< Spits out a copy of the program stack.
 		ptrFig getFirstOfType(dNameHash aType);		//!< Needs to change! Scans the stack and returns the first figment of the type we're looking for. If it didn't find one, it returns an empty figment.
 		dConSig getSig() const;						//!< Get unique signature.
+		void startJackMode();						//!< Sets the context into jack mode, where isStacked is only true if a figment was added during this mode. The mode is reset once the stack is unwound back to the point where the mode was engaged.
 
 		cContext& operator=(const cContext &pCon);
 
@@ -124,28 +126,27 @@ namespace gt{
 		friend class cFigContext;
 
 	private:
-		static const int ORIGINAL = -1;	//!< used when preventing an unwind into another context's stack.
+		static const int ORIGINAL = -1;	//!< Is this context an original and not a copy. used when preventing an unwind into another context's stack.
+		static const int NOT_JACKING = -1;
 
-		struct sInfo{
-			unsigned int timesStacked;
-			dNameHash realID;	//!< Lets you determine what sort of class is on the stack.
+		struct sStackInfo{
+			enum eMode{ eModeRun, eModeJack, eModeRestacked };
 
+			const dNameHash figType;	//!< Lets you determine what sort of figment is on the stack.
 
-			sInfo(unsigned int pTime, dNameHash pID) : timesStacked(pTime), realID(pID) {}
-			sInfo() : timesStacked(0), realID(0) {}
+			eMode mCurMode;	//!< In order to allow figments to be restacked in jack mode, we need to know more about when they were stacked.
+
+			sStackInfo(dNameHash pType, eMode pMode) : figType(pType), mCurMode(pMode) {}
 		};
 
-		typedef std::map<const cFigContext*, sInfo> dMapInfo;		//!<
-
-		#ifdef GT_THREADS
-			const dThreadID mThreadID;
-		#endif
+		typedef std::map<const cFigContext*, sStackInfo> dMapInfo;		//!<
 
 		bool mKeepPopping;
 		dConSig mSig;	//!<
 		dProgramStack mStack;	//!< This is the entire stack of figments in the order that they were added in.
 		dMapInfo mStackInfo;	//!< Stores more info about different items on the stack.
 		int mCopyIdx;	//!< Index of the last element copied from another context. -1 means nothing was copied. used when preventing an unwind into another context's stack.
+		int mJackModeIdx;	//!< The index at which jackmode was engaged.
 
 		dMapInfo::iterator itrInfo;	//!< scratch space.
 	};
@@ -157,6 +158,8 @@ namespace gt{
 	public:
 		cFigContext();
 		virtual ~cFigContext();
+
+		virtual const dPlaChar* name() const { return "fig context"; }	//!< Need this when stack dumping from destructor.
 
 		void start(cContext *con);	//!< If threaded, this figment is locked. Puts this figment onto the given context stack, but only if that figment isn't already stacked. Updates all plugs in the roster.
 		void stop(cContext *con);	//!< If threaded, this figment is unlocked. Takes the figment off the stack.
@@ -170,26 +173,18 @@ namespace gt{
 
 		//- It is hoped that the compiler will reduce the cost to call these to 0 if we use a un-threaded version.
 		void updatePlugs();	//!< Update all the plug shadows.
-		bool differedLead(ptrLead pLead);	//!< If the figment is locked, add the lead to the buffer and jack later.
-		ptrLead processLeads();	//!< Keep calling to flush the lead buffer. Returns a smart pointer containing null when empty. Swap buffers when you call it the first time
 
-		friend class cContext;
-		friend class cBlueprint;
+	friend class cContext;
+	friend class cBlueprint;
 
 	private:
-		typedef std::deque<ptrLead> dListLeads;
-
 		bool locked;
-		dListLeads ALeads, BLeads;
-		dListLeads *bufferLeads;
-		dListLeads *flushMe;
 
 		#ifdef GT_THREADS
 
 			typedef boost::lock_guard<boost::recursive_mutex> dLock;
 
 			boost::recursive_mutex muCon;	//!< Mutex for start and stop.
-			boost::recursive_mutex muLeads;	//!< Mutex for the differed leads buffers.
 			std::vector<cBase_plug*> updateRoster;	//!< Reference to plugs that need to update. DO NOT delete the contents, even on destruction.
 			std::vector<cBase_plug*>::iterator itrRos;
 			bool updating;

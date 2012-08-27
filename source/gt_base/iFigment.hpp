@@ -133,12 +133,14 @@ namespace gt{
 
 		cReload();
 
+		cReload(ptrFig pFig);
+
 		//!\brief	Stores a figment before it has been passed the rest of its reloaded data. This is so that figment plugs
 		//!			can see all the reloaded figments when they are passed the buffer.
 		//!\param	pFig	Reference to the newly made figment (it's not reloaded until it has been passed the buffer.
 		//!\param	copyMe	This is the accompanying reload buffer which has yet to be applied to the figment. The data
 		//!					being pointed to is copied so that it exists at the right time.
-		cReload(ptrFig pFig, const dByte* copyMe = NULL, size_t buffSize = 0);
+		cReload(ptrFig pFig, const dByte* copyMe, size_t buffSize);
 
 		//!\brief	Cleans up the data it has copied.
 		~cReload();

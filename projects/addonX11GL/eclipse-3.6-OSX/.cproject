@@ -1191,9 +1191,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.base.2074224755" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.base">
 								<option id="gnu.both.asm.option.include.paths.1780679016" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_46_0"/>
 									<listOptionValue builtIn="false" value="/Developer/SDKs/boost_1_49_0"/>
-									<listOptionValue builtIn="false" value="/Developer/SDKs/gtest-1.5.0/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1358248263" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>

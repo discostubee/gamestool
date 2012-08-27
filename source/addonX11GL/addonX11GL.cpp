@@ -12,7 +12,7 @@ draftAll(gt::cWorld *pWorld){
 	try{
 		gt::redirectWorld(pWorld);
 
-		DBUG_LO("test."); //!!!
+		std::cout << "drafting" << std::endl;//!!!
 
 		gt::tOutline<gt::cWindowFrame>::draft();
 		gt::tOutline<gt::cWindowFrame_X11GL>::draft();

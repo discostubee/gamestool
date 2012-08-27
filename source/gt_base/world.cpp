@@ -467,9 +467,11 @@ void
 gt::redirectWorld(cWorld* pWorldNew){
 	if(pWorldNew){
 		cWorld* temp = new cWorld();	// We need the member pointers to the statics to exist.
-		//std::cout << (long)gt::gWorld << " vs " << (long)pWorldNew << std::endl; //!!!
+
+		//std::cout << (long)gt::gWorld.get() << " vs " << (long)pWorldNew << std::endl; //!!!
 		//std::cout << "xLines at " << (long)(&gt::cWorld::xLines) << std::endl; //!!!
 		//std::cout << (long)gt::cWorld::xLines.get() << " vs " << (long)pWorldNew->mLines << std::endl; //!!!
+
 		pWorldNew->copyWorld(temp);
 		delete temp;
 
@@ -484,10 +486,10 @@ gt::redirectWorld(cWorld* pWorldNew){
 
 ////////////////////////////////////////////////////////////
 
-#ifdef DONTGTUT
+#ifdef GTUT
 
 //- A basic class to test out some functions of the world.
-class testDraftParent: public iFigment{
+class testDraftParent: public cFigment{
 public:
 	static const cPlugTag*	xPT_A;
 	static const cCommand::dUID	xCommandA;
@@ -502,16 +504,6 @@ public:
 
 	static dNameHash extends(){ return uDoesntExtend; }
 	virtual dNameHash getExtension() const { return extends(); }
-
-	virtual void jack(ptrLead pLead, cContext* pCon) {}
-	virtual void run(cContext* pCon) {}
-	virtual void world(cContext* pCon) {}
-	virtual void save(cByteBuffer* pAddHere) {}
-	virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL) {}
-	virtual void getLinks(std::list<ptrFig>* pOutLinks) {}
-	virtual dMigrationPattern getLoadPattern() { return dMigrationPattern(); }
-	virtual dNumVer getVersion() const { return 0; }
-	virtual dStr const& requiredAddon() const { DONT_USE_THIS; };
 
 	virtual ~testDraftParent(){}
 

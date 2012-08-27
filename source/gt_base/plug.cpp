@@ -38,7 +38,13 @@ using namespace gt;
 cReload::cReload(){
 }
 
-cReload::cReload(ptrFig pFig, const dByte* copyMe, size_t buffSize): fig(pFig){
+cReload::cReload(ptrFig pFig):
+	fig(pFig)
+{}
+
+cReload::cReload(ptrFig pFig, const dByte* copyMe, size_t buffSize):
+	fig(pFig)
+{
 	if(copyMe != NULL && buffSize > 0)
 		data.copy(copyMe, buffSize);
 }

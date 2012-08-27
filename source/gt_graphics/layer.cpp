@@ -85,7 +85,7 @@ cLayer::getLinks(std::list<ptrFig>* pOutLinks){
 
 void
 cLayer::patSetLink(ptrLead aLead){
-	mLink = aLead->getPlug(xPT_content);
+	aLead->setPlug(&mLink, xPT_content);
 }
 
 void

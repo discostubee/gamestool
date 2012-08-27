@@ -102,6 +102,7 @@ extern const char *MSG_UNKNOWN_ERROR;
 #define UNKNOWN_ERROR	WARN_S(MSG_UNKNOWN_ERROR);
 
 #ifdef GTUT
+	//- Adds line flushing per test. Sadly, if a test fails the lines are not flushed until the next test. At this point I can't see a way to fix this.
 #	undef GTUT_END
 #	define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
 #endif
