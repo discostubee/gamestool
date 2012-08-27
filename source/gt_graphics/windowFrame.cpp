@@ -46,21 +46,21 @@ cWindowFrame::~cWindowFrame(){
 
 void
 cWindowFrame::patLink(ptrLead aLead){
-	mContent = aLead->getPlug(cWindowFrame::xPT_content);
+	aLead->getPlug(&mContent, cWindowFrame::xPT_content);
 }
 
 void
 cWindowFrame::patSetCloser(ptrLead aLead){
-	mClosing = aLead->getPlug(cWindowFrame::xPT_closer);
+	aLead->getPlug(&mClosing, cWindowFrame::xPT_closer);
 	DBUG_LO("The closer is now " << mClosing.get()->name());
 }
 
 void
 cWindowFrame::patSetDim(ptrLead aLead){
-	aLead->setPlug(&mX, xPT_x, true);
-	aLead->setPlug(&mY, xPT_y, true);
-	aLead->setPlug(&mWidth, xPT_width, true);
-	aLead->setPlug(&mHeight, xPT_height, true);
+	aLead->setPlug(&mX, xPT_x);
+	aLead->setPlug(&mY, xPT_y);
+	aLead->setPlug(&mWidth, xPT_width);
+	aLead->setPlug(&mHeight, xPT_height);
 	refreshDim();
 }
 

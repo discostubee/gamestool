@@ -41,8 +41,13 @@ main(int argc, char **argv){
 
 	gWorld.take( new cOSXWorld() );
 
-	tOutline<cRunList>::draft();
 	tOutline<cFigment>::draft();
+	tOutline<cRunList>::draft();
+
+	//!!!
+	gWorld.get()->openAddon("X11GL");
+	ptrFig window = gWorld.get()->makeFig("window frame");
+	//!!!
 
 	gWorld.get()->flushLines();
 #ifdef GTUT_GOOGLE
@@ -61,8 +66,9 @@ main(int argc, char **argv){
 
 #ifdef GTUT
 namespace gt{
-	GTUT_START(testOSX, load){
-		gWorld.get()->openAddon("X11GLS");
+	GTUT_START(testOSX, loadAddon){
+		gWorld.get()->openAddon("X11GL");
+		ptrFig window = gWorld.get()->makeFig("window frame");
 	}GTUT_END;
 
 	GTUT_START(testOSX, unload){

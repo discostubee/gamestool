@@ -22,28 +22,30 @@
 using namespace gt;
 
 ////////////////////////////////////////////////////////////
-#ifdef GT_THREADS
-	void gt::startLead(ptrLead lead, dConSig pSig){
-		lead->start(pSig);
-	}
+#ifdef GTUT
+#	ifdef GT_THREADS
+		void gt::startLead(ptrLead lead, dConSig pSig){
+			lead->start(pSig);
+		}
 
-	void gt::stopLead(ptrLead lead){
-		lead->stop();
-	}
+		void gt::stopLead(ptrLead lead){
+			lead->stop();
+		}
 
-	void gt::startLead(cLead &lead, dConSig sig){
-		lead.start(sig);
-	}
+		void gt::startLead(cLead &lead, dConSig sig){
+			lead.start(sig);
+		}
 
-	void gt::stopLead(cLead &lead){
-		lead.stop();
-	}
+		void gt::stopLead(cLead &lead){
+			lead.stop();
+		}
 
-#else
-	void gt::startLead(ptrLead lead, dConSig pSig){}
-	void gt::stopLead(ptrLead lead){}
-	void startLead(cLead &lead, dConSig sig){}
-	void stopLead(cLead &lead){}
+#	else
+		void gt::startLead(ptrLead lead, dConSig pSig){}
+		void gt::stopLead(ptrLead lead){}
+		void startLead(cLead &lead, dConSig sig){}
+		void stopLead(cLead &lead){}
+#	endif
 #endif
 
 ////////////////////////////////////////////////////////////
@@ -123,7 +125,6 @@ cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 		scrTDataItr->second->unlinkLead(this);
 		scrTDataItr->second = addMe;
 	}else{
-		//mTaggedData.insert( std::pair<cPlugTag::dUID, cBase_plug *>(aTag->mID, aPlug) );
 		mTaggedData[aTag->mID] =addMe;
 	}
 	addMe->linkLead(this);
@@ -336,7 +337,30 @@ GTUT_START(testLead, tagging){
 	}
 }GTUT_END;
 
-GTUT_START(testLead, piling){
+GTUT_START(testLead, pilingPlugs){
+	const int numValues = 6;
+
+	cContext conx;
+	std::vector< tPlug<int> > results;
+	tPlug<int> convert[6];
+	ptrLead testMe = gWorld.get()->makeLead(0);
+
+	for(int i=0; i < numValues; ++i){
+		convert[i].copyFrom(&i);
+		testMe->addToPile(&convert[i]);
+	}
+
+	startLead(testMe, conx.getSig());
+	testMe->getPile(&results);
+
+	for(int i=0; i < numValues; ++i){
+		GTUT_ASRT(results[i].get() == i, "didn't pile the right results");
+	}
+	stopLead(testMe);
+
+}GTUT_END;
+
+GTUT_START(testLead, pilingValues){
 }GTUT_END;
 
 GTUT_START(testLead, shadowUpdate){

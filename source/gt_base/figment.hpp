@@ -66,8 +66,7 @@ namespace gt{
 		cFigment();
 		virtual ~cFigment();
 
-		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this.
-		//!\note	Threadsafe, so you can be running a this figment at the same time your are jacking.
+		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this, but in case you do.
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 		void run(cContext* pCon);	//!< Performs all the normal stuff needed before doing work, such as using the context to ensure it doesn't run into itself or other threads.
@@ -87,7 +86,7 @@ namespace gt{
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
 
-		virtual void work(cContext* pCon);	//!< Gives the childen figments some runtime to do whatever it is that they normally do.
+		virtual void work(cContext* pCon);	//!< Gives the child figments some runtime to do whatever it is that they normally do.
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
@@ -112,6 +111,7 @@ namespace gt{
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.
 		virtual void save(cByteBuffer* pSaveHere);	//!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
 		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL); //!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
+
 
 	protected:
 

@@ -149,9 +149,7 @@ void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
-	if(differedLead(pLead))
-		return;
-
+	pCon->startJackMode();
 	start(pCon);
 	try{
 		ASRT_NOTNULL(mBlueprint);
@@ -172,9 +170,6 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 		UNKNOWN_ERROR;
 	}
 	stop(pCon);
-
-	for(tmpLead = processLeads(); tmpLead.get() != NULL; tmpLead = processLeads())
-		jack(tmpLead, pCon);
 }
 
 
@@ -184,8 +179,6 @@ cFigment::run(cContext* pCon){
 	start(pCon);
 	updatePlugs();
 	work(pCon);
-	for(tmpLead = processLeads(); tmpLead.get() != NULL; tmpLead = processLeads())
-		jack(tmpLead, pCon);
 	stop(pCon);
 }
 
@@ -323,47 +316,110 @@ class testContextFigment: public cFigment{
 public:
 	testContextFigment *refOther;
 	bool throwOnRun;
+	int timesJacked;
 
-	testContextFigment() : refOther(NULL), throwOnRun(false) {}
+	testContextFigment() : refOther(NULL), throwOnRun(false), timesJacked(0) {}
 	virtual ~testContextFigment() {}
 
 	static const dPlaChar* identify(){ return "test context figment"; }
 	virtual const dPlaChar* name() const { return identify(); }
 	virtual dNameHash hash() const { return getHash<testContextFigment>(); }
 
-	virtual void run(cContext *pCon){
-		start(pCon);
+	virtual void work(cContext* pCon){
 		if(throwOnRun)
 			throw excep::base_error(__FILE__, __LINE__);
 		else
-			if(refOther) refOther->run(pCon);
+			if(refOther) refOther->run(currentCon);
+	}
+
+	virtual void jack(ptrLead pLead, cContext* pCon){
+		pCon->startJackMode();
+		start(pCon);
+		try{
+			if(refOther) refOther->jack(pLead, pCon);
+		}catch(excep::base_error &e){
+			DBUG_LO(e.what());
+		}
 		stop(pCon);
+		++timesJacked;
 	}
 
 	bool stillStacked(){ return currentCon != NULL; }
 };
 
 GTUT_START(test_context, preventSelfReference){
-	cContext testMe;
 	bool caughtLikeABoss = false;
 	testContextFigment A, B;
 
-	A.refOther = &B;
-	B.refOther = &A;
-	try{ A.run(&testMe); }catch(excep::stackFault_selfReference){ caughtLikeABoss = true; }
-	GTUT_ASRT(caughtLikeABoss, "context: Not the boss");
+	{
+		cContext testMe;
+
+		A.refOther = &B;
+		B.refOther = &A;
+		try{
+			A.run(&testMe);
+		}catch(excep::stackFault_selfReference){
+			caughtLikeABoss = true;
+		}
+		B.stop(&testMe);
+		A.stop(&testMe);
+	}
+
+	GTUT_ASRT(caughtLikeABoss, "Didn't prevent self reference.");
+
+	gt::gWorld.get()->flushLines();	//- So we clear out warnings.
 }GTUT_END;
 
 GTUT_START(test_context, forceUnwind){
-	cContext testMe;
 	testContextFigment A, B;
+	bool caughtLikeABoss = false;
 
 	A.refOther = &B;
 	B.throwOnRun = true;
-	cWorld::suppressNextError();
-	try{ A.run(&testMe); }catch(excep::base_error){}
-	A.stop(&testMe);
-	GTUT_ASRT( !B.stillStacked(), "B is still stacked." );
+
+	try{
+		cContext testMe;
+		A.run(&testMe);
+	}catch(excep::base_error){
+		caughtLikeABoss = true;
+	}
+
+	GTUT_ASRT(caughtLikeABoss, "Didn't throw.");
+
+	gt::gWorld.get()->flushLines();	//- So we clear out warnings.
+}GTUT_END;
+
+GTUT_START(test_context, allowJackStack){
+	testContextFigment A, B;
+	ptrLead testLead;
+
+	A.refOther = &B;
+	{
+		cContext testMe;
+		B.start(&testMe);	//- started in run mode.
+		A.jack(testLead, &testMe);
+		B.stop(&testMe);
+	}
+	GTUT_ASRT(A.timesJacked == 1, "A not stacked");
+	GTUT_ASRT(B.timesJacked == 1, "B not stacked");
+}GTUT_END;
+
+GTUT_START(test_context, preventDoubleJackStack){
+	testContextFigment A, B;
+	ptrLead testLead;
+
+	A.refOther = &B;
+	B.refOther = &A;
+
+	{
+		cContext testMe;
+		A.jack(testLead, &testMe);
+	}
+
+	GTUT_ASRT(A.timesJacked == 1, "A not stacked right.");
+	GTUT_ASRT(B.timesJacked == 1, "B not stacked right.");
+
+	gt::gWorld.get()->flushLines();	//- So we clear out warnings.
 }GTUT_END;
 
 #endif

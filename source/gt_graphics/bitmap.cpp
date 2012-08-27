@@ -38,5 +38,4 @@ cBitmap::patSetRelation(ptrLead aLead){
 
 void
 cBitmap::patAdd(ptrLead aLead){
-	aLead->getPileValues(&mPendingAdds);
 }

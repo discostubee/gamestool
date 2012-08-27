@@ -1,7 +1,6 @@
 /*
  * !\file	reflection.hpp
- * !\brief	This will be the place to put the objects which allows the program to dynamically fetch
- * !		program info and create new bindings all by itself.
+ * !\brief	This will be the place to put the objects which allows the program perform reflective tasks.
  *
 **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
@@ -32,15 +31,13 @@ namespace gt{
 	//!\brief	Plug hound will get a plug out of a figment for you. The figment it uses is one from the context, and the context is the
 	//!			one you are using when you jack in to get the plug. It gets the plug by jacking into the target and using the command
 	//!			it's been given.
-	//!\note	Plug hounds have a special relationship with Alucard, who will know that a plug he's trying to add is a hound, and will
-	//!			get the hound to get the plug for it.
 	//!\note	Currently only works for tagged plugs.
 	class cPlugHound : public cFigment{
 	public:
 		static const cPlugTag *xPT_contextTargetID;	//!< The target to jack into and get our plug. Expects a figment hash ID, and uses it to look for the figment in the context.
 		static const cPlugTag *xPT_command;	//!< ID of the command we use to get the plug from the target.
 		static const cPlugTag *xPT_tag;		//!< Used a tag ID rather than a pointer. This is the tag we use to get the plug from the target.
-		static const cPlugTag *xPT_plug;		//!< The plug we give back.
+		static const cPlugTag *xPT_plug;		//!< The plug we give back through the lead.
 		static const cCommand::dUID xGoGetIt;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target.
 
 		static const dPlaChar* identify(){ return "plug hound"; }
@@ -49,6 +46,9 @@ namespace gt{
 
 		static dNameHash extends(){ return getHash<cFigment>(); }
 		virtual dNameHash getExtension() const { return extends(); }
+		static dNumVer version(){ return 1; }
+		virtual dNumVer getVersion() const { return version(); }
+		virtual dMigrationPattern getLoadPattern();
 
 		cPlugHound();
 		virtual ~cPlugHound();
@@ -65,7 +65,6 @@ namespace gt{
 	//!			you want to use as plugs or even targets. Once made the lead is jacked into the target every time this object is run. Bleh!
 	//!\note	Because leads can't be saved, this figment instead rebuilds them for you.
 	//!\note	Currently only works for tagged plugs, not piles.
-	//!\note	If you want to get a data plug instead of a figment plug, use the plug hound above.
 	class cAlucard : public cFigment{
 	public:
 		static const cPlugTag *xPT_command;		//!< Expects a plug tag hash it can use to find the command in the world.
@@ -92,7 +91,7 @@ namespace gt{
 		virtual void save(cByteBuffer* pAddHere);		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL);			//!< Called load-eat because the head of the buffer is consume by the load function.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
-		virtual void run(cContext* pCon);
+		virtual void work(cContext* pCon);
 
 	protected:
 

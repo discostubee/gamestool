@@ -103,7 +103,6 @@ namespace gt{
 		void deadLemming();	//!<	If this is the last lemming for this thread, release the lock for next thread in queue.
 		void changedLem(tSafeLem<T>* from, tSafeLem<T>* to);	//!< Makes the 'from' lemming empty and makes the 'to' lemming linked to this manager.
 		T* getLockData(tSafeLem<T>* requester);	//!<	Acquires lock for current thread. Blocks and waits to acquire lock if request comes from another thread.
-		bool isSameThread();
 
 	private:
 		T* mData;
@@ -238,8 +237,6 @@ tMrSafety<T>::get() {
 
 	++inWild;
 
-	//tSafeLem<T> temp(this);
-	//return temp;
 	return tSafeLem<T>(this);
 }
 
@@ -248,11 +245,11 @@ void
 tMrSafety<T>::deadLemming(){
 	ASRT_TRUE(inWild > 0, "Lemming underflow.");
 
+	--inWild;
+
 #	ifdef GT_THREADS
 		muData.unlock();
 #	endif
-
-	--inWild;
 }
 
 template<typename T>
@@ -280,15 +277,6 @@ tMrSafety<T>::getLockData(tSafeLem<T>* requester){
 	return mData;
 }
 
-template<typename T>
-bool
-tMrSafety<T>::isSameThread(){
-#	ifdef GT_THREADS
-		return true;//current == boost::this_thread::get_id();
-#	else
-		return true;
-#	endif
-}
 
 }
 

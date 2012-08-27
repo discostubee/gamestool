@@ -78,13 +78,21 @@ cAnchor::save(cByteBuffer* pAddHere){
 			}
 		}while(branches->size() > 0);
 
-		DBUG_VERBOSE_LO(":) anchor saving " << figs.size() << " figments" );
+		DBUG_VERBOSE_LO("anchor saving " << figs.size() << " figments" );
 
 		{	//- First, we must list any required figments
 			std::list<dStr> addons;
+			std::list<dStr>::iterator itrA;
 			for(std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i){
-				if(!(*i)->requiredAddon().empty())
-					addons.push_back( (*i)->requiredAddon() );
+				if(!(*i)->requiredAddon().empty()){
+					for(itrA = addons.begin(); itrA != addons.end(); ++itrA){	//- ensure it's unique.
+						if(itrA->compare( (*i)->requiredAddon() )==0)
+							break;
+					}
+
+					if(itrA==addons.end())
+						addons.push_back( (*i)->requiredAddon() );
+				}
 			}
 
 			size_t numAddons = addons.size();
@@ -104,7 +112,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 			cByteBuffer	chunkSave;
 
 			//- The process below must happen in exactly the same way when loading.
-			//- We are counting the hash as part of the chunk size as a kind of check against corruption.
+			//- We are counting the hash and reload sig as part of the chunk size as a kind of check against corruption.
 			try{
 				DBUG_VERBOSE_LO("	saving a " << (*i)->name());
 
@@ -148,15 +156,11 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	dFigSaveSig		rootSig;
 	dNameHash		tempHash;
 	dFigSaveSig		reloadSig;
-	size_t			readSpot=0;
-	int 			chunkStart, chunkSize;
-
-	static const size_t BLOCK_SIZE = sizeof(size_t) + sizeof(dNameHash) + sizeof(dFigSaveSig);
+	size_t			readSpot=0, chunkStart, chunkSize;
 
 	ASRT_NOTNULL(pBuff);
 
 	try{	//- The process below must happen in exactly the same way in the save process.
-		DBUG_VERBOSE_LO(":) anchor loading");
 
 		//- first lets get all the addons we need to load these figments.
 		size_t numAddons = 0;
@@ -171,10 +175,10 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 		}
 
 		//- now get the root sig.
-		readSpot += pBuff->fill(&rootSig,readSpot);
+		readSpot += pBuff->fill(&rootSig, readSpot);
 
 		//- Now lets read in all the chunks.
-		while(readSpot + BLOCK_SIZE <= pBuff->size()){
+		while(pBuff->size() > readSpot){
 			readSpot += pBuff->fill(&chunkSize, readSpot); //- The size of the actual chunk size value is not counted.
 
 			chunkStart = readSpot;
@@ -190,7 +194,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 					chunkSize
 				);
 				readSpot += chunkSize;
-			}else if(chunkSize == 0){	//- No additional data appart from the figment itself.
+			}else if(chunkSize == 0){	//- No additional data apart from the figment itself.
 				reloads[reloadSig] = new cReload( ptrFig(gWorld.get()->makeFig(tempHash)) );
 			}else{
 				WARN_S("Unable to load chunk: bad size");
@@ -199,7 +203,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 		//- Now re-load all the figs we've made. It's done on a separate loop to the one above so that figment references can be re-created.
 		for(dReloadMap::iterator itr = reloads.begin(); itr != reloads.end(); ++itr){
-			DBUG_LO("		loading " << itr->second->fig->name());
+			DBUG_VERBOSE_LO("		loading " << itr->second->fig->name());
 			try{
 				itr->second->fig->loadEat( &itr->second->data, &reloads );
 			}catch(excep::base_error &e){

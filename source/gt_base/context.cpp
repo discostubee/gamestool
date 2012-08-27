@@ -45,14 +45,9 @@ stackFault::~stackFault() throw() {}
 using namespace gt;
 
 
-#ifdef GT_THREADS
 cContext::cContext() :
-	mThreadID(boost::this_thread::get_id())
-#else
-cContext::cContext()
-#endif
+	mCopyIdx(ORIGINAL), mJackModeIdx(NOT_JACKING)
 {
-	mCopyIdx = ORIGINAL;
 	mSig = gWorld.get()->regContext(this);
 }
 
@@ -60,24 +55,24 @@ cContext::cContext()
 cContext::cContext(const cContext & copyMe) :
 	mStack(copyMe.mStack),
 	mStackInfo(copyMe.mStackInfo),
-	mCopyIdx(copyMe.mStack.size()-1)
+	mCopyIdx( static_cast<int>(copyMe.mStack.size())-1),
+	mJackModeIdx(copyMe.mJackModeIdx)
 {
 	mSig = gWorld.get()->regContext(this);
 }
 
 cContext::~cContext(){
 	try{
-		while( static_cast<int>(mStack.size()) > (mCopyIdx + 1)){
+		while( static_cast<int>(mStack.size())-1 > mCopyIdx){
 			itrInfo = mStackInfo.find(mStack.back());
-			if(itrInfo == mStackInfo.end())
-				throw excep::stackFault(mStack, "Expected to find signature on info map", __FILE__, __LINE__);
+			if(itrInfo == mStackInfo.end()){
+				WARN_S("Expected to find signature on info map.");	//- This zombie
 
-			--itrInfo->second.timesStacked;
-			if(itrInfo->second.timesStacked == 0){
-				mStackInfo.erase(itrInfo);
+			}else{
+				if(!itrInfo->second.mCurMode != sStackInfo::eModeRestacked)
+					mStack.back()->emergencyStop();
 			}
 
-			mStack.back()->emergencyStop();
 			mStack.pop_back();
 		}
 		gWorld.get()->unregContext(mSig);
@@ -98,9 +93,22 @@ cContext::add(cFigContext *pFig){
 
 	itrInfo = mStackInfo.find(pFig);
 	if(itrInfo == mStackInfo.end()){
-		mStackInfo[pFig] = sInfo(1, pFig->hash());
+		mStackInfo.insert(
+			dMapInfo::value_type(
+				pFig,
+				sStackInfo(
+					pFig->hash(),
+					(mJackModeIdx == NOT_JACKING ? sStackInfo::eModeRun : sStackInfo::eModeJack)
+				)
+			)
+		);
+	}else if(mJackModeIdx != NOT_JACKING){
+		if(itrInfo->second.mCurMode != sStackInfo::eModeRun)
+			throw excep::stackFault(mStack, "Tried to restack a figment that was already added in jack mode.", __FILE__, __LINE__);
+
+		itrInfo->second.mCurMode = sStackInfo::eModeRestacked;
 	}else{
-		++itrInfo->second.timesStacked;
+		throw excep::stackFault(mStack, "Tried to restack a figment in run mode.", __FILE__, __LINE__);
 	}
 }
 
@@ -111,7 +119,7 @@ cContext::finished(cFigContext *pFig){
 	ASRT_NOTNULL(pFig);
 
 	do{
-		if(mStack.empty())
+		if(mStack.empty() || static_cast<int>(mStack.size()) <= mCopyIdx)
 			throw excep::stackFault(mStack, "context stack underflow.", __FILE__, __LINE__);
 
 		if(mStack.back() != pFig){
@@ -126,8 +134,12 @@ cContext::finished(cFigContext *pFig){
 		if(itrInfo == mStackInfo.end())
 			throw excep::stackFault(mStack, "Expected to find signature on info map", __FILE__, __LINE__);
 
-		--itrInfo->second.timesStacked;
-		if(itrInfo->second.timesStacked == 0){
+		if(mJackModeIdx != NOT_JACKING && mJackModeIdx <= static_cast<int>(mStack.size())-1)
+			mJackModeIdx = NOT_JACKING;
+
+		if(itrInfo->second.mCurMode == sStackInfo::eModeRestacked){
+			itrInfo->second.mCurMode = sStackInfo::eModeRun;	//- Can only be restacked if it was run first.
+		}else{
 			mStackInfo.erase(itrInfo);
 		}
 
@@ -149,17 +161,30 @@ cContext::isStacked(cFigContext *pFig){
 	ASRT_NOTNULL(pFig);
 
 	itrInfo = mStackInfo.find(pFig);
+
 	return (itrInfo != mStackInfo.end());
+}
+
+bool
+cContext::canStack(cFigContext *pFig){
+	PROFILE;
+
+	ASRT_NOTNULL(pFig);
+
+	itrInfo = mStackInfo.find(pFig);
+
+	if(itrInfo == mStackInfo.end())
+		return true;
+
+	if(mJackModeIdx != NOT_JACKING)
+		return itrInfo->second.mCurMode == sStackInfo::eModeRun;
+
+	return false;
 }
 
 
 dProgramStack
 cContext::makeStackDump(){
-
-	cWorld::lo("stack dump below:");
-	for(gt::dProgramStack::reverse_iterator itr = mStack.rbegin(); itr != mStack.rend(); ++itr){
-		cWorld::lo( (*itr)->name() );
-	}
 	return mStack;
 }
 
@@ -179,13 +204,19 @@ cContext::getSig() const{
 	return mSig;
 }
 
+void
+cContext::startJackMode(){
+	if(mJackModeIdx == NOT_JACKING)
+		mJackModeIdx = static_cast<int>(mStack.size());	//- Happens before figment is pushed onto the stack.
+}
+
 cContext&
 cContext::operator=(const cContext &pCon){
 	ASRT_NOTSELF(&pCon);
 
 	mStack = pCon.mStack;
 	mStackInfo = pCon.mStackInfo;
-	mCopyIdx = pCon.mCopyIdx;
+	mCopyIdx = mStack.size();
 
 	return *this;
 }
@@ -193,15 +224,11 @@ cContext::operator=(const cContext &pCon){
 ////////////////////////////////////////////////////////////
 cFigContext::cFigContext() :
 	currentCon(NULL),
-	locked(false),
-	flushMe(NULL)
+	locked(false)
 {
 	//- From parent.
 	mBlueprint = NULL;
 	self = NULL;
-
-	//-
-	bufferLeads = &ALeads;
 
 #	ifdef GT_THREADS
 		updating = false;
@@ -210,8 +237,10 @@ cFigContext::cFigContext() :
 
 cFigContext::~cFigContext(){
 	try{
-		if(currentCon!=NULL)
-			currentCon->finished(this);
+		if(currentCon!=NULL){
+			WARN_S("Figment died still holding a context.");
+			currentCon->finished(this);	//- Assume this pointer is the same as when stacked.
+		}
 
 #		ifdef GT_THREADS
 			if(locked)
@@ -228,17 +257,16 @@ void
 cFigContext::start(cContext *con){
 	PROFILE;
 
-	if(currentCon != NULL && con->isStacked(this))	//- prevent deadlocks.
+	if(!con->canStack(this))
 		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
+
+	con->add(this);
 
 #	ifdef GT_THREADS
 		muCon.lock();
 #	endif
 
 	locked = true;
-	flushMe = NULL;
-
-	con->add(this);
 	currentCon = con;
 }
 
@@ -249,25 +277,28 @@ cFigContext::stop(cContext *con){
 	if(con == currentCon){
 		con->finished(this);
 
-		if(!con->isStacked(this)){
+		if(!con->isStacked(this))
 			currentCon = NULL;
-		}
 
 #		ifdef GT_THREADS
 			if(updating){
 				for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
 					(*itrRos)->updateFinish();
+
 				updating = false;
 			}
 #		endif
+
 	}else{
-		WARN_S("tried to stop a figment with a context that wasn't right. Really odd");
+		currentCon = NULL;
+		WARN_S("tried to stop a figment with a context that wasn't right.");
 	}
 
 #	ifdef GT_THREADS
-		locked = false;
 		muCon.unlock();
 #	endif
+
+	locked = false;
 }
 
 void
@@ -318,58 +349,12 @@ cFigContext::emergencyStop(){
 					(*itrRos)->updateFinish();
 				updating = false;
 			}
-			locked = false;
 			muCon.unlock();
-#		else
-			locked = false;
 #		endif
+		locked = false;
 	}
 
-	WARN_S("Emergency stop pulled for" << name());
-}
-
-bool
-cFigContext::differedLead(ptrLead pLead){
-	PROFILE;
-
-	if(locked){
-#		ifdef GT_THREADS
-			dLock lockList(muLeads);
-#		endif
-
-		bufferLeads->push_back(pLead);
-		return true;
-	}
-	return false;
-}
-
-ptrLead
-cFigContext::processLeads(){
-	PROFILE;
-	ptrLead rtnLead;
-
-	if(flushMe == NULL){
-#		ifdef GT_THREADS
-			dLock lockList(muLeads);
-#		endif
-
-		flushMe = bufferLeads;
-
-		if(bufferLeads == &ALeads)
-			bufferLeads = &BLeads;
-		else
-			bufferLeads = &ALeads;
-	}
-
-	if(flushMe->empty()){
-		flushMe = NULL;
-
-	}else{
-		rtnLead = flushMe->front();
-		flushMe->pop_front();
-	}
-	return rtnLead;
-
+	WARN_S("Emergency stop pulled for " << name());
 }
 
 //--- PLEASE NOTE ---//

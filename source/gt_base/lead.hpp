@@ -33,10 +33,12 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Forward dec.
 namespace gt{
-	void startLead(ptrLead, dConSig);
-	void stopLead(ptrLead);
-	void startLead(cLead &, dConSig);
-	void stopLead(cLead &);
+#	ifdef GUTU
+		void startLead(ptrLead, dConSig);
+		void stopLead(ptrLead);
+		void startLead(cLead &, dConSig);
+		void stopLead(cLead &);
+#	endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -105,6 +107,9 @@ namespace gt{
 
 		//!\brief
 		template<typename PLUG_TYPE> void getPile(std::vector< tPlug<PLUG_TYPE> > *target);
+
+		//!\brief
+		template<typename TYPE> void getPileValue(std::vector< TYPE > *target);
 
 		//!\brief	Clears out the pile. Provided for those times when instead of making a new lead, you want to keep
 		//!			the tagged data.
@@ -177,6 +182,26 @@ namespace gt{
 #			endif
 		}
 	}
+
+  	template<typename TYPE>
+  	void
+	cLead::getPileValue(std::vector< TYPE > *target){
+  		TYPE valBase;
+		target->reserve(target->size() + mDataPile.size());
+#		ifdef GT_THREADS
+			tPlug<TYPE> passThrough;
+#		endif
+
+		for(scrPDataItr = mDataPile.begin(); scrPDataItr != mDataPile.end(); ++scrPDataItr){
+			target->push_back(valBase);
+#			ifdef GT_THREADS
+				(*scrPDataItr)->readShadow( &passThrough, mCurrentSig );
+				target->back() = passThrough.get();
+#			else
+				(*scrPDataItr)->copyInto( &target->back() );
+#			endif
+		}
+  	}
 
 }
 

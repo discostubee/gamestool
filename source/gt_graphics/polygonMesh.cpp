@@ -32,7 +32,7 @@ cPolyMesh::patAddVert(ptrLead aLead){
 	PROFILE;
 
 	promiseLazy();
-	aLead->getPileValues(&mLazyMesh->mVertexes);
+	aLead->getPileValue(&mLazyMesh->mVertexes);
 }
 
 void
@@ -40,7 +40,7 @@ cPolyMesh::patAddPoly(ptrLead aLead){
 	PROFILE;
 
 	promiseLazy();
-	aLead->getPileValues(&mLazyMesh->mPolys);
+	aLead->getPileValue(&mLazyMesh->mPolys);
 }
 
 void

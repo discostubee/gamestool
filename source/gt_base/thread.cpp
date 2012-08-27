@@ -92,7 +92,7 @@ cThread::work(cContext* pCon){
 			dLock lockConx(muConx);
 			mSharedConx = *pCon;
 		}
-		sync.notify_all();	// Run the thread once.
+		sync.notify_all();	// Run the thread once if it's waiting.
 	}
 #else
 	link.get()->run(pCon);
@@ -115,7 +115,6 @@ cThread::stopThread(){
 				threadStop = true;
 
 				if(myThread.joinable()){
-					std::cout << "joining" << std::endl;//!!!
 					muSync.lock();	//- Wait until we have sync
 					muSync.unlock();
 					sync.notify_all();
@@ -209,7 +208,7 @@ namespace gt{
 		virtual const dPlaChar* name() const { return identify(); }
 		virtual dNameHash hash() const { return getHash<cWriter>(); }
 
-		virtual void run(cContext* pCon) {
+		virtual void work(cContext* pCon) {
 			//- Really inefficient, but who cares.
 			ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite);
 			writeLead->addPlug(&phrase, cShareTarget::xPT_word);
@@ -225,7 +224,7 @@ namespace gt{
 	);
 
 	GTUT_START(test_Thread, threadDestruction){
-		const short testLength = 5;
+		const short testLength = 3;
 		for(short i=0; i < testLength; ++i){
 			cContext fakeContext;
 			cThread A, B, C;
@@ -243,7 +242,7 @@ namespace gt{
 		tOutline<cThread>::draft();
 
 		const int timeout = 10000;
-		const int testLength = 20;
+		const int testLength = 10;
 		int testCount = 0;
 		int time = 0;
 		cContext fakeContext;
@@ -263,15 +262,11 @@ namespace gt{
 			ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup);
 			ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup);
 
-			startLead(setupA, fakeContext.getSig());
 			setupA->addPlug(&share, cWriter::xPT_target);
 			setupA->addPlug(&AChatter, cWriter::xPT_word);
-			stopLead(setupA);
 
-			startLead(setupB, fakeContext.getSig());
 			setupB->addPlug(&share, cWriter::xPT_target);
 			setupB->addPlug(&BChatter, cWriter::xPT_word);
-			stopLead(setupB);
 
 			writerA.get()->jack(setupA, &fakeContext);
 			writerB.get()->jack(setupB, &fakeContext);
@@ -279,19 +274,13 @@ namespace gt{
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 
-			startLead(linkTest, fakeContext.getSig());
 			linkTest->addPlug(&writerA, cThread::xPT_fig);
-			stopLead(linkTest);
-
 			threadA.get()->jack(linkTest, &fakeContext);
 		}
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 
-			startLead(linkTest, fakeContext.getSig());
 			linkTest->addPlug(&writerB, cThread::xPT_fig);
-			stopLead(linkTest);
-
 			threadB.get()->jack(linkTest, &fakeContext);
 		}
 
