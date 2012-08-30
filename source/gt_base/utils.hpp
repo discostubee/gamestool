@@ -213,7 +213,7 @@ public:
 
 	bool valid(dIDSLookup aID);	//!< True if the ID is in range and the slot is not free, in other words is this slot valid.
 
-	dIDSLookup add(T &aData);
+	dIDSLookup add(const T &aData);
 
 	void del(dIDSLookup aID);
 
@@ -271,7 +271,7 @@ tShortLookup<T>::valid(dIDSLookup aID){
 
 template<typename T>
 dIDSLookup
-tShortLookup<T>::add(T &aData){
+tShortLookup<T>::add(const T &aData){
 	if(numFree == 0){
 		slot* tmp = new slot[size + 1];
 		::memcpy(tmp, table, size * sizeof(T));
