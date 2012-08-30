@@ -235,8 +235,9 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 
 	mScrBMapItr = mBlueprints.find(pRemoveMe->hash());
 	if(mScrBMapItr != mBlueprints.end()){
-		std::list<ptrFig>*	branches = new std::list<ptrFig>();
-		std::list<ptrFig>*	prev = new std::list<ptrFig>();
+		std::list<ptrFig> linksA, linksB;
+		std::list<ptrFig>*	branches = &linksA;
+		std::list<ptrFig>*	prev = &linksB;
 		std::map<iFigment*, ptrFig> figs;
 
 		//- Find and empty any objects using this blueprint.

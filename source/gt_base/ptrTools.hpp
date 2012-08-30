@@ -72,7 +72,7 @@ namespace gt{
 	template<typename T>
 	class tLemming{
 	public:
-		tLemming(tLemming<T>& copy);
+		tLemming(const tLemming<T>& copy);
 		virtual ~tLemming();
 
 		virtual T* operator -> ();
@@ -100,7 +100,7 @@ namespace gt{
 		tSpitLemming();
 		virtual ~tSpitLemming();
 
-		virtual tLemming<T>& get();
+		virtual tLemming<T> get();
 		virtual tSpitLemming<T>& operator = (const tSpitLemming<T>& spitter);
 
 		unsigned int inWild();
@@ -239,9 +239,9 @@ namespace gt{
 namespace gt{
 
 	template<typename T>
-	tLemming<T>::tLemming(tLemming<T>& copy) : mParent(copy.mParent){
+	tLemming<T>::tLemming(const tLemming<T>& copy) : mParent(copy.mParent){
 		mParent->lemmingChange(this);
-		copy.mParent = NULL;
+		const_cast<tLemming<T>*>(&copy)->mParent = NULL;	//- fuck you c++
 	}
 
 	template<typename T>
@@ -274,7 +274,7 @@ namespace gt{
 		if(this != &copy){
 			mParent = copy.mParent;
 			mParent->lemmingChange(this);
-			copy.mParent = NULL;
+			const_cast<tLemming*>(&copy)->mParent = NULL;
 		}
 		return *this;
 	}
@@ -302,12 +302,11 @@ namespace gt{
 	template<typename T>
 	tSpitLemming<T>::~tSpitLemming() {}
 
-	template<typename T> tLemming<T>&
+	template<typename T>
+	tLemming<T>
 	tSpitLemming<T>::get(){
-		tLemming<T>* temp = new tLemming<T>(this);
 		++inTheWild;
-
-		return *temp;
+		return tLemming<T>(this);
 	}
 
 	template<typename T> tSpitLemming<T>&
