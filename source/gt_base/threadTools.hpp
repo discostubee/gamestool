@@ -274,6 +274,7 @@ template<typename T>
 T*
 tMrSafety<T>::getLockData(tSafeLem<T>* requester){
 	ASRT_TRUE(requester->mParent == this, "A lemming requested data from the wrong manager");
+	ASRT_NOTNULL(mData);
 	return mData;
 }
 

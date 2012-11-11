@@ -32,33 +32,38 @@ using namespace gt;
 int
 main(int argc, char **argv){
 	int result = EXIT_SUCCESS;
-	std::cout
-		<< "Running gamestool tests for OSX. Version 0.2. "
-#ifdef GT_THREADS
-		<< "Threadding. "
-#endif
-		<< std::endl;
 
 	gWorld.take( new cOSXWorld() );
 
-	tOutline<cFigment>::draft();
-	tOutline<cRunList>::draft();
+	try{
+		std::cout
+			<< "Running gamestool tests for OSX. Version 0.2. "
+	#ifdef GT_THREADS
+			<< "Threadding. "
+	#endif
+			<< std::endl;
 
-	//!!!
-	gWorld.get()->openAddon("X11GL");
-	ptrFig window = gWorld.get()->makeFig("window frame");
-	//!!!
+		gt::tOutline<gt::cFigment>::draft();
+		gt::tOutline<gt::cEmptyFig>::draft();
+		gt::tOutline<gt::cWorldShutoff>::draft();
 
-	gWorld.get()->flushLines();
-#ifdef GTUT_GOOGLE
-	::testing::InitGoogleTest(&argc, argv);
-	result = RUN_ALL_TESTS();
-#endif
+		gWorld.get()->openAddon("X11GL");
+		ptrFig window = gWorld.get()->makeFig("window frame");
+
+	#ifdef GTUT_GOOGLE
+		::testing::InitGoogleTest(&argc, argv);
+		result = RUN_ALL_TESTS();
+	#endif
+
+	}catch(excep::base_error &e){
+		WARN(e);
+	}
 
 	std::ofstream profileReport("profile_report.txt");
-	gt::gWorld.get()->makeProfileReport(profileReport);//(std::cout);
+	gt::cWorld::primordial::makeProfileReport(profileReport);
 	profileReport.close();
 
+	gt::gWorld.get()->flushLines();
 	gt::gWorld.cleanup();
 
 	return result;

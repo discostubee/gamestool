@@ -1,9 +1,9 @@
-#include "bitmap.hpp"
+#include "printworks.hpp"
 
 using namespace gt;
 
-cBitmap::cBitmap(){
+cPrintworks::cPrintworks(){
 }
 
-cBitmap::~cBitmap(){
+cPrintworks::~cPrintworks(){
 }

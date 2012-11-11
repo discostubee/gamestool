@@ -63,7 +63,7 @@ namespace excep{
     };
 
     //!\brief	Useful macro to make writing error bombs easier to write.
-	#define THROW_BASEERROR(s) { std::stringstream ss; ss << s; throw excep::base_error(ss.str().c_str(), __FILE__, __LINE__); }
+	#define THROW_ERROR(s) { std::stringstream ss; ss << s; throw excep::base_error(ss.str().c_str(), __FILE__, __LINE__); }
 
     //!\brief	Nobody knows.
 	class unknownError: public base_error{
@@ -166,18 +166,18 @@ namespace excep{
 	};
 }
 
+#define DONT_USE_THIS			throw excep::dontUseThis(__FILE__, __LINE__)
+
 #ifdef DEBUG
 	#define ASRT_TRUE(p, s)			if(!(p)) throw ::excep::base_error(s, __FILE__, __LINE__)
 	#define ASRT_NOTNULL(p) 		if(p == NULL) throw ::excep::isNull( __FILE__, __LINE__)
 	#define ASRT_INRANGE(vec, idx)	if( idx < 0 || idx >= vec.size() ) throw ::excep::outOfRange(vec.size(), idx, __FILE__, __LINE__)
 	#define ASRT_NOTSELF(p)			if( p == this) throw ::excep::base_error("Pointer is self", __FILE__, __LINE__)
-	#define DONT_USE_THIS			throw excep::dontUseThis(__FILE__, __LINE__)
 #else
 	#define ASRT_TRUE(p, s)
 	#define ASRT_NOTNULL(p)
 	#define ASRT_INRANGE(vec, ite)
 	#define ASRT_NOTSELF(p)
-	#define DONT_USE_THIS
 #endif
 
 #define NOTSELF(p)			if(p == this) return *this

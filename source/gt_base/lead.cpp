@@ -22,33 +22,6 @@
 using namespace gt;
 
 ////////////////////////////////////////////////////////////
-#ifdef GTUT
-#	ifdef GT_THREADS
-		void gt::startLead(ptrLead lead, dConSig pSig){
-			lead->start(pSig);
-		}
-
-		void gt::stopLead(ptrLead lead){
-			lead->stop();
-		}
-
-		void gt::startLead(cLead &lead, dConSig sig){
-			lead.start(sig);
-		}
-
-		void gt::stopLead(cLead &lead){
-			lead.stop();
-		}
-
-#	else
-		void gt::startLead(ptrLead lead, dConSig pSig){}
-		void gt::stopLead(ptrLead lead){}
-		void startLead(cLead &lead, dConSig sig){}
-		void stopLead(cLead &lead){}
-#	endif
-#endif
-
-////////////////////////////////////////////////////////////
 
 cLead::cLead(cCommand::dUID aCom):
 	mCom(aCom)
@@ -308,6 +281,32 @@ cLead::unplug(cBase_plug* aPlug){
 #ifdef GTUT
 
 using namespace gt;
+
+////////////////////////////////////////////////////////////
+#ifdef GT_THREADS
+		void gt::startLead(ptrLead lead, dConSig pSig){
+			lead->start(pSig);
+		}
+
+		void gt::stopLead(ptrLead lead){
+			lead->stop();
+		}
+
+		void gt::startLead(cLead &lead, dConSig sig){
+			lead.start(sig);
+		}
+
+		void gt::stopLead(cLead &lead){
+			lead.stop();
+		}
+
+#else
+		void gt::startLead(ptrLead lead, dConSig pSig){}
+		void gt::stopLead(ptrLead lead){}
+		void gt::startLead(cLead &lead, dConSig sig){}
+		void gt::stopLead(cLead &lead){}
+#endif
+
 
 GTUT_START(testLead, tagging){
 	cContext fakeConx;

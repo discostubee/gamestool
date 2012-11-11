@@ -139,7 +139,9 @@ namespace gt{
 			*data = copyMe;
 		}
 
-		template<typename COPY> tPMorphJar(const tPMorphJar<COPY> &copyMe){
+		template<typename COPY> tPMorphJar(const tPMorphJar<COPY> &copyMe) :
+			castodian(true)
+		{
 			if(copyMe.castodian){
 				data = new COPY();
 				*data = *copyMe.data;
@@ -198,6 +200,8 @@ namespace gt{
 
 			data = refMe;
 			castodian = false;
+
+			return *this;
 		}
 
 		T& get(){

@@ -147,7 +147,7 @@ namespace gt{
 		if(aFig->hash() == mParent){
 			( dynamic_cast<T*>(aFig)->*myFoo )(aLead);
 		}else{
-			THROW_BASEERROR(aFig->name() << " can't use command " << mName << " (" << aFig->hash() << ", " << mParent << ")");
+			THROW_ERROR(aFig->name() << " can't use command " << mName << " (" << aFig->hash() << ", " << mParent << ")");
 
 		}
 	}

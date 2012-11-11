@@ -8,11 +8,14 @@
 #ifndef OPENGL_WINDOWFRAME_HPP
 #define OPENGL_WINDOWFRAME_HPP
 
+#define GL_GLEXT_PROTOTYPES
+
 #include "gt_graphics/windowFrame.hpp"
 
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
+#include <GL/glext.h>
 
 #include <X11/Xlib.h>	// Xlib.h is the default header that is included and has the core functionality
 #include <X11/Xatom.h>	// Xatom.h includes functionality for creating new protocol messages
@@ -28,7 +31,7 @@ namespace gt{
 
 class X11GLAddon{
 public:
-	static const dPlaChar* getName(){ return "X11GL"; }
+	static const dPlaChar* getAddonName(){ return "X11GL"; }
 };
 
 class cWindowFrame_X11GL: public cWindowFrame, public tAddonDependent<X11GLAddon>{

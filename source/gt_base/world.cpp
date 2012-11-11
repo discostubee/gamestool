@@ -18,30 +18,14 @@
 
 #include "figment.hpp"	//- so we get all implementation.
 
-using namespace gt;
 
 ////////////////////////////////////////////////////////////
-// Globals and statics
-using namespace gt;
+// Globals
 
 const char *MSG_UNKNOWN_ERROR = "unknown error";
 
-tMrSafety<cWorld> gt::gWorld;
+gt::tMrSafety<gt::cWorld> gt::gWorld;
 
-//- Don't assign anything to the stuff below.
-cWorld::dLines* cWorld::xLines;
-cProfiler* cWorld::xProfiler;
-
-#ifdef GT_THREADS
-	boost::recursive_mutex *cWorld::xProfileGuard;
-	boost::recursive_mutex *cWorld::xLineGuard;
-
-	#ifdef GTUT
-		boost::recursive_mutex *cWorld::xSuppressGuard;
-	#endif
-#endif
-
-bool cWorld::thereCanBeOnlyOne = false;
 
 ////////////////////////////////////////////////////////////
 // Blueprint stuff
@@ -75,37 +59,7 @@ struct cWorld::sBlueprintHeader{
 
 using namespace gt;
 
-void
-cWorld::lo(const dStr& pLine){
-	static bool linesSetup = false;
-	if(!linesSetup){
-		linesSetup = true;
-		xLines = new dLines();
-		#ifdef GT_THREADS
-			xLineGuard = new boost::recursive_mutex();
-		#endif
-	}
-#ifdef GT_THREADS
-	boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
-#endif
-	xLines->push_back(pLine);
-}
-
-cProfiler::cToken
-cWorld::makeProfileToken(const char* pFile, unsigned int pLine){
-	static bool profileSetup = false;
-	if(!profileSetup){
-		profileSetup = true;
-		xProfiler = new cProfiler();
-		#ifdef GT_THREADS
-			xProfileGuard = new boost::recursive_mutex();
-		#endif
-	}
-#ifdef GT_THREADS
-	boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-#endif
-	return xProfiler->makeToken(pFile, pLine);
-}
+bool gt::cWorld::thereCanBeOnlyOne = false;
 
 dConSig
 cWorld::regContext(cContext* pCon){
@@ -127,27 +81,22 @@ cWorld::cWorld():
 	mBicycleSetup(false)
 {
 	if(thereCanBeOnlyOne)
-		THROW_BASEERROR("can only create the world once");
+		THROW_ERROR("can only create the world once");
 
 	thereCanBeOnlyOne = true;
 
 	mVillageBicycle = ptrFig(new cEmptyFig());
 	mRoot = ptrFig(new cWorldShutoff());
 
-	(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
-	mProfiles = xProfiler;
+	(void)primordial::makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
+	mProfiler = primordial::xProfiler;
 
-	lo("World created."); //- Ensure it exists.
-	mLines = xLines;
+	primordial::lo("World created."); //- Ensure it exists.
+	mLines = primordial::xLines;
 
 	#ifdef GT_THREADS
-		//- Used so external modules can use the location
-		mProfileGuard = xProfileGuard;
-		mLineGuard = xLineGuard;
-
-		#ifdef GTUT
-			mSuppressGuard = xSuppressGuard;
-		#endif
+		mProfileGuard = primordial::xProfileGuard;
+		mLineGuard = primordial::xLineGuard;
 	#endif
 }
 
@@ -156,24 +105,49 @@ cWorld::~cWorld(){
 		mRoot.redirect(NULL);
 		mVillageBicycle.redirect(NULL);
 
-		for(std::list<dStr>::iterator itr = mAddonsToClose.begin(); itr != mAddonsToClose.end(); ++itr)
-			closeAddon(*itr);
-
 		while(!mBlueprints.empty()){
 			mBlueprints.begin()->second.mBlueprint->mCleanup();
 			mBlueprints.erase( mBlueprints.begin() );
 		}
 
-		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
-		delete xProfiler;
-
-		//- Be super careful that we don't try and profile anything anymore.
-		lo("end of the world"); //- Ensure it exists.
-		flushLines();
-		delete xLines;
+		primordial::cleanup();
 
 	}catch(...){
 	}
+}
+
+void
+cWorld::lazyCloseAddon(const dStr &name){
+	for(
+		std::list<dStr>::iterator itr = mAddonsToClose.begin();
+		itr != mAddonsToClose.end();
+		++itr
+	){
+		if(itr->compare(name)==0)
+			return;
+	}
+
+	mAddonsToClose.push_back(name);
+}
+
+void
+cWorld::lo(const dStr& pLine){
+#ifdef GT_THREADS
+	boost::lock_guard<boost::recursive_mutex> lock(*mLineGuard);
+#endif
+	mLines->push_back(pLine);
+}
+
+void
+cWorld::warnError(const char *msg, const char* pFile, const unsigned int pLine){
+	std::stringstream ss;
+	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << msg;
+	lo(ss.str());
+}
+
+void
+cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
+	warnError(pE.what(), pFile, pLine);
 }
 
 void
@@ -287,7 +261,7 @@ cWorld::makeFig(dNameHash pNameHash){
 	mScrBMapItr = mBlueprints.find(pNameHash);
 
 	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("Can't make figment as the provided name hash isn't drafted.", __FILE__, __LINE__);
+		THROW_ERROR("Can't make figment as the provided name hash isn't drafted.");
 
 	return mScrBMapItr->second.mBlueprint->make();
 }
@@ -299,36 +273,17 @@ cWorld::makeFig(const dPlaChar *pName){
 
 void
 cWorld::copyWorld(cWorld* pWorld){
+#	ifdef GT_THREADS
+		boost::lock_guard<boost::recursive_mutex> lockA(*mProfileGuard);
+		boost::lock_guard<boost::recursive_mutex> lockB(*mProfileGuard);
+		boost::lock_guard<boost::recursive_mutex> lockC(*pWorld->mProfileGuard);
+		boost::lock_guard<boost::recursive_mutex> lockD(*pWorld->mLineGuard);
+#	endif
+
 	if(!pWorld->mLines->empty())
 		mLines->splice(mLines->end(), *pWorld->mLines);
 
-	*mProfiles += *pWorld->mProfiles;
-
-	#ifdef GT_THREADS
-		mProfileGuard = pWorld->mProfileGuard;
-		mLineGuard = pWorld->mLineGuard;
-		xProfileGuard = pWorld->mProfileGuard;
-		xLineGuard = pWorld->mLineGuard;
-
-		#ifdef GTUT
-			xSuppressGuard = pWorld->xSuppressGuard;
-			mSuppressGuard = pWorld->mSuppressGuard;
-		#endif
-	#endif
-}
-
-void
-cWorld::lazyCloseAddon(const dStr &name){
-	for(
-		std::list<dStr>::iterator itr = mAddonsToClose.begin();
-		itr != mAddonsToClose.end();
-		++itr
-	){
-		if(itr->compare(name)==0)
-			return;
-	}
-
-	mAddonsToClose.push_back(name);
+	*mProfiler += *pWorld->mProfiler;
 }
 
 ptrLead
@@ -354,7 +309,7 @@ cWorld::getPlugTag(dNameHash pFigHash, cPlugTag::dUID pPTHash){
 	mScrBMapItr =  mBlueprints.find(pFigHash);
 
 	if(mScrBMapItr == mBlueprints.end())
-		THROW_BASEERROR("figment wasn't found");
+		THROW_ERROR("figment wasn't found");
 
 	return mScrBMapItr->second.mBlueprint->getPlugTag(pPTHash);
 }
@@ -392,50 +347,6 @@ cWorld::setRoot(ptrFig pNewRoot){
 	mRoot = pNewRoot;
 }
 
-void
-cWorld::makeProfileReport(std::ostream &log){
-	{
-		(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
-	}
-	xProfiler->flushThatLog(log);
-}
-
-void
-cWorld::warnError(const char *msg, const char* pFile, const unsigned int pLine){
-	#ifdef GTUT
-		if(mSuppressError){
-			mSuppressError = false;
-			return;
-		}
-	#endif
-	std::stringstream ss;
-	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << msg;
-	lo(ss.str());
-}
-
-void
-cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
-	warnError(pE.what(), pFile, pLine);
-}
-
-#ifdef GTUT
-	bool cWorld::mSuppressError = false;
-
-	void
-	cWorld::suppressNextError(){
-		#ifdef GT_THREADS
-			static bool setup = false;
-			if(!setup){
-				setup = true;
-				xSuppressGuard = new boost::recursive_mutex();
-			}
-
-			boost::lock_guard<boost::recursive_mutex> lock(*xSuppressGuard);
-		#endif
-		mSuppressError = true;
-	}
-#endif
-
 ptrFig
 cWorld::getEmptyFig(){
 	if(mBicycleSetup == false){
@@ -455,34 +366,138 @@ cWorld::getContextLookup(){
 
 void
 cWorld::flushLines(){
-	for(dLines::iterator i = xLines->begin(); i != xLines->end(); ++i){
+	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
 		std::cout << (*i) << std::endl;
 	}
-	xLines->clear();
+	mLines->clear();
 }
 
 ////////////////////////////////////////////////////////////
-// Functions
+// primordial
+
+using namespace gt;
+
+//- Don't assign anything to the stuff below.
+cWorld::dLines* gt::cWorld::primordial::xLines;
+cProfiler* gt::cWorld::primordial::xProfiler;
+
+#ifdef GT_THREADS
+	boost::recursive_mutex *gt::cWorld::primordial::xProfileGuard;
+	boost::recursive_mutex *gt::cWorld::primordial::xLineGuard;
+#endif
+
 
 void
-gt::redirectWorld(cWorld* pWorldNew){
+cWorld::primordial::lo(const dStr& pLine, bool cleanup){
+	static bool linesSetup = false;
+	if(!linesSetup && !cleanup){
+		linesSetup = true;
+		xLines = new dLines();
+#		ifdef GT_THREADS
+			xLineGuard = new boost::recursive_mutex();
+#		endif
+
+	}else if(cleanup){
+		if(linesSetup){
+#			ifdef GT_THREADS
+				{
+					boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+				}
+				SAFEDEL(xLineGuard);
+#			endif
+			SAFEDEL(xLines);
+			linesSetup = false;
+		}
+		return;
+	}
+#	ifdef GT_THREADS
+		boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+#	endif
+	xLines->push_back(pLine);
+}
+
+void
+cWorld::primordial::warnError(const char *msg, const char* pFile, const unsigned int pLine){
+	std::stringstream ss;
+	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << msg;
+	lo(ss.str());
+}
+
+void
+cWorld::primordial::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
+	warnError(pE.what(), pFile, pLine);
+}
+
+cProfiler::cToken
+cWorld::primordial::makeProfileToken(const char* pFile, unsigned int pLine, bool cleanup){
+	static bool profileSetup = false;
+	if(!profileSetup && !cleanup){
+		profileSetup = true;
+		xProfiler = new cProfiler();
+#		ifdef GT_THREADS
+			xProfileGuard = new boost::recursive_mutex();
+#		endif
+
+	}else if(cleanup){
+		if(profileSetup){
+#			ifdef GT_THREADS
+				{
+					boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+				}
+				SAFEDEL(xProfileGuard);
+#			endif
+			SAFEDEL(xProfiler);
+			profileSetup = false;
+			return cProfiler::cToken(NULL, 0, 0);
+		}
+	}
+
+#	ifdef GT_THREADS
+		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+#	endif
+	return xProfiler->makeToken(pFile, pLine);
+}
+
+void
+cWorld::primordial::makeProfileReport(std::ostream &log){
+#	ifdef GT_THREADS
+		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+#	endif
+	(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
+	xProfiler->flushThatLog(log);
+}
+
+#ifdef GTUT
+	bool gt::cWorld::primordial::mSuppressError = false;
+
+	void
+	gt::cWorld::primordial::suppressNextError(){
+		mSuppressError = true;
+	}
+#endif
+
+void
+cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 	if(pWorldNew){
 		cWorld* temp = new cWorld();	// We need the member pointers to the statics to exist.
 
-		//std::cout << (long)gt::gWorld.get() << " vs " << (long)pWorldNew << std::endl; //!!!
-		//std::cout << "xLines at " << (long)(&gt::cWorld::xLines) << std::endl; //!!!
-		//std::cout << (long)gt::cWorld::xLines.get() << " vs " << (long)pWorldNew->mLines << std::endl; //!!!
-
 		pWorldNew->copyWorld(temp);
-		delete temp;
+		delete temp;	// causes cleanup of statics
 
-		cWorld::xLines = pWorldNew->mLines;
-		cWorld::xProfiler = pWorldNew->mProfiles;
+		xLines = pWorldNew->mLines;
+		xProfiler = pWorldNew->mProfiler;
 		gWorld.take(pWorldNew);
+
 	}else{
 		gWorld.drop();
 	}
 
+}
+
+void
+cWorld::primordial::cleanup(){
+	lo("", true);
+	(void)makeProfileToken("", 0, true);
 }
 
 ////////////////////////////////////////////////////////////

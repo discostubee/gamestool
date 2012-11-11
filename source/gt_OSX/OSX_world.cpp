@@ -13,12 +13,18 @@ cOSXWorld::getOSXTime(){
 }
 
 cOSXWorld::cOSXWorld(){
-	mProfiles->mGetTime = &getOSXTime;
+	mProfiler->mGetTime = &getOSXTime;
 }
 
 cOSXWorld::~cOSXWorld(){
-	mRoot.redirect(NULL);	//so that our console displays that all figments were destroyed.
-	flushLines();
+	try{
+		for(std::list<dStr>::iterator itr = mAddonsToClose.begin(); itr != mAddonsToClose.end(); ++itr)
+			closeAddon(*itr);
+
+		mRoot.redirect(NULL);	//so that our console displays that all figments were destroyed.
+		flushLines();
+	}catch(...){
+	}
 }
 
 dMillisec

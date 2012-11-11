@@ -10,9 +10,7 @@
 DYN_LIB_DEF(void)
 draftAll(gt::cWorld *pWorld){
 	try{
-		gt::redirectWorld(pWorld);
-
-		std::cout << "drafting" << std::endl;//!!!
+		gt::cWorld::primordial::redirectWorld(pWorld);
 
 		gt::tOutline<gt::cWindowFrame>::draft();
 		gt::tOutline<gt::cWindowFrame_X11GL>::draft();
@@ -28,10 +26,10 @@ draftAll(gt::cWorld *pWorld){
 		DBUG_LO("x11 addon open.");
 
 	}catch(excep::base_error &e){
-		WARN(e);
+		pWorld->lo(e.what());
 
 	}catch(...){
-		std::cout << "unknown error while opening x11 addon" << std::endl;
+		pWorld->lo("error while opening x11 addon");
 	}
 }
 
@@ -51,7 +49,7 @@ closeLib(){
 
 		DBUG_LO("closed x11 addon.");
 
-		gt::redirectWorld(NULL);
+		gt::cWorld::primordial::redirectWorld(NULL);
 
 	}catch(excep::base_error &e){
 		WARN(e);
