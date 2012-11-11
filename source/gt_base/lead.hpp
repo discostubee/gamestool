@@ -206,22 +206,31 @@ namespace gt{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Macros
+// Unit testing
+#ifdef GTUT
+
 namespace gt{
+	//- In a couple of unit tests we need to emulate how leads are stopped and started in jack and run mode.
+	void startLead(ptrLead lead, dConSig pSig);
+	void stopLead(ptrLead lead);
+	void startLead(cLead &lead, dConSig sig);
+	void stopLead(cLead &lead);
 }
+
+#endif
 
 
 /*
-	//--------------------------------------------------------------------------------------------------------
-	template<typename PLUG_TYPE>
-	cBase_plug::dPlugType
-	cBase_plug::getPlugType(){
-		static dPlugType typeID = 0;
-		if(typeID == 0){
-			typeID = makeHash(typeid(PLUG_TYPE).name());
-		}
-		return typeID;
+//--------------------------------------------------------------------------------------------------------
+template<typename PLUG_TYPE>
+cBase_plug::dPlugType
+cBase_plug::getPlugType(){
+	static dPlugType typeID = 0;
+	if(typeID == 0){
+		typeID = makeHash(typeid(PLUG_TYPE).name());
 	}
+	return typeID;
+}
 
 //!\brief
 struct sSortDMap{
@@ -243,6 +252,5 @@ struct sSortPile{
 	}
 };
 */
-
 
 #endif

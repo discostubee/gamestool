@@ -50,10 +50,10 @@ cPolyMesh_X11GL::formatGLMesh(){
 	PROFILE;
 
 	if(mLazyMesh->mVertexes.empty())
-		THROW_BASEERROR("lazy mesh has no vertexes");
+		THROW_ERROR("lazy mesh has no vertexes");
 
 	if(mLazyMesh->mPolys.empty())
-		THROW_BASEERROR("lazy mesh has no polies");
+		THROW_ERROR("lazy mesh has no polies");
 
 	polyCount = mLazyMesh->mPolys.size();
 	vertCount = mLazyMesh->mVertexes.size();

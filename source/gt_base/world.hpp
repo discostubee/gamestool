@@ -94,8 +94,8 @@
 #	define DYN_LIB_DEF(rnt) rnt
 #endif
 
-#define WARN(x) gt::cWorld::warnError(x, __FILE__, __LINE__)
-#define WARN_S(x) {std::stringstream ss; ss << x; gt::cWorld::warnError(ss.str().c_str(), __FILE__, __LINE__);}
+#define WARN(x) gt::cWorld::primordial::warnError(x, __FILE__, __LINE__)
+#define WARN_S(x) {std::stringstream ss; ss << x; gt::cWorld::primordial::warnError(ss.str().c_str(), __FILE__, __LINE__);}
 
 // Handy for all those (...) catch blocks.
 extern const char *MSG_UNKNOWN_ERROR;
@@ -108,8 +108,8 @@ extern const char *MSG_UNKNOWN_ERROR;
 #endif
 
 #ifdef DEBUG
-#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::makeProfileToken(__FILE__, __LINE__)
-#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::lo(ss.str()); }
+#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
+#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
 #else
 #	define PROFILE
 #	define DBUG_LO(x)
@@ -148,8 +148,8 @@ namespace gt{
 	//!\brief	The world is a single object that ties the program together, as well as being the main 
 	//!			factory that creates figment-type objects. The world object is also a singleton that is 
 	//!			seen by every figment-type object and offers services to them. It also designed to 
-	//!			coordinate different heaps located in addons. Must also be threadsafe when accessed by
-	//!			a mr safety.
+	//!			coordinate different heaps located in addons.
+	//!\note	Not threadsafe, so it must be accessed with a tMrSafety.
 	//!\todo	Prevent a collection of objects becoming an island which is separate from the root node, and
 	//!			thus will never be cleaned up. This will also be a huge problem when removing addons where
 	//!			the objects made in the addon need to be blanked.
@@ -166,42 +166,23 @@ namespace gt{
 		bool mKeepLooping;
 
 		//--------------------------------------------------------
-		// Logging and info services
-
-		//!\brief	Add a line to be displayed in the console.
-		//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
-		static void lo(const dStr& pLine);
-
-		//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
-		static void warnError(const char *msg, const char* pFile, const unsigned int pLine);
-
-		//!\brief	Allows you to pass the error type directly.
-		static void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
-
-#		ifdef GTUT
-			static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
-#		endif
-
-		//!\todo	Make threadsafe.
-		static void makeProfileReport(std::ostream &log);
-
-		//--------------------------------------------------------
 		// Regular world methods
 		cWorld();
 		virtual ~cWorld();
 
 		void setRoot(ptrFig pNewRoot);
 
-		virtual void copyWorld(cWorld* pWorld);
-
 		virtual void lazyCloseAddon(const dStr &name);	//!\brief	Waits until the end of the current run loop before it actually closes the addon.
 
 		//--------------------------------------------------------
+		// Logging and info services
+		void lo(const dStr& pLine);	//!< Add a line to be displayed in the console.
+		void warnError(const char *msg, const char* pFile, const unsigned int pLine);	//!< logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
+		void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);	//!< Allows you to pass the error type directly.
+
+		//--------------------------------------------------------
 		// Blueprint stuff
-
-		//!\brief	Adds a blueprint to the library. Will replace a blueprint if the new ones say to.
-		void addBlueprint(cBlueprint* pAddMe);
-
+		void addBlueprint(cBlueprint* pAddMe);	//!<	Adds a blueprint to the library. Will replace a blueprint if the new ones say to.
 		const cBlueprint* getBlueprint(dNameHash pNameHash);
 
 		//!\brief	Removed, or un-draft, a blueprint from the world.
@@ -212,25 +193,13 @@ namespace gt{
 
 		//--------------------------------------------------------
 		// Factory outlets
-
-		//!\brief	Makes a new figment that is managed by a smart pointer.
-		ptrFig makeFig(dNameHash pNameHash);
-
-		//!\brief	Handy function if you want to use literal strings in a demo.
-		ptrFig makeFig(const dNatChar *pName);
-
-		//!\brief	Makes a new lead that is managed by a smart pointer.
-		ptrLead makeLead(unsigned int pComID);
+		ptrFig makeFig(dNameHash pNameHash);	//!< Makes a new figment that is managed by a smart pointer.
+		ptrFig makeFig(const dNatChar *pName);	//!< Handy function if you want to use literal strings in a demo.
+		ptrLead makeLead(unsigned int pComID);	//!< Makes a new lead that is managed by a smart pointer.
 
 		//!\brief	If you don't have the context ID (possible because you're creating some kind of hard coded demo), you can still
 		//!			get a lead if you have the string name of the figment and the context it came from.
 		ptrLead makeLead(const dPlaChar *aFigName, const dPlaChar *aComName);
-
-		//!\brief	Makes a profile token using the profiler stored in this world.
-		//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
-		//!\todo	Make the death report threadsafe
-		static cProfiler::cToken makeProfileToken(const char* pFile, unsigned int pLine);
-
 
 		//--------------------------------------------------------
 		// Register office
@@ -243,8 +212,8 @@ namespace gt{
 		//!			(apart from the one being unregged) remain valid.
 		void unregContext(dConSig pSig);
 
-		//!\brief	Is this context still alive?
-		bool activeContext(dConSig pSig);
+
+		bool activeContext(dConSig pSig);	//!<	Is this context still alive?
 
 		//--------------------------------------------------------
 		// Get stuff
@@ -279,43 +248,82 @@ namespace gt{
 		virtual void openAddon(const dStr &name) { DONT_USE_THIS; }		//!\brief	Opens an addon with the given name
 		virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }
 
+		//---------------------------------------------------------------------------------------------------
+		//!\brief	primodial is used to manage services that are present before a world is available.
+		//!\note	Not a namespace so that data is hidden.
+		class primordial{
+		public:
+
+			//!\brief	Add a line to be displayed in the console.
+			//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
+			static void lo(const dStr& pLine, bool cleanup=false);
+
+			//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
+			static void warnError(const char *msg, const char* pFile, const unsigned int pLine);
+
+			//!\brief	Allows you to pass the error type directly.
+			static void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
+
+		#	ifdef GTUT
+				static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
+		#	endif
+
+			//!\brief	Makes a profile token using the profiler stored in this world.
+			//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
+			//!\todo	Make the death report threadsafe
+			static cProfiler::cToken makeProfileToken(const char* pFile, unsigned int pLine, bool cleanup=false);
+
+			//!\todo	Make threadsafe.
+			static void makeProfileReport(std::ostream &log);
+
+			static void redirectWorld(gt::cWorld *directHere);	//!< copies the primordial static data into the given world, and redirects gWorld to point to the one given. If null, gWorld is cleaned up and set to null.
+
+		protected:
+		#	ifdef GTUT
+				static bool mSuppressError;	//!<
+		#	endif
+
+		#	ifdef GT_THREADS
+				static boost::recursive_mutex *xProfileGuard;
+				static boost::recursive_mutex *xLineGuard;
+		#	endif
+
+			//--------------------------------------------------------
+			// Data which must be redirected if this is an addon's heap.
+			// This stuff also needs specific setup
+			static gt::cWorld::dLines* xLines;
+			static cProfiler* xProfiler;
+
+			static void cleanup();
+
+			friend class gt::cWorld;
+
+		private:
+			primordial();
+		};
+
+
 	protected:
-#		ifdef GTUT
-			static bool mSuppressError;	//!<
-#		endif
 
-		//--------------------------------------------------------
-		// Data which must be redirected if this is an addon's heap.
-		// This stuff also needs specific setup
-		static dLines* xLines;
-		static cProfiler* xProfiler;
-
-		// Allows you to copy the statics from different heaps
+		// references from primordial.
 		dLines* mLines;
-		cProfiler* mProfiles;
+		cProfiler* mProfiler;
+#		ifdef GT_THREADS
+			boost::recursive_mutex *mProfileGuard;
+			boost::recursive_mutex *mLineGuard;
+#		endif
 
 		ptrFig mRoot;
 		std::list<dStr> mAddonsToClose;
 
-		friend void redirectWorld(cWorld*);
-		//--------------------------------------------------------
+		virtual void copyWorld(cWorld* pWorld);
+
+		friend class primordial;
 
 	private:
 		struct sBlueprintHeader;
 
 		typedef std::map<dNameHash, sBlueprintHeader> dBlueprintMap;
-
-#		ifdef GT_THREADS
-			static boost::recursive_mutex *xProfileGuard;
-			static boost::recursive_mutex *xLineGuard;
-			boost::recursive_mutex *mProfileGuard;
-			boost::recursive_mutex *mLineGuard;
-
-#			ifdef GTUT
-				static boost::recursive_mutex *xSuppressGuard;
-				boost::recursive_mutex *mSuppressGuard;
-#			endif
-#		endif
 
 		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).
 
@@ -352,24 +360,19 @@ namespace gt{
 	   	   	   --instCount;
 			try{
 	   	   	   if(instCount<=0)
-	   	   		   gWorld.get()->lazyCloseAddon( ADDON::getName() );
+	   	   		   gWorld.get()->lazyCloseAddon( ADDON::getAddonName() );
 			}catch(...){}
 		}
-   		virtual dStr const & requiredAddon() const { return ADDON::getName(); }	//!< Returns name of addon that this figment comes from. An empty string means that no addon is required.
+   		virtual const dPlaChar* requiredAddon() const { return ADDON::getAddonName(); }	//!< Returns name of addon that this figment comes from. An empty string means that no addon is required.
 	};
 	template<typename ADDON> int tAddonDependent<ADDON>::instCount = 0;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Typedefs
 namespace gt{
 	//typedef tPtrRef<iFigment> refFig;	//!< Used when you want access to a figment
-}
-
-////////////////////////////////////////////////////////////////////
-// Functions
-namespace gt{
-	void redirectWorld(cWorld* pWorldNew);
 }
 
 

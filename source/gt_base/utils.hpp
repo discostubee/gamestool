@@ -233,7 +233,7 @@ private:
 // Template definitions
 
 template<typename T>
-tShortLookup<T>::tShortLookup(): table(NULL), size(0), numFree(0){}
+tShortLookup<T>::tShortLookup(): table(NULL), itr(NULL), size(0), numFree(0) {}
 
 template<typename T>
 tShortLookup<T>::~tShortLookup(){

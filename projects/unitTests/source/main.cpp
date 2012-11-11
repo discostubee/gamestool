@@ -22,7 +22,7 @@ main(int argc, char **argv){
 	result = RUN_ALL_TESTS();
 #endif
 
-	gt::gWorld.get()->makeProfileReport(std::cout);
+	gt::cWorld::primordial::makeProfileReport(std::cout);
 	gt::gWorld.cleanup();
 	cTracker::makeReport(std::cout);
 
