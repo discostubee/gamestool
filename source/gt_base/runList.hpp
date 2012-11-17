@@ -24,6 +24,7 @@
 
 #include <list>
 #include "figment.hpp"
+#include "plugContainer.hpp"
 
 namespace gt{ //gamestool
 

@@ -61,22 +61,62 @@ namespace gt{
 		void patGoGetit(ptrLead aLead);
 	};
 
-	//!\brief	Opposite Dracula has a reflection. Alucard lets you form a lead by taking a command and scanning the context for some of the objects
-	//!			you want to use as plugs or even targets. Once made the lead is jacked into the target every time this object is run. Bleh!
+	//!\brief	Any jack or run commands are passed to the bound figment instead of the alias.
+	//!			The cool stuff happens when you get to change the alias name (which also changes the hash). This means that when you search for a figment
+	//!			in the context, you can look for an alias instead of the figment type name.
+	//!\note	Identify always returns 'alias'.
+	class cAlias : public cFigment{
+	public:
+		static const cPlugTag *xPT_fig;
+		static const cPlugTag *xPT_alias;
+		static const cCommand::dUID xBindFig;
+		static const cCommand::dUID xSetAlias;
+
+		cAlias();
+		virtual ~cAlias();
+
+		static const dPlaChar* identify(){ return "alias"; }
+
+		static dNameHash extends(){ return getHash<cFigment>(); }
+		virtual dNameHash getExtension() const { return extends(); }
+
+		static dNumVer version(){ return 1; }
+		virtual dNumVer getVersion() const { return version(); }
+		virtual dMigrationPattern getLoadPattern();
+
+		virtual const dPlaChar* name() const;	//!< Returns alias name, or "alias" by default.
+		virtual dNameHash hash() const;	//!< Returns a hash of the current alias.
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL);
+		virtual void getLinks(std::list<ptrFig>* pOutLinks);
+		virtual void work(cContext* pCon);	//!<
+		virtual void jack(ptrLead pLead, cContext* pCon);
+
+	private:
+		tPlug<ptrFig> mBound;	//!< The figment this alias is bound to.
+		tPlug<dStr> mAName;	//!< Alias name.
+		dNameHash mAHash;	//!< Hash of alias name.
+
+		void patBindFig(ptrLead aLead);
+		void patSetAlias(ptrLead aLead);
+	};
+
+	//!\brief	Reverse Dracula has a reflection. Alucard lets you form a lead by taking a command and scanning the context for objects
+	//!			to use as the target of the command, or plugs to use in the command. Once made the lead jacks into the target every
+	//!			time this object is run. Blah!
 	//!\note	Because leads can't be saved, this figment instead rebuilds them for you.
 	//!\note	Currently only works for tagged plugs, not piles.
 	class cAlucard : public cFigment{
 	public:
-		static const cPlugTag *xPT_command;		//!< Expects a plug tag hash it can use to find the command in the world.
+		static const cPlugTag *xPT_figHash;		//!<
+		static const cPlugTag *xPT_comUID;		//!<
 		static const cPlugTag *xPT_target;		//!< Target of the jacking.
 		static const cPlugTag *xPT_plug;		//!<
-		static const cPlugTag *xPT_tag;
-		static const cPlugTag *xPT_contextFig;
-		static const cCommand::dUID xAddCommand;	//!< The command to use when jacking into the target.
+		static const cPlugTag *xPT_tag;			//!<
+		static const cCommand::dUID xSetCommand;	//!< The command to use when jacking into the target.
 		static const cCommand::dUID xSetTarget;		//!< Uses the provided figment as the target for the jack operation.
-		static const cCommand::dUID xAddPlug;		//!< Adds a specific plug. Note that if this plug is not part of the same anchor file, it's unlikely to be reloaded.
-		static const cCommand::dUID xAddContextPlug;	//!< Add info to search for a plug in the context.
-		static const cCommand::dUID xSetContextTarget;	//!< Instead of using a direct target, we'll get our target from the current context.
+		static const cCommand::dUID xAddPlug;		//!< Adds a specific plug to the command. Note that if this plug is not part of the same anchor file, it's unlikely to be reloaded.
+		static const cCommand::dUID xSetTargetConx;	//!< Instead of using a direct target, we'll get our target from the current context.
+		static const cCommand::dUID xAddPlugConx;	//!< Find a plug in the context with a given hash.
 
 		cAlucard();
 		virtual ~cAlucard();
@@ -88,10 +128,8 @@ namespace gt{
 		static dNameHash extends(){ return getHash<cFigment>(); }
 		virtual dNameHash getExtension() const { return extends(); }
 
-		virtual void save(cByteBuffer* pAddHere);		//!< Adds to the buffer, all the data needed to reload itself. It was done this way as opposed to a return auto pointer because all save operations are buffer appends.
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL);			//!< Called load-eat because the head of the buffer is consume by the load function.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
-		virtual void work(cContext* pCon);
+		virtual void work(cContext* pCon);	//!< If Alucard doesn't have a target, it uses the context to see if it can one matching the hash.
 
 	protected:
 
@@ -114,8 +152,9 @@ namespace gt{
 		typedef std::list< std::list<sContextPlug>::iterator > dListOfPlugsToFind;
 		typedef std::list< std::list<sActualPlug>::iterator > dListOfPlugsToAdd;
 
-		std::list<sContextPlug> mContextPlugs;	//!< Contains the info we need to search for plugs in the context. This gets saved.
-		std::list<sActualPlug> mActualPlugs;		//!< List of plugs we've added to the figment. These get saved, but they may not be present when we reload.
+		//-
+		tPlugContainer< std::list<sContextPlug> > mContextPlugs;	//!< Contains the info we need to search for plugs in the context. This gets saved.
+		tPlugContainer< std::list<sActualPlug> > mActualPlugs;	//!< List of plugs we've added to the figment. These get saved, but they may not be present when we reload.
 		dListOfPlugsToFind mNewPlugsToFind;	//!< Emptied every time we run.
 		dListOfPlugsToAdd mNewPlugsToAdd;	//!< Emptied every time we run.
 		tPlug<ptrFig> mTarget;
@@ -128,11 +167,12 @@ namespace gt{
 		std::list<sContextPlug>::iterator tmpCPlug;
 		std::list<sActualPlug>::iterator tmpAPlug;
 
-		void patAddCom(ptrLead aLead);
+		//-
+		void patSetCom(ptrLead aLead);
 		void patSetTarget(ptrLead aLead);
 		void patAddPlug(ptrLead aLead);
-		void patAddConxPlug(ptrLead aLead);
-		void patSetConxTarget(ptrLead aLead);
+		void patAddPlugConx(ptrLead aLead);
+		void patSetTargetConx(ptrLead aLead);
 	};
 }
 
