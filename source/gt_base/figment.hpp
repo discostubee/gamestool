@@ -44,6 +44,22 @@ namespace excep{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+// macros
+#define GT_IDENTIFY(x)\
+		static const dPlaChar* identify(){ return x; }\
+		virtual const dPlaChar* name() const { return identify(); }\0
+
+#define GT_EXTENDS(x)\
+		static dNameHash extends(){ return x; }\
+		virtual dNameHash getExtension() const { return extends(); }\0
+
+#define GT_VERSION(x)\
+		static dNumVer version(){ return x; }\
+		virtual dNumVer getVersion() const { return version(); }\0
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
 // classes
 namespace gt{
 
@@ -66,7 +82,7 @@ namespace gt{
 		cFigment();
 		virtual ~cFigment();
 
-		//!\brief	Jack is your interface for using data with this figment. You shouldn't need to override this, but in case you do.
+		//!\brief	Jack is your interface for using data with this figment.
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 		void run(cContext* pCon);	//!< Performs all the normal stuff needed before doing work, such as using the context to ensure it doesn't run into itself or other threads.
@@ -86,8 +102,6 @@ namespace gt{
 		//-----------------------------
 		// standard interface. These are all optional in later classes.
 
-		virtual void work(cContext* pCon);	//!< Gives the child figments some runtime to do whatever it is that they normally do.
-
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
 		//!			specific version.
@@ -105,7 +119,7 @@ namespace gt{
 		static dNumVer version(){ return 0; }
 		virtual dNumVer getVersion() const { return version(); }
 
-
+		virtual void work(cContext* pCon);	//!< Gives the child figments some runtime to do whatever it is that they normally do.
 		virtual dStr const & requiredAddon() const;	//!<	Unless this figment comes from an addon, only an empty string should be returned.
 		virtual dMigrationPattern getLoadPattern();	//!< Load patterns offer you a way to migrate an older version of a figment to the current version. Override this function to pass back different load patterns. \note NOT threadsafe.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.

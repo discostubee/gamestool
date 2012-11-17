@@ -50,7 +50,6 @@ cPlugHound::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-
 	version1.push_back(mCom);
 	version1.push_back(mTag);
 	version1.push_back(mTarget);
@@ -80,18 +79,76 @@ cPlugHound::patGoGetit(ptrLead aLead){
 	);
 }
 
+////////////////////////////////////////////////////////////
+using namespace gt;
+
+dMigrationPattern
+cAlias::getLoadPattern(){
+	dMigrationPattern pattern;
+	dVersionPlugs version1;
+
+	version1.push_back(mBound);
+	version1.push_back(mAName);
+
+	pattern.push_back(version1);
+	return pattern;
+}
+
+void
+cAlias::jack(ptrLead pLead, cContext* pCon){
+	if(mBound.get().valid())
+		mBound.get()->jack(pLead, pCon);
+}
+
+const dPlaChar*
+cAlias::name() const{
+	return mAName.get().c_str();
+}
+
+dNameHash
+cAlias::hash() const{
+	return mAHash;
+}
+
+void
+cAlias::loadEat(cByteBuffer* pBuff, dReloadMap *aReloads){
+	cFigment::loadEat(pBuff, aReloads);
+	mAHash = makeHash(mAName.get().c_str());
+}
+
+void
+cAlias::getLinks(std::list<ptrFig>* pOutLinks){
+	pOutLinks->push_back(mBound);
+}
+
+void
+cAlias::work(cContext* pCon){
+	if(mBound.get().valid())
+		mBound.get()->work(pCon);
+}
+
+void
+cAlias::patBindFig(ptrLead aLead){
+	aLead->getPlug(&mBound, xPT_fig);
+}
+
+void
+cAlias::patSetAlias(ptrLead aLead){
+	aLead->getPlug(&mAName, xPT_alias);
+	mAHash = makeHash(mAName.get().c_str());
+}
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag *cAlucard::xPT_command = tOutline<cAlucard>::makePlugTag("command");
+const cPlugTag *cAlucard::xPT_figHash = tOutline<cAlucard>::makePlugTag("fig hash");
+const cPlugTag *cAlucard::xPT_comUID = tOutline<cAlucard>::makePlugTag("command ID");
 const cPlugTag *cAlucard::xPT_target = tOutline<cAlucard>::makePlugTag("target");
 const cPlugTag *cAlucard::xPT_plug = tOutline<cAlucard>::makePlugTag("plug");
 const cPlugTag *cAlucard::xPT_tag = tOutline<cAlucard>::makePlugTag("tag");
-const cPlugTag *cAlucard::xPT_contextFig = tOutline<cAlucard>::makePlugTag("context fig");
 
-const cCommand::dUID cAlucard::xAddCommand = tOutline<cAlucard>::makeCommand(
-	"add command", &cAlucard::patAddCom, xPT_command, NULL
+const cCommand::dUID cAlucard::xSetCommand = tOutline<cAlucard>::makeCommand(
+	"set command", &cAlucard::patSetCom, xPT_comUID, NULL
 );
 
 const cCommand::dUID cAlucard::xSetTarget = tOutline<cAlucard>::makeCommand(
@@ -102,12 +159,12 @@ const cCommand::dUID cAlucard::xAddPlug = tOutline<cAlucard>::makeCommand(
 	"add plug", &cAlucard::patAddPlug, xPT_plug, xPT_tag, NULL
 );
 
-const cCommand::dUID cAlucard::xAddContextPlug = tOutline<cAlucard>::makeCommand(
-	"add context plug", &cAlucard::patAddConxPlug, xPT_contextFig, xPT_tag, NULL
+const cCommand::dUID cAlucard::xSetTargetConx = tOutline<cAlucard>::makeCommand(
+	"set context target", &cAlucard::patAddPlugConx, xPT_figHash, NULL
 );
 
-const cCommand::dUID cAlucard::xSetContextTarget = tOutline<cAlucard>::makeCommand(
-	"set context target", &cAlucard::patAddConxPlug, xPT_contextFig, NULL
+const cCommand::dUID cAlucard::xAddPlugConx = tOutline<cAlucard>::makeCommand(
+	"add context plug", &cAlucard::patAddPlugConx, xPT_figHash, xPT_tag, NULL
 );
 
 
@@ -122,29 +179,6 @@ cAlucard::cAlucard():
 cAlucard::~cAlucard(){
 }
 
-void
-cAlucard::patAddCom(ptrLead aLead){
-	aLead->getPlug(&mCommand, xPT_command);
-}
-
-void cAlucard::patSetTarget(ptrLead aLead){
-	aLead->getPlug(&mTarget, xPT_target);
-}
-
-void cAlucard::patAddPlug(ptrLead aLead){
-	PROFILE;
-
-}
-
-void cAlucard::patAddConxPlug(ptrLead aLead){
-	PROFILE;
-
-
-}
-
-void cAlucard::patSetConxTarget(ptrLead aLead){
-}
-
 void cAlucard::save(cByteBuffer* pAddHere){
 }
 
@@ -156,39 +190,30 @@ void cAlucard::getLinks(std::list<ptrFig>* pOutLinks){
 
 void cAlucard::work(cContext* aCon){
 	PROFILE;
-	start(aCon);
 
-	if(mLead.get() == NULL && mCommand.get() != cCommand::noID){
-		mLead = ptrLead( new cLead(mCommand.get()) );
-	}
-
-	if(mLead.get() != NULL){
-
-		while(!mNewPlugsToFind.empty()){
-			tmpCPlug = *mNewPlugsToFind.begin();
-			tmpCPlug->found = aCon->getFirstOfType( tmpCPlug->type );
-
-			if( tmpCPlug->found.get()->hash() != getHash<cEmptyFig>() ){
-				mLead->addPlug(&tmpCPlug->found, tmpCPlug->tag);
-			}
-			mContextPlugs.pop_front();
-		}
-
-		while(!mNewPlugsToAdd.empty()){
-			tmpAPlug = *mNewPlugsToAdd.begin();
-			mLead->addPlug(
-				&tmpAPlug->plug, tmpAPlug->tag
-			);
-			mNewPlugsToAdd.pop_front();
-		}
-
-		if(mTarget.get()->hash() != getHash<cEmptyFig>()){
-			mTarget.get()->jack(mLead, &mConx);
-		}
-	}
-
-	stop(aCon);
 }
+
+void
+cAlucard::patAddCom(ptrLead aLead){
+	dHash comhash = 0;
+	aLead->getValue(&comhash, xPT_hash);
+
+}
+
+void cAlucard::patSetTarget(ptrLead aLead){
+	aLead->getPlug(&mTarget, xPT_target);
+}
+
+void cAlucard::patAddPlug(ptrLead aLead){
+}
+
+void cAlucard::patAddConxPlug(ptrLead aLead){
+}
+
+void cAlucard::patSetConxTarget(ptrLead aLead){
+}
+
+
 
 #ifdef GTUT
 
@@ -235,41 +260,6 @@ GTUT_START(test_reflection, houndGets){
 }GTUT_END;
 
 GTUT_START(test_reflection, alucardBasic){
-	tOutline<cAlucard>::draft();
-	tOutline<cTestNum>::draft();
-
-	cContext fakeConx;
-
-	ptrFig alucard = gWorld.get()->makeFig(getHash<cAlucard>());
-	tPlug<ptrFig> testNum = gWorld.get()->makeFig(getHash<cTestNum>());
-
-	ptrLead setCom = gWorld.get()->makeLead(cAlucard::xAddCommand);
-	tPlug<cCommand::dUID> comID = cTestNum::xSetData;
-	setCom->addPlug(&comID, cAlucard::xPT_command);
-
-	alucard->jack(setCom, &fakeConx);
-
-	tPlug<int> num = 3;
-	ptrLead setPlug = gWorld.get()->makeLead(cAlucard::xAddPlug);
-	setPlug->addPlug(&num, cAlucard::xPT_plug);
-	alucard->jack(setPlug, &fakeConx);
-
-	ptrLead setTarget = gWorld.get()->makeLead(cAlucard::xSetTarget);
-	setTarget->addPlug(&testNum, cAlucard::xPT_target);
-	alucard->jack(setTarget, &fakeConx);
-
-	alucard->run(&fakeConx);
-
-	ptrLead getNum = gWorld.get()->makeLead( cTestNum::xGetData );
-	testNum.get()->jack(getNum, &fakeConx);
-
-	tPlug<int> a;
-
-	startLead(getNum, fakeConx.getSig());
-	getNum->getPlug(&a, cTestNum::xPT_num);
-	stopLead(getNum);
-
-	GTUT_ASRT( a == num, "number wasn't set.");
 
 
 }GTUT_END;

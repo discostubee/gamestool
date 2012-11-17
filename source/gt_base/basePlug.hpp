@@ -123,7 +123,7 @@ namespace gt{
 			virtual void updateFinish() =0;	//!< Update all shadows using the origin. Any shadow writes after the update was started are overwritten.
 		#endif
 
-		//---
+		//--- should be protected.
 		typedef std::map<cLead*, unsigned int> dMapLeads;
 
 		dMapLeads mLeadsConnected;		//!< Lead connections are not copied when copy plug values.

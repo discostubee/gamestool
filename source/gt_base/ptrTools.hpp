@@ -187,8 +187,9 @@ namespace gt{
 			if(castodian)
 				delete data;
 
-			data = new COPY();
-			*data = copyMe;
+			COPY *tmp = new COPY();
+			*tmp = copyMe;
+			data = tmp;
 			castodian = true;
 			return *this;
 		}

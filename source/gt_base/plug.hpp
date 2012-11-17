@@ -191,6 +191,7 @@ namespace gt{
 		A mD;	//!< Data
 
 	};
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +376,7 @@ namespace gt{
 	template<typename A>
 	bool
 	tPlug<A>::operator== (const cBase_plug &pD) const {
-		return (pD.mType == tPlugFlakes<A>::mType);
+		return (pD.mType == tPlugParent<A>::mType);
 	}
 
 	template<typename A>
@@ -428,6 +429,7 @@ namespace gt{
 
 		mD = *reinterpret_cast<const A*>(pContainer);
 	}
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
