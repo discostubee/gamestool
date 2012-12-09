@@ -25,6 +25,7 @@
 #define REFLECTION_HPP
 
 #include "figment.hpp"
+#include "plugContainer.hpp"
 
 namespace gt{
 
@@ -40,15 +41,10 @@ namespace gt{
 		static const cPlugTag *xPT_plug;		//!< The plug we give back through the lead.
 		static const cCommand::dUID xGoGetIt;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target.
 
-		static const dPlaChar* identify(){ return "plug hound"; }
-		virtual const dPlaChar* name() const { return identify(); }
+		GT_IDENTIFY("plug hound");
+		GT_EXTENDS(cFigment);
+		GT_VERSION(1);
 		virtual dNameHash hash() const { return getHash<cPlugHound>(); }
-
-		static dNameHash extends(){ return getHash<cFigment>(); }
-		virtual dNameHash getExtension() const { return extends(); }
-		static dNumVer version(){ return 1; }
-		virtual dNumVer getVersion() const { return version(); }
-		virtual dMigrationPattern getLoadPattern();
 
 		cPlugHound();
 		virtual ~cPlugHound();
@@ -77,18 +73,14 @@ namespace gt{
 
 		static const dPlaChar* identify(){ return "alias"; }
 
-		static dNameHash extends(){ return getHash<cFigment>(); }
-		virtual dNameHash getExtension() const { return extends(); }
+		GT_EXTENDS(cFigment);
+		GT_VERSION(1);
 
-		static dNumVer version(){ return 1; }
-		virtual dNumVer getVersion() const { return version(); }
-		virtual dMigrationPattern getLoadPattern();
-
-		virtual const dPlaChar* name() const;	//!< Returns alias name, or "alias" by default.
+		virtual const dPlaChar* name() const;	//!< Returns the name of the bound figment, or "alias" by default.
 		virtual dNameHash hash() const;	//!< Returns a hash of the current alias.
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL);
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap *aReloads = NULL);	//!< Recreates the hash, if a name was saved.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
-		virtual void work(cContext* pCon);	//!<
+		virtual void work(cContext* pCon);
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 	private:
@@ -100,6 +92,7 @@ namespace gt{
 		void patSetAlias(ptrLead aLead);
 	};
 
+	/*
 	//!\brief	Reverse Dracula has a reflection. Alucard lets you form a lead by taking a command and scanning the context for objects
 	//!			to use as the target of the command, or plugs to use in the command. Once made the lead jacks into the target every
 	//!			time this object is run. Blah!
@@ -140,6 +133,7 @@ namespace gt{
 			tPlug<ptrFig> found;	//!< Helpful when found.
 
 			sContextPlug(dNameHash aType, const cPlugTag *aTag) : type(aType), tag(aTag) {}
+			sContextPlug() : type(0), tag(NULL) {}
 		};
 
 		struct sActualPlug{
@@ -147,14 +141,15 @@ namespace gt{
 			cPlugTag const *tag;
 
 			sActualPlug(const cBase_plug *aPlug, const cPlugTag *aTag) : tag(aTag) { plug = aPlug; }
+			sActualPlug() : tag(NULL) {}
 		};
 
 		typedef std::list< std::list<sContextPlug>::iterator > dListOfPlugsToFind;
 		typedef std::list< std::list<sActualPlug>::iterator > dListOfPlugsToAdd;
 
 		//-
-		tPlugContainer< std::list<sContextPlug> > mContextPlugs;	//!< Contains the info we need to search for plugs in the context. This gets saved.
-		tPlugContainer< std::list<sActualPlug> > mActualPlugs;	//!< List of plugs we've added to the figment. These get saved, but they may not be present when we reload.
+		tPlugList< sContextPlug > mContextPlugs;	//!< Contains the info we need to search for plugs in the context. This gets saved.
+		tPlugList< sActualPlug > mActualPlugs;	//!< List of plugs we've added to the figment. These get saved, but they may not be present when we reload.
 		dListOfPlugsToFind mNewPlugsToFind;	//!< Emptied every time we run.
 		dListOfPlugsToAdd mNewPlugsToAdd;	//!< Emptied every time we run.
 		tPlug<ptrFig> mTarget;
@@ -164,8 +159,8 @@ namespace gt{
 		cContext mConx;	//!< This here is the context we create to use when jacking.
 
 		//- scratch variables
-		std::list<sContextPlug>::iterator tmpCPlug;
-		std::list<sActualPlug>::iterator tmpAPlug;
+		tPlugList< sContextPlug >::itr_t tmpCPlug;
+		tPlugList< sContextPlug >::itr_t tmpAPlug;
 
 		//-
 		void patSetCom(ptrLead aLead);
@@ -174,6 +169,7 @@ namespace gt{
 		void patAddPlugConx(ptrLead aLead);
 		void patSetTargetConx(ptrLead aLead);
 	};
+	*/
 }
 
 #endif

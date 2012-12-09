@@ -82,7 +82,28 @@ cPlugHound::patGoGetit(ptrLead aLead){
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-dMigrationPattern
+const cPlugTag *cAlias::xPT_fig = tOutline<cAlias>::makePlugTag("figment");
+const cPlugTag *cAlias::xPT_alias = tOutline<cAlias>::makePlugTag("alias name");
+
+const cCommand::dUID cAlias::xBindFig = tOutline<cAlias>::makeCommand(
+	"bind fig", &cAlias::patBindFig,
+	cAlias::xPT_fig,
+	NULL
+);
+
+const cCommand::dUID cAlias::xSetAlias = tOutline<cAlias>::makeCommand(
+	"set alias", &cAlias::patSetAlias,
+	cAlias::xPT_alias,
+	NULL
+);
+
+cAlias::cAlias(){
+}
+
+cAlias::~cAlias(){
+}
+
+iFigment::dMigrationPattern
 cAlias::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
@@ -94,15 +115,9 @@ cAlias::getLoadPattern(){
 	return pattern;
 }
 
-void
-cAlias::jack(ptrLead pLead, cContext* pCon){
-	if(mBound.get().valid())
-		mBound.get()->jack(pLead, pCon);
-}
-
 const dPlaChar*
 cAlias::name() const{
-	return mAName.get().c_str();
+	return mAName.getConst().c_str();
 }
 
 dNameHash
@@ -118,13 +133,19 @@ cAlias::loadEat(cByteBuffer* pBuff, dReloadMap *aReloads){
 
 void
 cAlias::getLinks(std::list<ptrFig>* pOutLinks){
-	pOutLinks->push_back(mBound);
+	pOutLinks->push_back(mBound.get());
 }
 
 void
 cAlias::work(cContext* pCon){
 	if(mBound.get().valid())
 		mBound.get()->work(pCon);
+}
+
+void
+cAlias::jack(ptrLead pLead, cContext* pCon){
+	if(mBound.get().valid())
+		mBound.get()->jack(pLead, pCon);
 }
 
 void
@@ -138,6 +159,7 @@ cAlias::patSetAlias(ptrLead aLead){
 	mAHash = makeHash(mAName.get().c_str());
 }
 
+/*
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
@@ -179,11 +201,6 @@ cAlucard::cAlucard():
 cAlucard::~cAlucard(){
 }
 
-void cAlucard::save(cByteBuffer* pAddHere){
-}
-
-void cAlucard::loadEat(cByteBuffer* pBuff, dReloadMap *aReloads){
-}
 
 void cAlucard::getLinks(std::list<ptrFig>* pOutLinks){
 }
@@ -192,26 +209,8 @@ void cAlucard::work(cContext* aCon){
 	PROFILE;
 
 }
+*/
 
-void
-cAlucard::patAddCom(ptrLead aLead){
-	dHash comhash = 0;
-	aLead->getValue(&comhash, xPT_hash);
-
-}
-
-void cAlucard::patSetTarget(ptrLead aLead){
-	aLead->getPlug(&mTarget, xPT_target);
-}
-
-void cAlucard::patAddPlug(ptrLead aLead){
-}
-
-void cAlucard::patAddConxPlug(ptrLead aLead){
-}
-
-void cAlucard::patSetConxTarget(ptrLead aLead){
-}
 
 
 
@@ -224,12 +223,8 @@ GTUT_START(test_cPlugHound, test_suit){
 	figmentTestSuit<cPlugHound>();
 }GTUT_END;
 
-GTUT_START(test_cAlucard, test_suit){
-	tOutline<cFigment>::draft();
-	figmentTestSuit<cAlucard>();
-}GTUT_END;
 
-GTUT_START(test_reflection, houndGets){
+GTUT_START(test_cPlugHound, houndGets){
 	tOutline<cPlugHound>::draft();
 	tOutline<cTestNum>::draft();
 
@@ -259,9 +254,15 @@ GTUT_START(test_reflection, houndGets){
 	GTUT_ASRT( num.get() == 42, "Didn't get the right number back from the test figment.");
 }GTUT_END;
 
+/*
+GTUT_START(test_cAlucard, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cAlucard>();
+}GTUT_END;
+
 GTUT_START(test_reflection, alucardBasic){
 
 
 }GTUT_END;
-
+*/
 #endif

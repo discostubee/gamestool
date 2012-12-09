@@ -74,6 +74,17 @@ cBase_fileIO::cBase_fileIO(){
 cBase_fileIO::~cBase_fileIO(){
 }
 
+cFigment::dMigrationPattern
+cBase_fileIO::getLoadPattern(){
+	dMigrationPattern pattern;
+	dVersionPlugs version1;
+
+	version1.push_back(mPath);
+
+	pattern.push_back(version1);
+	return pattern;
+}
+
 void
 cBase_fileIO::patSetPath(ptrLead aLead){
 	aLead->getPlug(&mPath, xPT_filePath);

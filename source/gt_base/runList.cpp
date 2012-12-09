@@ -27,6 +27,7 @@ const cCommand::dUID cRunList::xAdd = tOutline<cRunList>::makeCommand(
 );
 
 cRunList::cRunList(){
+	addUpdRoster(&mList);
 }
 
 cRunList::~cRunList(){
@@ -36,53 +37,27 @@ void
 cRunList::work(cContext* pCon){
 	PROFILE;
 
-	for(
-		std::vector< tPlug<ptrFig> >::iterator i = mList.begin();
-		i != mList.end();
-		++i
-	){
+	for(dList::itr_t i = mList.mContainer.begin(); i != mList.mContainer.end(); ++i){
 		(*i).get()->run(pCon);
 	}
 }
 
-void
-cRunList::save(cByteBuffer* pAddHere){
-	PROFILE;
+cFigment::dMigrationPattern
+cRunList::getLoadPattern(){
+	dMigrationPattern pattern;
+	dVersionPlugs version1;
 
-	size_t listSize = mList.size();
+	version1.push_back(mList);
 
-	pAddHere->add( &listSize );
-	for( std::vector< tPlug<ptrFig> >::iterator i = mList.begin(); i != mList.end(); ++i){
-		i->save(pAddHere);
-	}
-}
-
-void
-cRunList::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
-	PROFILE;
-
-	ASRT_NOTNULL(pBuff);
-	ASRT_NOTNULL(pReloads);
-
-	size_t listSize;
-	pBuff->fill(&listSize);
-	pBuff->trimHead(sizeof listSize);
-	for(size_t i = 0; i < listSize; ++i){
-		tPlug<ptrFig> tempFig;
-		tempFig.loadEat(pBuff, pReloads); // there should be enough in this buffer for all figs to load.
-		mList.push_back(tempFig);
-	}
+	pattern.push_back(version1);
+	return pattern;
 }
 
 void
 cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 	ASRT_NOTNULL(pOutLinks);
 
-	for(
-		std::vector< tPlug<ptrFig> >::iterator i = mList.begin();
-		i != mList.end();
-		++i
-	){
+	for(dList::itr_t i = mList.mContainer.begin(); i != mList.mContainer.end(); ++i){
 		pOutLinks->push_back( i->get() );
 	}
 }
@@ -91,12 +66,11 @@ void
 cRunList::patAdd(ptrLead aLead){
 	PROFILE;
 
-	dList plugs;
+	std::vector< tPlug<ptrFig> > plugs;
 	aLead->getPile(&plugs);
 
-	for(dList::iterator itr = plugs.begin(); itr != plugs.end(); ++itr){
-		mList.push_back( *itr );
-		addUpdRoster( &(*itr) );
+	for(dList::itr_t itr = plugs.begin(); itr != plugs.end(); ++itr){
+		mList.mContainer.push_back( *itr );
 	}
 }
 
@@ -122,32 +96,27 @@ void
 cValves::work(cContext* pCon){
 	PROFILE;
 
-	for(
-		std::vector< tPlug<ptrFig> >::iterator itr = mList.begin();
-		itr != mList.end();
-		++itr
-	){
-		if( mStates[itr].get() )
-			(*itr).get()->run(pCon);
+	for(size_t idx = 0; idx != mList.mContainer.size(); ++idx){
+		if( mStates.mContainer[idx].get() )
+			mList.mContainer[idx].get()->run(pCon);
 	}
 }
 
-void
-cValves::save(cByteBuffer* pAddHere){
-	//!\todo add saves for each valve
-	cRunList::save(pAddHere);
-}
+cFigment::dMigrationPattern
+cValves::getLoadPattern(){
+	dMigrationPattern pattern;
+	dVersionPlugs version1;
 
-void
-cValves::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
+	version1.push_back(mList);
+	version1.push_back(mStates);
 
-	//!\todo, add in your stuff here.
-
-	cRunList::loadEat(pBuff, pReloads);
+	pattern.push_back(version1);
+	return pattern;
 }
 
 void
 cValves::patSetValve(ptrLead pLead){
+	//!\todo
 }
 
 #ifdef GTUT

@@ -56,6 +56,8 @@ namespace gt{
 			virtual void updateFinish();
 #		endif
 
+		tPlugLinierContainer<CONTAINER> operator=(const tPlugLinierContainer<CONTAINER> &copyMe);
+
 	protected:
 
 		virtual void actualCopyInto(void* pContainer, dPlugType pType) const;
@@ -89,10 +91,13 @@ namespace gt{
 
 
 	//!\brief
-	template<typename T, typename KEY>
-	class tPlugMap : public tPlugLinierContainer< std::map< tPlug<T>, KEY > > {
+	template<typename KEY, typename T>
+	class tPlugMap : public cBase_plug {
 	public:
-		typedef typename std::map<tPlug<T>, KEY > map_t;
+		typedef typename std::map< KEY, tPlug<T> > map_t;
+		typedef typename map_t::iterator itr_t;
+
+		map_t mContainer;
 
 		tPlugMap();
 		virtual ~tPlugMap();
@@ -103,8 +108,23 @@ namespace gt{
 		virtual	cBase_plug& operator= (const cBase_plug &pD);
 		virtual bool operator== (const cBase_plug &pD) const;
 
-	private:
-		typedef tPlugLinierContainer< std::map< tPlug<T>, KEY > > parent;
+#		ifdef GT_THREADS
+			virtual void updateStart();
+			virtual void updateFinish();
+#		endif
+
+		tPlugMap<KEY, T> operator= (const tPlugMap<KEY, T> &copyMe);
+
+	protected:
+		typedef typename map_t::value_type entry;
+
+		virtual void actualCopyInto(void* pContainer, dPlugType pType) const;
+		virtual void actualCopyFrom(const void* pContainer, dPlugType pType);
+
+#		ifdef GT_THREADS
+			virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon);
+			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon);
+#		endif
 	};
 
 
@@ -164,12 +184,20 @@ namespace gt{
 	}
 
 	template<typename CONTAINER>
+	tPlugLinierContainer<CONTAINER>
+	tPlugLinierContainer<CONTAINER>::operator=(const tPlugLinierContainer<CONTAINER> &copyMe){
+		NOTSELF(&copyMe);
+		mContainer = copyMe.mContainer;
+		return *this;
+	}
+
+	template<typename CONTAINER>
 	void
 	tPlugLinierContainer<CONTAINER>::actualCopyInto(void* pContainer, dPlugType pType) const{
 		if(pType != mType)
 			throw excep::cantCopy(typeid(CONTAINER).name(), "unknown", __FILE__, __LINE__);
 
-		mContainer = *reinterpret_cast<CONTAINER*>(pContainer);
+		*reinterpret_cast<CONTAINER*>(pContainer) = mContainer;
 	}
 
 	template<typename CONTAINER>
@@ -178,7 +206,7 @@ namespace gt{
 		if(pType != mType)
 			throw excep::cantCopy(typeid(CONTAINER).name(), "unknown", __FILE__, __LINE__);
 
-		*reinterpret_cast<CONTAINER*>(pContainer) = mContainer;
+		mContainer = *reinterpret_cast<const CONTAINER*>(pContainer);
 	}
 
 #	ifdef GT_THREADS
@@ -212,29 +240,110 @@ namespace gt{
 
 
 	//-----------------------------------------------------------------------------------------------
-	template<typename T, typename KEY>
-	tPlugMap<T, KEY>::tPlugMap(){
+	template<typename KEY, typename T>
+	tPlugMap<KEY, T>::tPlugMap() :
+		cBase_plug(cBase_plug::getPlugType<map_t>())
+	{}
+
+	template<typename KEY, typename T>
+	tPlugMap<KEY, T>::~tPlugMap(){
 	}
 
-	template<typename T, typename KEY>
-	tPlugMap<T, KEY>::~tPlugMap(){
-	}
-
-	template<typename T, typename KEY>
+	template<typename KEY, typename T>
 	void
-	tPlugMap<T, KEY>::save(cByteBuffer* pSaveHere){
-		size_t s = parent::mContainer.size();
+	tPlugMap<KEY, T>::save(cByteBuffer* pSaveHere){
+		size_t s = mContainer.size();
 		pSaveHere->add( &s );
+		for(itr_t itr=mContainer.begin(); itr!=mContainer.end(); ++itr){
+			pSaveHere->add(&itr->first);
+			itr->second.save(pSaveHere);
+		}
 	}
 
-	template<typename T, typename KEY>
+	template<typename KEY, typename T>
 	void
-	tPlugMap<T, KEY>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
+	tPlugMap<KEY, T>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
 		size_t s=0;
 		KEY tmpKey=0;
 		pChewToy->trimHead( pChewToy->fill(&s) );
-
+		for(size_t i=0; i < s; ++i){
+			pChewToy->trimHead( pChewToy->fill(&tmpKey) );
+			mContainer.insert(
+				entry(tmpKey, tPlug<T>() )
+			).first->second.loadEat(pChewToy);
+		}
 	}
+
+	template<typename KEY, typename T>
+	cBase_plug&
+	tPlugMap<KEY, T>::operator= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		pD.copyInto(&mContainer);
+		return *this;
+	}
+
+	template<typename KEY, typename T>
+	bool
+	tPlugMap<KEY, T>::operator== (const cBase_plug &pD) const{
+		return (mType == pD.mType);
+	}
+
+	template<typename KEY, typename T>
+	tPlugMap<KEY, T>
+	tPlugMap<KEY, T>::operator= (const tPlugMap<KEY, T> &copyMe){
+		NOTSELF(&copyMe);
+
+		mContainer = copyMe.mContainer;
+
+		return *this;
+	}
+
+	template<typename KEY, typename T>
+	void
+	tPlugMap<KEY, T>::actualCopyInto(void* pContainer, dPlugType pType) const{
+		if(pType != mType)
+			throw excep::cantCopy(typeid(map_t).name(), "unknown", __FILE__, __LINE__);
+
+		*reinterpret_cast<map_t*>(pContainer) = mContainer;
+	}
+
+	template<typename KEY, typename T>
+	void
+	tPlugMap<KEY, T>::actualCopyFrom(const void* pContainer, dPlugType pType){
+		if(pType != mType)
+			throw excep::cantCopy(typeid(map_t).name(), "unknown", __FILE__, __LINE__);
+
+		mContainer = *reinterpret_cast<const map_t*>(pContainer);
+	}
+
+#	ifdef GT_THREADS
+
+		template<typename KEY, typename T>
+		void
+		tPlugMap<KEY, T>::updateStart(){
+			for(itr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+				itr->second.updateStart();
+		}
+
+		template<typename KEY, typename T>
+		void
+		tPlugMap<KEY, T>::updateFinish(){
+			for(itr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+				itr->second.updateFinish();
+		}
+
+		template<typename KEY, typename T>
+		void
+		tPlugMap<KEY, T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
+		}
+
+		template<typename KEY, typename T>
+		void
+		tPlugMap<KEY, T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
+
+		}
+
+#	endif
 
 }
 

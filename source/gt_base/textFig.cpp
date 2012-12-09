@@ -52,14 +52,15 @@ cTextFig::patGetText(ptrLead aLead){
 	aLead->getPlug(&mText, xPT_text);
 }
 
-void
-cTextFig::save(cByteBuffer* pAddHere){
-	mText.save(pAddHere);
-}
+iFigment::dMigrationPattern
+cTextFig::getLoadPattern(){
+	dMigrationPattern pattern;
+	dVersionPlugs version1;
 
-void
-cTextFig::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
-	mText.loadEat(pBuff, pReloads);
+	version1.push_back(mText);
+
+	pattern.push_back(version1);
+	return pattern;
 }
 
 
@@ -68,7 +69,7 @@ cTextFig::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 #ifdef GTUT
 
 GTUT_START(test_string, textToNative){
-	const char *sampleA = "i'm ok, this isn't:";
+	const char *sampleA = "i'm ASCII, this isn't:";
 	const char *sampleB = "てすと";
 	dText textA;
 

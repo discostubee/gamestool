@@ -40,20 +40,18 @@ namespace gt{ //gamestool
 		static const cCommand::dUID	xSetRoot;	//!\todo	Rename to linkRoot. Gotta keep the term link consistent.
 		static const cCommand::dUID	xGetRoot;
 
+		//- Required
 		cAnchor();
 		virtual ~cAnchor();
 
-		//- Required
-		static const dPlaChar* identify(){ return "anchor"; }
-		virtual const dPlaChar* name() const { return identify(); }	//!<
+		GT_IDENTIFY("anchor");
+		GT_EXTENDS(cFigment);
 		virtual dNameHash hash() const { return getHash<cAnchor>(); }
-		static dNameHash extends(){ return getHash<cFigment>(); }
-		virtual dNameHash getExtension() const { return extends(); }
 
 		//- Optional
 		virtual void work(cContext* pCon);
-		virtual void save(cByteBuffer* pAddHereb);
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);
+		virtual void save(cByteBuffer* pAddHereb);	//!< Performs special saving.
+		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);	//!< Performs special loading.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 
 	protected:

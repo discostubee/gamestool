@@ -38,17 +38,17 @@
  *! fPtrSomething	A function pointer.
  *! patSomething	A patch through function used with commands.
  *
- *!\note		A little bit about some of the terms used around the place. This isn't shorthand exactly, so it get's it's own note coz it's special.
+ *!\note	A little bit about some of the terms used around the place. This isn't shorthand exactly, so it get's it's own note coz it's special.
  *! set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.
- *! copy		Copy a stream/buffer
+ *! copy	Copy a stream/buffer
  *! get		Return a primitive by copy, return a stream/buffer copy, return a reference to an object
- *! pass		Passes back something as a reference.
- *! link		Set a smart pointer to different, already existing, reference.
+ *! pass	Passes back something as a reference.
+ *! link	Set a smart pointer to different, already existing, reference.
  *! make	Return a fresh new instance of an object from a factory.
  *! clone	Make a duplicate of an object instance and return a smart pointer to the new clone.
- *! clear		Empty something so that it doesn't contain any data.
+ *! clear	Empty something so that it doesn't contain any data.
  *! blank	Change a link to being a blank or dead end (terminator) object.
- *! take		The function will clean up the memory it is being passed. In other word the object or function becomes the custodian of this memory.
+ *! take	The function will manage (cleanup) the memory it is being passed. In other word the object or function becomes the custodian of this memory.
  *! eat		A function that consumes a buffer parameter.
  *
  *!\note	Some notes about the terminology for the jack interface

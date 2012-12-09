@@ -16,12 +16,9 @@ namespace gt{
 		cPolyMesh_X11GL();
 		virtual ~cPolyMesh_X11GL();
 
-		static const dNatChar* identify(){ return "mesh X11GL"; }
-		virtual const dNatChar* name() const { return identify(); }
+		GT_IDENTIFY("polymesh gl");
+		GT_REPLACES(cPolyMesh);
 		virtual dNameHash hash() const { return getHash<cPolyMesh_X11GL>(); }
-
-		static dNameHash replaces(){ return getHash<cPolyMesh>(); }
-		virtual dNameHash getReplacement() const{ return cPolyMesh_X11GL::replaces(); }
 
 		virtual void run(cContext* pCon);	//!< Draw this mesh
 

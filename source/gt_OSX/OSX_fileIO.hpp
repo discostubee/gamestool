@@ -30,14 +30,12 @@ namespace gt{
 
 	class cOSX_fileIO: public cBase_fileIO, private tOutline<cOSX_fileIO>{
 	public:
-		static const dPlaChar* identify(){ return "OSX file IO"; }
-		static dNameHash replaces(){ return getHash<cBase_fileIO>(); }
 
 		cOSX_fileIO();
 		virtual ~cOSX_fileIO();
 
-		virtual const dPlaChar* name() const{ return cOSX_fileIO::identify(); }
-		virtual dNameHash getReplacement() const{ return replaces(); }
+		GT_IDENTIFY("OSX file");
+		GT_EXTENDS(cBase_fileIO);
 		virtual dNameHash hash() const{ return getHash<cOSX_fileIO>(); }
 
 	protected:

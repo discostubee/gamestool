@@ -40,11 +40,9 @@ public:
 	cWindowFrame_X11GL();
 	virtual ~cWindowFrame_X11GL();
 
-	static const char* identify(){ return "window frame X11GL"; }
-	virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
+	GT_IDENTIFY("window gl");
+	GT_REPLACES(cWindowFrame);
 	virtual dNameHash hash() const{ return getHash<cWindowFrame_X11GL>(); }
-	static dNameHash replaces(){ return getHash<cWindowFrame>(); }
-	virtual dNameHash getReplacement() const{ return replaces(); }
 
 	virtual void run(cContext* pCon);
 

@@ -45,17 +45,33 @@ namespace excep{
 
 ///////////////////////////////////////////////////////////////////////////////////
 // macros
+
+//!\brief	A helpful way to reducing pointless busy work.
 #define GT_IDENTIFY(x)\
 		static const dPlaChar* identify(){ return x; }\
-		virtual const dPlaChar* name() const { return identify(); }\0
+		virtual const dPlaChar* name() const { return identify(); }
 
+//!\brief	This is different to the normal c++ class inheritance because it gives you class the ability to accept commands
+//!			from its parent. So in this sense, you don't always need to exten a class.
+//!\note	A helpful way to reduce pointless busy work.
 #define GT_EXTENDS(x)\
-		static dNameHash extends(){ return x; }\
-		virtual dNameHash getExtension() const { return extends(); }\0
+		static dNameHash extends(){ return getHash<x>(); }\
+		virtual dNameHash getExtension() const { return extends(); }
 
+//!\brief	When this figment is drafted, it replaces the given one in the world. That means that when you request the old
+//!			figment, you get the new one instead.
+//!\note	A helpful way to reduce pointless busy work.
+#define GT_REPLACES(x)\
+		static dNameHash replaces(){ return getHash<x>(); }\
+		virtual dNameHash getReplacement() const{ return replaces(); }
+
+//!\brief	Using version (with a number above 0) means you have stuff you want to save. So you'll need to implement
+//!			the dMigrationPattern getLoadPattern() function
+//!\note	A helpful way to reduce pointless busy work.
 #define GT_VERSION(x)\
 		static dNumVer version(){ return x; }\
-		virtual dNumVer getVersion() const { return version(); }\0
+		virtual dNumVer getVersion() const { return version(); }\
+		virtual dMigrationPattern getLoadPattern();
 
 
 
@@ -148,8 +164,7 @@ namespace gt{
 		cEmptyFig();
 		virtual ~cEmptyFig();
 
-		static const dPlaChar* identify(){ return "empty figment"; }
-		virtual const dPlaChar* name() const{ return cEmptyFig::identify(); }
+		GT_IDENTIFY("empty figment");
 		virtual dNameHash hash() const{ return getHash<cEmptyFig>(); }
 	};
 
@@ -163,8 +178,7 @@ namespace gt{
 		cWorldShutoff();
 		virtual ~cWorldShutoff();
 
-		static const dPlaChar* identify(){ return "world shutoff"; }
-		virtual const dPlaChar* name() const{ return identify(); }
+		GT_IDENTIFY("world shutoff");
 		virtual dNameHash hash() const{ return getHash<cWorldShutoff>(); }
 
 		virtual void work(cContext* pCon);

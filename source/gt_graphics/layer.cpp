@@ -44,38 +44,6 @@ cLayer::cLayer(){
 cLayer::~cLayer(){
 }
 
-void
-cLayer::save(cByteBuffer* pAddHere){
-	tPlug< sWH<dUnitVDis> > size;
-	tPlug< sPoint2D<dUnitVDis> > pos;
-	tPlug< shape::rectangle<dUnitPix32> > crop;
-
-	size = getSize();
-	pos = getPos();
-	crop = getCrop();
-
-	//- The order of these saves must be the same in load.
-	mLink.save(pAddHere);
-	size.save(pAddHere);
-	pos.save(pAddHere);
-	crop.save(pAddHere);
-}
-
-void
-cLayer::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
-	tPlug< sWH<dUnitVDis> > size;
-	tPlug< sPoint2D<dUnitVDis> > pos;
-	tPlug< shape::rectangle<dUnitPix32> > crop;
-
-	mLink.loadEat(pBuff, pReloads);
-	size.loadEat(pBuff, pReloads);
-	pos.loadEat(pBuff, pReloads);
-	crop.loadEat(pBuff, pReloads);
-
-	setSize(size.get());
-	setPos(pos.get());
-	setCrop(crop.get());
-}
 
 void
 cLayer::getLinks(std::list<ptrFig>* pOutLinks){
