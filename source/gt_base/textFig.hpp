@@ -33,12 +33,10 @@ namespace gt{
 		cTextFig();
 		virtual ~cTextFig();
 
-		static const dPlaChar* identify(){ return "text fig"; }
-		virtual const dPlaChar* name() const{ return cTextFig::identify(); }
+		GT_IDENTIFY("text");
+		GT_EXTENDS(cFigment);
+		GT_VERSION(1);
 		virtual dNameHash hash() const{ return getHash<cTextFig>(); }
-
-		virtual void save(cByteBuffer* pAddHere);
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 
 	protected:
 		void patSetText(ptrLead aLead);

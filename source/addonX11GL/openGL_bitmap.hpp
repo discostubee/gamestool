@@ -17,12 +17,8 @@ namespace gt{
 		cBitmap_X11GL();
 		virtual ~cBitmap_X11GL();
 
-		static const char* identify(){ return "bitmap X11GL"; }
-		virtual const char* name() const{ return identify(); }
-
-		static dNameHash replaces(){ return getHash<cBitmap>(); }
-		virtual dNameHash getReplacement() const{ return replaces(); }
-
+		GT_IDENTIFY("bitmap gl");
+		GT_REPLACES(cBitmap);
 		virtual dNameHash hash() const { return getHash<cBitmap_X11GL>(); }
 
 		virtual void run(cContext *pCon);

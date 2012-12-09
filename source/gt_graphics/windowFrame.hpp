@@ -31,8 +31,7 @@ namespace gt{
 		virtual ~cWindowFrame();
 
 		//----- Stuff we must have.
-		static const dPlaChar* identify(){ return "window frame"; }
-		virtual const dPlaChar* name() const{ return identify(); }
+		GT_IDENTIFY("window");
 		virtual dNameHash hash() const{ return getHash<cWindowFrame>(); }
 
 	protected:

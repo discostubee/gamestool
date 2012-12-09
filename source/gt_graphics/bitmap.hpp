@@ -40,8 +40,7 @@ namespace gt{
 		cBitmap();
 		virtual ~cBitmap();
 
-		static const dPlaChar* identify(){ return "bitmap"; }
-		virtual const dPlaChar* name() const{ return identify(); }		//!< Virtual version of identify.
+		GT_IDENTIFY("bitmap");
 		virtual dNameHash hash() const { return getHash<cBitmap>(); }
 
 	protected:

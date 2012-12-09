@@ -15,10 +15,9 @@ namespace gt{
 	public:
 
 		//--- Required
-		static const dPlaChar* identify(){ return "3D camera X11GL"; }
-		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
+		GT_IDENTIFY("3d camera gl");
+		GT_REPLACES(c3DCamera);
 		virtual dNameHash hash() const { return getHash<c3DCamera_X11GL>(); }
-		static dNameHash replaces(){ return getHash<c3DCamera>(); }
 
 		c3DCamera_X11GL();
 		virtual ~c3DCamera_X11GL();
@@ -28,10 +27,9 @@ namespace gt{
 	public:
 
 		//--- Required
-		static const dPlaChar* identify(){ return "2D camera X11GL"; }
-		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
+		GT_IDENTIFY("2d camera gl");
+		GT_REPLACES(c2DCamera);
 		virtual dNameHash hash() const { return getHash<c2DCamera_X11GL>(); }
-		static dNameHash replaces(){ return getHash<c2DCamera>(); }
 
 		c2DCamera_X11GL();
 		virtual ~c2DCamera_X11GL();

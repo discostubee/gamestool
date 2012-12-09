@@ -41,18 +41,13 @@ namespace gt{
 			eFromSelf		//!< As a number of pixels from the centre of itself.
 		};
 
-		//--- Required stuff
-		static const dPlaChar* identify(){ return "layer"; }
-		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return getHash<cLayer>(); }
-
-
-		//--- Standard
 		cLayer();
 		virtual ~cLayer();
 
-		virtual void save(cByteBuffer* pAddHere);
-		virtual void loadEat(cByteBuffer *pBuff, dReloadMap *pReloads);
+		GT_IDENTIFY("layer");
+		GT_EXTENDS(cFigment);
+		virtual dNameHash hash() const { return getHash<cLayer>(); }
+
 		virtual void getLinks(std::list<ptrFig> *pOutLinks);
 
 	protected:

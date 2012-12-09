@@ -27,8 +27,7 @@ namespace gt{
 
 		//-----------------------------
 		// Standard
-		static const dPlaChar* identify(){ return "printworks"; }
-		virtual const dPlaChar* name() const{ return identify(); }		//!< Virtual version of identify.
+		GT_IDENTIFY("printworks");
 		virtual dNameHash hash() const { return getHash<cPrintworks>(); }
 
 	protected:

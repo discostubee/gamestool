@@ -119,35 +119,54 @@ namespace gt{
 	};
 
 	//------------------------------------------------------------------------------------------
-	//!\brief	Polymorph jar. Used so that you can exploit polymorphism by holding a pointer
-	//!			that the jar can either manage, or dangerously, let you manage.
+	//!\brief	Polymorph jar gives you the ability to handle a pointer, or just reference an
+	//!			unmanaged pointer.
 	template<typename T>
 	class tPMorphJar{
 	private:
+		typedef T* (*dCopyAlloc)(const void*);
+
 		T *data;
 		bool castodian;
+		dCopyAlloc fPtrCopAll;
+
+		template<typename REAL> static T* copyAlloc(const void *copyMe){
+			T *tmp = new REAL();
+			if(copyMe)
+				*reinterpret_cast<REAL*>(tmp) = *reinterpret_cast<const REAL*>(copyMe);
+			else
+				memset(tmp, 0, sizeof(REAL));
+			return tmp;
+		}
 
 	public:
 		explicit tPMorphJar() :
-			data(NULL), castodian(false)
+			data(NULL), castodian(false), fPtrCopAll(NULL)
 		{}
 
-		template<typename COPY> tPMorphJar(const COPY &copyMe) :
-			castodian(true)
+		explicit tPMorphJar(const tPMorphJar<T> &copyMe):
+			castodian(copyMe.castodian), fPtrCopAll(copyMe.fPtrCopAll)
 		{
-			data = new COPY();
-			*data = copyMe;
+			data = fPtrCopAll(copyMe.data);
 		}
 
-		template<typename COPY> tPMorphJar(const tPMorphJar<COPY> &copyMe) :
-			castodian(true)
+		template<typename COPY> tPMorphJar(const tPMorphJar<COPY> &copyMe):
+			fPtrCopAll(copyMe.fPtrCopAll)
 		{
-			if(copyMe.castodian){
-				data = new COPY();
-				*data = *copyMe.data;
+			if(fPtrCopAll){
+				data = fPtrCopAll(copyMe.data);
+				castodian = true;
+
 			}else{
 				data = copyMe.data;
+				castodian = false;
 			}
+		}
+
+		template<typename COPY> tPMorphJar(const COPY &copyMe) :
+			castodian(true), fPtrCopAll(copyAlloc<COPY>)
+		{
+			data = fPtrCopAll(&copyMe);
 		}
 
 		~tPMorphJar(){
@@ -156,55 +175,42 @@ namespace gt{
 		}
 
 		tPMorphJar<T> & operator = (const tPMorphJar<T> &otherJar){
-			if(&otherJar != this){
-				if(data==NULL)
-					return *this;
+			NOTSELF(&otherJar);
 
-				if(otherJar.castodian){
-					*data = *otherJar.data;
-
-				}else{
-					if(castodian)
-						delete data;
-
-					data = otherJar.data;
-					castodian = false;
-				}
-			}
-			return *this;
-		}
-
-		template<typename REF> tPMorphJar<T> & operator = (REF *refMe){
 			if(castodian)
 				delete data;
 
-			data = refMe;
-			castodian = false;
+			fPtrCopAll = otherJar.fPtrCopAll;
+			data = fPtrCopAll(otherJar.data);
+
 			return *this;
 		}
 
+		//!\brief	Create memory and Copy the target's values.
 		template<typename COPY> tPMorphJar<T> & operator = (const COPY &copyMe){
 			if(castodian)
 				delete data;
 
-			COPY *tmp = new COPY();
-			*tmp = copyMe;
-			data = tmp;
+			fPtrCopAll = copyAlloc<COPY>;
+			data = fPtrCopAll(&copyMe);
 			castodian = true;
 			return *this;
 		}
 
-		//!\brief	Pray to Tron that refMe doesn't go invalid.
-		tPMorphJar<T>& operator = (T *refMe){
+		//!\brief	The jar is simply just a reference to some memory. BE CAREFUL not to delete the memory
+		//!			before this jar is either deleted or given memory it can manage.
+		template<typename REF> tPMorphJar<T> & operator = (REF *refMe){
 			if(castodian)
 				delete data;
 
+			fPtrCopAll = NULL;
+
 			data = refMe;
 			castodian = false;
-
 			return *this;
 		}
 
+		//!\brief	Allows you access to the content directly. BE CAREFUL, it's not passing back a copy.
 		T& get(){
 			return *data;
 		}

@@ -38,21 +38,17 @@ namespace gt{ //gamestool
 		virtual ~cRunList();
 
 		//- Required
-		static const dPlaChar* identify(){ return "run list"; }
-		virtual const dPlaChar* name() const{ return identify(); }
+		GT_IDENTIFY("run list");
+		GT_EXTENDS(cFigment);
+		GT_VERSION(1);
 		virtual dNameHash hash() const{ return getHash<cRunList>(); }
-		static dNameHash extends(){ return getHash<cFigment>(); }
-		virtual dNameHash getExtension() const { return extends(); }
 
 		//- Optional
 		virtual void work(cContext* pCon);	//!< runs every element in the list
-		virtual void save(cByteBuffer* pAddHere);
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 
 	protected:
-		typedef std::vector< tPlug<ptrFig> > dList;
-		typedef dList::iterator dListItr;
+		typedef tPlugArray<ptrFig> dList;
 
 		dList mList;
 
@@ -65,7 +61,7 @@ namespace gt{ //gamestool
 	//!\todo	Save and Load.
 	class cValves: public cRunList{
 	protected:
-		std::map< dListItr, tPlug<bool> > mStates;	//!< Maps states to the list entries. These states control which objects are run.
+		tPlugMap<size_t, bool> mStates;	//!< Maps states to the list entries. These states control which objects are run.
 
 	public:
 		static const cPlugTag*	xPT_state;		//!< Turn turns valve on.
@@ -76,18 +72,13 @@ namespace gt{ //gamestool
 		cValves();
 		virtual ~cValves();
 
-		//- Required
-		static const dPlaChar* identify(){ return "valve station"; }
-		virtual const dPlaChar* name() const { return identify(); }
+		GT_IDENTIFY("valves");
+		GT_EXTENDS(cRunList);
+		GT_VERSION(1);
 		virtual dNameHash hash() const { return getHash<cValves>(); }
 
 		//- Optional
 		virtual void work(cContext* pCon);				//!< runs every element in the list
-		virtual void save(cByteBuffer* pAddHere);
-		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads);
-
-		static dNameHash extends(){ return getHash<cRunList>(); }
-		virtual dNameHash getExtension() const { return extends(); }
 
 	protected:
 		void patSetValve(ptrLead pLead);

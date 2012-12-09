@@ -18,8 +18,7 @@
 				cTestNum();
 				virtual ~cTestNum();
 
-				static const dPlaChar* identify(){ return "test number"; }
-				virtual const dPlaChar* name() const{ return cTestNum::identify(); }
+				GT_IDENTIFY("test num");
 				virtual dNameHash hash() const{ return getHash<cTestNum>(); }
 
 				virtual void save(cByteBuffer* pAddHere);

@@ -53,10 +53,9 @@ namespace gt{
 
 		//-----------------------------
 		// The stuff me must have.
-		static const dPlaChar* identify(){ return "polygon mesh"; }
-
+		GT_IDENTIFY("polymesh");
 		virtual dNameHash hash() const { return getHash<cPolyMesh>(); }
-		virtual const dPlaChar* name() const{ return identify(); }		//!< Virtual version of identify.
+
 
 		//-----------------------------
 		cPolyMesh();

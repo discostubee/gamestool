@@ -43,8 +43,9 @@ namespace gt{
 		cThread();
 		virtual ~cThread();
 
-		static const dPlaChar* identify(){ return "thread"; }
-		virtual const dPlaChar* name() const{ return cThread::identify(); }
+		GT_IDENTIFY("thread");
+		GT_EXTENDS(cFigment);
+		GT_VERSION(1);
 		virtual dNameHash hash() const{ return getHash<cThread>(); }
 
 		virtual void work(cContext* pCon);	//!< Begins a new thread if the link plug is set. Threads run through once and wait until this figment is run to go again. This is opposed to running a tight loop in every thread figment.
