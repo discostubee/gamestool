@@ -31,7 +31,7 @@ namespace gt{
 
 class X11GLAddon{
 public:
-	static const dPlaChar* getAddonName(){ return "X11GL"; }
+	static const dPlaChar* getAddonName() { return "X11GL"; }
 };
 
 class cWindowFrame_X11GL: public cWindowFrame, public tAddonDependent<X11GLAddon>{

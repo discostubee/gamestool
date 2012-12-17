@@ -94,8 +94,11 @@
 #	define DYN_LIB_DEF(rnt) rnt
 #endif
 
-#define WARN(x) gt::cWorld::primordial::warnError(x, __FILE__, __LINE__)
-#define WARN_S(x) {std::stringstream ss; ss << x; gt::cWorld::primordial::warnError(ss.str().c_str(), __FILE__, __LINE__);}
+#define WARN(x)\
+	gt::cWorld::primordial::warnError(x, __FILE__, __LINE__)
+
+#define WARN_S(x)\
+	{ std::stringstream ss; ss << x; gt::cWorld::primordial::warnError(ss.str().c_str(), __FILE__, __LINE__); }
 
 // Handy for all those (...) catch blocks.
 extern const char *MSG_UNKNOWN_ERROR;
@@ -104,19 +107,23 @@ extern const char *MSG_UNKNOWN_ERROR;
 #ifdef GTUT
 	//- Adds line flushing per test. Sadly, if a test fails the lines are not flushed until the next test. At this point I can't see a way to fix this.
 #	undef GTUT_END
-#	define GTUT_END catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
+#	define GTUT_END\
+		catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
 #endif
 
 #ifdef DEBUG
-#	define PROFILE	cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
-#	define DBUG_LO(x) { std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
+#	define PROFILE\
+		cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
+#	define DBUG_LO(x)\
+		{ std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
 #else
 #	define PROFILE
 #	define DBUG_LO(x)
 #endif
 
 #if defined(DBUG_VERBOSE) && defined(DEBUG)
-#	define DBUG_VERBOSE_LO(x) DBUG_LO(x)
+#	define DBUG_VERBOSE_LO(x)\
+		{ std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
 #else
 #	define DBUG_VERBOSE_LO(x)
 #endif
@@ -145,10 +152,7 @@ namespace gt{
 namespace gt{
 
 	//---------------------------------------------------------------------------------------------------
-	//!\brief	The world is a single object that ties the program together, as well as being the main 
-	//!			factory that creates figment-type objects. The world object is also a singleton that is 
-	//!			seen by every figment-type object and offers services to them. It also designed to 
-	//!			coordinate different heaps located in addons.
+	//!\brief	The world is both a factory and a service provider for pretty much every figment.
 	//!\note	Not threadsafe, so it must be accessed with a tMrSafety.
 	//!\todo	Prevent a collection of objects becoming an island which is separate from the root node, and
 	//!			thus will never be cleaned up. This will also be a huge problem when removing addons where
@@ -171,14 +175,6 @@ namespace gt{
 		virtual ~cWorld();
 
 		void setRoot(ptrFig pNewRoot);
-
-		virtual void lazyCloseAddon(const dStr &name);	//!\brief	Waits until the end of the current run loop before it actually closes the addon.
-
-		//--------------------------------------------------------
-		// Logging and info services
-		void lo(const dStr& pLine);	//!< Add a line to be displayed in the console.
-		void warnError(const char *msg, const char* pFile, const unsigned int pLine);	//!< logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
-		void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);	//!< Allows you to pass the error type directly.
 
 		//--------------------------------------------------------
 		// Blueprint stuff
@@ -212,8 +208,9 @@ namespace gt{
 		//!			(apart from the one being unregged) remain valid.
 		void unregContext(dConSig pSig);
 
+		bool activeContext(dConSig pSig);	//!< Is this context still alive?
 
-		bool activeContext(dConSig pSig);	//!<	Is this context still alive?
+		void lazyCloseAddon(const dPlaChar* pAddonName);	//!< This is called from addon dependent figments, so we can't directly call closeAddon.
 
 		//--------------------------------------------------------
 		// Get stuff
@@ -245,8 +242,8 @@ namespace gt{
 		virtual dMillisec getAppTime() { return 0; }
 		virtual void loop() {}	//!< Enter the main program loop. Continues looping until it is told to stop.
 		virtual void flushLines	();		//!< Process the lines to be displayed on the console. Uses std::cout by default
-		virtual void openAddon(const dStr &name) { DONT_USE_THIS; }		//!\brief	Opens an addon with the given name
-		virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }
+		virtual void openAddon(const dStr &name) { DONT_USE_THIS; }		//!< Opens an addon with the given name
+		virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }	//!< Actually close the addon.
 
 		//---------------------------------------------------------------------------------------------------
 		//!\brief	primodial is used to manage services that are present before a world is available.
@@ -298,6 +295,9 @@ namespace gt{
 
 			friend class gt::cWorld;
 
+			//--------------------------------------------------------
+			virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }
+
 		private:
 			primordial();
 		};
@@ -306,17 +306,17 @@ namespace gt{
 	protected:
 
 		// references from primordial.
-		dLines* mLines;
-		cProfiler* mProfiler;
+		dLines* mLines;	//!< points to the static global that holds all the lines that need flushing.
+		cProfiler* mProfiler;	//!< points to the static global.
 #		ifdef GT_THREADS
 			boost::recursive_mutex *mProfileGuard;
 			boost::recursive_mutex *mLineGuard;
 #		endif
 
 		ptrFig mRoot;
-		std::list<dStr> mAddonsToClose;
+		std::list<dStr> mAddonsToClose;	//!< List of addons to close next cycle.
 
-		virtual void copyWorld(cWorld* pWorld);
+		virtual void copyWorld(cWorld* pWorld);	//!< Virtual in case the child class needs other things copied.
 
 		friend class primordial;
 
@@ -338,10 +338,11 @@ namespace gt{
 
 	extern tMrSafety<cWorld> gWorld;	//!< Gives you threadsafe access to the world.
 
+
 	//---------------------------------------------------------------------------------------------------
 	//!\brief	Any figments that come from an addon are dependent on that addon (so you inherit from it).
-	//!			Provides a way to see what addon a figment is dependent on, and informs the world when
-	//!			there are no more figments dependent on an addon.S
+	//!			When no more of these figments are open, the world closes the addon.
+	//!\note	Expects ADDON to be a class with member "static const dPlaChar* getAddonName()"
 	template<typename ADDON>
 	class tAddonDependent{
 	private:
@@ -349,22 +350,20 @@ namespace gt{
 
 	public:
 		tAddonDependent(){
-			//- chicken or the egg?
-			//if(instCount==0){
-			//	gWorld.get()->openAddon( ADDON::getName() );
-			//}
 			++instCount;
 		}
 
 		virtual ~tAddonDependent(){
-	   	   	   --instCount;
 			try{
-	   	   	   if(instCount<=0)
-	   	   		   gWorld.get()->lazyCloseAddon( ADDON::getAddonName() );
+				--instCount;
+				if(instCount<=0)
+					gWorld.get()->lazyCloseAddon( ADDON::getAddonName() );
 			}catch(...){}
 		}
+
    		virtual const dPlaChar* requiredAddon() const { return ADDON::getAddonName(); }	//!< Returns name of addon that this figment comes from. An empty string means that no addon is required.
 	};
+
 	template<typename ADDON> int tAddonDependent<ADDON>::instCount = 0;
 }
 

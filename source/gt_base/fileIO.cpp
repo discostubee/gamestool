@@ -79,7 +79,7 @@ cBase_fileIO::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-	version1.push_back(mPath);
+	version1.push_back(&mPath);
 
 	pattern.push_back(version1);
 	return pattern;

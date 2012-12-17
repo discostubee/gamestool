@@ -21,6 +21,7 @@ cOSXWorld::~cOSXWorld(){
 		for(std::list<dStr>::iterator itr = mAddonsToClose.begin(); itr != mAddonsToClose.end(); ++itr)
 			closeAddon(*itr);
 
+		mAddonsToClose.clear();
 		mRoot.redirect(NULL);	//so that our console displays that all figments were destroyed.
 		flushLines();
 	}catch(...){
@@ -43,6 +44,7 @@ cOSXWorld::loop(){
 
 		for(itrAddonsToClose = mAddonsToClose.begin(); itrAddonsToClose != mAddonsToClose.end(); ++itrAddonsToClose)
 			closeAddon(*itrAddonsToClose);
+		mAddonsToClose.clear();
 
 		flushLines();
 	}
@@ -50,7 +52,6 @@ cOSXWorld::loop(){
 
 void
 cOSXWorld::flushLines(){
-	//std::cout << "flush from "<< mLines << ", "<< mLines->size() <<" lines" << std::endl;
 	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
 		std::cout << (*i) << std::endl;
 	}
@@ -77,7 +78,7 @@ cOSXWorld::openAddon(const dStr &name){
 		libPath += ".dylib";
 	#endif
 
-	DBUG_LO("using OSX to load shared library " << libPath);
+	DBUG_LO("using OSX to load shared library " << name << ", with path " << libPath);
 
 	void *handLib = dlopen(libPath.c_str(), RTLD_LAZY);
 	if(handLib != NULL){
@@ -87,6 +88,7 @@ cOSXWorld::openAddon(const dStr &name){
 
 		if( fn != NULL ){
 			(*fn)(gWorld.get().get());
+			mAddonsToClose.push_back(name);
 		}else{
 			WARN_S("Unable to use shared library function 'draftAll' because " << dlerror());
 		}

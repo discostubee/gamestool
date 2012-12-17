@@ -86,7 +86,7 @@ namespace gt{
 	class tMrSafety{
 	public:
 		tMrSafety();
-		virtual ~tMrSafety();
+		~tMrSafety();
 
 		void take(T* takeMe); 		//!< Cleans up the old data if it exists, and becomes the custodian of the data being past in. Waits to acquire lock.
 		void cleanup();				//!< Deletes data. Waits to acquire lock.
@@ -172,15 +172,7 @@ template<typename T>
 tMrSafety<T>::~tMrSafety()
 {
 	try{
-#	ifdef GT_THREADS
-		while(inWild > 0){
-			muData.unlock();
-			--inWild;
-		}
-		delete mData;
-#	else
-		delete mData;
-#	endif
+		cleanup();
 	}catch(...){
 	}
 }
@@ -201,9 +193,7 @@ tMrSafety<T>::cleanup() {
 #	ifdef GT_THREADS
 		dMuLock lock(muData);
 #	endif
-
-	delete mData;
-	mData = NULL;
+	SAFEDEL(mData);
 }
 
 template<typename T>

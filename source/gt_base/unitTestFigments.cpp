@@ -4,6 +4,7 @@
 #if defined(DEBUG) && defined(GTUT)
 	using namespace gt;
 
+	////////////////////////////////////////////////////////////
 	const cPlugTag *cTestNum::xPT_num = tOutline<cTestNum>::makePlugTag("number");
 
 	const cCommand::dUID	cTestNum::xGetData = tOutline<cTestNum>::makeCommand(
@@ -34,6 +35,24 @@
 
 	void cTestNum::patSetData(ptrLead aLead){
 		aLead->getPlug(&myNum, xPT_num);
+	}
+
+	////////////////////////////////////////////////////////////
+	const cPlugTag *cSaveTester::xPT_str = tOutline<cSaveTester>::makePlugTag("my str");
+
+	const cPlugTag *cSaveTester::xPT_num = tOutline<cSaveTester>::makePlugTag("my num");
+
+	const cCommand::dUID	cSaveTester::xGetData = tOutline<cSaveTester>::makeCommand(
+		"get my string", &cSaveTester::patGetData,
+		xPT_str,
+		xPT_num,
+		NULL
+	);
+
+	void
+	cSaveTester::patGetData(ptrLead aLead){
+		aLead->addPlug(&myStr, xPT_str);
+		aLead->addPlug(&myNum, xPT_num);
 	}
 
 #endif

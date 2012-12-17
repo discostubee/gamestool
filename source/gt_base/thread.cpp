@@ -134,7 +134,7 @@ cThread::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-	version1.push_back(link);
+	version1.push_back(&link);
 
 	pattern.push_back(version1);
 	return pattern;

@@ -36,18 +36,20 @@ cRunList::~cRunList(){
 void
 cRunList::work(cContext* pCon){
 	PROFILE;
+	ASRT_NOTNULL(pCon);
 
-	for(dList::itr_t i = mList.mContainer.begin(); i != mList.mContainer.end(); ++i){
+	for(dList::itr_t i = mList.getItr(); i.stillGood(); ++i)
 		(*i).get()->run(pCon);
-	}
 }
 
 cFigment::dMigrationPattern
 cRunList::getLoadPattern(){
+	PROFILE;
+
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-	version1.push_back(mList);
+	version1.push_back(&mList);
 
 	pattern.push_back(version1);
 	return pattern;
@@ -55,10 +57,10 @@ cRunList::getLoadPattern(){
 
 void
 cRunList::getLinks(std::list<ptrFig>* pOutLinks){
+	PROFILE;
 	ASRT_NOTNULL(pOutLinks);
-
-	for(dList::itr_t i = mList.mContainer.begin(); i != mList.mContainer.end(); ++i){
-		pOutLinks->push_back( i->get() );
+	for(dList::itr_t itr = mList.getItr(); itr.stillGood(); ++itr){
+		pOutLinks->push_back(itr.get().get());
 	}
 }
 
@@ -68,68 +70,16 @@ cRunList::patAdd(ptrLead aLead){
 
 	std::vector< tPlug<ptrFig> > plugs;
 	aLead->getPile(&plugs);
+	mList += plugs;
 
-	for(dList::itr_t itr = plugs.begin(); itr != plugs.end(); ++itr){
-		mList.mContainer.push_back( *itr );
-	}
 }
 
-////////////////////////////////////////////////////////////
-using namespace gt;
-
-const cPlugTag* cValves::xPT_state = tOutline<cValves>::makePlugTag("valve state");
-const cPlugTag* cValves::xPT_valveIdx = tOutline<cValves>::makePlugTag("Valve index");
-
-const cCommand::dUID cValves::xSetState = tOutline<cValves>::makeCommand(
-	"set valve",
-	&cValves::patSetValve,
-	NULL
-);
-
-cValves::cValves(){
-}
-
-cValves::~cValves(){
-}
-
-void
-cValves::work(cContext* pCon){
-	PROFILE;
-
-	for(size_t idx = 0; idx != mList.mContainer.size(); ++idx){
-		if( mStates.mContainer[idx].get() )
-			mList.mContainer[idx].get()->run(pCon);
-	}
-}
-
-cFigment::dMigrationPattern
-cValves::getLoadPattern(){
-	dMigrationPattern pattern;
-	dVersionPlugs version1;
-
-	version1.push_back(mList);
-	version1.push_back(mStates);
-
-	pattern.push_back(version1);
-	return pattern;
-}
-
-void
-cValves::patSetValve(ptrLead pLead){
-	//!\todo
-}
 
 #ifdef GTUT
 
 GTUT_START(test_cRunList, test_suit){
 	tOutline<cFigment>::draft();
 	figmentTestSuit<cRunList>();
-}GTUT_END;
-
-GTUT_START(test_cValves, test_suit){
-	tOutline<cFigment>::draft();
-	tOutline<cRunList>::draft();
-	figmentTestSuit<cValves>();
 }GTUT_END;
 
 #endif

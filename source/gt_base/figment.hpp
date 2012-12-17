@@ -87,7 +87,7 @@ namespace gt{
 
 		//-----------------------------
 		// Commands and plug tags
-		static const cPlugTag*	xPT_serialBuff;	//!< A smart pointer to the buffer where we load from, and save to.
+		static const cPlugTag* xPT_serialBuff;	//!< A smart pointer to the buffer where we load from, and save to.
 		static const cPlugTag* xPT_loadingParty;	//!< This is a special group of figments relevant to loading.
 
 		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability. Expects a xPT_serialBuff.

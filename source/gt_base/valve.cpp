@@ -16,48 +16,69 @@
  *********************************************************************************************************
 */
 
-#include "textFig.hpp"
+#include "valve.hpp"
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag* cTextFig::xPT_text = tOutline<cTextFig>::makePlugTag("text");
+const cPlugTag* cValve::xPT_link = tOutline<cValve>::makePlugTag("link");
+const cPlugTag* cValve::xPT_state = tOutline<cValve>::makePlugTag("state");
 
-const cCommand::dUID cTextFig::xSetText = tOutline<cTextFig>::makeCommand(
-	"set text", &cTextFig::patSetText,
-	cTextFig::xPT_text,
+const cCommand::dUID cValve::xSetLink = tOutline<cValve>::makeCommand(
+	"set link", &cValve::patSetLink,
+	cValve::xPT_link,
 	NULL
 );
 
-const cCommand::dUID cTextFig::xGetText = tOutline<cTextFig>::makeCommand(
-	"get text", &cTextFig::patGetText,
-	cTextFig::xPT_text,
+const cCommand::dUID cValve::xSetState = tOutline<cValve>::makeCommand(
+	"set state", &cValve::patSetState,
+	cValve::xPT_state,
 	NULL
 );
 
-cTextFig::cTextFig(){
-	addUpdRoster(&mText);
+const cCommand::dUID cValve::xGetState = tOutline<cValve>::makeCommand(
+	"get state", &cValve::patGetState,
+	cValve::xPT_state,
+	NULL
+);
+
+cValve::cValve(){
+	addUpdRoster(&mLink);
+	addUpdRoster(&mState);
+
+	mState = true;
 }
 
-cTextFig::~cTextFig(){
+cValve::~cValve(){
 }
 
 void
-cTextFig::patSetText(ptrLead aLead){
-	aLead->setPlug(&mText, xPT_text);
+cValve::getLinks(std::list<ptrFig>* pOutLinks){
+	pOutLinks->push_back(mLink.get());
 }
 
 void
-cTextFig::patGetText(ptrLead aLead){
-	aLead->getPlug(&mText, xPT_text);
+cValve::patSetLink(ptrLead aLead){
+	aLead->setPlug(&mLink, xPT_link);
+}
+
+void
+cValve::patSetState(ptrLead aLead){
+	aLead->setPlug(&mState, xPT_state);
+}
+
+void
+cValve::patGetState(ptrLead aLead){
+	aLead->getPlug(&mState, xPT_state);
 }
 
 iFigment::dMigrationPattern
-cTextFig::getLoadPattern(){
+cValve::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-	version1.push_back(&mText);
+	version1.push_back(&mLink);
+	version1.push_back(&mState);
 
 	pattern.push_back(version1);
 	return pattern;
@@ -68,23 +89,9 @@ cTextFig::getLoadPattern(){
 
 #ifdef GTUT
 
-GTUT_START(test_string, textToNative){
-	const char *sampleA = "i'm ASCII, this isn't:";
-	const char *sampleB = "てすと";
-	dText textA;
-
-	textA.t.append(sampleA);
-	textA.t.append(sampleB);
-	dNatStr nstr= toNStr(textA);
-	GTUT_ASRT(nstr.t.compare(sampleA)==0, "conversions failed.");
-}GTUT_END;
-
-GTUT_START(test_string, platformToText){
-	const char *sample = "test me!";
-	dStr pstr = sample;
-	dText text = toText(pstr);
-	pstr = toPStr(text);
-	GTUT_ASRT(pstr.compare(sample)==0, "conversions failed.");
+GTUT_START(test_cValve, test_suit){
+	tOutline<cValve>::draft();
+	figmentTestSuit<cValve>();
 }GTUT_END;
 
 #endif
