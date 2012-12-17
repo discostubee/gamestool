@@ -103,23 +103,25 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 
 	dVersionPlugs::iterator itrPrev, itrPrevEnd, itrCur;
 
-	for(size_t idxVer = numVer.get(); idxVer < loadPattern.size(); ++idxVer){
-		itrCur = loadPattern[idxVer].begin();
-		if(idxVer==0){
-			while(itrCur != loadPattern[0].end()){
-				itrPrev->get().loadEat( pLoadFrom, aReloads );
-				++itrCur;
-			}
+	if(numVer.get() > 0){
+		for(size_t idxVer = numVer.get()-1; idxVer < loadPattern.size(); ++idxVer){
+			itrCur = loadPattern[idxVer].begin();
+			if(idxVer==0){
+				while(itrCur != loadPattern[0].end()){
+					itrCur->get().loadEat( pLoadFrom, aReloads );
+					++itrCur;
+				}
 
-		}else{
-			itrPrev = loadPattern[idxVer-1].begin();
-			itrPrevEnd = loadPattern[idxVer-1].end();
-			for(itrCur=loadPattern[idxVer].begin(); itrCur!=loadPattern[idxVer].end(); ++itrCur){
-				if(itrPrev != itrPrevEnd){
-					itrCur->get() = itrPrev->get();
-					++itrPrev;
-				}else{
-					break;
+			}else{
+				itrPrev = loadPattern[idxVer-1].begin();
+				itrPrevEnd = loadPattern[idxVer-1].end();
+				for(itrCur=loadPattern[idxVer].begin(); itrCur!=loadPattern[idxVer].end(); ++itrCur){
+					if(itrPrev != itrPrevEnd){
+						itrCur->get() = itrPrev->get();
+						++itrPrev;
+					}else{
+						break;
+					}
 				}
 			}
 		}

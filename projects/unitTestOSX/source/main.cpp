@@ -33,8 +33,6 @@ int
 main(int argc, char **argv){
 	int result = EXIT_SUCCESS;
 
-	gWorld.take( new cOSXWorld() );
-
 	try{
 		std::cout
 			<< "Running gamestool tests for OSX. Version 0.2. "
@@ -43,28 +41,29 @@ main(int argc, char **argv){
 	#endif
 			<< std::endl;
 
-		gt::tOutline<gt::cFigment>::draft();
-		gt::tOutline<gt::cEmptyFig>::draft();
-		gt::tOutline<gt::cWorldShutoff>::draft();
+		try{
+			gWorld.take( new cOSXWorld() );
 
-		gWorld.get()->openAddon("X11GL");
-		ptrFig window = gWorld.get()->makeFig("window frame");
+		#ifdef GTUT_GOOGLE
+			::testing::InitGoogleTest(&argc, argv);
+			result = RUN_ALL_TESTS();
+		#endif
 
-	#ifdef GTUT_GOOGLE
-		::testing::InitGoogleTest(&argc, argv);
-		result = RUN_ALL_TESTS();
-	#endif
+		}catch(excep::base_error &e){
+			std::cout << e.what() << std::endl;
+		}
 
-	}catch(excep::base_error &e){
-		WARN(e);
+		gt::gWorld.cleanup();	//- Must do this here otherwise the cleanup order isn't assured.
+
+		std::ofstream profileReport("profile_report.txt");
+		gt::cWorld::primordial::makeProfileReport(profileReport);
+		profileReport.close();
+
+		cTracker::makeReport(std::cout);
+
+	}catch(std::exception &e){
+		std::cout << e.what() << std::endl;
 	}
-
-	std::ofstream profileReport("profile_report.txt");
-	gt::cWorld::primordial::makeProfileReport(profileReport);
-	profileReport.close();
-
-	gt::gWorld.get()->flushLines();
-	gt::gWorld.cleanup();
 
 	return result;
 }
@@ -73,10 +72,8 @@ main(int argc, char **argv){
 namespace gt{
 	GTUT_START(testOSX, loadAddon){
 		gWorld.get()->openAddon("X11GL");
-		ptrFig window = gWorld.get()->makeFig("window frame");
-	}GTUT_END;
 
-	GTUT_START(testOSX, unload){
+		ptrFig window = gWorld.get()->makeFig("window");
 	}GTUT_END;
 }
 #endif

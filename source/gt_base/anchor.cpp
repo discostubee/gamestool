@@ -80,7 +80,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 		DBUG_VERBOSE_LO("anchor saving " << figs.size() << " figments" );
 
-		{	//- First, we must list any required figments
+		{	//- First, we must list any required addons
 			std::list<dStr> addons;
 			std::list<dStr>::iterator itrA;
 			for(std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i){
@@ -252,59 +252,10 @@ cAnchor::getLinks(std::list<ptrFig>* pOutLinks){
 
 #ifdef GTUT
 
-GTUT_START(test_cAnchor, test_suit){
-	tOutline<cFigment>::draft();
-	figmentTestSuit<cAnchor>();
-}GTUT_END;
-
 #include "runList.hpp"
-
-class cSaveTester: public cFigment, private tOutline<cSaveTester>{
-public:
-	static const cPlugTag *xPT_str, *xPT_num;
-	static const cCommand::dUID	xGetData;
-
-	cSaveTester(){}
-	cSaveTester(const dPlaChar* inStr, int pNum) : myStr(inStr), myNum(pNum) {}
-	virtual ~cSaveTester(){}
-
-	static const dPlaChar* identify(){ return "save tester"; }
-	virtual const dPlaChar* name() const{ return cSaveTester::identify(); }
-	virtual dNameHash hash() const{ return getHash<cSaveTester>(); }
-
-	virtual void save(cByteBuffer* pAddHere) {
-		myStr.save(pAddHere); myNum.save(pAddHere);
-	}
-
-	virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL) {
-		myStr.loadEat(pBuff, pReloads); myNum.loadEat(pBuff, pReloads);
-	}
-private:
-	tPlug<dStr> myStr;
-	tPlug<int> myNum;
-
-	void patGetData(ptrLead aLead);
-};
-
-const cPlugTag *cSaveTester::xPT_str = tOutline<cSaveTester>::makePlugTag("my str");
-
-const cPlugTag *cSaveTester::xPT_num = tOutline<cSaveTester>::makePlugTag("my num");
-
-const cCommand::dUID	cSaveTester::xGetData = tOutline<cSaveTester>::makeCommand(
-	"get my string", &cSaveTester::patGetData,
-	xPT_str,
-	xPT_num,
-	NULL
-);
-
-void
-cSaveTester::patGetData(ptrLead aLead){
-	aLead->addPlug(&myStr, xPT_str);
-	aLead->addPlug(&myNum, xPT_num);
-}
+#include "unitTestFigments.hpp"
 
 tPlug<iFigment::ptrBuff> plugBuff;
-//const dTextChar *testStr = L"proper job";
 const dPlaChar *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
@@ -315,7 +266,7 @@ GTUT_START(testAnchor, basicSave){
 	tPlug<ptrFig> tester;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 
-	plugBuff = iFigment::ptrBuff( iFigment::ptrBuff(new cByteBuffer()) );
+	plugBuff = iFigment::ptrBuff(new cByteBuffer());
 	tester = ptrFig(new cSaveTester(testStr, 42));
 
 	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot);
@@ -359,11 +310,12 @@ GTUT_START(testAnchor, basicLoad){
 }GTUT_END;
 
 
-GTUT_START(testAnchor, figmentSave){
+GTUT_START(testAnchor, chainSave){
 	tOutline<cFigment>::draft();
 	tOutline<cSaveTester>::draft();
 	tOutline<cAnchor>::draft();
 	tOutline<cRunList>::draft();
+
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> rlist = gWorld.get()->makeFig(getHash<cRunList>());
@@ -384,31 +336,44 @@ GTUT_START(testAnchor, figmentSave){
 
 }GTUT_END;
 
-GTUT_START(testAnchor, figmentLoad){
+GTUT_START(testAnchor, chainLoad){
+	tOutline<cFigment>::draft();
 	tOutline<cSaveTester>::draft();
 	tOutline<cAnchor>::draft();
 	tOutline<cRunList>::draft();
+
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	dReloadMap dontcare;
 
 	ank->loadEat(plugBuff.get().get(), &dontcare);
 
-	std::list<ptrFig> links;
-	ank->getLinks(&links);
-	if(links.empty())
-		GTUT_ASRT(false, "root of anchor not in links list");
+	std::list<ptrFig> ankLinks;
+	ank->getLinks(&ankLinks);
+	if(ankLinks.empty() || strcmp( ankLinks.front()->name(), cRunList::identify() )!=0 )
+		GTUT_ASRT(false, "run list wasn't the root of anchor");
 
-	links.front()->getLinks(&links);
+	std::list<ptrFig> runLinks;
+	ankLinks.front()->getLinks(&runLinks);
 
-	if(links.size() != 2)
-		GTUT_ASRT(false, "tester not in links list");
+	if(runLinks.empty() || strcmp( runLinks.front()->name(), cSaveTester::identify() )!=0 )
+		GTUT_ASRT(false, "run list doesn't have the save tester");
 
-	links.pop_front();
-
-	GTUT_ASRT(strncmp( links.front()->name(), cSaveTester::identify(), strlen( cSaveTester::identify()) )==0, "didn't save/load correct figment");
+	GTUT_ASRT(
+		strncmp(
+			runLinks.front()->name(),
+			cSaveTester::identify(),
+			strlen( cSaveTester::identify())
+		)==0,
+		"didn't save/load correct figment"
+	);
 
 	plugBuff.get().reset();
+}GTUT_END;
+
+GTUT_START(test_cAnchor, test_suit){
+	tOutline<cFigment>::draft();
+	figmentTestSuit<cAnchor>();
 }GTUT_END;
 
 #endif

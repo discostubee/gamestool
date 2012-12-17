@@ -119,8 +119,8 @@ namespace gt{
 	};
 
 	//------------------------------------------------------------------------------------------
-	//!\brief	Polymorph jar gives you the ability to handle a pointer, or just reference an
-	//!			unmanaged pointer.
+	//!\brief	Polymorph jar gives you the ability to pass about a managed or unmanaged pointer,
+	//!			without forcing the user to know which of the two it is.
 	template<typename T>
 	class tPMorphJar{
 	private:
@@ -147,7 +147,14 @@ namespace gt{
 		explicit tPMorphJar(const tPMorphJar<T> &copyMe):
 			castodian(copyMe.castodian), fPtrCopAll(copyMe.fPtrCopAll)
 		{
-			data = fPtrCopAll(copyMe.data);
+			if(fPtrCopAll){
+				data = fPtrCopAll(copyMe.data);
+				castodian = true;
+
+			}else{
+				data = copyMe.data;
+				castodian = false;
+			}
 		}
 
 		template<typename COPY> tPMorphJar(const tPMorphJar<COPY> &copyMe):
@@ -169,6 +176,12 @@ namespace gt{
 			data = fPtrCopAll(&copyMe);
 		}
 
+		template<typename COPY> tPMorphJar(COPY *refMe) :
+			castodian(false), fPtrCopAll(NULL)
+		{
+			data = refMe;
+		}
+
 		~tPMorphJar(){
 			if(castodian)
 				delete data;
@@ -181,7 +194,11 @@ namespace gt{
 				delete data;
 
 			fPtrCopAll = otherJar.fPtrCopAll;
-			data = fPtrCopAll(otherJar.data);
+
+			if(fPtrCopAll)
+				data = fPtrCopAll(otherJar.data);
+			else
+				data = NULL;
 
 			return *this;
 		}

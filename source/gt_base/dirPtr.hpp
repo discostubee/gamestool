@@ -111,7 +111,7 @@ namespace gt{
 					mDir->unlink(); // Only bother if you're not the last one.
 			}
 		}catch(...){
-			//std::cout << "what the fuck" << std::endl;	//!\todo, something better.
+			std::cout << "what the fuck" << std::endl;	//!\todo, something better.
 		}
 	}
 

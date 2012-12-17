@@ -38,9 +38,9 @@ namespace gt{
 	template<typename CONTAINER>
 	class tPlugLinierContainer : public cBase_plug{
 	public:
-		typedef typename CONTAINER::iterator itr_t;
+		typedef tCoolItr<CONTAINER> itr_t;
 
-		CONTAINER mContainer;
+		CONTAINER mContainer;	//!< Exposed to make things easy.
 
 		tPlugLinierContainer();
 		virtual ~tPlugLinierContainer();
@@ -48,17 +48,22 @@ namespace gt{
 		virtual void save(cByteBuffer* pSaveHere);
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL);
 
+		tPlugLinierContainer<CONTAINER>& operator=(const tPlugLinierContainer<CONTAINER> &pCopyMe);
 		virtual	cBase_plug& operator= (const cBase_plug &pD);
+		virtual	cBase_plug& operator= (const CONTAINER &pCopyMe);
 		virtual bool operator== (const cBase_plug &pD) const;
+
+		template<typename OTHER> tPlugLinierContainer<CONTAINER>& operator+=(const OTHER &pCopyMe);
+
+		itr_t getItr();
 
 #		ifdef GT_THREADS
 			virtual void updateStart();
 			virtual void updateFinish();
 #		endif
 
-		tPlugLinierContainer<CONTAINER> operator=(const tPlugLinierContainer<CONTAINER> &copyMe);
-
 	protected:
+		typedef typename CONTAINER::iterator fullitr_t;	//!< Container iterator.
 
 		virtual void actualCopyInto(void* pContainer, dPlugType pType) const;
 		virtual void actualCopyFrom(const void* pContainer, dPlugType pType);
@@ -155,18 +160,31 @@ namespace gt{
 	tPlugLinierContainer<CONTAINER>::save(cByteBuffer* pSaveHere){
 		size_t s = mContainer.size();
 		pSaveHere->add( &s );
-		for(itr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+		for(fullitr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
 			itr->save(pSaveHere);
 	}
 
 	template<typename CONTAINER>
 	void
 	tPlugLinierContainer<CONTAINER>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
-		size_t s=0;
+		typedef typename CONTAINER::value_type element;
+
+		size_t s=0, i=0;
 		pChewToy->trimHead( pChewToy->fill(&s) );
-		mContainer.insert(mContainer.begin(), s, 0);
-		for(itr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
-			itr->loadEat(pChewToy, aReloads);
+		mContainer.reserve(s);
+		while(i < s){
+			mContainer.push_back(element());
+			mContainer.back().loadEat(pChewToy, aReloads);
+			++i;
+		}
+	}
+
+	template<typename CONTAINER>
+	tPlugLinierContainer<CONTAINER>&
+	tPlugLinierContainer<CONTAINER>::operator=(const tPlugLinierContainer<CONTAINER> &copyMe){
+		NOTSELF(&copyMe);
+		mContainer = copyMe.mContainer;
+		return *this;
 	}
 
 	template<typename CONTAINER>
@@ -178,18 +196,39 @@ namespace gt{
 	}
 
 	template<typename CONTAINER>
+	cBase_plug&
+	tPlugLinierContainer<CONTAINER>::operator= (const CONTAINER &pCopyMe){
+		mContainer = pCopyMe;
+		return *this;
+	}
+
+	template<typename CONTAINER>
 	bool
 	tPlugLinierContainer<CONTAINER>::operator== (const cBase_plug &pD) const{
 		return (mType == pD.mType);
 	}
 
 	template<typename CONTAINER>
-	tPlugLinierContainer<CONTAINER>
-	tPlugLinierContainer<CONTAINER>::operator=(const tPlugLinierContainer<CONTAINER> &copyMe){
-		NOTSELF(&copyMe);
-		mContainer = copyMe.mContainer;
+	template<typename OTHER>
+	tPlugLinierContainer<CONTAINER>&
+	tPlugLinierContainer<CONTAINER>::operator+=(const OTHER &pCopyMe){
+		mContainer.reserve(mContainer.size() + pCopyMe.size());
+		for(
+			typename OTHER::const_iterator itr = pCopyMe.begin();
+			itr != pCopyMe.end();
+			++itr
+		)
+			mContainer.push_back(*itr);
+
 		return *this;
 	}
+
+	template<typename CONTAINER>
+	tCoolItr<CONTAINER>
+	tPlugLinierContainer<CONTAINER>::getItr(){
+		return tCoolItr<CONTAINER>(&mContainer);
+	}
+
 
 	template<typename CONTAINER>
 	void
@@ -214,14 +253,14 @@ namespace gt{
 		template<typename CONTAINER>
 		void
 		tPlugLinierContainer<CONTAINER>::updateStart(){
-			for(itr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+			for(fullitr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
 				itr->updateStart();
 		}
 
 		template<typename CONTAINER>
 		void
 		tPlugLinierContainer<CONTAINER>::updateFinish(){
-			for(itr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+			for(fullitr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
 				itr->updateFinish();
 		}
 

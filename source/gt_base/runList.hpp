@@ -48,40 +48,11 @@ namespace gt{ //gamestool
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 
 	protected:
-		typedef tPlugArray<ptrFig> dList;
+		typedef tPlugList<ptrFig> dList;
 
 		dList mList;
 
 		void patAdd(ptrLead aLead);
-	};
-
-	//-----------------------------------------------------------------------------------------------
-	//!\brief Running or not running an object is controlled by this valve station. Use the jack to
-	//!		change what objects will be run every time this figment is run.
-	//!\todo	Save and Load.
-	class cValves: public cRunList{
-	protected:
-		tPlugMap<size_t, bool> mStates;	//!< Maps states to the list entries. These states control which objects are run.
-
-	public:
-		static const cPlugTag*	xPT_state;		//!< Turn turns valve on.
-		static const cPlugTag*	xPT_valveIdx;	//!< The numeric index for the valve.
-
-		static const cCommand::dUID	xSetState;
-
-		cValves();
-		virtual ~cValves();
-
-		GT_IDENTIFY("valves");
-		GT_EXTENDS(cRunList);
-		GT_VERSION(1);
-		virtual dNameHash hash() const { return getHash<cValves>(); }
-
-		//- Optional
-		virtual void work(cContext* pCon);				//!< runs every element in the list
-
-	protected:
-		void patSetValve(ptrLead pLead);
 	};
 }
 

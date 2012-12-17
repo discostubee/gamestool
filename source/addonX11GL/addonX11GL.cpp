@@ -12,6 +12,9 @@ draftAll(gt::cWorld *pWorld){
 	try{
 		gt::cWorld::primordial::redirectWorld(pWorld);
 
+		gt::tOutline<gt::cFigment>::draft();
+		gt::tOutline<gt::cEmptyFig>::draft();
+
 		gt::tOutline<gt::cWindowFrame>::draft();
 		gt::tOutline<gt::cWindowFrame_X11GL>::draft();
 		gt::tOutline<gt::cLayer>::draft();
@@ -26,10 +29,10 @@ draftAll(gt::cWorld *pWorld){
 		DBUG_LO("x11 addon open.");
 
 	}catch(excep::base_error &e){
-		pWorld->lo(e.what());
+		WARN(e.what());
 
 	}catch(...){
-		pWorld->lo("error while opening x11 addon");
+		WARN_S("error while opening x11 addon");
 	}
 }
 
@@ -40,12 +43,12 @@ closeLib(){
 		gt::tOutline<gt::cWindowFrame>::removeFromWorld();
 		gt::tOutline<gt::cLayer_X11GL>::removeFromWorld();
 		gt::tOutline<gt::cLayer>::removeFromWorld();
-		gt::tOutline<gt::cPolyMesh>::removeFromWorld();
 		gt::tOutline<gt::cPolyMesh_X11GL>::removeFromWorld();
-		gt::tOutline<gt::c3DCamera>::removeFromWorld();
+		gt::tOutline<gt::cPolyMesh>::removeFromWorld();
 		gt::tOutline<gt::c3DCamera_X11GL>::removeFromWorld();
-		gt::tOutline<gt::c2DCamera>::removeFromWorld();
+		gt::tOutline<gt::c3DCamera>::removeFromWorld();
 		gt::tOutline<gt::c2DCamera_X11GL>::removeFromWorld();
+		gt::tOutline<gt::c2DCamera>::removeFromWorld();
 
 		DBUG_LO("closed x11 addon.");
 

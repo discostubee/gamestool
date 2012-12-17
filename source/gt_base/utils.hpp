@@ -81,18 +81,13 @@ template <typename T>
 class tCoolItr{
 public:
 
-	tCoolItr(const T* pContainer, typename T::const_iterator pStartHere) :
+	tCoolItr(T* pContainer, typename T::const_iterator pStartHere) :
 		mContainerRef(pContainer), mCurrentSpot(pStartHere)
 	{}
 
-	tCoolItr(const T* pContainer) :
+	tCoolItr(T* pContainer) :
 		mContainerRef(pContainer), mCurrentSpot(mContainerRef->begin())
 	{}
-
-	void operator ++ () {
-		if(stillGood)
-			++mCurrentSpot;
-	}
 
 	bool stillGood() {
 		if(mCurrentSpot != mContainerRef->end())
@@ -101,7 +96,7 @@ public:
 		return false;
 	}
 
-	typename T::value_type get(){
+	typename T::value_type& get(){
 		return *mCurrentSpot;
 	}
 
@@ -109,9 +104,18 @@ public:
 		mCurrentSpot = mContainerRef->begin();
 	}
 
+	void operator ++ () {
+		if(stillGood())
+			++mCurrentSpot;
+	}
+
+	typename T::value_type& operator* (){
+		return get();
+	}
+
 private:
-	const T* mContainerRef;
-	typename T::const_iterator mCurrentSpot;
+	T* mContainerRef;	//!< Don't delete
+	typename T::iterator mCurrentSpot;
 };
 
 //------------------------------------------------------------------------------------------

@@ -50,9 +50,9 @@ cPlugHound::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-	version1.push_back(mCom);
-	version1.push_back(mTag);
-	version1.push_back(mTarget);
+	version1.push_back(&mCom);
+	version1.push_back(&mTag);
+	version1.push_back(&mTarget);
 
 	pattern.push_back(version1);
 	return pattern;
@@ -108,8 +108,8 @@ cAlias::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-	version1.push_back(mBound);
-	version1.push_back(mAName);
+	version1.push_back(&mBound);
+	version1.push_back(&mAName);
 
 	pattern.push_back(version1);
 	return pattern;

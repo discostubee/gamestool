@@ -61,21 +61,6 @@ using namespace gt;
 
 bool gt::cWorld::thereCanBeOnlyOne = false;
 
-dConSig
-cWorld::regContext(cContext* pCon){
-	return mContexts.add(pCon);
-}
-
-void
-cWorld::unregContext(dConSig pSig){
-	mContexts.del(pSig);
-}
-
-bool
-cWorld::activeContext(dConSig pSig){
-	return mContexts.valid(pSig);
-}
-
 cWorld::cWorld():
 	mKeepLooping(true),
 	mBicycleSetup(false)
@@ -114,40 +99,6 @@ cWorld::~cWorld(){
 
 	}catch(...){
 	}
-}
-
-void
-cWorld::lazyCloseAddon(const dStr &name){
-	for(
-		std::list<dStr>::iterator itr = mAddonsToClose.begin();
-		itr != mAddonsToClose.end();
-		++itr
-	){
-		if(itr->compare(name)==0)
-			return;
-	}
-
-	mAddonsToClose.push_back(name);
-}
-
-void
-cWorld::lo(const dStr& pLine){
-#ifdef GT_THREADS
-	boost::lock_guard<boost::recursive_mutex> lock(*mLineGuard);
-#endif
-	mLines->push_back(pLine);
-}
-
-void
-cWorld::warnError(const char *msg, const char* pFile, const unsigned int pLine){
-	std::stringstream ss;
-	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << msg;
-	lo(ss.str());
-}
-
-void
-cWorld::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
-	warnError(pE.what(), pFile, pLine);
 }
 
 void
@@ -271,21 +222,6 @@ cWorld::makeFig(const dPlaChar *pName){
 	return makeFig(makeHash(toNStr(pName)));
 }
 
-void
-cWorld::copyWorld(cWorld* pWorld){
-#	ifdef GT_THREADS
-		boost::lock_guard<boost::recursive_mutex> lockA(*mProfileGuard);
-		boost::lock_guard<boost::recursive_mutex> lockB(*mProfileGuard);
-		boost::lock_guard<boost::recursive_mutex> lockC(*pWorld->mProfileGuard);
-		boost::lock_guard<boost::recursive_mutex> lockD(*pWorld->mLineGuard);
-#	endif
-
-	if(!pWorld->mLines->empty())
-		mLines->splice(mLines->end(), *pWorld->mLines);
-
-	*mProfiler += *pWorld->mProfiler;
-}
-
 ptrLead
 cWorld::makeLead(cCommand::dUID pComID){
 	PROFILE;
@@ -300,6 +236,30 @@ cWorld::makeLead(const dPlaChar *aFigName, const dPlaChar *aComName){
 	dNameHash hash = makeHash(totalString);
 	ptrLead rtnLead(new cLead(hash));
 	return rtnLead;
+}
+
+dConSig
+cWorld::regContext(cContext* pCon){
+	return mContexts.add(pCon);
+}
+
+void
+cWorld::unregContext(dConSig pSig){
+	mContexts.del(pSig);
+}
+
+bool
+cWorld::activeContext(dConSig pSig){
+	return mContexts.valid(pSig);
+}
+
+void
+cWorld::lazyCloseAddon(const dPlaChar* pAddonName){
+	for(std::list<dStr>::iterator itr = mAddonsToClose.begin(); itr != mAddonsToClose.end(); ++itr)
+		if(itr->compare(pAddonName)==0)
+			return;
+
+	mAddonsToClose.push_back(pAddonName);
 }
 
 const cPlugTag* 
@@ -372,6 +332,21 @@ cWorld::flushLines(){
 	mLines->clear();
 }
 
+void
+cWorld::copyWorld(cWorld* pWorld){
+#	ifdef GT_THREADS
+		boost::lock_guard<boost::recursive_mutex> lockA(*mLineGuard);
+		boost::lock_guard<boost::recursive_mutex> lockB(*mProfileGuard);
+		boost::lock_guard<boost::recursive_mutex> lockC(*pWorld->mProfileGuard);
+		boost::lock_guard<boost::recursive_mutex> lockD(*pWorld->mLineGuard);
+#	endif
+
+	if(!pWorld->mLines->empty())
+		mLines->splice(mLines->end(), *pWorld->mLines);
+
+	*mProfiler += *pWorld->mProfiler;
+}
+
 ////////////////////////////////////////////////////////////
 // primordial
 
@@ -409,17 +384,20 @@ cWorld::primordial::lo(const dStr& pLine, bool cleanup){
 			linesSetup = false;
 		}
 		return;
+
+	}else{
+#		ifdef GT_THREADS
+			boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+#		endif
+
+		xLines->push_back(pLine);
 	}
-#	ifdef GT_THREADS
-		boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
-#	endif
-	xLines->push_back(pLine);
 }
 
 void
 cWorld::primordial::warnError(const char *msg, const char* pFile, const unsigned int pLine){
 	std::stringstream ss;
-	ss << "!Warning detected in file " << pFile << " on line " << pLine << std::endl << "	" << msg;
+	ss << "<!> Warning detected in file '" << pFile << "' on line " << pLine << std::endl << ". Info: " << msg;
 	lo(ss.str());
 }
 
@@ -460,6 +438,9 @@ cWorld::primordial::makeProfileToken(const char* pFile, unsigned int pLine, bool
 
 void
 cWorld::primordial::makeProfileReport(std::ostream &log){
+	if(xProfileGuard==NULL)
+		return;
+
 #	ifdef GT_THREADS
 		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
 #	endif
@@ -479,13 +460,32 @@ cWorld::primordial::makeProfileReport(std::ostream &log){
 void
 cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 	if(pWorldNew){
-		cWorld* temp = new cWorld();	// We need the member pointers to the statics to exist.
+		cWorld* temp = new cWorld();	//- We need the member pointers to the statics to exist.
 
 		pWorldNew->copyWorld(temp);
-		delete temp;	// causes cleanup of statics
+		delete temp;	//- causes cleanup of old statics
 
-		xLines = pWorldNew->mLines;
-		xProfiler = pWorldNew->mProfiler;
+		{
+#			ifdef GT_THREADS
+				boost::lock_guard<boost::recursive_mutex> lockC(*pWorldNew->mProfileGuard);
+				boost::lock_guard<boost::recursive_mutex> lockD(*pWorldNew->mLineGuard);
+#			endif
+
+			lo("won't see this");	//- We don't want to re-initalise the statics, we just want to redirect.
+			(void)makeProfileToken("dummy", 0);
+			delete xLines;
+			delete xProfiler;
+
+			xLines = pWorldNew->mLines;
+			xProfiler = pWorldNew->mProfiler;
+
+		}
+
+#		ifdef GT_THREADS
+			xProfileGuard = pWorldNew->mProfileGuard;
+			xLineGuard = pWorldNew->mLineGuard;
+#		endif
+
 		gWorld.take(pWorldNew);
 
 	}else{
