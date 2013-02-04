@@ -3,24 +3,28 @@
 
 
 // Include the stuff we want to test.
-#include "gt_base/figment.hpp"
+#include "gt_terminal/terminal_world.hpp"
 
 int
 main(int argc, char **argv){
 	int result = EXIT_FAILURE;
 
-	std::cout << "Running gamestool tests. Version 0.3";
-	#ifdef GT_THREADS
-		std::cout << " threaded";
-	#endif
+	std::cout << "Running gamestool tests.";
+#	ifdef __APPLE__
+		std::cout << " For apple.";
+#	endif
+
+#	ifdef GT_THREADS
+		std::cout << " Threaded";
+#	endif
 	std::cout << std::endl;
 
-	gt::gWorld.take( new gt::cWorld() );
+	gt::gWorld.take( new gt::cTerminalWorld() );
 
-#ifdef GTUT_GOOGLE
-	::testing::InitGoogleTest(&argc, argv);
-	result = RUN_ALL_TESTS();
-#endif
+#	ifdef GTUT_GOOGLE
+		::testing::InitGoogleTest(&argc, argv);
+		result = RUN_ALL_TESTS();
+#	endif
 
 	gt::cWorld::primordial::makeProfileReport(std::cout);
 	gt::gWorld.cleanup();

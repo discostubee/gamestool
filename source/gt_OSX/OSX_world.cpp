@@ -52,9 +52,6 @@ cOSXWorld::loop(){
 
 void
 cOSXWorld::flushLines(){
-	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
-		std::cout << (*i) << std::endl;
-	}
 	mLines->clear();
 }
 

@@ -33,8 +33,8 @@
 #endif
 
 
-//!\brief	8Bit buffer used for consistency across platforms and not for performance. If you give it memory location to a type, it will store
-//!			it as a cross platform binary stream possibly not exactly the same as the memory you passed it.
+//!\brief	8Bit buffer used for consistency across platforms and not for performance. If you give it a memory location to a type, it will store
+//!			it as a cross platform binary stream.
 //!\note	The gamestool byte buffer is always 8bits even if it is not effective for the system to process 8 bit buffers. This ensures that data files
 //!			are compatible across the different gamestool virtual machines.
 //!\note	The gamestool should pretty much only use byte buffers for saving and loading data, because the guarantee of 8bit buffers is more important

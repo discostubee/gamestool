@@ -62,7 +62,7 @@ namespace excep{
         dStr operator << (const T &pT) { dStr out; out + mInfo + pT; return out; }
     };
 
-    //!\brief	Useful macro to make writing error bombs easier to write.
+    //!\brief	Useful macro to make writing error bombs easier.
 	#define THROW_ERROR(s) { std::stringstream ss; ss << s; throw excep::base_error(ss.str().c_str(), __FILE__, __LINE__); }
 
     //!\brief	Nobody knows.

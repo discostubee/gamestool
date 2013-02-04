@@ -18,7 +18,7 @@ namespace gt{
 	class cOSXWorld: public cWorld{
 	public:
 		cOSXWorld();
-		~cOSXWorld();
+		virtual ~cOSXWorld();
 
 		virtual dMillisec getAppTime();
 		virtual void loop();

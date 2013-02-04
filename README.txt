@@ -19,8 +19,8 @@ the gamestool running on these OSs, there is also a list of supported
 IDEs.
 
 Windows 7: Visual Studio Express 2010.
-Ubuntu 12: Eclipse 3.7
-OS X 10.6: Eclipse 3.6
+Ubuntu 12: Eclipse 4.2
+OS X 10.6: Eclipse 3.7
 
 If you want to expand the list of supported stuff, feel free to jump on
 the forum or source forge and let us know.
@@ -63,6 +63,8 @@ ourselves (like the google gTest lib) just to make things easy.
 - projects
 This is where we store all the IDE files ect. We'll also try and get the
 gnu auto make tools in here at some point.
+
+Projects can also have a source directory, which is for code that is intended to have no other purpose but for that project.
 
 - source
 This is where all the code goes. It's sorted according to the different
@@ -171,38 +173,3 @@ ftp://www.mirrorservice.org/sites/ftp.gnu.org/gnu/libiconv/
 Read the GNU docs Then make sure it goes into your usr/local directory.
 
 
-
---- (OLD) compile boost lib 1.46 in OSX
-Reading the online 'getting started' guide for boost you'll find a spot 
-about compiling, but for OSX the part about running the shell script
-requires you to explicitly call 'sh' to run a shell script.
-
-Chances are you'll also need to give the shell script permission
-to do anything it wants with the boost directory. Running sh
-as admin wasn't enough, but chmod with a+rwx did the trick. However
-chmod a+wr wasn't enough. 
-
-Next, instead of the b2 output that the offical guide says to use, in
-mac, you'll need bjam. Now there are a few options with bjam which
-are not listed when you type "$./bjam -help" so go here instead:
-http://www.boost.org/boost-build2/doc/html/bbv2/overview/invocation.html
-
-I tell you this because there are a few options you'll need, depending
-on your system:
-
-address-module=64
-Lets face it, you'll have a 64bit processor and any 64bit mac will be using
-64 bit OSx, so put this on.
-
-link=static
-runtime-link=static
-using this just to make sure compilation is easy.
-
-variant=debug
-As every project at the moment is debug, you'll need this to be turned
-onto debug.
-
-The library is located under YOUR_BOOST_DIR/stage/lib which you will need
-to add to your IDE. I'll give details below
-
-Props to Matt from Technobroia for the bjam tip: http://www.technoboria.com/2009/07/simple-guide-to-installing-boost-on-mac-os-x/
