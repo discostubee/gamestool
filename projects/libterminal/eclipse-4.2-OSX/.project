@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>unitTests</name>
+	<name>libterminal</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -26,31 +26,12 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>gt_OSX</name>
-			<type>2</type>
-			<locationURI>SOURCE_LOC/gt_OSX</locationURI>
-		</link>
-		<link>
-			<name>gt_base</name>
-			<type>2</type>
-			<locationURI>SOURCE_LOC/gt_base</locationURI>
-		</link>
-		<link>
-			<name>gt_terminal</name>
+			<name>source</name>
 			<type>2</type>
 			<locationURI>SOURCE_LOC/gt_terminal</locationURI>
 		</link>
-		<link>
-			<name>source</name>
-			<type>2</type>
-			<locationURI>PROJ_SOURCE_LOC</locationURI>
-		</link>
 	</linkedResources>
 	<variableList>
-		<variable>
-			<name>PROJ_SOURCE_LOC</name>
-			<value>$%7BPARENT-1-PROJECT_LOC%7D/source</value>
-		</variable>
 		<variable>
 			<name>SOURCE_LOC</name>
 			<value>$%7BPARENT-3-PROJECT_LOC%7D/source</value>

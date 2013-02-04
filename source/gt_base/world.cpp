@@ -438,10 +438,10 @@ cWorld::primordial::makeProfileToken(const char* pFile, unsigned int pLine, bool
 
 void
 cWorld::primordial::makeProfileReport(std::ostream &log){
-	if(xProfileGuard==NULL)
-		return;
-
 #	ifdef GT_THREADS
+		if(xProfileGuard==NULL)
+			return;
+
 		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
 #	endif
 	(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.

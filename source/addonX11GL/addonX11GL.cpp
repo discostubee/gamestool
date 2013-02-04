@@ -29,7 +29,7 @@ draftAll(gt::cWorld *pWorld){
 		DBUG_LO("x11 addon open.");
 
 	}catch(excep::base_error &e){
-		WARN(e.what());
+		WARN(e);
 
 	}catch(...){
 		WARN_S("error while opening x11 addon");
