@@ -3,10 +3,10 @@
 
 
 // Include the stuff we want to test.
-#include "gt_terminal/terminal_world.hpp"
+#include "gt_terminal/entryPoint.hpp"
 
-int
-main(int argc, char **argv){
+ENTRYPOINT
+{
 	int result = EXIT_FAILURE;
 
 	std::cout << "Running gamestool tests.";
