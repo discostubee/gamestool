@@ -79,10 +79,10 @@ cWorld::cWorld():
 	primordial::lo("World created."); //- Ensure it exists.
 	mLines = primordial::xLines;
 
-	#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		mProfileGuard = primordial::xProfileGuard;
 		mLineGuard = primordial::xLineGuard;
-	#endif
+#	endif
 }
 
 cWorld::~cWorld(){
@@ -324,28 +324,6 @@ cWorld::getContextLookup(){
 	return mContexts;
 }
 
-void
-cWorld::flushLines(){
-	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
-		std::cout << (*i) << std::endl;
-	}
-	mLines->clear();
-}
-
-void
-cWorld::copyWorld(cWorld* pWorld){
-#	ifdef GT_THREADS
-		boost::lock_guard<boost::recursive_mutex> lockA(*mLineGuard);
-		boost::lock_guard<boost::recursive_mutex> lockB(*mProfileGuard);
-		boost::lock_guard<boost::recursive_mutex> lockC(*pWorld->mProfileGuard);
-		boost::lock_guard<boost::recursive_mutex> lockD(*pWorld->mLineGuard);
-#	endif
-
-	if(!pWorld->mLines->empty())
-		mLines->splice(mLines->end(), *pWorld->mLines);
-
-	*mProfiler += *pWorld->mProfiler;
-}
 
 ////////////////////////////////////////////////////////////
 // primordial
@@ -365,27 +343,33 @@ cProfiler* gt::cWorld::primordial::xProfiler;
 void
 cWorld::primordial::lo(const dStr& pLine, bool cleanup){
 	static bool linesSetup = false;
-	if(!linesSetup && !cleanup){
+	if(!linesSetup){
+		if(cleanup)	//- nothing to do.
+			return;
+
 		linesSetup = true;
 		xLines = new dLines();
 #		ifdef GT_THREADS
 			xLineGuard = new boost::recursive_mutex();
 #		endif
+	}
 
-	}else if(cleanup){
-		if(linesSetup){
+	if(cleanup){
+		if(!linesSetup)
+			return;
+
+		{
 #			ifdef GT_THREADS
-				{
-					boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
-				}
-				SAFEDEL(xLineGuard);
+				boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
 #			endif
 			SAFEDEL(xLines);
 			linesSetup = false;
 		}
-		return;
+#		ifdef GT_THREADS
+			SAFEDEL(xLineGuard);
+#		endif
 
-	}else{
+	}else if(!pLine.empty()){
 #		ifdef GT_THREADS
 			boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
 #		endif
@@ -409,31 +393,37 @@ cWorld::primordial::warnError(excep::base_error &pE, const char* pFile, const un
 cProfiler::cToken
 cWorld::primordial::makeProfileToken(const char* pFile, unsigned int pLine, bool cleanup){
 	static bool profileSetup = false;
-	if(!profileSetup && !cleanup){
-		profileSetup = true;
-		xProfiler = new cProfiler();
-#		ifdef GT_THREADS
-			xProfileGuard = new boost::recursive_mutex();
-#		endif
-
-	}else if(cleanup){
-		if(profileSetup){
+	if(!profileSetup){
+		if(!cleanup){	//- Nothing to do.
+			profileSetup = true;
+			xProfiler = new cProfiler();
 #			ifdef GT_THREADS
-				{
-					boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-				}
-				SAFEDEL(xProfileGuard);
+				xProfileGuard = new boost::recursive_mutex();
 #			endif
-			SAFEDEL(xProfiler);
-			profileSetup = false;
-			return cProfiler::cToken(NULL, 0, 0);
 		}
 	}
 
-#	ifdef GT_THREADS
-		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-#	endif
-	return xProfiler->makeToken(pFile, pLine);
+	if(cleanup){
+		if(profileSetup){
+			{
+#				ifdef GT_THREADS
+					boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+#				endif
+				SAFEDEL(xProfiler);
+				profileSetup = false;
+			}
+#			ifdef GT_THREADS
+				SAFEDEL(xProfileGuard);
+#			endif
+		}
+	}else if(pFile != NULL){
+#		ifdef GT_THREADS
+			boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+#		endif
+		return xProfiler->makeToken(pFile, pLine);
+	}
+
+	return cProfiler::cToken(NULL, 0, 0);
 }
 
 void
@@ -460,10 +450,14 @@ cWorld::primordial::makeProfileReport(std::ostream &log){
 void
 cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 	if(pWorldNew){
-		cWorld* temp = new cWorld();	//- We need the member pointers to the statics to exist.
 
-		pWorldNew->copyWorld(temp);
-		delete temp;	//- causes cleanup of old statics
+		if(xLines == pWorldNew->mLines || xProfiler == pWorldNew->mProfiler)
+			return;
+
+#		ifdef GT_THREADS
+			boost::lock_guard<boost::recursive_mutex> lockA(*xLineGuard);
+			boost::lock_guard<boost::recursive_mutex> lockB(*xProfileGuard);
+#		endif
 
 		{
 #			ifdef GT_THREADS
@@ -471,14 +465,19 @@ cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 				boost::lock_guard<boost::recursive_mutex> lockD(*pWorldNew->mLineGuard);
 #			endif
 
-			lo("won't see this");	//- We don't want to re-initalise the statics, we just want to redirect.
-			(void)makeProfileToken("dummy", 0);
+			lo("");	//- This shouldn't add a line, but it ensures it's initialised.
+			(void)makeProfileToken(NULL, 0);	//- same.
+
+			if(!xLines->empty())
+				pWorldNew->mLines->splice(pWorldNew->mLines->end(), *xLines);
+
+			*pWorldNew->mProfiler += *xProfiler;
+
 			delete xLines;
 			delete xProfiler;
 
 			xLines = pWorldNew->mLines;
 			xProfiler = pWorldNew->mProfiler;
-
 		}
 
 #		ifdef GT_THREADS
@@ -486,7 +485,7 @@ cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 			xLineGuard = pWorldNew->mLineGuard;
 #		endif
 
-		gWorld.take(pWorldNew);
+		gWorld.take(pWorldNew);	//- Old world cleaned up by doing this.
 
 	}else{
 		gWorld.drop();
@@ -497,7 +496,7 @@ cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 void
 cWorld::primordial::cleanup(){
 	lo("", true);
-	(void)makeProfileToken("", 0, true);
+	(void)makeProfileToken(NULL, 0, true);
 }
 
 ////////////////////////////////////////////////////////////

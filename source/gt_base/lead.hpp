@@ -33,6 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Forward dec.
 namespace gt{
+	template<typename A> class tPlug;
+
 #	ifdef GUTU
 		void startLead(ptrLead, dConSig);
 		void stopLead(ptrLead);

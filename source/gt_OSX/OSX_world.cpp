@@ -53,6 +53,7 @@ cOSXWorld::loop(){
 void
 cOSXWorld::flushLines(){
 	mLines->clear();
+	excep::logExcep::shake();
 }
 
 void

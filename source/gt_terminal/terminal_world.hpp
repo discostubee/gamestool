@@ -15,7 +15,8 @@
 namespace gt{
 
 	//--------------------------------------------------------
-	//!\brief	The Apple Mac version of the abstract world class.
+	//!\brief	Overrides the normal 'sandbox' world to output
+	//!			to the terminal instead.
 	class cTerminalWorld:
 #if defined(__APPLE__)
 		public cOSXWorld
@@ -27,7 +28,7 @@ namespace gt{
 		cTerminalWorld();
 		virtual ~cTerminalWorld();
 
-		virtual void flushLines();
+		virtual void flushLines	();
 	};
 }
 

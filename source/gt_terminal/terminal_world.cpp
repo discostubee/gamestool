@@ -22,7 +22,7 @@ cTerminalWorld::~cTerminalWorld(){
 void
 cTerminalWorld::flushLines(){
 #	ifdef GT_THREADS
-		boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+		boost::lock_guard<boost::recursive_mutex> lock(*mLineGuard);
 #	endif
 
 	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){

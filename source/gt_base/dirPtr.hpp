@@ -105,13 +105,16 @@ namespace gt{
 	tDirPtr<T>::~tDirPtr(){
 		try{
 			if(mDir){
-				if(unique())	// Last one to leave turns off the lights.
+				if(unique())
 					delete mDir;
 				else
-					mDir->unlink(); // Only bother if you're not the last one.
+					mDir->unlink();
 			}
+		}catch(std::exception &e){
+			excep::logExcep::add(e.what());
+
 		}catch(...){
-			std::cout << "what the fuck" << std::endl;	//!\todo, something better.
+			excep::logExcep::add("Unknown error destroying tDirPtr");
 		}
 	}
 
