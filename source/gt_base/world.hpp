@@ -129,17 +129,6 @@ extern const char *MSG_UNKNOWN_ERROR;
 #endif
 
 
-///////////////////////////////////////////////////////////////////////////////////
-// forward declarations
-namespace gt{
-	class cBase_plug;
-	class cPlugTag;
-	class cLead;
-	class cBlueprint;
-	class cCommand;
-	class cContext;
-}
-
 ////////////////////////////////////////////////////////////////////
 // Typedefs
 namespace gt{

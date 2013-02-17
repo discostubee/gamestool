@@ -1,8 +1,6 @@
 //!\file	main.cpp
 //!\brief	Start of unit tests
 
-
-// Include the stuff we want to test.
 #include "gt_terminal/entryPoint.hpp"
 
 ENTRYPOINT
@@ -10,8 +8,10 @@ ENTRYPOINT
 	int result = EXIT_FAILURE;
 
 	std::cout << "Running gamestool tests.";
-#	ifdef __APPLE__
+#	if defined(__APPLE__)
 		std::cout << " For apple.";
+#	elif defined(_WIN32)
+		std::cout << " For Windows.";
 #	endif
 
 #	ifdef GT_THREADS

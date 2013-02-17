@@ -14,22 +14,17 @@ namespace gt{
 
 	class cWin_fileIO: public cBase_fileIO, private tOutline<cWin_fileIO>{
 	public:
-		static const dNatChar* identify(){ return "win file IO"; }
-		static dNameHash replaces(){ return getHash<cBase_fileIO>(); }
-		static void requirements();
-
 		cWin_fileIO();
 		virtual ~cWin_fileIO();
 
-		//- standard
-		virtual const dNatChar* name() const { return cWin_fileIO::identify(); }		//!<
-		virtual dNameHash hash() const { return tOutline<cWin_fileIO>::hash(); }
+		GT_IDENTIFY("win fileIO");
+		GT_EXTENDS(cFigment);
+		virtual dNameHash hash() const { return getHash<cWin_fileIO>(); }
 
 	protected:
-		//- polymorphs
-		virtual cByteBuffer& read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 );
+		virtual void read(cByteBuffer* aOutput, const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 );
 		virtual void write(const cByteBuffer* pBuff);
-		virtual void insert(const cByteBuffer* pBuff, dFilePoint pStartPoint);
+		virtual void insert(const cByteBuffer* pBuff, dFilePoint pStartSpot);
 		virtual void deleteFile();
 		virtual size_t getFileSize();
 	};
