@@ -164,6 +164,29 @@ namespace excep{
 		virtual ~cantCopy() throw(){}
 
 	};
+
+	//!\brief	Used when we want to log an error rather than throw, such as an error during destruction.
+	class logExcep: public std::exception{
+	public:
+		static void add(const char *msg);
+		static void shake();	//!< throws if any errors have been logged.
+
+		virtual ~logExcep() throw();
+
+		virtual const char* what() const throw();
+
+	private:
+		static const size_t SIZE_BUFF = 512;
+
+		static char xBuff[SIZE_BUFF];	//!< All messages are concated here.
+		static size_t xPos;	//!< write position, if not 0 we have some messages.
+
+		static void clearAll();
+
+		const std::string mMsg;
+
+		logExcep(const char *msg);
+	};
 }
 
 #define DONT_USE_THIS			throw excep::dontUseThis(__FILE__, __LINE__)

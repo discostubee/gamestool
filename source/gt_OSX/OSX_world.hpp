@@ -24,6 +24,8 @@ namespace gt{
 		virtual void loop();
 		virtual void flushLines();
 		virtual void openAddon(const dStr &name);
+
+	protected:
 		virtual void closeAddon(const dStr &name);
 
 	private:

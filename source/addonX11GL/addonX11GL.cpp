@@ -29,10 +29,10 @@ draftAll(gt::cWorld *pWorld){
 		DBUG_LO("x11 addon open.");
 
 	}catch(excep::base_error &e){
-		WARN(e);
+		excep::logExcep::add(e.what());
 
 	}catch(...){
-		WARN_S("error while opening x11 addon");
+		excep::logExcep::add("unknown error while opening X11GL addon");
 	}
 }
 
@@ -55,9 +55,9 @@ closeLib(){
 		gt::cWorld::primordial::redirectWorld(NULL);
 
 	}catch(excep::base_error &e){
-		WARN(e);
+		excep::logExcep::add(e.what());
 
 	}catch(...){
-		std::cout << "unknown error while closing x11 addon" << std::endl;
+		excep::logExcep::add("unknown error while closing X11GL addon");
 	}
 }

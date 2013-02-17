@@ -179,7 +179,7 @@ namespace gt{
 		//--------------------------------------------------------
 		// Factory outlets
 		ptrFig makeFig(dNameHash pNameHash);	//!< Makes a new figment that is managed by a smart pointer.
-		ptrFig makeFig(const dNatChar *pName);	//!< Handy function if you want to use literal strings in a demo.
+		ptrFig makeFig(const dPlaChar *pName);	//!< Handy function if you want to use literal strings in a demo.
 		ptrLead makeLead(unsigned int pComID);	//!< Makes a new lead that is managed by a smart pointer.
 
 		//!\brief	If you don't have the context ID (possible because you're creating some kind of hard coded demo), you can still
@@ -226,13 +226,11 @@ namespace gt{
 
 		//--------------------------------------------------------
 		// Polymorphs
-		// Not using pure virtuals so things like unit tests can use the base world class.
 
-		virtual dMillisec getAppTime() { return 0; }
-		virtual void loop() {}	//!< Enter the main program loop. Continues looping until it is told to stop.
-		virtual void flushLines	();		//!< Process the lines to be displayed on the console. Uses std::cout by default
-		virtual void openAddon(const dStr &name) { DONT_USE_THIS; }		//!< Opens an addon with the given name
-		virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }	//!< Actually close the addon.
+		virtual dMillisec getAppTime() =0;
+		virtual void loop() =0;	//!< Enter the main program loop. Continues looping until it is told to stop.
+		virtual void flushLines	() =0;		//!< Process the lines to be displayed on the console.
+		virtual void openAddon(const dStr &name) =0;		//!< Opens an addon with the given name
 
 		//---------------------------------------------------------------------------------------------------
 		//!\brief	primodial is used to manage services that are present before a world is available.
@@ -250,9 +248,9 @@ namespace gt{
 			//!\brief	Allows you to pass the error type directly.
 			static void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
 
-		#	ifdef GTUT
+#			ifdef GTUT
 				static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
-		#	endif
+#			endif
 
 			//!\brief	Makes a profile token using the profiler stored in this world.
 			//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
@@ -265,14 +263,14 @@ namespace gt{
 			static void redirectWorld(gt::cWorld *directHere);	//!< copies the primordial static data into the given world, and redirects gWorld to point to the one given. If null, gWorld is cleaned up and set to null.
 
 		protected:
-		#	ifdef GTUT
+#			ifdef GTUT
 				static bool mSuppressError;	//!<
-		#	endif
+#			endif
 
-		#	ifdef GT_THREADS
+#			ifdef GT_THREADS
 				static boost::recursive_mutex *xProfileGuard;
 				static boost::recursive_mutex *xLineGuard;
-		#	endif
+#			endif
 
 			//--------------------------------------------------------
 			// Data which must be redirected if this is an addon's heap.
@@ -282,10 +280,10 @@ namespace gt{
 
 			static void cleanup();
 
-			friend class gt::cWorld;
-
 			//--------------------------------------------------------
-			virtual void closeAddon(const dStr &name) { DONT_USE_THIS; }
+			virtual void closeAddon(const dStr &name) =0;	//!< Actually close the addon
+
+			friend class gt::cWorld;
 
 		private:
 			primordial();
@@ -305,8 +303,6 @@ namespace gt{
 		ptrFig mRoot;
 		std::list<dStr> mAddonsToClose;	//!< List of addons to close next cycle.
 
-		virtual void copyWorld(cWorld* pWorld);	//!< Virtual in case the child class needs other things copied.
-
 		friend class primordial;
 
 	private:
@@ -323,6 +319,8 @@ namespace gt{
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
 		bool mBicycleSetup;	//!< Faster than looking for it in the library every time.
 		dContextLookup mContexts; //!< We keep track of all the contexts here in the world.
+
+		cWorld& operator=(cWorld&) { return *this; };	//!< Banned.
 	};
 
 	extern tMrSafety<cWorld> gWorld;	//!< Gives you threadsafe access to the world.

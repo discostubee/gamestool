@@ -66,7 +66,7 @@ namespace gt{
 		typedef boost::shared_ptr<cByteBuffer> ptrBuff;
 		typedef unsigned short dNumVer;	//!< Version number.
 		typedef std::vector<dPlugHolder> dVersionPlugs;	//!< Vector of all the different plugs in a given version.
-		typedef std::vector< dVersionPlugs > dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data.
+		typedef std::vector<dVersionPlugs> dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data.
 
 		virtual ~iFigment() {}
 		virtual const dPlaChar* name() const =0;

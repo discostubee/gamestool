@@ -34,12 +34,14 @@
 #	include <boost/thread.hpp>
 #endif
 
-namespace gt{
-
+//-------------------------------------------------------------------------------------
 #ifdef GT_THREADS
-	typedef boost::thread::id dThreadID;
-	typedef boost::unique_lock<boost::mutex> dLock;
+#	define CRITSEC static boost::mutex mu; boost::unique_lock<boost::mutex> lock(mu)
+#else
+#	define CRITSEC
 #endif
+
+namespace gt{
 
 	template<typename T> class tMrSafety;
 
