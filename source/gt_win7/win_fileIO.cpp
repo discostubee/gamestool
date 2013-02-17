@@ -2,32 +2,24 @@
 
 using namespace gt;
 
-void
-cWin_fileIO::requirements(){
-	//tOutline<cBase_fileIO>::draft();
-}
-
 cWin_fileIO::cWin_fileIO(){
-
 }
 
 cWin_fileIO::~cWin_fileIO(){
-
 }
 
-cByteBuffer&
-cWin_fileIO::read(const dFilePoint pStartPoint, const size_t pReadAmount ){
+void
+cWin_fileIO::read(cByteBuffer* aOutput, const dFilePoint pStartPoint, const size_t pReadAmount){
 	std::fstream stream;
-	cByteBuffer* outBuff = new cByteBuffer();
 	unsigned int fileSize = 0;
 	char* readBuff = NULL;
 
 	try{
 		DBUG_LO("reading");
-		stream.open(mPath.mD.c_str(), std::fstream::in | std::fstream::binary );
+		stream.open(mPath.get().c_str(), std::fstream::in | std::fstream::binary );
 
 		stream.seekg(0, std::fstream::end);
-		fileSize = static_cast<size_t>(stream.tellg().seekpos());
+		fileSize = stream.tellg();
 
 		if(fileSize == 0 || fileSize == static_cast<unsigned int>(-1) )
 			throw excep::base_error("file empty", __FILE__, __LINE__); //!\todo
@@ -40,41 +32,37 @@ cWin_fileIO::read(const dFilePoint pStartPoint, const size_t pReadAmount ){
 		if(pReadAmount == 0){	// read up to the end of the file.
 			readBuff = new char[fileSize - pStartPoint];
 			stream.read(readBuff, fileSize - pStartPoint);
-			outBuff->take( static_cast<dByte*>(readBuff), fileSize - pStartPoint );
+			aOutput->take( static_cast<dByte*>(readBuff), fileSize - pStartPoint );
 		}else{
 			readBuff = new char[pReadAmount];
 			stream.read(readBuff, pReadAmount);
-			outBuff->take( static_cast<dByte*>(readBuff), pReadAmount );
+			aOutput->take( static_cast<dByte*>(readBuff), pReadAmount );
 		}
 
 		if( stream.bad() )
 			throw std::exception();	//!\ todo
 
-	}catch(std::exception){
-		outBuff->clear();
+	}catch(std::exception &e){
+		aOutput->clear();
 		stream.close();
-		throw;
+		throw;	// rethrow e.
 	}
 	stream.close();
-	return *outBuff;
 }
 
-void 
+void
 cWin_fileIO::write(const cByteBuffer* pBuff){
 	std::fstream stream;
 
 	try{
 		DBUG_LO("writing");
-		if(mPath.mD.empty())
-			throw excep::base_error("Path can't be empty. But it is.", __FILE__, __LINE__);
-
-		stream.open(mPath.mD.c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc );
+		stream.open(mPath.get().c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc );
 		stream.write( pBuff->get(), pBuff->size() );
 
 		if(stream.bad())
 			throw std::exception(); //!\todo
 
-	}catch(std::exception){
+	}catch(std::exception &e){
 		stream.close();
 		throw;
 	}
@@ -82,7 +70,7 @@ cWin_fileIO::write(const cByteBuffer* pBuff){
 	stream.close();
 }
 
-void 
+void
 cWin_fileIO::insert(const cByteBuffer* pBuff, dFilePoint pStartPoint){
 	std::fstream stream;
 
@@ -90,10 +78,10 @@ cWin_fileIO::insert(const cByteBuffer* pBuff, dFilePoint pStartPoint){
 		size_t fileSize=0;
 		DBUG_LO("inserting");
 
-		stream.open(mPath.mD.c_str(), std::fstream::out | std::fstream::in | std::fstream::binary | std::fstream::app );
+		stream.open(mPath.get().c_str(), std::fstream::out | std::fstream::in | std::fstream::binary | std::fstream::app );
 		stream.seekg(0, std::fstream::end);
 
-		fileSize = static_cast<size_t>(stream.tellg().seekpos());
+		fileSize = stream.tellg();
 
 		if( fileSize == static_cast<unsigned int>(-1)
 			|| fileSize == 0
@@ -115,7 +103,7 @@ cWin_fileIO::insert(const cByteBuffer* pBuff, dFilePoint pStartPoint){
 		if(stream.bad())
 			throw excep::base_error("insert went badly", __FILE__, __LINE__); //!\todo
 
-	}catch(std::exception){
+	}catch(std::exception &e){
 		stream.close();
 		throw;
 	}
@@ -123,20 +111,20 @@ cWin_fileIO::insert(const cByteBuffer* pBuff, dFilePoint pStartPoint){
 	stream.close();
 }
 
-void 
+void
 cWin_fileIO::deleteFile(){
 	DBUG_LO("deleting");
-	::remove(mPath.mD.c_str());
+	::remove(mPath.get().c_str());
 }
 
-size_t 
+size_t
 cWin_fileIO::getFileSize(){
 	std::fstream stream;
 	size_t fileSize = 0;
 
-	stream.open(mPath.mD.c_str(), std::fstream::in | std::fstream::binary);
+	stream.open(mPath.get().c_str(), std::fstream::in | std::fstream::binary);
 	stream.seekg(0, std::fstream::end);
-	fileSize = static_cast<size_t>(stream.tellg());
+	fileSize = stream.tellg();
 	stream.close();
 	return fileSize;
 }

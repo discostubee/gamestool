@@ -8,7 +8,8 @@
 
 #include <windows.h>
 #include <time.h> // for gettimeofday and timeval
-#include <gt_base/figment.hpp>
+
+#include "gt_base/world.hpp"
 
 //!\brief	Contains windows helper functions.
 namespace win{
@@ -26,8 +27,6 @@ namespace win{
 
 	size_t MSStrLen(const TCHAR* pString);
 
-	//!\brief	
-	::HINSTANCE getInst();
 }
 
 namespace gt{
@@ -37,22 +36,23 @@ namespace gt{
 	//!\class	cWinWorld
 	//!\brief	Windows XP version of the abstract world class.
 	class cWinWorld: public cWorld{
-	private:
-		static dMillisec getWinTime();
-
-	protected:
-		::HINSTANCE	mInst;
-		
-		friend ::HINSTANCE win::getInst();
-
 	public:
-		cWinWorld(HINSTANCE pInst);
+		static void			setWinInst(::HINSTANCE aInst);
+		static ::HINSTANCE	getWinInst();
+
+		cWinWorld();
 		virtual ~cWinWorld();
 
 		virtual void		copyWorld(cWorld* pWorld);
 		virtual dMillisec	getAppTime();
 		virtual void		loop();
 		virtual void		flushLines();
+
+	protected:
+		static ::HINSTANCE	xInst;
+
+	private:
+		static dMillisec getWinTime();
 	};
 }
 

@@ -1,10 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <PostBuildIncludeCopy>md $(ProjectDir)..\..\..\includes &amp; copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\includes\$(TargetFileName) "</PostBuildIncludeCopy>
+    <PostBuildBinCopy>copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\bin"</PostBuildBinCopy>
+  </PropertyGroup>
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)/../../../source;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../../includes;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../source;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../includes;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -17,5 +20,12 @@
       <AdditionalLibraryDirectories>$(ProjectDir)..\..\..\includes;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <BuildMacro Include="PostBuildIncludeCopy">
+      <Value>$(PostBuildIncludeCopy)</Value>
+    </BuildMacro>
+    <BuildMacro Include="PostBuildBinCopy">
+      <Value>$(PostBuildBinCopy)</Value>
+    </BuildMacro>
+  </ItemGroup>
 </Project>
