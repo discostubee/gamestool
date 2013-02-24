@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>libgamestool</name>
+	<name>editor</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -31,7 +31,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildLocation</key>
-					<value>${workspace_loc:/libgamestool/Debug}</value>
+					<value>${workspace_loc:/editor/Debug}</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.cleanBuildTarget</key>
@@ -82,24 +82,19 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>gt_base</name>
+			<name>source</name>
 			<type>2</type>
-			<locationURI>BaseSourceDir/gt_base</locationURI>
-		</link>
-		<link>
-			<name>shared settings</name>
-			<type>2</type>
-			<locationURI>SHARED_SETTINGS_LOC</locationURI>
+			<locationURI>PROJECT_SOURCE_LOC</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>
 		<variable>
-			<name>BaseSourceDir</name>
-			<value>$%7BPARENT-3-PROJECT_LOC%7D/source</value>
+			<name>PROJECT_SOURCE_LOC</name>
+			<value>$%7BPARENT-1-PROJECT_LOC%7D/source</value>
 		</variable>
 		<variable>
-			<name>SHARED_SETTINGS_LOC</name>
-			<value>$%7BPARENT-2-PROJECT_LOC%7D/shared/eclipse-3.7</value>
+			<name>SOURCE_LOC</name>
+			<value>$%7BPARENT-3-PROJECT_LOC%7D/source</value>
 		</variable>
 	</variableList>
 </projectDescription>

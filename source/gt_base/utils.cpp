@@ -113,7 +113,6 @@ GTUT_START(test_makehash, consistency){
 GTUT_START(TestingFind, something){
 	int MagicNum = 3;
 	std::vector<int> vecA;
-	std::vector<int>::iterator itrA = vecA.begin();
 
 	vecA.push_back(1);
 	vecA.push_back(2);

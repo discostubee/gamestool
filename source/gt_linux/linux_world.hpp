@@ -8,7 +8,8 @@
 
 #include <dlfcn.h>	// MUST include the dl library in whatever binary you build.
 #include <sys/time.h> // for gettimeofday and timeval
-#include <gt_base/world.hpp>
+
+#include "gt_base/world.hpp"
 
 namespace gt{
 

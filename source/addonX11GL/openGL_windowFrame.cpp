@@ -25,34 +25,10 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
 
     XVisualInfo *vi = NULL;
     Colormap cmap;
-    XF86VidModeModeInfo **modes=NULL;
-    int modeNum=0, bestMode=0;
 
     // get a connection
     mDisplay = XOpenDisplay(0);
     mScreen = DefaultScreen(mDisplay);
-
-//#ifdef DEBUG
-#if 0
-    {
-		char** list=NULL;
-		int extCount=0;
-		int extension=0;
-		int vmMajor=0, vmMinor=0;
-
-		list = XListExtensions(mDisplay, &extCount);
-		while(extension < extCount){
-			DBUG_LO("xlib extension: "<<list[extension]);
-			++extension;
-		}
-		XFreeExtensionList(list);
-
-		XF86VidModeQueryVersion(mDisplay, &vmMajor, &vmMinor);
-		DBUG_LO("XF86 VideoMode extension version " << vmMajor << "." << vmMinor);
-	}
-#endif
-
-	XF86VidModeGetAllModeLines(mDisplay, mScreen, &modeNum, &modes);
 
     // get an appropriate visual
     vi = glXChooseVisual(mDisplay, mScreen, attrListDoubleBuff);
@@ -80,37 +56,18 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
     mWinAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
 
     if(mFullscreen){	//- Run checks before attempting fullscreen.
-		if(modes==NULL){
-			mFullscreen = false;
-			DBUG_LO("Unable to set fullscreen because we can't get modes.");
-		}
 
-		// look for mode with requested resolution
-		for (int i = 0; i < modeNum; i++)
-		{
-			if (
-				modes[i]->hdisplay == static_cast<unsigned int>(mWidth.get())
-				&& modes[i]->vdisplay == static_cast<unsigned int>(mHeight.get())
-				&& XF86VidModeValidateModeLine(mDisplay, 0, modes[i])==0/*MODE_OK*/
-			)
-				bestMode = i;
-		}
     }
 
     if (mFullscreen){
     	int dpyWidth, dpyHeight;
 
-    	// save desktop-resolution before switching modes
-		mDesktopMode = *modes[0];
-
-        XF86VidModeSwitchToMode(mDisplay, mScreen, modes[bestMode]);
-        XF86VidModeSetViewPort(mDisplay, mScreen, 0, 0);
-        dpyWidth = modes[bestMode]->hdisplay;
-        dpyHeight = modes[bestMode]->vdisplay;
+    	//!\todo make this configurable.
+        dpyWidth = mWidth.get();
+        dpyHeight = mHeight.get();
         DBUG_LO("resolution " << dpyWidth << ", " << dpyHeight);
 
         mWinAttr.override_redirect = True;
-
 
         mWindow = XCreateWindow(
         	mDisplay,
@@ -174,15 +131,13 @@ cWindowFrame_X11GL::cWindowFrame_X11GL():
 
     refreshDim();
 
-    if(modes) XFree(modes);
     XFlush(mDisplay);
 }
 
 cWindowFrame_X11GL::~cWindowFrame_X11GL(){
 	// switch back to original desktop resolution if we were in fullscreen
 	if(mFullscreen){
-		XF86VidModeSwitchToMode(mDisplay, mScreen, &mDesktopMode);
-		XF86VidModeSetViewPort(mDisplay, mScreen, 0, 0);
+
 	}
 
 	if(mContext){
@@ -300,18 +255,15 @@ cWindowFrame_X11GL::refreshDim(){
 	if(mWidth.get()==0 || mHeight.get()==0)
 		return;
 
-	glViewport(0, 0, static_cast<GLdouble>(mWidth.get()), static_cast<GLdouble>(mHeight.get()));
+	GLdouble glW = static_cast<GLdouble>(mWidth.get());
+	GLdouble glH = static_cast<GLdouble>(mHeight.get());
+
+	glViewport(0, 0, glW, glH);
 
 	//!\todo needs to be moved into a camera class.
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(
-		45.0,	// Field of view.
-		static_cast<GLdouble>(mWidth.get() / mHeight.get()), // aspect ratio.
-		0.1, // z near clip.
-		100.0 // z far clip.
-	);
-	//todo
+
 
 	if(mInternalDimRefresh){
 

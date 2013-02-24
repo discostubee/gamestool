@@ -15,7 +15,7 @@ cLinuxWorld::getLinuxTime(){
 }
 
 cLinuxWorld::cLinuxWorld(){
-	mProfiles->mGetTime = &getLinuxTime;
+	mProfiler->mGetTime = &getLinuxTime;
 }
 
 cLinuxWorld::~cLinuxWorld(){

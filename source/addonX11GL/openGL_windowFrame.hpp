@@ -3,29 +3,22 @@
  * !\file	openGL_windowFrame.hpp
  * !\brief	This is sort of the start file for the X11GL addon.
  * !\note	This code comes from 'The game programmers wiki', so big props to them. http://gpwiki.org/index.php/OpenGL:Tutorials:Setting_up_OpenGL_on_X11
- * !\note	Will have to install: libxxf86vm-dev, libgl1-mesa-dev
+ * !\note	Will have to install: mesa-common-dev
  */
 #ifndef OPENGL_WINDOWFRAME_HPP
 #define OPENGL_WINDOWFRAME_HPP
 
-#define GL_GLEXT_PROTOTYPES
+//#define GL_GLEXT_PROTOTYPES
 
 #include "gt_graphics/windowFrame.hpp"
 
 #include <GL/gl.h>
 #include <GL/glx.h>
-#include <GL/glu.h>
 #include <GL/glext.h>
 
 #include <X11/Xlib.h>	// Xlib.h is the default header that is included and has the core functionality
 #include <X11/Xatom.h>	// Xatom.h includes functionality for creating new protocol messages
 #include <X11/keysym.h> // keysym.h contains key symbols which we use to resolve what keys that are being pressed
-
-/* the XF86 Video Mode extension allows us to change the displaymode of the server
- * this allows us to set the display to fullscreen and also read videomodes and
- * other information.
- */
-#include <X11/extensions/xf86vmode.h>
 
 namespace gt{
 
@@ -56,7 +49,6 @@ protected:
 	XSetWindowAttributes    mWinAttr;
 	Bool                    mFullscreen;
 	Bool                    mDoubleBuffered;
-	XF86VidModeModeInfo     mDesktopMode;
 	unsigned int            mDepth;
     XEvent					mEvent;
 	Atom 					mDeleteMessage;

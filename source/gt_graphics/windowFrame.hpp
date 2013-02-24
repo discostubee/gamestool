@@ -12,7 +12,6 @@
 namespace gt{
 	//!\class	cWindow
 	//!\brief	The window class provides a typical window interface we see in most OSs.
-	//!\note	Runs the linked figment when you close this window.
 	class cWindowFrame: public cFigment{
 	public:
 		static const cPlugTag*	xPT_content;

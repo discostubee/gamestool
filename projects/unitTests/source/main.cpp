@@ -14,6 +14,8 @@ ENTRYPOINT
 		std::cout << "Running gamestool tests.";
 #	if defined(__APPLE__)
 		std::cout << " For Apple.";
+#	elif defined(__linux)
+		std::cout << " For Linux";
 #	elif defined(_WIN32)
 		std::cout << " For Windows.";
 #	endif

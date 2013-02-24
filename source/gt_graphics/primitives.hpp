@@ -7,9 +7,9 @@
 #define PRIMITIVES_HPP
 
 namespace gt{
-	typedef float	dUnitVDis;	//!< Virtual distance measurement.
-	typedef float	dUnitVRad;	//!< Virtual angle measurement, in radians.
-	typedef int		dUnitPix32;	//!< 32 bit pixel.
+	typedef float			dUnitVDis;	//!< Virtual distance measurement.
+	typedef float			dUnitVRad;	//!< Virtual angle measurement, in radians.
+	typedef unsigned int	dUnitPix32;	//!< 32 bit pixel.
 
 	//!\brief A 2D vector
 	struct s2DVec{

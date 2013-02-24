@@ -4,7 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>libgamestool</project>
-		<project>libgraphics</project>
+		<project>libgt_graphics</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
