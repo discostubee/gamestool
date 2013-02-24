@@ -1,0 +1,80 @@
+/*
+ **********************************************************************************************************
+ *  Copyright (C) 2010  Stuart Bridgens
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3) as published by
+ *  the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************************************************
+*/
+
+#include "lead.hpp"
+
+using namespace gt;
+
+////////////////////////////////////////////////////////////
+cBase_plug::cBase_plug(dPlugType pTI):
+	mType(pTI)
+{
+}
+
+cBase_plug::cBase_plug(const cBase_plug &pCopy):
+	mType(pCopy.mType)
+{
+}
+
+cBase_plug::~cBase_plug(){
+	for(
+		itrLead = mLeadsConnected.begin();
+		itrLead != mLeadsConnected.end();
+		++itrLead
+	){
+		try{
+			itrLead->first->unplug(this);	//- the count is irrelevant.
+		}catch(excep::base_error &e){
+			WARN(e);
+		}catch(...){
+			//- carry on removing.
+		}
+	}
+}
+
+void
+cBase_plug::linkLead(cLead *pLead){
+	PROFILE;
+	ASRT_NOTNULL(pLead);
+
+	itrLead = mLeadsConnected.find(pLead);
+	if(itrLead==mLeadsConnected.end()){
+		mLeadsConnected[pLead] = 1;
+	}else{
+		++itrLead->second;
+	}
+}
+
+void
+cBase_plug::unlinkLead(cLead *pLead){
+	PROFILE;
+	ASRT_NOTNULL(pLead);
+
+	itrLead = mLeadsConnected.find(pLead);
+	if(itrLead != mLeadsConnected.end()){
+		--itrLead->second;
+		if(itrLead->second == 0){
+			mLeadsConnected.erase(itrLead);
+		}
+
+	}else{
+		WARN_S("lead isn't connected to this plug.");
+	}
+}
+
+

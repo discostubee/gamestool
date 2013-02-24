@@ -1,0 +1,16 @@
+syntax: glob
+
+# stuff I added
+*.sdf
+*.suo
+*.vcxproj.filters
+*.vcxproj.user
+*.d
+*.o
+.DS_Store
+*.mk
+*.tlog
+*.obj
+*.a
+*.so
+*org.eclipse.cdt.core.prefs

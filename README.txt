@@ -1,0 +1,175 @@
+Gamestool readme. April 2011
+----------------------------------------------------
+Hi all, the software in this repository is presented as is and makes no 
+promises or guarantees. All stuff in here that is claimed to be my stuff
+is protected under the GNU (version 3) license. There is however, plenty of
+other peoples stuff made use of in this project (for instance, boost and
+openGL), so please be kind to their software licenses as well.
+
+If there are any problems or questions regarding the software use, 
+please visit www.frontiergraphics.com.au/gamestool and don't be afraid to 
+sign up and flame away for us failing in some way.
+
+
+Supported environments
+----------------------------------------------------
+These are some of the environments currently being supported. Put 
+another way, this stuff should work on these platforms. As well as
+the gamestool running on these OSs, there is also a list of supported
+IDEs.
+
+Windows 7: Visual Studio Express 2010.
+Ubuntu 12: Eclipse 4.2
+OS X 10.6: Eclipse 3.7
+
+If you want to expand the list of supported stuff, feel free to jump on
+the forum or source forge and let us know.
+
+
+Rational
+----------------------------------------------------
+There's no clear goal for the gamestool, because I have to be honest with
+myself and just say that it's all done for the lolz. The only direction I
+can really offer is to say: I wanna make an engine that lets you write once, 
+in a graphical kinda way, and run anywhere. Oh, and support an
+engine that generates procedural graphics.
+
+But we already have a write once, run anywhere language you retort! It's
+called Java, Ruby, Mr fantastics do anything language. Well, you sir don't
+understand the zen of lolz do you!
+
+
+
+Directories
+----------------------------------------------------
+Directory assistance...
+
+- bin
+All the runtime libraries and executables are located here. This 
+directory may be empty when you check it out. But once you build the
+project you should start seeing it fill up with goodies.
+
+- docs
+Mostly used by dOxygen to create a fancy pants, html based, user doc to
+help coders new to the project. Other fluffy documents may appears in here
+at some point the future.
+
+- includes
+Any 3rd party libraries which are platform independent, and small enough,
+go in here. We'll update the libraries in here when the providers give
+us a reason to do so. We also chuck in some libraries we compiled 
+ourselves (like the google gTest lib) just to make things easy.
+
+- projects
+This is where we store all the IDE files ect. We'll also try and get the
+gnu auto make tools in here at some point.
+
+Projects can also have a source directory, which is for code that is intended to have no other purpose but for that project.
+
+- source
+This is where all the code goes. It's sorted according to the different
+components, from static libs, to runtime hotness. Usually anything with
+the gt_ prefix is a static lib, and addon is a prefix for our runtime
+libraries for the gamestool (AKA plugins).
+
+
+Compilin it
+----------------------------------------------------
+There are several IDE projects located under projects. Currently visual 
+studio and eclipse projects are being maintained. A good place to start 
+(at the moment) is the unitTests project. This lets you see the tests
+being run and lets you try out your improvements against the code that
+exists.
+
+Make sure you ...
+
+--- Download boost library 1.49
+You'll need to have boost installed in order to compile the games tool.
+Google for boost c++ and use their homepage to find a download mirror.
+
+Once downloaded, all you need to do is unzip it and chuck it somewhere your
+compiler can find it. If can't install it somewhere that any compiler can
+find it, you'll need to direct your compiler to it (read below)
+
+It may be a good idea to keep the boost lib, root directory with a name
+that includes the version number and not just naming it 'boost'. For 
+instance, I've got mine under: linux:~/includes/boost_1_49
+
+--- Compile boost lib 1.49
+Read the index html file that's in the boost root directory, and follow the
+instructions for making 'b2' from the shell script and then use the
+normal build using b2.
+
+gamestool includes all boost libraries as statics so you'll need the
+option: link=static to build static versions of the libs.
+
+In OSX it's likely you'll need to run b2 as an admin so it can link to
+the system libraries.
+
+To make things easy on yourself, it may be a good idea to install
+boost to a specific location rather than your system includes/libs.
+This means passing a prefix into the bootstrap script and then
+point the compiler to your headers and static libs (see below).
+
+--- Download and compile google test (if building the testing app)
+The google testing framework needs to be downloaded and put somewhere
+for you to be able to run unit tests. You'll also need to place the built 
+gtest library into the gamestool include directory. Make sure the library 
+is named libgtest_main.a because that's what the project is expecting.
+
+To build the static lib just read the guide that comes with it, but
+in case you miss it (which is easy to do), simply add link==static
+to the bjam line, so it'll read something like this:
+
+sudo ./bjam link=static
+
+For windows, you can build the gtest lib using the visual studio
+project located in the 'msvc' directory of gtest.
+
+--- Link external includes in Eclipse
+For eclipse you'll need to point your IDE to the spot you unzipped the 
+lib. You can do this in eclipse by adding an Environment variable under 
+the property manager (Properties->C/C++->Build->Environment). This 
+variable must be named CPATH and its value needs to be the location of 
+your boost directory. You can have as many directories as you like, so 
+long as you use a colon to separate each path.
+
+There are a few includes you need:
+Boost
+x11 for OSX (linux is already visible)
+gtest (if building for testing apps)
+
+--- For Linux, get openGL
+OpenGL is provided via MESA in ubuntu 12. 
+
+--- Link external static libs in Eclipse
+You will sometimes need to link to some static libraries, and in an effort
+not to put specific paths in the eclipse project, the paths to these 
+libraries you'll need to add symbolic links inside the follow directory:
+
+projects/shared/eclipse-(version)-(OSX or linux)/lib_links/(boost or opengl)
+
+use the terminal command to create the symbolic link:
+ln -s your_boost_install_dir/stage/lib gamestool_dir/projects/shared/eclipse-someversion/lib_links/boost
+
+note:
+I couldn't use the PATH environment variable in OSX because it destroyed
+'make' for some reason.
+
+--- for OSX, get X11 
+You'll need to install X11 for OSX (google for it) first, then add the 
+path to the includes directory to the Eclipse environment, just like 
+you do for the boost library. 
+
+--- other OSX issues
+OSX has issues, and you'll need to fix some things.
+
+If iconv symbols are missing, you'll need to install from here:
+http://www.gnu.org/software/libiconv/#downloading
+
+An example of a mirror to download the package is:
+ftp://www.mirrorservice.org/sites/ftp.gnu.org/gnu/libiconv/
+
+Read the GNU docs Then make sure it goes into your usr/local directory.
+
+

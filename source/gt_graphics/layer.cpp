@@ -1,0 +1,67 @@
+#include "layer.hpp"
+
+using namespace gt;
+
+const cPlugTag* cLayer::xPT_content = tOutline<cLayer>::makePlugTag("content");
+const cPlugTag*	cLayer::xPT_size = tOutline<cLayer>::makePlugTag("size");
+const cPlugTag*	cLayer::xPT_point = tOutline<cLayer>::makePlugTag("point");
+const cPlugTag*	cLayer::xPT_rectangle = tOutline<cLayer>::makePlugTag("rectangle");
+const cPlugTag*	cLayer::xPT_arrangement = tOutline<cLayer>::makePlugTag("arrangement");
+const cPlugTag*	cLayer::xPT_cropStyle = tOutline<cLayer>::makePlugTag("cropStyle");
+
+const cCommand::dUID cLayer::xLinkContent = tOutline<cLayer>::makeCommand(
+	"link content", &cLayer::patSetLink,
+	xPT_content,
+	NULL
+);
+
+const cCommand::dUID cLayer::xSetLayout = tOutline<cLayer>::makeCommand(
+	"set layout", &cLayer::patSetLayout,
+	xPT_size,
+	xPT_point,
+	xPT_rectangle,
+	xPT_arrangement,
+	xPT_cropStyle,
+	NULL
+);
+
+const cCommand::dUID cLayer::xGetLayout = tOutline<cLayer>::makeCommand(
+	"getLayout", &cLayer::patGetLayout,
+	xPT_size,
+	xPT_point,
+	xPT_rectangle,
+	xPT_arrangement,
+	xPT_cropStyle,
+	NULL
+);
+
+cLayer::cLayer(){
+	addUpdRoster(&mLink);
+	addUpdRoster(&mArrangement);
+	addUpdRoster(&mCropStyle);
+}
+
+cLayer::~cLayer(){
+}
+
+
+void
+cLayer::getLinks(std::list<ptrFig>* pOutLinks){
+	if(mLink.get()->hash() != getHash<cEmptyFig>() )
+		pOutLinks->push_back(mLink.get());
+}
+
+void
+cLayer::patSetLink(ptrLead aLead){
+	aLead->setPlug(&mLink, xPT_content);
+}
+
+void
+cLayer::patSetLayout(ptrLead aLead){
+
+}
+
+void
+cLayer::patGetLayout(ptrLead aLead){
+
+}
