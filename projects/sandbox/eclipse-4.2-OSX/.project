@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>gamestool</name>
+	<name>sandbox</name>
 	<comment></comment>
 	<projects>
+		<project>addonX11GL</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

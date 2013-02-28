@@ -6,7 +6,7 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
-#include "windowFrame.hpp"
+#include "stage.hpp"
 
 
 namespace gt{

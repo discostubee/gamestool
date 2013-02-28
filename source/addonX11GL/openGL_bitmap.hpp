@@ -1,8 +1,7 @@
 #ifndef OPENGL_BITMAP_HPP
 #define OPENGL_BITMAP_HPP
 
-#include "openGL_layer.hpp"
-
+#include "openGL_stage.hpp"
 #include "gt_graphics/bitmap.hpp"
 
 namespace gt{

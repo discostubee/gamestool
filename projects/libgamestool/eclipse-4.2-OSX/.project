@@ -30,8 +30,17 @@
 			<type>2</type>
 			<locationURI>SOURCE_LOC/gt_base</locationURI>
 		</link>
+		<link>
+			<name>shared settings</name>
+			<type>2</type>
+			<locationURI>SHARED_PROJ_LOC</locationURI>
+		</link>
 	</linkedResources>
 	<variableList>
+		<variable>
+			<name>SHARED_PROJ_LOC</name>
+			<value>$%7BPARENT-2-PROJECT_LOC%7D/shared/eclipse/osx-4.2</value>
+		</variable>
 		<variable>
 			<name>SOURCE_LOC</name>
 			<value>$%7BPARENT-3-PROJECT_LOC%7D/source</value>

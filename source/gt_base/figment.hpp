@@ -136,7 +136,7 @@ namespace gt{
 		virtual dNumVer getVersion() const { return version(); }
 
 		virtual void work(cContext* pCon);	//!< Gives the child figments some runtime to do whatever it is that they normally do.
-		virtual dStr const & requiredAddon() const;	//!<	Unless this figment comes from an addon, only an empty string should be returned.
+		virtual dStr const & requiredAddon() const;	//!< Unless this figment comes from an addon, only an empty string should be returned.
 		virtual dMigrationPattern getLoadPattern();	//!< Load patterns offer you a way to migrate an older version of a figment to the current version. Override this function to pass back different load patterns. \note NOT threadsafe.
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.
 		virtual void save(cByteBuffer* pSaveHere);	//!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.

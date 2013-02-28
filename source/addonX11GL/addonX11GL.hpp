@@ -2,7 +2,8 @@
 #ifndef ADDONX11GL_HPP
 #define ADDONX11GL_HPP
 
-#include "openGL_layer.hpp"
+#include "openGL_stage.hpp"
+#include "openGL_film.hpp"
 #include "openGL_polyMesh.hpp"
 #include "openGL_bitmap.hpp"
 #include "openGL_camera.hpp"

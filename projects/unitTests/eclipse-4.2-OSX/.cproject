@@ -73,6 +73,19 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.449868837.1665165372" name="/" resourcePath="bin">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.base.1543926691" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.base" unusedChildren="">
+							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.base.285238568" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.base.741066450"/>
+							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.base.486485661" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.base.933652849"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.base.1418114329" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.base.1911713603"/>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.macosx.base.20505727" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.macosx.base.884831282"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.base.531208257" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.base.462083064"/>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.macosx.base.1465671465" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.macosx.base.570163408"/>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="bin" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

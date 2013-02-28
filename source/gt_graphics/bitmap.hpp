@@ -6,7 +6,7 @@
 #ifndef BITMAP_HPP
 #define BITMAP_HPP
 
-#include "gt_base/figment.hpp"
+#include "stage.hpp"
 
 namespace gt{
 
@@ -19,7 +19,6 @@ namespace gt{
 		};
 
 		typedef unsigned short dColRng; //!< Colour range from 0 to its maximum value representing the maximum value possible for this bitmap type.
-		typedef unsigned int dUnitPix;	//!< unit in pixels.
 		typedef std::vector<dColRng> dStreamChannel;	//!<
 		typedef std::map<eChan, dStreamChannel> dChannels;
 

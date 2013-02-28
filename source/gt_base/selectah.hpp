@@ -51,7 +51,7 @@ namespace gt{
 		dModeID current();	//!< Get the current mode of this selectah.
 		bool has(dModeID);	//!< Does this selectah use this mode?
 
-		static sMode &getModeFromAll(const dStr &aName);	//!< Get any mode from any selectah. !\note must be threadsafe.
+		static sMode &getModeFromAll(const dStr &aName);	//!< Get any mode from any selectah.
 		static void cleanupAll();							//!< Cleans up the global collection.
 
 	private:

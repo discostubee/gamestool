@@ -36,6 +36,16 @@ const cCommand::dUID cAnchor::xGetRoot = tOutline<cAnchor>::makeCommand(
 	NULL
 );
 
+////////////////////////////////////////////////////////////
+using namespace gt;
+
+cAnchor::cAnchor(){
+	addUpdRoster(&mRoot);
+}
+
+cAnchor::~cAnchor() {
+}
+
 void
 cAnchor::work(cContext* pCon) {
 	mRoot.get()->run(pCon);
@@ -224,13 +234,6 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 		SAFEDEL(itr->second);
 	}
 	pBuff->trimHead(readSpot);
-}
-
-cAnchor::cAnchor(){
-	addUpdRoster(&mRoot);
-}
-
-cAnchor::~cAnchor() {
 }
 
 void

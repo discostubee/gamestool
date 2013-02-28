@@ -3,9 +3,6 @@
 
 #include "gt_terminal/entryPoint.hpp"
 
-//- Include anything else we want to unit test here.
-#include "gt_graphics/windowFrame.hpp"
-
 ENTRYPOINT
 {
 	int result = EXIT_FAILURE;
@@ -51,13 +48,15 @@ ENTRYPOINT
 #ifdef GTUT
 namespace gt{
 
+//- Include anything else we want to unit test here.
+
 GTUT_START(test_addon, load){
 	cContext fake;
 
 	gWorld.get()->openAddon(dStr("X11GL"));
 
 	gWorld.get()->setRoot(
-		gWorld.get()->makeFig( getHash<cWindowFrame>() )
+		gWorld.get()->makeFig("stage")
 	);
 }GTUT_END;
 
@@ -67,13 +66,13 @@ GTUT_START(test_addon, unload){
 	bool addonBlueprintRemoved = false;
 
 	gWorld.get()->setRoot(
-		gWorld.get()->makeFig( getHash<cWorldShutoff>() )
+		gWorld.get()->makeFig("world shutoff")
 	);	// Will take out everything, and should close the addon.
 
 	gWorld.get()->loop();
 
 	try{
-		gWorld.get()->getBlueprint(getHash<cWindowFrame>());
+		gWorld.get()->getBlueprint(makeHash("stage"));
 	}catch(excep::base_error){
 		DBUG_LO("removed the window frame blueprint.");
 		addonBlueprintRemoved = true;

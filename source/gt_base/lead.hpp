@@ -94,6 +94,9 @@ namespace gt{
 		//!\return	false if it couldn't find the plug
 		template<typename CONTAIN> bool getValue( CONTAIN *input, const cPlugTag *tag);
 
+		//!\brief	Sets the value of the plug identified by the tag.
+		template<typename CONTAIN> void setValue( const CONTAIN *input, const cPlugTag *tag);
+
 		//!\brief	If you don't want to re-create a lead without this plug, or you don't want to over-ride it, you
 		//!			can remove it with this.
 		void remPlug(const cPlugTag *pGetTag);
@@ -169,6 +172,17 @@ namespace gt{
 
 		scrTDataItr->second->copyInto(input);
 		return true;
+	}
+
+	template<typename CONTAIN>
+	void
+	cLead::setValue( const CONTAIN *input, const cPlugTag *tag){
+		scrTDataItr = mTaggedData.find(tag->mID);
+
+		if(scrTDataItr == mTaggedData.end())
+			return;
+
+		scrTDataItr->second->copyFrom(input);
 	}
 
   	template<typename PLUG_TYPE>

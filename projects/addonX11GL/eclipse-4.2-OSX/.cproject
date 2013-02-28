@@ -43,7 +43,7 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_system"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_locale"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gamestool_d"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="graphics_d"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gt_graphics_d"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.379246390" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
@@ -161,7 +161,7 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_locale"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_thread"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gamestool_dt"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="graphics_dt"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gt_graphics_dt"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.76802529" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
@@ -206,17 +206,23 @@
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063.;cdt.managedbuild.tool.gnu.c.compiler.base.1616421453;cdt.managedbuild.tool.gnu.c.compiler.input.1710045184">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.715292638;cdt.managedbuild.tool.gnu.c.compiler.input.452977713">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063.;cdt.managedbuild.tool.gnu.c.compiler.base.1616421453;cdt.managedbuild.tool.gnu.c.compiler.input.1710045184">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.base.984509570;cdt.managedbuild.tool.gnu.cpp.compiler.input.917384872">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063.;cdt.managedbuild.tool.gnu.cpp.compiler.base.1170015972;cdt.managedbuild.tool.gnu.cpp.compiler.input.781037608">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.1845346740;cdt.managedbuild.tool.gnu.cpp.compiler.input.1062517145">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.c.compiler.macosx.base.221584121;cdt.managedbuild.tool.gnu.c.compiler.input.800995535">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.c.compiler.base.1416273593;cdt.managedbuild.tool.gnu.c.compiler.input.541508780">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
