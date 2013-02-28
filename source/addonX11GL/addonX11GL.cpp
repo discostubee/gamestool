@@ -14,11 +14,10 @@ draftAll(gt::cWorld *pWorld){
 
 		gt::tOutline<gt::cFigment>::draft();
 		gt::tOutline<gt::cEmptyFig>::draft();
-
-		gt::tOutline<gt::cWindowFrame>::draft();
-		gt::tOutline<gt::cWindowFrame_X11GL>::draft();
-		gt::tOutline<gt::cLayer>::draft();
-		gt::tOutline<gt::cLayer_X11GL>::draft();
+		gt::tOutline<gt::cStage>::draft();
+		gt::tOutline<gt::cStage_X11GL>::draft();
+		gt::tOutline<gt::cFilm>::draft();
+		gt::tOutline<gt::cFilm_X11GL>::draft();
 		gt::tOutline<gt::cPolyMesh>::draft();
 		gt::tOutline<gt::cPolyMesh_X11GL>::draft();
 		gt::tOutline<gt::c3DCamera>::draft();
@@ -39,10 +38,11 @@ draftAll(gt::cWorld *pWorld){
 DYN_LIB_DEF(void)
 closeLib(){
 	try{
-		gt::tOutline<gt::cWindowFrame_X11GL>::removeFromWorld();
-		gt::tOutline<gt::cWindowFrame>::removeFromWorld();
-		gt::tOutline<gt::cLayer_X11GL>::removeFromWorld();
-		gt::tOutline<gt::cLayer>::removeFromWorld();
+
+		gt::tOutline<gt::cStage_X11GL>::removeFromWorld();
+		gt::tOutline<gt::cStage>::removeFromWorld();
+		gt::tOutline<gt::cFilm_X11GL>::removeFromWorld();
+		gt::tOutline<gt::cFilm>::removeFromWorld();
 		gt::tOutline<gt::cPolyMesh_X11GL>::removeFromWorld();
 		gt::tOutline<gt::cPolyMesh>::removeFromWorld();
 		gt::tOutline<gt::c3DCamera_X11GL>::removeFromWorld();

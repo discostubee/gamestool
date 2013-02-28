@@ -6,7 +6,7 @@
 #ifndef POLYGONMESH_HPP
 #define POLYGONMESH_HPP
 
-#include "windowFrame.hpp"
+#include "stage.hpp"
 
 namespace gt{
 	typedef unsigned int dIdxVert;
@@ -27,8 +27,8 @@ namespace gt{
 
 	struct sPoly{
 		dIdxVert a, b, c;
-		s3DVec surfNorm;
-		s3DVec normA, normB, normC;
+		t3DVec<dUnitVDis> surfNorm;
+		t3DVec<dUnitVDis> normA, normB, normC;
 
 		sPoly() : a(0), b(0), c(0) {}
 		sPoly(dIdxVert aA, dIdxVert aB, dIdxVert aC) : a(aA), b(aB), c(aC) {}
@@ -45,19 +45,14 @@ namespace gt{
 	//!			When run, this figment should render a polygon mesh.
 	class cPolyMesh: public cFigment{
 	public:
-		//-----------------------------
 		const static cPlugTag* xPT_Mesh;	// Expects the sMesh struct.
 		const static cCommand::dUID xAddVert;	//!< Adds vertexes as a pile.
 		const static cCommand::dUID xAddPoly;	//!< Adds polygons as a pile.
 		const static cCommand::dUID xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
 
-		//-----------------------------
-		// The stuff me must have.
 		GT_IDENTIFY("polymesh");
 		virtual dNameHash hash() const { return getHash<cPolyMesh>(); }
 
-
-		//-----------------------------
 		cPolyMesh();
 		virtual ~cPolyMesh();
 

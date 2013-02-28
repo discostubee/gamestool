@@ -37,9 +37,9 @@ namespace gt{
 	public:
 		static const cPlugTag *xPT_contextTargetID;	//!< The target to jack into and get our plug. Expects a figment hash ID, and uses it to look for the figment in the context.
 		static const cPlugTag *xPT_command;	//!< ID of the command we use to get the plug from the target.
-		static const cPlugTag *xPT_tag;		//!< Used a tag ID rather than a pointer. This is the tag we use to get the plug from the target.
-		static const cPlugTag *xPT_plug;		//!< The plug we give back through the lead.
-		static const cCommand::dUID xGoGetIt;		//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target.
+		static const cPlugTag *xPT_tag;	//!< Used a tag ID rather than a pointer. This is the tag we use to get the plug from the target.
+		static const cPlugTag *xPT_plug;	//!< The plug we give back through the lead.
+		static const cCommand::dUID xGoGetIt;	//!< Go get it boy! Expects a target, a command and a tag. Searches the jack context for the target.
 
 		GT_IDENTIFY("plug hound");
 		GT_EXTENDS(cFigment);

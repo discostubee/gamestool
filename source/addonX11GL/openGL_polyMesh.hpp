@@ -2,8 +2,7 @@
 #ifndef OPENGL_POLYMESH_HPP
 #define OPENGL_POLYMESH_HPP
 
-#include "openGL_layer.hpp"
-
+#include "openGL_stage.hpp"
 #include "gt_graphics/polygonMesh.hpp"
 
 namespace gt{

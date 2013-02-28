@@ -1,39 +1,49 @@
 /*
  * !\file	primitives.hpp
- * !\brief	graphic primitives
+ * !\brief	This is 'sort of' the starting point for the graphics library.
  */
 
 #ifndef PRIMITIVES_HPP
 #define PRIMITIVES_HPP
 
 namespace gt{
-	typedef float			dUnitVDis;	//!< Virtual distance measurement.
-	typedef float			dUnitVRad;	//!< Virtual angle measurement, in radians.
-	typedef unsigned int	dUnitPix32;	//!< 32 bit pixel.
+	typedef float			dUnitVDis;		//!< Distance in virtual units, in other words there's no real unit for this distance.
+	typedef float			dUnitRad;		//!< Angle in radiants.
+	typedef unsigned int	dUnitPix;		//!< Number of pixels.
+	typedef unsigned int	dPix32;			//!< Gamestool 32 bit pixel.
 
 	//!\brief A 2D vector
-	struct s2DVec{
-		dUnitVDis	scaler;
-		dUnitVRad	rot;
+	template<typename UNIT>
+	struct t2DVec{
+		UNIT		scaler;
+		dUnitRad	rot;
 	};
 
 	struct sEulerRot{
-		dUnitVRad	x, y, z, A;
+		dUnitRad	x, y, z, A;
 	};
 
-	struct s3DVec{
-		dUnitVDis	scaler;
+	//!\brief	Euclidean vector
+	template<typename UNIT>
+	struct t3DVec{
+		UNIT		scaler;
 		sEulerRot	rotate;
 	};
 
+	//!\brief	Dimensions of a 2D shape.
 	template<typename UNIT>
-	struct sWH{
+	struct tDim2D{
 		UNIT width, height;
 	};
 
 	template<typename UNIT>
-	struct sPoint2D{
+	struct tPoint2D{
 		UNIT x, y;
+	};
+
+	template<typename UNIT>
+	struct tPoint3D{
+		UNIT x, y, z;
 	};
 
 	//!\brief	Collection of 2D shapes.

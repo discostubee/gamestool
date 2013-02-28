@@ -59,7 +59,7 @@ namespace gt{
 	template<typename A> class tPlug;
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Provides serialization (as a healthy breakfast). Get it, cereal, haha haha, uuuuhhh.
+	//!\brief	Provides serialization as a healthy breakfast. Get it, cereal, haha haha, uuuuhhh.
 	template<typename A>
 	class tPlugFlakes: public cBase_plug{
 	public:
@@ -255,7 +255,7 @@ namespace gt{
 
 			dLock lock(guardShadows);
 
-			tSafeLem<cWorld> tmpW( gWorld.get() );
+			tSafeLem<cWorld> tmpW = gWorld.get();
 			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
 				tmpSRef = (*itrShadow);
 				if(tmpSRef != NULL){

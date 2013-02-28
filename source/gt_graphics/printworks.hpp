@@ -6,7 +6,7 @@
 #ifndef PRINTWORKS_HPP
 #define PRINTWORKSS_HPP
 
-#include "gt_base/figment.hpp"
+#include "stage.hpp"
 
 namespace gt{
 

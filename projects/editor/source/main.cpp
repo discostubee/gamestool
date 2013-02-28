@@ -31,7 +31,10 @@ ENTRYPOINT
 
 #if defined(__APPLE__)
 ptrFig makeEditor(){
+	gWorld.get()->openAddon("X11GL");
+	ptrFig rl = gWorld.get()->makeFig("run list");
 
+	return rl;
 }
 #elif defined(__linux)
 ptrFig makeEditor(){

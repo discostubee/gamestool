@@ -40,7 +40,6 @@ namespace gt{ //gamestool
 		static const cCommand::dUID	xSetRoot;	//!\todo	Rename to linkRoot. Gotta keep the term link consistent.
 		static const cCommand::dUID	xGetRoot;
 
-		//- Required
 		cAnchor();
 		virtual ~cAnchor();
 
@@ -48,7 +47,6 @@ namespace gt{ //gamestool
 		GT_EXTENDS(cFigment);
 		virtual dNameHash hash() const { return getHash<cAnchor>(); }
 
-		//- Optional
 		virtual void work(cContext* pCon);
 		virtual void save(cByteBuffer* pAddHereb);	//!< Performs special saving.
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);	//!< Performs special loading.

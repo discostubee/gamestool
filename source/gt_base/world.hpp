@@ -37,6 +37,9 @@
  *! ptrSomething	A managed pointer.
  *! fPtrSomething	A function pointer.
  *! patSomething	A patch through function used with commands.
+ *! roSomething		A route to something. This is for pointers that you should not cleanup  because it's expected that the route exists longer than what is using it.
+ *! mroSomething	A route that's contained as a member. Don't clean these up, which also means making sure it lasts longer than the containing class.
+ *! STAMP_SOMETHING	This is when a macro expands into a declaration/definition. In other words, it stamps/prints out something.
  *
  *!\note	A little bit about some of the terms used around the place. This isn't shorthand exactly, so it get's it's own note coz it's special.
  *! set		Set a primitive to a value, copy a string, reference a static constant object, deep copy an object.

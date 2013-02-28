@@ -27,6 +27,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>bin</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/gamestool/bin</locationURI>
+		</link>
+		<link>
 			<name>gt_OSX</name>
 			<type>2</type>
 			<locationURI>SOURCE_LOC/gt_OSX</locationURI>
