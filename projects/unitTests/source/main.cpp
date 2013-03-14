@@ -46,6 +46,8 @@ ENTRYPOINT
 
 
 #ifdef GTUT
+#include "gt_base/figment.hpp"
+
 namespace gt{
 
 //- Include anything else we want to unit test here.
