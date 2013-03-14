@@ -83,6 +83,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>eclipse_share</name>
+			<type>2</type>
+			<locationURI>SHARED_LOC</locationURI>
+		</link>
+		<link>
 			<name>gt_base</name>
 			<type>2</type>
 			<locationURI>SOURCE_LOC/gt_base</locationURI>
@@ -107,6 +112,10 @@
 		<variable>
 			<name>PROJECT_SOURCE_LOC</name>
 			<value>$%7BPARENT-1-PROJECT_LOC%7D/source</value>
+		</variable>
+		<variable>
+			<name>SHARED_LOC</name>
+			<value>$%7BPARENT-2-PROJECT_LOC%7D/shared/eclipse/linux-3.7</value>
 		</variable>
 		<variable>
 			<name>SOURCE_LOC</name>
