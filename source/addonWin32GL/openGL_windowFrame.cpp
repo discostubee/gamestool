@@ -112,6 +112,8 @@ cWindowFrame_winGL::~cWindowFrame_winGL(){
 
 void 
 cWindowFrame_winGL::run(cContext* pCon){
+	PROFILE;
+
 	ASRT_NOTNULL(pCon);
 
 	wglMakeCurrent(mDevCon, mRenderCon);

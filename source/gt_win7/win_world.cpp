@@ -171,8 +171,3 @@ cWinWorld::flushLines(){
 	}
 	mLines->clear();
 }
-
-void		
-cWinWorld::copyWorld(cWorld* pWorld){
-	cWorld::copyWorld(pWorld);
-}

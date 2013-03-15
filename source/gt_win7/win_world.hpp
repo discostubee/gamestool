@@ -51,6 +51,8 @@ namespace gt{
 	protected:
 		static ::HINSTANCE	xInst;
 
+		virtual	void		closeAddon(dStr &name);
+
 	private:
 		static dMillisec getWinTime();
 	};

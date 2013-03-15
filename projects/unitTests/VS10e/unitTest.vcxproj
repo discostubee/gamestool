@@ -46,6 +46,7 @@
     <ClCompile Include="..\..\..\source\gt_base\command.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\context.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\dirPtr.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\exceptions.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\figment.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\fileIO.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\gt_string.cpp" />
