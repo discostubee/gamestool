@@ -6,6 +6,25 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\source\gt_graphics\bitmap.cpp" />
+    <ClCompile Include="..\..\..\source\gt_graphics\camera.cpp" />
+    <ClCompile Include="..\..\..\source\gt_graphics\film.cpp" />
+    <ClCompile Include="..\..\..\source\gt_graphics\polygonMesh.cpp" />
+    <ClCompile Include="..\..\..\source\gt_graphics\printworks.cpp" />
+    <ClCompile Include="..\..\..\source\gt_graphics\screens.cpp" />
+    <ClCompile Include="..\..\..\source\gt_graphics\stage.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\source\gt_graphics\bitmap.hpp" />
+    <ClInclude Include="..\..\..\source\gt_graphics\camera.hpp" />
+    <ClInclude Include="..\..\..\source\gt_graphics\film.hpp" />
+    <ClInclude Include="..\..\..\source\gt_graphics\polygonMesh.hpp" />
+    <ClInclude Include="..\..\..\source\gt_graphics\primitives.hpp" />
+    <ClInclude Include="..\..\..\source\gt_graphics\printworks.hpp" />
+    <ClInclude Include="..\..\..\source\gt_graphics\screens.hpp" />
+    <ClInclude Include="..\..\..\source\gt_graphics\stage.hpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{409B0298-3B1E-417D-9FE0-61E666D7EE87}</ProjectGuid>
     <RootNamespace>graphics_lib</RootNamespace>
@@ -46,18 +65,6 @@
       <Command>copy $(TargetPath) $(ProjectDir)..\..\..\includes\$(TargetFileName)  /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\source\gt_graphics\bitmap.cpp" />
-    <ClCompile Include="..\..\..\source\gt_graphics\layer.cpp" />
-    <ClCompile Include="..\..\..\source\gt_graphics\polygonMesh.cpp" />
-    <ClCompile Include="..\..\..\source\gt_graphics\windowFrame.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\source\gt_graphics\bitmap.hpp" />
-    <ClInclude Include="..\..\..\source\gt_graphics\layer.hpp" />
-    <ClInclude Include="..\..\..\source\gt_graphics\polygonMesh.hpp" />
-    <ClInclude Include="..\..\..\source\gt_graphics\windowFrame.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

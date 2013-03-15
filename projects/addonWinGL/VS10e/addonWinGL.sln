@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "addonWinGL", "addonWinGL.vc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gamestool_lib", "..\..\libgamestool\VS10e\gamestool_lib.vcxproj", "{BEAFEDAC-3AE3-44E9-998A-E6C41CD31C98}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graphics_lib", "..\..\libgraphics\VS10e\graphics_lib.vcxproj", "{409B0298-3B1E-417D-9FE0-61E666D7EE87}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{BEAFEDAC-3AE3-44E9-998A-E6C41CD31C98}.Debug|Win32.Build.0 = Debug|Win32
 		{BEAFEDAC-3AE3-44E9-998A-E6C41CD31C98}.Release|Win32.ActiveCfg = Debug|Win32
 		{BEAFEDAC-3AE3-44E9-998A-E6C41CD31C98}.Release|Win32.Build.0 = Debug|Win32
+		{409B0298-3B1E-417D-9FE0-61E666D7EE87}.Debug|Win32.ActiveCfg = Debug|Win32
+		{409B0298-3B1E-417D-9FE0-61E666D7EE87}.Debug|Win32.Build.0 = Debug|Win32
+		{409B0298-3B1E-417D-9FE0-61E666D7EE87}.Release|Win32.ActiveCfg = Debug|Win32
+		{409B0298-3B1E-417D-9FE0-61E666D7EE87}.Release|Win32.Build.0 = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
