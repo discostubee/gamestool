@@ -22,17 +22,20 @@ namespace win{
 
 namespace gt{
 
-	class cWindowFrame_winGL: public cWindowFrame, private tOutline<cWindowFrame_winGL>{
+	class cWinGLAddon{
 	public:
-		static const dNatChar* identify(){ return "gl window frame"; }
-		static dNameHash replaces(){ return getHash<cWindowFrame>(); }
+		static const dPlaChar* getAddonName() { return "win32GL"; }
+	};
 
+	class cWindowFrame_winGL: public cWindowFrame, public tAddonDependant<cWinGLAddon>{
+	public:
 		cWindowFrame_winGL();
 		virtual ~cWindowFrame_winGL();
 
-		virtual const dNatChar* name() const { return cWindowFrame_winGL::identify(); }		//!<
-		virtual dNameHash hash() const { return tOutline<cWindowFrame_winGL>::hash(); }
+		GT_IDENTIFY("window gl");
+		GT_REPLACES(cWindowFrame);
 
+		virtual dNameHash hash const(){ return getHash<cWindowFrame_winGL>(); }
 		virtual void run(cContext* pCon);
 
 	protected:

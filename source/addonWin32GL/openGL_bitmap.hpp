@@ -6,32 +6,14 @@
 
 namespace gt{
 
-	class cBitmap_gl: public cBitmap, private tOutline<cBitmap_gl>{
-
-	protected:
-		virtual void setMap(dColourChan){ DONT_USE_THIS; };
-
+	class cBitmap_gl: public cBitmap, public tAddonDependant<cWinGLAddon>{
 	public:
-		//-----------------------------
-		// Defines
 
-		//-----------------------------
-		// Members
-
-
-		//-----------------------------
-		// Statics
-
-		static const char* identify(){ return "gl bitmap"; }
-		static dNameHash replaces(){ return getHash<cBitmap>(); }
-
-		//-----------------------------
 		cBitmap_gl();
 		virtual ~cBitmap_gl();
 
-		//-----------------------------
-		virtual const char* name() const{ return identify(); }		//!< Virtual version of identify.
-
+		GT_IDENTIFY("bitmap gl");
+		GT_REPLACES(cBitmap);
 	};
 }
 
