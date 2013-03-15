@@ -18,6 +18,7 @@
     <ClCompile Include="..\..\..\source\gt_base\exceptions.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\figment.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\fileIO.cpp" />
+    <ClCompile Include="..\..\..\source\gt_base\glassHouse.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\gt_string.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\iFigment.cpp" />
     <ClCompile Include="..\..\..\source\gt_base\lead.cpp" />
@@ -49,6 +50,7 @@
     <ClInclude Include="..\..\..\source\gt_base\exceptions.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\figment.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\fileIO.hpp" />
+    <ClInclude Include="..\..\..\source\gt_base\glassHouse.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\gt_string.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\iFigment.hpp" />
     <ClInclude Include="..\..\..\source\gt_base\lead.hpp" />
