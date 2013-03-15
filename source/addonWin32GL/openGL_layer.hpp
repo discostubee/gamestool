@@ -13,15 +13,13 @@
 
 namespace gt{
 
-	class cLayer_winGL: public cLayer, private tOutline<cLayer_winGL>{
+	class cLayer_winGL: public cLayer, public tAddonDependant<cWinGLAddon>{
 	public:
-		static const dNatChar* identify(){ return "gl layer"; }
-		static dNameHash replaces(){ return getHash<cLayer>(); }
-
 		cLayer_winGL();
 		virtual ~cLayer_winGL();
 
-		virtual const dNatChar* name() const { return cLayer_winGL::identify(); }		//!<
+		GT_IDENTIFY("layer gl");
+		GT_REPLACES(cLayer);
 		virtual dNameHash hash() const { return tOutline<cLayer_winGL>::hash(); }
 
 		virtual void run(cContext* pCon);

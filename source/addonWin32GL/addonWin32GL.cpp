@@ -14,10 +14,10 @@ draftAll(gt::cWorld* pWorld){
 
 		DBUG_LO("Win32GL addon open.");
 	}catch(excep::base_error &e){
-		WARN(e);
+		excep::logExcep::add(e.what);
 
 	}catch(...){
-		std::cout << "unknown error while opening x11 addon" << std::endl;
+		excep::logExcep::add("Unknown error");
 	}
 }
 
@@ -31,11 +31,10 @@ closeLib(){
 
 		cTracker::makeReport(std::cout);
 
-		DBUG_LO("Win32GL logic addon.");
 	}catch(excep::base_error &e){
-		WARN(e);
+		excep::logExcep::add(e.what);
 
 	}catch(...){
-		std::cout << "unknown error while opening x11 addon" << std::endl;
+		excep::logExcep::add("Unknown error");
 	}
 }
