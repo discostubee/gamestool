@@ -34,6 +34,7 @@
 // Object types
 namespace gt{
 
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Suitable for STL list and vector that contain cBase_plug child classes.
 	template<typename CONTAINER>
 	class tPlugLinierContainer : public cBase_plug{
@@ -45,15 +46,20 @@ namespace gt{
 		tPlugLinierContainer();
 		virtual ~tPlugLinierContainer();
 
+		virtual dPlugType getType() const;
 		virtual void save(cByteBuffer* pSaveHere);
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL);
+		virtual void assign(void *aTo, dPlugType aType) const;
+		virtual void append(void *aTo, dPlugType aType) const;
 
-		tPlugLinierContainer<CONTAINER>& operator=(const tPlugLinierContainer<CONTAINER> &pCopyMe);
 		virtual	cBase_plug& operator= (const cBase_plug &pD);
-		virtual	cBase_plug& operator= (const CONTAINER &pCopyMe);
 		virtual bool operator== (const cBase_plug &pD) const;
+		virtual cBase_plug& operator+= (const cBase_plug &pD);
 
-		template<typename OTHER> tPlugLinierContainer<CONTAINER>& operator+=(const OTHER &pCopyMe);
+		//--- new
+		virtual	cBase_plug& operator = (const CONTAINER &pCopyMe);
+		tPlugLinierContainer<CONTAINER>& operator= (const tPlugLinierContainer<CONTAINER> &pCopyMe);
+		template<typename OTHER> tPlugLinierContainer<CONTAINER>& operator+= (const OTHER &pCopyMe);
 
 		itr_t getItr();
 
@@ -65,15 +71,14 @@ namespace gt{
 	protected:
 		typedef typename CONTAINER::iterator fullitr_t;	//!< Container iterator.
 
-		virtual void actualCopyInto(void* pContainer, dPlugType pType) const;
-		virtual void actualCopyFrom(const void* pContainer, dPlugType pType);
-
 #		ifdef GT_THREADS
 			virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon);
 			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon);
+			virtual void appendShadow(const cBase_plug *pReadFrom, dConSig aCon);
 #		endif
 	};
 
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Implementation intended to make things easier that using tPlugLinierContainer
 	template<typename T>
 	class tPlugArray : public tPlugLinierContainer< std::vector< tPlug<T> > > {
@@ -84,6 +89,7 @@ namespace gt{
 		virtual ~tPlugArray(){}
 	};
 
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Implementation intended to make things easier that using tPlugLinierContainer
 	template<typename T>
 	class tPlugList : public tPlugLinierContainer< std::vector< tPlug<T> > > {
@@ -107,28 +113,31 @@ namespace gt{
 		tPlugMap();
 		virtual ~tPlugMap();
 
+		dPlugType getType() const;
 		virtual void save(cByteBuffer* pSaveHere);
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL);
+		virtual void assign(void *aTo, dPlugType aType) const;
+		virtual void append(void *aTo, dPlugType aType) const;
 
 		virtual	cBase_plug& operator= (const cBase_plug &pD);
 		virtual bool operator== (const cBase_plug &pD) const;
+		virtual	cBase_plug& operator+= (const cBase_plug &pD);
 
 #		ifdef GT_THREADS
 			virtual void updateStart();
 			virtual void updateFinish();
 #		endif
 
+		//--- new
 		tPlugMap<KEY, T> operator= (const tPlugMap<KEY, T> &copyMe);
 
 	protected:
 		typedef typename map_t::value_type entry;
 
-		virtual void actualCopyInto(void* pContainer, dPlugType pType) const;
-		virtual void actualCopyFrom(const void* pContainer, dPlugType pType);
-
 #		ifdef GT_THREADS
 			virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon);
 			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon);
+			virtual void appendShadow(const cBase_plug *pReadFrom, dConSig aCon);
 #		endif
 	};
 
@@ -147,9 +156,8 @@ namespace gt{
 
 	//-----------------------------------------------------------------------------------------------
 	template<typename CONTAINER>
-	tPlugLinierContainer<CONTAINER>::tPlugLinierContainer() :
-		cBase_plug(cBase_plug::getPlugType<CONTAINER>())
-	{}
+	tPlugLinierContainer<CONTAINER>::tPlugLinierContainer(){
+	}
 
 	template<typename CONTAINER>
 	tPlugLinierContainer<CONTAINER>::~tPlugLinierContainer(){
@@ -180,20 +188,47 @@ namespace gt{
 	}
 
 	template<typename CONTAINER>
-	tPlugLinierContainer<CONTAINER>&
-	tPlugLinierContainer<CONTAINER>::operator=(const tPlugLinierContainer<CONTAINER> &copyMe){
-		NOTSELF(&copyMe);
-		mContainer = copyMe.mContainer;
-		return *this;
+	void
+	tPlugLinierContainer<CONTAINER>::assign(void *aTo, dPlugType aType) const{
+	}
+
+	template<typename CONTAINER>
+	void
+	tPlugLinierContainer<CONTAINER>::append(void *aTo, dPlugType aType) const{
+
 	}
 
 	template<typename CONTAINER>
 	cBase_plug&
 	tPlugLinierContainer<CONTAINER>::operator= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.copyInto(&mContainer);
+		pD.assign(&mContainer, getType());
 		return *this;
 	}
+
+	template<typename CONTAINER>
+	bool
+	tPlugLinierContainer<CONTAINER>::operator== (const cBase_plug &pD) const{
+		return (getType() == pD.getType());
+	}
+
+	template<typename CONTAINER>
+	cBase_plug&
+	tPlugLinierContainer<CONTAINER>::operator+= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		CONTAINER tmp;
+		pD.assign(&tmp, getType());
+		mContainer.reserve(mContainer.size() + tmp.size());
+		for(
+			typename CONTAINER::const_iterator itr = tmp.begin();
+			itr != tmp.end();
+			++itr
+		)
+			mContainer.push_back(*itr);
+
+		return *this;
+	}
+
 
 	template<typename CONTAINER>
 	cBase_plug&
@@ -203,9 +238,11 @@ namespace gt{
 	}
 
 	template<typename CONTAINER>
-	bool
-	tPlugLinierContainer<CONTAINER>::operator== (const cBase_plug &pD) const{
-		return (mType == pD.mType);
+	tPlugLinierContainer<CONTAINER>&
+	tPlugLinierContainer<CONTAINER>::operator=(const tPlugLinierContainer<CONTAINER> &copyMe){
+		NOTSELF(&copyMe);
+		mContainer = copyMe.mContainer;
+		return *this;
 	}
 
 	template<typename CONTAINER>
@@ -229,24 +266,6 @@ namespace gt{
 		return tCoolItr<CONTAINER>(&mContainer);
 	}
 
-
-	template<typename CONTAINER>
-	void
-	tPlugLinierContainer<CONTAINER>::actualCopyInto(void* pContainer, dPlugType pType) const{
-		if(pType != mType)
-			throw excep::cantCopy(typeid(CONTAINER).name(), "unknown", __FILE__, __LINE__);
-
-		*reinterpret_cast<CONTAINER*>(pContainer) = mContainer;
-	}
-
-	template<typename CONTAINER>
-	void
-	tPlugLinierContainer<CONTAINER>::actualCopyFrom(const void* pContainer, dPlugType pType){
-		if(pType != mType)
-			throw excep::cantCopy(typeid(CONTAINER).name(), "unknown", __FILE__, __LINE__);
-
-		mContainer = *reinterpret_cast<const CONTAINER*>(pContainer);
-	}
 
 #	ifdef GT_THREADS
 
@@ -275,17 +294,28 @@ namespace gt{
 
 		}
 
+		template<typename CONTAINER>
+		void
+		tPlugLinierContainer<CONTAINER>::appendShadow(const cBase_plug *pReadFrom, dConSig aCon){
+
+		}
+
 #	endif
 
 
 	//-----------------------------------------------------------------------------------------------
 	template<typename KEY, typename T>
-	tPlugMap<KEY, T>::tPlugMap() :
-		cBase_plug(cBase_plug::getPlugType<map_t>())
-	{}
+	tPlugMap<KEY, T>::tPlugMap(){
+	}
 
 	template<typename KEY, typename T>
 	tPlugMap<KEY, T>::~tPlugMap(){
+	}
+
+	template<typename KEY, typename T>
+	cBase_plug::dPlugType
+	tPlugMap<KEY, T>::getType() const{
+		return cBase_plug::genPlugType<map_t>();
 	}
 
 	template<typename KEY, typename T>
@@ -314,17 +344,48 @@ namespace gt{
 	}
 
 	template<typename KEY, typename T>
+	void
+	tPlugMap<KEY, T>::assign(void *aTo, dPlugType aType) const{
+
+	}
+
+	template<typename KEY, typename T>
+	void
+	tPlugMap<KEY, T>::append(void *aTo, dPlugType aType) const{
+
+	}
+
+	template<typename KEY, typename T>
 	cBase_plug&
 	tPlugMap<KEY, T>::operator= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.copyInto(&mContainer);
+		pD.assign(
+			&mContainer,
+			cBase_plug::genPlugType< tPlugMap<KEY, T> >()
+		);
 		return *this;
 	}
 
 	template<typename KEY, typename T>
 	bool
 	tPlugMap<KEY, T>::operator== (const cBase_plug &pD) const{
-		return (mType == pD.mType);
+		return (getType() == pD.getType());
+	}
+
+	template<typename KEY, typename T>
+	cBase_plug&
+	tPlugMap<KEY, T>::operator+= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		map_t tmp;
+		pD.assign(&tmp, getType());
+		for(
+			typename map_t::iterator itr = tmp.begin();
+			itr != tmp.end();
+			++itr
+		){
+			mContainer[ itr->first ] = itr->second;
+		}
+		return *this;
 	}
 
 	template<typename KEY, typename T>
@@ -337,23 +398,6 @@ namespace gt{
 		return *this;
 	}
 
-	template<typename KEY, typename T>
-	void
-	tPlugMap<KEY, T>::actualCopyInto(void* pContainer, dPlugType pType) const{
-		if(pType != mType)
-			throw excep::cantCopy(typeid(map_t).name(), "unknown", __FILE__, __LINE__);
-
-		*reinterpret_cast<map_t*>(pContainer) = mContainer;
-	}
-
-	template<typename KEY, typename T>
-	void
-	tPlugMap<KEY, T>::actualCopyFrom(const void* pContainer, dPlugType pType){
-		if(pType != mType)
-			throw excep::cantCopy(typeid(map_t).name(), "unknown", __FILE__, __LINE__);
-
-		mContainer = *reinterpret_cast<const map_t*>(pContainer);
-	}
 
 #	ifdef GT_THREADS
 
@@ -379,9 +423,13 @@ namespace gt{
 		template<typename KEY, typename T>
 		void
 		tPlugMap<KEY, T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
-
 		}
 
+		template<typename KEY, typename T>
+		void
+		tPlugMap<KEY, T>::appendShadow(const cBase_plug *pReadFrom, dConSig aCon){
+
+		}
 #	endif
 
 }

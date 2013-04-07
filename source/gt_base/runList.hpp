@@ -32,6 +32,8 @@ namespace gt{ //gamestool
 	//!\brief	When you run this figment, you also run every figment in its list.
 	class cRunList: public cFigment{
 	public:
+		static const cPlugTag *xPT_single;	//!< Single thing to add.
+
 		static const cCommand::dUID	xAdd;
 
 		cRunList();

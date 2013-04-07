@@ -63,120 +63,64 @@ namespace gt{
 	};
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	Handle to a resource kept by mr safety, who is told when this handle dies.
+	//!\brief
 	template<typename T>
-	class tSafeLem{
+	class tMrSafety : public tSpitLemming<T>{
 	public:
-		tSafeLem(tMrSafety<T> *mr);
-		tSafeLem(const tSafeLem<T> &lem);
-		~tSafeLem<T>();
+		typedef typename tSpitLemming<T>::tLemming dLemming;
 
-		T* get ();
-		T* operator -> ();
-		tSafeLem<T>& operator = (const tSafeLem<T> &copy);
-
-	protected:
-		tMrSafety<T> *mParent;
-
-	friend class tMrSafety<T>;
-	};
-
-	//-------------------------------------------------------------------------------------
-	//!\brief	Replicates the lemming spitter. Would have been nice to keep it as a base
-	//!			class, but mr safety really needs to be its own thing.
-	template<typename T>
-	class tMrSafety{
-	public:
 		tMrSafety();
 		~tMrSafety();
 
-		void take(T* takeMe); 		//!< Cleans up the old data if it exists, and becomes the custodian of the data being past in. Waits to acquire lock.
+		//---
+		dLemming get();
+
+		//---
+		void take(T *takeMe); 		//!< Cleans up the old data if it exists, and becomes the custodian of the data being past in. Waits to acquire lock.
 		void cleanup();				//!< Deletes data. Waits to acquire lock.
 		void drop(); 				//!< Don't manage this anymore. Doesn't cleanup. Waits to acquire lock.
 		void set(const T& data);	//!< Set containing data and deletes any old data. Requires lock.
-		tSafeLem<T> get();
 
 	protected:
+		void changeLem(dLemming *from, dLemming *to);	//!< Makes the 'from' lemming empty and makes the 'to' lemming linked to this manager.
+		void first();	//!< Starts the lock.
+		void noMore();	//!< If this is the last lemming for this thread, release the lock for next thread in queue.
+		T* getData(const dLemming *requester);	//!< Acquires lock for current thread. Blocks and waits to acquire lock if request comes from another thread.
+
+	private:
+		T* mData;
+
 #		ifdef GT_THREADS
 			boost::recursive_mutex muData;
 			typedef boost::lock_guard<boost::recursive_mutex> dMuLock;
 #		endif
-
-		void deadLemming();	//!<	If this is the last lemming for this thread, release the lock for next thread in queue.
-		void changedLem(tSafeLem<T>* from, tSafeLem<T>* to);	//!< Makes the 'from' lemming empty and makes the 'to' lemming linked to this manager.
-		T* getLockData(tSafeLem<T>* requester);	//!<	Acquires lock for current thread. Blocks and waits to acquire lock if request comes from another thread.
-
-	private:
-		T* mData;
-		int inWild;	//!< Gotta keep track of the number of times we use the lock.
-
-	friend class tSafeLem<T>;
 	};
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Templates
 namespace gt{
-//-------------------------------------------------------------------------------------
-template<typename T>
-tSafeLem<T>::tSafeLem(tMrSafety<T> *mr) :
-	mParent(mr)
-{
-}
-
-template<typename T>
-tSafeLem<T>::tSafeLem(const tSafeLem<T> &lem) :
-	mParent(lem.mParent)
-{
-	mParent->changedLem(const_cast<tSafeLem*>(&lem), this);
-}
-
-template<typename T>
-tSafeLem<T>::~tSafeLem(){
-	if(mParent!=NULL)
-		mParent->deadLemming();
-}
-
-
-template<typename T> T*
-tSafeLem<T>::get () {
-	if(mParent==NULL)
-		return NULL;
-
-	return mParent->getLockData(this);
-}
-
-template<typename T>
-T*
-tSafeLem<T>::operator -> () {
-	return get();
-}
-
-template<typename T>
-tSafeLem<T>&
-tSafeLem<T>::operator = (const tSafeLem &copy){
-	ASRT_NOTSELF(&copy);
-
-	mParent->changedLem(static_cast<tSafeLem*>(&copy), this);
-
-	return *this;
-}
 
 
 //-------------------------------------------------------------------------------------
 
 template<typename T>
-tMrSafety<T>::tMrSafety() :
-	mData(NULL), inWild(0)
+tMrSafety<T>::tMrSafety()
 {}
 
 template<typename T>
 tMrSafety<T>::~tMrSafety()
-{
-	try{
-		cleanup();
-	}catch(...){
-	}
+{}
+
+template<typename T>
+typename tMrSafety<T>::dLemming
+tMrSafety<T>::get() {
+#	ifdef GT_THREADS
+		muData.lock();
+#	endif
+
+	return tSpitLemming<T>::get();
 }
 
 template<typename T>
@@ -221,32 +165,30 @@ tMrSafety<T>::set(const T& data) {
 }
 
 template<typename T>
-tSafeLem<T>
-tMrSafety<T>::get() {
+void
+tMrSafety<T>::first(){
 #	ifdef GT_THREADS
 		muData.lock();
 #	endif
-
-	++inWild;
-
-	return tSafeLem<T>(this);
 }
 
 template<typename T>
 void
-tMrSafety<T>::deadLemming(){
-	ASRT_TRUE(inWild > 0, "Lemming underflow.");
-
-	--inWild;
-
+tMrSafety<T>::noMore(){
 #	ifdef GT_THREADS
 		muData.unlock();
 #	endif
 }
 
 template<typename T>
+T*
+tMrSafety<T>::getData(const dLemming *requester){
+	return mData;
+}
+
+template<typename T>
 void
-tMrSafety<T>::changedLem(tSafeLem<T>* from, tSafeLem<T>* to){
+tMrSafety<T>::changeLem(dLemming *from, dLemming *to){
 	ASRT_TRUE(from->mParent == this, "Tried to change from a lemming that didn't come from this manager.");
 
 	if(to->mParent != this){
@@ -261,15 +203,6 @@ tMrSafety<T>::changedLem(tSafeLem<T>* from, tSafeLem<T>* to){
 	to->mParent = this;
 	from->mParent = NULL;
 }
-
-template<typename T>
-T*
-tMrSafety<T>::getLockData(tSafeLem<T>* requester){
-	ASRT_TRUE(requester->mParent == this, "A lemming requested data from the wrong manager");
-	ASRT_NOTNULL(mData);
-	return mData;
-}
-
 
 }
 

@@ -24,6 +24,10 @@ using namespace gt;
 
 const cPlugTag* cFigment::xPT_serialBuff = tOutline<cFigment>::makePlugTag("serial buffer");
 const cPlugTag* cFigment::xPT_loadingParty = tOutline<cFigment>::makePlugTag("loading party");
+const cPlugTag* cFigment::xPT_name = tOutline<cFigment>::makePlugTag("name");
+const cPlugTag* cFigment::xPT_hash = tOutline<cFigment>::makePlugTag("hash");
+const cPlugTag* cFigment::xPT_commands = tOutline<cFigment>::makePlugTag("commands");
+const cPlugTag* cFigment::xPT_links = tOutline<cFigment>::makePlugTag("links");
 
 const cCommand::dUID cFigment::xSave = tOutline<cFigment>::makeCommand(
 	"save", &cFigment::patSave, cFigment::xPT_serialBuff,
@@ -31,9 +35,32 @@ const cCommand::dUID cFigment::xSave = tOutline<cFigment>::makeCommand(
 );
 
 const cCommand::dUID cFigment::xLoad = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patLoad, cFigment::xPT_serialBuff,
+	"load", &cFigment::patLoad,
+	cFigment::xPT_serialBuff,
+	cFigment::xPT_loadingParty,
 	NULL
 );
+
+const cCommand::dUID cFigment::xGetName = tOutline<cFigment>::makeCommand(
+	"load", &cFigment::patLoad, cFigment::xPT_name,
+	NULL
+);
+
+const cCommand::dUID cFigment::xGetHash = tOutline<cFigment>::makeCommand(
+	"load", &cFigment::patLoad, cFigment::xPT_hash,
+	NULL
+);
+
+const cCommand::dUID cFigment::xGetCommands = tOutline<cFigment>::makeCommand(
+	"load", &cFigment::patLoad, cFigment::xPT_commands,
+	NULL
+);
+
+const cCommand::dUID cFigment::xGetLinks = tOutline<cFigment>::makeCommand(
+	"load", &cFigment::patLoad, cFigment::xPT_links,
+	NULL
+);
+
 
 #if defined(DEBUG) && defined(GT_SPEED)
 	const cPlugTag* cFigment::xPT_life = tOutline<cFigment>::makePlugTag("life");
@@ -130,24 +157,6 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 }
 
 void
-cFigment::patSave(ptrLead aLead){
-	tPlug<ptrBuff> buffer;
-
-	aLead->getPlug(&buffer, xPT_serialBuff);
-
-	save(buffer.get().get());
-}
-
-void
-cFigment::patLoad(ptrLead aLead){
-	tPlug<ptrBuff> buffer;
-
-	aLead->getPlug(&buffer, xPT_serialBuff);
-
-	loadEat(buffer.get().get());
-}
-
-void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
 
@@ -204,6 +213,46 @@ cFigment::getLinks(std::list<ptrFig>* pOutLinks){
 	DUMB_REF_ARG(pOutLinks);
 }
 
+void
+cFigment::patSave(ptrLead aLead){
+	ptrBuff buffer;
+
+	aLead->assignTo(&buffer, xPT_serialBuff);
+
+	save(buffer.get());
+}
+
+void
+cFigment::patLoad(ptrLead aLead){
+	ptrBuff buffer;
+
+	aLead->assignTo(&buffer, xPT_serialBuff);
+
+	loadEat(buffer.get());
+}
+
+void
+cFigment::patGetName(ptrLead aLead){
+	const dPlaChar *tmp = name();
+	aLead->assignFrom(tmp, xPT_name);
+}
+
+void
+cFigment::patGetHash(ptrLead aLead){
+	dNameHash tmp = hash();
+	aLead->assignFrom(tmp, xPT_hash);
+}
+
+void
+cFigment::patGetCommands(ptrLead aLead){
+
+}
+
+void
+cFigment::patGetLinks(ptrLead aLead){
+
+}
+
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
@@ -232,6 +281,7 @@ cWorldShutoff::work(cContext* pCon){
 ////////////////////////////////////////////////////////////
 
 #ifdef GTUT
+#	include "unitTestFigments.hpp"
 
 GTUT_START(test_cfigment, test_suit){
 	figmentTestSuit<cFigment>();

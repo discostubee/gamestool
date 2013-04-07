@@ -24,50 +24,49 @@
 #include <vector>
 
 
-///////////////////////////////////////////////////////////////////////////////////
-//
-namespace gt{
-	namespace voidCopiers{
-		template<typename A>
-		void baseCopy(const A *pFrom, void *pTo){
-			*reinterpret_cast<A*>(pTo) = *pFrom;
-		}
+#ifdef GT_THREADS
+#	define PLUG_PARENT tShadowPlug
+#else
+#	define PLUG_PARENT tPlugFlakes
+#endif
 
+///////////////////////////////////////////////////////////////////////////////////
+// fu
+namespace gt{
+
+	namespace voidAssign{
 		void textToNStr(const dText *pFrom, void *pTo);
 		void textToPStr(const dText *pFrom, void *pTo);
+		void plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo);
+		void plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo);
+		void plaCStrToText(const dPlaChar * const *pFrom, void *pTo);
 	}
 
-	template<typename A>
-	inline typename tPlug<A>::dMapCopiers*
-	getPlugCopiers(){
-		static bool setup = false;
-		static typename tPlug<A>::dMapCopiers copiers;
-
-		if(!setup){
-			copiers[ cBase_plug::getPlugType<A>() ] = voidCopiers::baseCopy<A>;
-			setup=true;
-		}
-
-		return &copiers;
+	namespace voidAppend{
+		void textToText(const dText *pFrom, void *pTo);
+		void plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo);
+		void plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo);
+		void plaCStrToText(const dPlaChar * const *pFrom, void *pTo);
 	}
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Object types
 namespace gt{
-	template<typename A> class tPlug;
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Provides serialization as a healthy breakfast. Get it, cereal, haha haha, uuuuhhh.
 	template<typename A>
-	class tPlugFlakes: public cBase_plug{
+	class tPlugFlakes: public tDataPlug<A>{
 	public:
-		tPlugFlakes(dPlugType pTI) :
-			cBase_plug(pTI)
-		{}
 
-		virtual ~tPlugFlakes(){}
+		//--- interface
+		virtual A& get() = 0;
+		virtual const A& getConst() const =0;
+
+		//---
+		virtual ~tPlugFlakes(){
+		}
 
 		virtual void save(cByteBuffer* pSaveHere){
 			pSaveHere->add(&get());
@@ -77,12 +76,12 @@ namespace gt{
 			pChewToy->trimHead( pChewToy->fill(&get()) );
 		}
 
-		virtual A& get() = 0;	//!< Only the containing figment should have access to this.
-		virtual const A& getConst() const =0;
 	};
+
 
 #	ifdef GT_THREADS
 
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Used to indicate how shadows are effects, and how the effect the source.
 	enum eShadowMode{
 		eSM_init,	//!< Initial value.
@@ -97,7 +96,7 @@ namespace gt{
 	template<typename A>
 	class tShadowPlug: public tPlugFlakes<A>{
 	public:
-		tShadowPlug(cBase_plug::dPlugType pTI);
+		tShadowPlug();
 		virtual ~tShadowPlug();
 
 		virtual void linkLead(cLead* pLead);
@@ -114,6 +113,7 @@ namespace gt{
 	protected:
 		virtual void readShadow(cBase_plug *pWriteTo, dConSig pSig);
 		virtual void writeShadow(const cBase_plug *pReadFrom, dConSig pSig);
+		virtual void appendShadow(const cBase_plug *pReadFrom, dConSig aSig);
 
 	friend class cLead;
 
@@ -137,37 +137,15 @@ namespace gt{
 #	endif
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Handy way to select which parent to use. Can't typedef and macro is evil, so the next best thing to do
-	//!			is this.
-#	ifdef GT_THREADS
-		template<typename A>
-		class tPlugParent : public tShadowPlug<A> {
-		public:
-			tPlugParent(cBase_plug::dPlugType pTI) : tShadowPlug<A>(pTI) {}
-			virtual ~tPlugParent() {}
-		};
-#	else
-		template<typename A>
-		class tPlugParent : public tPlugFlakes<A> {
-		public:
-			tPlugParent(cBase_plug::dPlugType pTI) : tPlugFlakes<A>(pTI) {}
-			virtual ~tPlugParent() {}
-		};
-#	endif
-
-	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Implements most of what's left unimplemented from cBase_plug. It also provides easy access to its data
 	//!			for any containing figments, which also makes it not thread safe if somehow the plug were to be used
 	//!			through this interface by 2 threads. Which can't really happen because async leads use shadows.
 	//!\note	Refer to the cBase_plug class for more info.
 	template<typename A>
-	class tPlug: public tPlugParent<A>
-	{
+	class tPlug: public PLUG_PARENT<A>{
 	public:
-		typedef void (*fuCopyInto)(const A *copyFrom, void *copyTo);
-		typedef std::map<cBase_plug::dPlugType, fuCopyInto> dMapCopiers;
-
 		tPlug();
+		tPlug(const cBase_plug &other);
 		tPlug(const A& pA);
 		tPlug(const tPlug<A> &other);
 		tPlug(const cBase_plug *other);
@@ -176,6 +154,7 @@ namespace gt{
 		//- Polymorph
 		virtual cBase_plug& operator= (const cBase_plug &pD);
 		virtual bool operator== (const cBase_plug &pD) const;
+		virtual cBase_plug& operator+= (const cBase_plug &pD);
 		virtual A& get();
 		virtual const A& getConst() const;
 
@@ -183,28 +162,23 @@ namespace gt{
 		cBase_plug& operator= (const tPlug<A> &other);
 		cBase_plug& operator= (const A& pA);
 
-	protected:
-		virtual void actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const;
-		virtual void actualCopyFrom(const void* pContainer, cBase_plug::dPlugType pType);
-
 	private:
 		A mD;	//!< Data
-
 	};
 
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////////
-// Templates
+// Template implementation
 namespace gt{
 
 #	ifdef GT_THREADS
 
 		//--------------------------------------
 		template<typename A>
-		tShadowPlug<A>::tShadowPlug(cBase_plug::dPlugType pTI) :
-			tPlugFlakes<A>(pTI)
-		{}
+		tShadowPlug<A>::tShadowPlug(){
+		}
 
 		template<typename A>
 		tShadowPlug<A>::~tShadowPlug(){
@@ -255,7 +229,7 @@ namespace gt{
 
 			dLock lock(guardShadows);
 
-			tSafeLem<cWorld> tmpW = gWorld.get();
+			dRefWorld tmpW = gWorld.get();
 			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
 				tmpSRef = (*itrShadow);
 				if(tmpSRef != NULL){
@@ -271,7 +245,7 @@ namespace gt{
 		template<typename A>
 		void
 		tShadowPlug<A>::updateFinish(){
-			typedef tPlugParent<A> p;
+			typedef PLUG_PARENT<A> p;
 
 			PROFILE;
 
@@ -289,27 +263,34 @@ namespace gt{
 		template<typename A>
 		void
 		tShadowPlug<A>::readShadow(cBase_plug *pWriteTo, dConSig pSig){
-			if(tPlugFlakes<A>::mType != pWriteTo->mType)
-				return;
-
 			setTmpShadowRef(pSig);
-
 			if(tmpSRef->mMode == eSM_init){	//- This looks bad because it is possible that the unlocked interface is being used to change data at the point we are reading form it.
 				dLock lock(guardShadows);
 				tmpSRef->mData = get();
 			}
-
-			pWriteTo->copyFrom(&tmpSRef->mData);
+			tLitePlug<A> tmp(&tmpSRef->mData);
+			*pWriteTo = tmp;
 		}
 
 		template<typename A>
 		void
 		tShadowPlug<A>::writeShadow(const cBase_plug *pReadFrom, dConSig pSig){
-			if(tPlugFlakes<A>::mType != pReadFrom->mType)
-				return;
-
 			setTmpShadowRef(pSig);
-			pReadFrom->copyInto(&tmpSRef->mData);
+			pReadFrom->assign(
+				static_cast<void*>(&tmpSRef->mData),
+				cBase_plug::genPlugType<A>()
+			);
+			tmpSRef->mMode = eSM_write;
+		}
+
+		template<typename A>
+		void
+		tShadowPlug<A>::appendShadow(const cBase_plug *pReadFrom, dConSig aSig){
+			setTmpShadowRef(aSig);
+			pReadFrom->append(
+				static_cast<void*>(&tmpSRef->mData),
+				cBase_plug::genPlugType<A>()
+			);
 			tmpSRef->mMode = eSM_write;
 		}
 
@@ -321,7 +302,7 @@ namespace gt{
 			if(mShadows.size() <= s){
 				dLock lock(guardShadows);
 				while(mShadows.size() <= s)
-					mShadows.push_back( NULL );
+					mShadows.push_back(NULL);
 			}
 
 			tmpSRef = mShadows[pSig];
@@ -336,29 +317,32 @@ namespace gt{
 #	endif
 
 	//--------------------------------------
+	template<typename A>
+	tPlug<A>::tPlug(){
+	}
 
 	template<typename A>
-	tPlug<A>::tPlug():
-		tPlugParent<A>(cBase_plug::getPlugType<A>())
-	{}
+	tPlug<A>::tPlug(const cBase_plug &other){
+		other.assign(
+			&mD,
+			cBase_plug::genPlugType<A>()
+		);
+	}
 
 	template<typename A>
-	tPlug<A>::tPlug(const A& pA):
-		tPlugParent<A>(cBase_plug::getPlugType<A>()),
-		mD(pA)
-	{}
+	tPlug<A>::tPlug(const A& pA){
+	}
 
 	template<typename A>
-	tPlug<A>::tPlug(const tPlug<A> &other) :
-		tPlugParent<A>(other.mType),
-		mD(other.mD)
-	{}
+	tPlug<A>::tPlug(const tPlug<A> &other){
+	}
 
 	template<typename A>
-	tPlug<A>::tPlug(const cBase_plug *other) :
-		tPlugParent<A>(other->mType)
-	{
-		other->copyInto(&mD);
+	tPlug<A>::tPlug(const cBase_plug *other){
+		other->assign(
+			&mD,
+			cBase_plug::genPlugType<A>()
+		);
 	}
 
 	template<typename A>
@@ -369,28 +353,15 @@ namespace gt{
 	cBase_plug&
 	tPlug<A>::operator= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.copyInto(&mD);
-		return *this;
-	}
-
-	template<typename A>
-	bool
-	tPlug<A>::operator== (const cBase_plug &pD) const {
-		return (pD.mType == tPlugParent<A>::mType);
-	}
-
-	template<typename A>
-	cBase_plug&
-	tPlug<A>::operator= (const tPlug<A> &other){
-		NOTSELF(&other);
-		mD = other.mD;
+		pD.assign(&mD, cBase_plug::genPlugType<A>());
 		return *this;
 	}
 
 	template<typename A>
 	cBase_plug&
-	tPlug<A>::operator= (const A& pA){
-		mD = pA;
+	tPlug<A>::operator+= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		pD.append(&mD, cBase_plug::genPlugType<A>());
 		return *this;
 	}
 
@@ -407,29 +378,19 @@ namespace gt{
 	}
 
 	template<typename A>
-	void
-	tPlug<A>::actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const{
-		PROFILE;
-
-		typename dMapCopiers::iterator itrCopiers = getPlugCopiers<A>()->find( pType );
-		if(itrCopiers != getPlugCopiers<A>()->end()){
-			itrCopiers->second(&mD, pContainer);
-		}else{
-			throw excep::cantCopy(typeid(A).name(), "unknown", __FILE__, __LINE__);
-		}
+	cBase_plug&
+	tPlug<A>::operator= (const tPlug<A> &other){
+		NOTSELF(&other);
+		mD = other.mD;
+		return *this;
 	}
 
 	template<typename A>
-	void
-	tPlug<A>::actualCopyFrom(const void* pContainer, cBase_plug::dPlugType pType){
-		PROFILE;
-
-		if(pType != tPlugParent<A>::mType)
-			throw excep::cantCopy(typeid(A).name(), "unknown", __FILE__, __LINE__);
-
-		mD = *reinterpret_cast<const A*>(pContainer);
+	cBase_plug&
+	tPlug<A>::operator= (const A& pA){
+		mD = pA;
+		return *this;
 	}
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -438,25 +399,102 @@ namespace gt{
 
 	//!\brief	plug leads are illegal. Don't make much sense anyhow.
 	template<>
-	class tPlug<cLead>: public tPlugParent<cLead>{
+	class tPlug<cLead>: public PLUG_PARENT<cLead>{
 	};
 
+	//-------------------------------------------------------------------------------------
 	template<>
-	inline tPlug<dText>::dMapCopiers*
-	getPlugCopiers<dText>(){
+	tDataPlug<dText>::dMapAssigns *
+	getVoidAssignments<dText>(){
 		static bool setup = false;
-		static tPlug<dText>::dMapCopiers copiers;
+		static tDataPlug<dText>::dMapAssigns copiers;
 
 		if(!setup){
-			copiers[ cBase_plug::getPlugType<dText>() ] = voidCopiers::baseCopy<dText>;
-			copiers[ cBase_plug::getPlugType<dNatStr>() ] = voidCopiers::textToNStr;
-			copiers[ cBase_plug::getPlugType<dStr>() ] = voidCopiers::textToPStr;
+			copiers[ cBase_plug::genPlugType<dText>() ] = voidAssign::basic<dText>;
+			copiers[ cBase_plug::genPlugType<dNatStr>() ] = voidAssign::textToNStr;
+			copiers[ cBase_plug::genPlugType<dStr>() ] = voidAssign::textToPStr;
 			setup=true;
 		}
 
 		return &copiers;
 	}
+
+	template<>
+	tDataPlug<dText>::dMapAssigns *
+	getVoidAppends<dText>(){
+		static bool setup = false;
+		static tDataPlug<dText>::dMapAppends app;
+
+		if(!setup){
+			app[ cBase_plug::genPlugType<dText>() ] = voidAppend::textToText;
+			setup=true;
+		}
+
+		return &app;
+	}
+
+	//-------------------------------------------------------------------------------------
+	template<>
+	tDataPlug< const dPlaChar* >::dMapAssigns *
+	getVoidAssignments< const dPlaChar* >(){
+		static bool setup = false;
+		static tDataPlug<const dPlaChar*>::dMapAssigns copiers;
+
+		if(!setup){
+			copiers[ cBase_plug::genPlugType<dText>() ] = voidAssign::plaCStrToText;
+			copiers[ cBase_plug::genPlugType<dNatStr>() ] = voidAssign::plaCStrToNStr;
+			copiers[ cBase_plug::genPlugType<dStr>() ] = voidAssign::plaCStrToPStr;
+			setup=true;
+		}
+
+		return &copiers;
+	}
+
+	template<>
+	tDataPlug< const dPlaChar* >::dMapAssigns *
+	getVoidAppends< const dPlaChar* >(){
+		static bool setup = false;
+		static tDataPlug< const dPlaChar* >::dMapAppends app;
+
+		if(!setup){
+			app[ cBase_plug::genPlugType<dText>() ] = voidAppend::plaCStrToText;
+			app[ cBase_plug::genPlugType<dNatStr>() ] = voidAppend::plaCStrToNStr;
+			app[ cBase_plug::genPlugType<dStr>() ] = voidAppend::plaCStrToPStr;
+			setup=true;
+		}
+
+		return &app;
+	}
+
+	//-------------------------------------------------------------------------------------
+
+//	template<>
+//	tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAssigns *
+//	getVoidAssignments< boost::shared_ptr<cByteBuffer> >(){
+//		static bool setup = false;
+//		static tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAssigns ass;
+//
+//		if(!setup){
+//			setup=true;
+//		}
+//
+//		return &ass;
+//	}
+
+	template<>
+	tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAppends *
+	getVoidAppends< boost::shared_ptr<cByteBuffer> >(){
+		static bool setup = false;
+		static tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAppends app;
+
+		if(!setup){
+			setup=true;
+		}
+
+		return &app;
+	}
 }
+
 
 
 #endif

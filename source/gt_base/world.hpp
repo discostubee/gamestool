@@ -27,7 +27,7 @@
  *! sSomething		A simple object or data container. In other words, a struct with no defined methods.
  *! eSomething		an enum, for both the scope and the values.
  *! mSomething		Variable data stored in a class or structure, otherwise known as a member variable.
- *! pSomething		A parameter passed into a function call.
+ *! aSomething		A function argument.
  *! uSomething		Constant and constant static data where the u stands for unchanging. Not to replace p when constant data is passed to a function.
  *! tSomething		A template class or struct.
  *! xSomething		Static data as either a class member or a function variable.
@@ -184,10 +184,7 @@ namespace gt{
 		ptrFig makeFig(dNameHash pNameHash);	//!< Makes a new figment that is managed by a smart pointer.
 		ptrFig makeFig(const dPlaChar *pName);	//!< Handy function if you want to use literal strings in a demo.
 		ptrLead makeLead(unsigned int pComID);	//!< Makes a new lead that is managed by a smart pointer.
-
-		//!\brief	If you don't have the context ID (possible because you're creating some kind of hard coded demo), you can still
-		//!			get a lead if you have the string name of the figment and the context it came from.
-		ptrLead makeLead(const dPlaChar *aFigName, const dPlaChar *aComName);
+		ptrLead makeLead(const dPlaChar *aFigName, const dPlaChar *aComName);	//!<
 
 		//--------------------------------------------------------
 		// Register office
@@ -362,6 +359,8 @@ namespace gt{
 // Typedefs
 namespace gt{
 	//typedef tPtrRef<iFigment> refFig;	//!< Used when you want access to a figment
+
+	typedef gt::tMrSafety<gt::cWorld>::dLemming dRefWorld;
 }
 
 

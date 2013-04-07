@@ -25,8 +25,8 @@
 //!\brief	Stamps out all the things needed to make a pot inside your house.
 #define STAMP_POT(HOUSE_TYPE, POT_TYPE, POT) \
 	POT_TYPE POT;\
-	static void setPot##POT(HOUSE_TYPE *house, const cBase_plug *set){ set->copyInto(&house->POT); }\
-	static void getPot##POT(const HOUSE_TYPE *house, cBase_plug *get){ get->copyFrom(&house->POT); }
+	static void setPot##POT(HOUSE_TYPE *house, const cBase_plug *set){ set->assign(&house->POT, cBase_plug::genPlugType<HOUSE_TYPE>()); }\
+	static void getPot##POT(const HOUSE_TYPE *house, cBase_plug *get){ *get = house->POT; }
 
 
 #include "figment.hpp"

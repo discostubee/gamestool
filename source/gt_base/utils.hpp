@@ -119,6 +119,31 @@ private:
 };
 
 //------------------------------------------------------------------------------------------
+//!\brief	Handy if you don't want to expose the map, or if you don't want to get the
+//!			container again to check the iterator against it.
+template <typename KEY, typename T>
+class tCoolFind{
+public:
+	typedef std::map<KEY, T> dMap;
+
+	tCoolFind(dMap &aMap, KEY aFindMe) :
+		refMap(aMap), mFind(aMap.find(aFindMe))
+	{}
+
+	bool found(){
+		return mFind != refMap.end();
+	}
+
+	T& get(){
+		return mFind->second;
+	}
+
+private:
+	dMap &refMap;
+	typename dMap::iterator mFind;
+};
+
+//------------------------------------------------------------------------------------------
 //!\brief	Handy little function for just seeing if a value is in a vector.
 template<typename T>
 bool

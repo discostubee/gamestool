@@ -12,7 +12,7 @@ ENTRYPOINT
 {
 
 	gt::gWorld.take(
-#	ifdef __APPLE__
+#	if defined(__APPLE__)
 		new gt::cOSXWorld()
 #	endif
 	);

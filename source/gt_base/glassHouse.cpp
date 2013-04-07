@@ -11,6 +11,8 @@ struct testHouse{
 	STAMP_POT(testHouse, int, A);
 	STAMP_POT(testHouse, unsigned short, B);
 	STAMP_POT(testHouse, bool, C);
+
+	testHouse& operator += (const testHouse &copy){ return *this; }
 };
 
 typedef tGlassHouse<testHouse> ghTest;
