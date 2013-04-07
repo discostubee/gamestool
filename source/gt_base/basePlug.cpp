@@ -21,14 +21,11 @@
 using namespace gt;
 
 ////////////////////////////////////////////////////////////
-cBase_plug::cBase_plug(dPlugType pTI):
-	mType(pTI)
-{
+cBase_plug::cBase_plug(){
 }
 
-cBase_plug::cBase_plug(const cBase_plug &pCopy):
-	mType(pCopy.mType)
-{
+cBase_plug::cBase_plug(const cBase_plug &pCopy){
+
 }
 
 cBase_plug::~cBase_plug(){

@@ -89,9 +89,17 @@ namespace gt{
 		// Commands and plug tags
 		static const cPlugTag* xPT_serialBuff;	//!< A smart pointer to the buffer where we load from, and save to.
 		static const cPlugTag* xPT_loadingParty;	//!< This is a special group of figments relevant to loading.
+		static const cPlugTag* xPT_name;
+		static const cPlugTag* xPT_hash;
+		static const cPlugTag* xPT_commands;	//!< An array plug to contain
+		static const cPlugTag* xPT_links;	//!< An array plug to contain all the figments.
 
 		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability. Expects a xPT_serialBuff.
 		static const cCommand::dUID	xLoad;	//!< Expects a xPT_serialBuff and xPT_loadingParty
+		static const cCommand::dUID	xGetName;		//!< Fills a provided plug with the figment's name.
+		static const cCommand::dUID	xGetHash;		//!< Fills a provided plug with the hash of the figment's name.
+		static const cCommand::dUID	xGetCommands;	//!< Gets a list of all the commands used by this figment.
+		static const cCommand::dUID	xGetLinks;		//!< Fills a provided container with the list of links found using getLinks
 
 		//-----------------------------
 		// Implemented
@@ -138,7 +146,7 @@ namespace gt{
 		virtual void work(cContext* pCon);	//!< Gives the child figments some runtime to do whatever it is that they normally do.
 		virtual dStr const & requiredAddon() const;	//!< Unless this figment comes from an addon, only an empty string should be returned.
 		virtual dMigrationPattern getLoadPattern();	//!< Load patterns offer you a way to migrate an older version of a figment to the current version. Override this function to pass back different load patterns. \note NOT threadsafe.
-		virtual void getLinks(std::list<ptrFig>* pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.
+		virtual void getLinks(std::list<ptrFig> *pOutLinks);	//!< Append the list being passed in, with any figment pointers which form the run structure of the program. !\note NOT threadsafe.
 		virtual void save(cByteBuffer* pSaveHere);	//!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
 		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL); //!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
 
@@ -149,6 +157,10 @@ namespace gt{
 		// Patch through functions for use with command.
 		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
 		void patLoad(ptrLead aLead);	//!< Same as the patSave function above.
+		void patGetName(ptrLead aLead);
+		void patGetHash(ptrLead aLead);
+		void patGetCommands(ptrLead aLead);
+		void patGetLinks(ptrLead aLead);
 
 	private:
 		ptrLead tmpLead;	//!< Avoids mem alloc.
@@ -191,6 +203,39 @@ namespace gt{
 namespace gt{
 
 	//-----------------------------------------------------------------------------------
+	//!\brief	This is the most common plug, so it needs to be the most efficient.
+	template<>
+	class tDataPlug<ptrFig>: public cBase_plug{
+	public:
+
+		typedef void (*fuAssign)(const ptrFig *copyFrom, void *copyTo);
+		typedef void (*fuAppend)(const ptrFig *copyFrom, void *copyTo);
+		typedef std::map<dPlugType, fuAssign> dMapAssigns;
+		typedef std::map<dPlugType, fuAppend> dMapAppends;
+
+		virtual cBase_plug::dPlugType getType() const { return cBase_plug::genPlugType<ptrFig>(); }
+
+		virtual void assign(void *aTo, dPlugType aType) const {
+			if(aType != cBase_plug::genPlugType<ptrFig>())
+				throw excep::base_error("Can't assign none ptrFig to ptrFig", __FILE__, __LINE__);
+
+			*reinterpret_cast<ptrFig*>(aTo) = getConst();
+		}
+
+		virtual void append(void *aTo, dPlugType aType) const {
+			throw excep::base_error("Can't append ptrFig, ever,", __FILE__, __LINE__);
+		}
+
+		virtual bool operator== (const cBase_plug &pD) const {
+			return (pD.getType() == cBase_plug::genPlugType<ptrFig>());
+		}
+
+		//---
+		virtual ptrFig& get() = 0;
+		virtual const ptrFig& getConst() const =0;
+	};
+
+	//-----------------------------------------------------------------------------------
 	//!\brief	This thing is slightly odd. I say odd as opposed to dangerous because
 	//!			a figment pointer plug is only threadsafe because the interface to
 	//!			figment is. Plugs use shadows to be threadsafe, but only if the contained
@@ -198,45 +243,52 @@ namespace gt{
 	//!			your plug is for a class that has a smart pointer, what that smart
 	//!			pointer refers to won't be protected by the shadow strategy.
 	template<>
-	class tPlug<ptrFig>: public tPlugParent<ptrFig>
+	class tPlug<ptrFig>: public PLUG_PARENT<ptrFig>
 	{
 	public:
-		typedef void (*fuCopyInto)(const ptrFig *copyFrom, void *copyTo);
-		typedef std::map<cBase_plug::dPlugType, fuCopyInto> dMapCopiers;
 
-		tPlug():
-			tPlugParent<ptrFig>(cBase_plug::getPlugType<ptrFig>())
-		{
+		tPlug(){
 			mD = gWorld.get()->getEmptyFig();
 		}
 
-		tPlug(const ptrFig& pA):
-			tPlugParent<ptrFig>(cBase_plug::getPlugType<ptrFig>())
-		{
+		tPlug(const cBase_plug &other){
+			other.assign(
+				&mD,
+				cBase_plug::genPlugType<ptrFig>()
+			);
+		}
+
+		tPlug(const ptrFig& pA){
 			mD = pA;
 		}
 
-		tPlug(const tPlug<ptrFig> &other):
-			tPlugParent<ptrFig>(cBase_plug::getPlugType<ptrFig>())
-		{
+		tPlug(const tPlug<ptrFig> &other){
 			mD = other.mD;
 		}
 
-		tPlug(const cBase_plug *other):
-			tPlugParent<ptrFig>(cBase_plug::getPlugType<ptrFig>())
-		{
-			other->copyInto(&mD);
+		tPlug(const cBase_plug *other){
+			other->assign(
+				&mD,
+				cBase_plug::genPlugType<ptrFig>()
+			);
 		}
 
 		virtual ~tPlug(){}
 
 		virtual cBase_plug& operator= (const cBase_plug &pD){
 			NOTSELF(&pD);
-			pD.copyInto(&mD);
+			pD.assign(&mD, getType());
 			return *this;
 		}
 
-		virtual bool operator== (const cBase_plug &pD) const { return false; }
+		virtual bool operator== (const cBase_plug &pD) const {
+			return false;
+		}
+
+		cBase_plug& operator+= (const cBase_plug &pD){
+			NOTSELF(&pD);
+			return *this;
+		}
 
 		cBase_plug& operator= (const tPlug<ptrFig> &other){
 			NOTSELF(&other);
@@ -247,6 +299,14 @@ namespace gt{
 		cBase_plug& operator= (const ptrFig& pA){
 			mD = pA;
 			return *this;
+		}
+
+		virtual ptrFig& get(){
+			return mD;
+		}
+
+		virtual const ptrFig& getConst() const{
+			return mD;
 		}
 
 		virtual void save(cByteBuffer* pAddHere){
@@ -272,52 +332,11 @@ namespace gt{
 			get() = itr->second->fig;
 		}
 
-		virtual ptrFig& get(){
-			return mD;
-		}
-
-		virtual const ptrFig& getConst() const{
-			return mD;
-		}
-
-	protected:
-		virtual void actualCopyInto(void* pContainer, cBase_plug::dPlugType pType) const{
-			dMapCopiers::iterator itrCopiers = getPlugCopiers<ptrFig>()->find(getPlugType<ptrFig>());
-			if(itrCopiers != getPlugCopiers<ptrFig>()->end()){
-				itrCopiers->second( &mD, pContainer );
-			}else{
-				throw excep::cantCopy(typeid(ptrFig).name(), "unknown", __FILE__, __LINE__);
-			}
-		}
-
-		virtual void actualCopyFrom(const void* pContainer, cBase_plug::dPlugType pType){
-			PROFILE;
-
-			if(pType != tPlugParent<ptrFig>::mType)
-				throw excep::cantCopy(typeid(ptrFig).name(), "unknown", __FILE__, __LINE__);
-
-			mD = *reinterpret_cast<const ptrFig*>(pContainer);
-		}
-
 	private:
 		ptrFig mD;	//!< Data
-
 
 	};
 
 }
-
-
-#ifdef GTUT
-	namespace gt{
-		//!\brief	Used to run a series of standard tests.
-		template<typename FIGTYPE>
-		void figmentTestSuit(){
-			tOutline<FIGTYPE>::draft();
-			tPlug<ptrFig> me = gWorld.get()->makeFig(getHash<FIGTYPE>());
-			//tOutline<FIGTYPE>::removeFromWorld();
-		}
-	}
-#endif
 
 #endif

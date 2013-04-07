@@ -40,6 +40,40 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////
+// fu
+namespace gt{
+
+	//!\brief	Void assigns let us map different copying techniques to each type, for each type. If the target wasn't void, we wouldn't be
+	//!			able to map them as function pointers.
+	namespace voidAssign{
+
+		//!\brief Try a static cast conversion.
+		template<typename A> void basic(const A *pFrom, void *pTo){
+			*static_cast<A*>(pTo) = *pFrom;
+		}
+	}
+
+	//!\brief
+	namespace voidAppend{
+
+		//!\brief Try a static cast conversion.
+		template<typename A> void basic(const A *pFrom, void *pTo){
+			*static_cast<A*>(pTo) += *pFrom;
+		}
+	}
+
+	template<typename A> class tDataPlug;
+
+	//!\brief	Specialise this for each type you want to have more than just a basic copy for.
+	//!\note	Made as a function separate from the class to make it easier to write new assignments.
+	template<typename A> typename tDataPlug<A>::dMapAssigns* getVoidAssignments();
+
+	//!\brief	Similar to getVoidAssignments.
+	template<typename A> typename tDataPlug<A>::dMapAppends* getVoidAppends();
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 // Classes
 namespace gt{
 
@@ -85,80 +119,231 @@ namespace gt{
 		typedef dNameHash dPlugType;
 
 		//--- statics
-		template<typename PLUG_TYPE> static dPlugType getPlugType();
+		template<typename PLUG_TYPE> static dPlugType genPlugType();	//!<
 
 		//--- implemented
-		const dPlugType mType;	//!< Must be public so the tPlug templates can use it.
-
-		cBase_plug(dPlugType pTI);
-		cBase_plug(const cBase_plug& pCopy);	//!< Only copies the type. Assume later implementations will copy contents.
+		cBase_plug();
 		virtual ~cBase_plug();
 
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Made threadsafe in implementation.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Made threadsafe in implementation.
 
-		template<typename T> void copyInto(T *container) const;	//!< The plug will try and copy itself into the given memory location.
-		template<typename T> void copyFrom(const T *container);	//!< The plug will try and copy the value from the container.
+		template<typename T> cBase_plug& operator= (const T &aFrom);	//!< Can only work on exactly equal types.
 
 		//--- interface
-		//!\brief Appends the buffer with binary data that should be understandable by any platform.
-		virtual void save(cByteBuffer* pSaveHere) = 0;
+		virtual dPlugType getType() const =0;
+		virtual void save(cByteBuffer* pSaveHere) = 0;	//!< Appends the buffer with binary data that should be understandable by any platform.
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) = 0;	//!< Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
+		virtual void assign(void *aTo, dPlugType aType) const =0;	//!< Allows later implementation to assign into the memory addess. !\note Not the same as copying because things like smart pointers should work correctly with this.
+		virtual void append(void *aTo, dPlugType aType) const =0;	//!< Similar to assign, but for appending to the input argument.
 
-		//!\brief Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) = 0;
-
-		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, does not copy any linked lead info.
+		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, should not copy any linked lead info.
 		virtual bool operator== (const cBase_plug &pD) const =0;
+		virtual cBase_plug& operator+= (const cBase_plug &pD) =0;
 
 		#ifdef GT_THREADS
 			virtual void updateStart() =0;	//!< Write shadow updates to origin.
 			virtual void updateFinish() =0;	//!< Update all shadows using the origin. Any shadow writes after the update was started are overwritten.
 		#endif
 
-		//--- should be protected.
+
+	protected:
 		typedef std::map<cLead*, unsigned int> dMapLeads;
 
 		dMapLeads mLeadsConnected;		//!< Lead connections are not copied when copy plug values.
 		dMapLeads::iterator itrLead;	//!< handy.
 
-		virtual void actualCopyInto(void* pContainer, dPlugType pType) const =0;
-		virtual void actualCopyFrom(const void* pContainer, dPlugType pType) =0;
-
 		#ifdef GT_THREADS
 			virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon) =0;
 			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon) =0;
+			virtual void appendShadow(const cBase_plug *pReadFrom, dConSig aCon) =0;
 		#endif
 
 	friend class cLead;
+
+	private:
+		cBase_plug(const cBase_plug &pCopy);
+	};
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Another step towards a full plug, designed just to manage assignments and appends.
+	template<typename A>
+	class tDataPlug: public cBase_plug{
+	public:
+		//--- types
+		typedef void (*fuAssign)(const A *copyFrom, void *copyTo);
+		typedef void (*fuAppend)(const A *copyFrom, void *copyTo);
+		typedef std::map<dPlugType, fuAssign> dMapAssigns;
+		typedef std::map<dPlugType, fuAppend> dMapAppends;
+
+		//--- implemented
+		virtual cBase_plug::dPlugType getType() const;
+		virtual void assign(void *aTo, dPlugType aType) const;
+		virtual void append(void *aTo, dPlugType aType) const;
+
+		virtual bool operator== (const cBase_plug &pD) const;
+
+		//--- interface
+		virtual A& get() = 0;
+		virtual const A& getConst() const =0;
+	};
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Used just for copying and appending.
+	template<typename T>
+	class tLitePlug: public tDataPlug<T>{
+	public:
+		T *mRef;
+
+		tLitePlug(T *aRef) : mRef(aRef) {}
+		virtual ~tLitePlug();
+
+		virtual void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
+
+		virtual	cBase_plug& operator= (const cBase_plug &pD) {
+			ASRT_NOTSELF(&pD);
+			pD.assign(mRef, cBase_plug::genPlugType<T>());
+			return *this;
+		}
+
+		virtual cBase_plug& operator+= (const cBase_plug &pD) {
+			ASRT_NOTSELF(&pD);
+			pD.append(mRef, cBase_plug::genPlugType<T>());
+			return *this;
+		}
+
+		virtual T& get(){ return *mRef; }
+		virtual const T& getConst() const{ return *mRef; }
+
+		#ifdef GT_THREADS
+			virtual void updateStart(){ DONT_USE_THIS; }
+			virtual void updateFinish(){ DONT_USE_THIS; }
+		#endif
+
+	protected:
+#		ifdef GT_THREADS
+			virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon){ DONT_USE_THIS; }
+			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
+			virtual void appendShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
+#		endif
 	};
 
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////
+// Template implementation
 namespace gt{
 
+	//----------------------------------------------------------------------------------------------------------------
+	template<typename A>
+	typename tDataPlug<A>::dMapAssigns*
+	getVoidAssignments(){
+		static bool setup = false;
+		static typename tDataPlug<A>::dMapAssigns ass;
+
+		if(!setup){
+			ass[ cBase_plug::genPlugType<A>() ] = voidAssign::basic<A>;
+			setup=true;
+		}
+
+		return &ass;
+	}
+
+	template<typename A>
+	typename tDataPlug<A>::dMapAppends*
+	getVoidAppends(){
+		static bool setup = false;
+		static typename tDataPlug<A>::dMapAppends app;
+
+		if(!setup){
+			app[ cBase_plug::genPlugType<A>() ] = voidAppend::basic<A>;
+			setup=true;
+		}
+
+		return &app;
+	}
+
+	//----------------------------------------------------------------------------------------------------------------
 	template<typename PLUG_TYPE>
 	cBase_plug::dPlugType
-	cBase_plug::getPlugType(){
-		static dPlugType typeID = 0;
+	cBase_plug::genPlugType(){
 
-		if(typeID == 0)
-			typeID = makeHash(typeid(PLUG_TYPE).name());
+		static const dPlugType typeID
+#			ifdef USE_TYPEINFO
+				= makeHash(typeid(PLUG_TYPE).name());
+#			else
+				//- error for now
+#			endif
 
 		return typeID;
 	}
 
 	template<typename T>
-	void
-	cBase_plug::copyInto(T *container) const{
-		actualCopyInto(static_cast<void*>(container), getPlugType<T>());
+	cBase_plug&
+	cBase_plug::operator= (const T &aFrom){
+		//- there should be no need to chech for yourself due to input type
+
+		if(cBase_plug::genPlugType<T>() != getType())
+			excep::cantCopy("plug", "raw type", __FILE__, __LINE__);
+
+		dynamic_cast< tDataPlug<T>* >(this)->get() = aFrom;	//- Attempt down cast.
+
+		return *this;
 	}
 
-	template<typename T>
-	void
-	cBase_plug::copyFrom(const T *container){
-		actualCopyFrom(static_cast<const void*>(container), getPlugType<T>());
+	//----------------------------------------------------------------------------------------------------------------
+	template<typename A>
+	cBase_plug::dPlugType
+	tDataPlug<A>::getType() const {
+		return cBase_plug::genPlugType<A>();
 	}
+
+	template<typename A>
+	void
+	tDataPlug<A>::assign(void *aTo, cBase_plug::dPlugType aType) const{
+		PROFILE;
+
+		tCoolFind<cBase_plug::dPlugType, fuAssign> assign(
+			*getVoidAssignments<A>(),
+			aType
+		);
+
+		if(!assign.found())
+			throw excep::cantCopy(typeid(A).name(), "unknown type", __FILE__, __LINE__);
+
+		assign.get()(
+			&getConst(),
+			aTo
+		);
+	}
+
+	template<typename A>
+	void
+	tDataPlug<A>::append(void *aTo, cBase_plug::dPlugType aType) const{
+		PROFILE;
+
+		tCoolFind<cBase_plug::dPlugType, fuAssign> append(
+			*getVoidAppends<A>(),
+			aType
+		);
+
+		if(!append.found())
+			throw excep::cantCopy(typeid(A).name(), "unknown type", __FILE__, __LINE__);
+
+		append.get()(
+			&getConst(),
+			aTo
+		);
+	}
+
+	template<typename A>
+	bool
+	tDataPlug<A>::operator== (const cBase_plug &pD) const {
+		return (cBase_plug::genPlugType<A>() == pD.getType());
+	}
+
 }
+
 
 #endif

@@ -238,7 +238,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 void
 cAnchor::patSetRoot(ptrLead aLead){
-	aLead->getPlug(&mRoot, cAnchor::xPT_root);
+	aLead->copyPlug(&mRoot, cAnchor::xPT_root);
 }
 
 void
@@ -292,7 +292,7 @@ GTUT_START(testAnchor, basicLoad){
 	tPlug<ptrFig> reload;
 
 	startLead(root, fake.getSig());
-	root->getPlug(&reload, cAnchor::xPT_root);
+	root->copyPlug(&reload, cAnchor::xPT_root);
 	stopLead(root);
 
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
@@ -302,8 +302,8 @@ GTUT_START(testAnchor, basicLoad){
 	tPlug<int> myNum;
 
 	startLead(checkData, fake.getSig());
-	checkData->getPlug(&myStr, cSaveTester::xPT_str);
-	checkData->getPlug(&myNum, cSaveTester::xPT_num);
+	checkData->copyPlug(&myStr, cSaveTester::xPT_str);
+	checkData->copyPlug(&myNum, cSaveTester::xPT_num);
 	stopLead(checkData);
 
 	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
@@ -329,7 +329,10 @@ GTUT_START(testAnchor, chainSave){
 
 	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
 	ptrLead add = gWorld.get()->makeLead(cRunList::xAdd);
-	add->addToPile(&tester);
+	add->addPlug(
+		&tester,
+		cRunList::xPT_single
+	);
 	rlist.get()->jack(add, &fakeCon);
 
 	ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);

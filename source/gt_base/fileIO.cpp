@@ -87,7 +87,7 @@ cBase_fileIO::getLoadPattern(){
 
 void
 cBase_fileIO::patSetPath(ptrLead aLead){
-	aLead->getPlug(&mPath, xPT_filePath);
+	aLead->copyPlug(&mPath, xPT_filePath);
 }
 
 void
@@ -95,12 +95,12 @@ cBase_fileIO::patRead(ptrLead aLead){
 	size_t readSize = 0;
 	size_t readStart = 0;
 
-	aLead->getValue(&readStart, xPT_readSize);
-	aLead->getValue(&readSize, xPT_startSpot);
+	aLead->assignTo(&readStart, xPT_readSize);
+	aLead->assignTo(&readSize, xPT_startSpot);
 
-	tPlug<cByteBuffer> readInto;
-	read(&readInto.get(), readSize, readStart);
-	aLead->setPlug(&readInto, xPT_buffer);
+	ptrBuff buff;
+	read(buff.get(), readSize, readStart);
+	aLead->assignFrom(buff, xPT_buffer);
 }
 
 void
@@ -114,12 +114,11 @@ cBase_fileIO::patWrite(ptrLead aLead){
 void
 cBase_fileIO::patInsert(ptrLead aLead){
 	size_t startSpot = 0;
-	tPlug<cByteBuffer> current;
+	ptrBuff current;
 
-	aLead->getValue(&startSpot, xPT_startSpot);
-	aLead->getPlug(&current, xPT_buffer);
-	insert( &current.get(), startSpot );
-	aLead->setPlug(&current, xPT_buffer);
+	aLead->assignTo(&startSpot, xPT_startSpot);
+	aLead->assignTo(&current, xPT_buffer);
+	insert(current.get(), startSpot);
 }
 
 void
@@ -135,6 +134,7 @@ cBase_fileIO::patGetFileSize(ptrLead aLead){
 }
 
 #ifdef GTUT
+#	include "unitTestFigments.hpp"
 
 GTUT_START(test_cBase_fileIO, test_suit){
 	tOutline<cFigment>::draft();

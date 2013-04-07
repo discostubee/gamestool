@@ -6,8 +6,11 @@
 
 
 #include "gt_terminal/entryPoint.hpp"
-
+#include "gt_base/anchor.hpp"
 #include "gt_base/runList.hpp"
+#include "gt_graphics/stage.hpp"
+#include "gt_graphics/film.hpp"
+#include "gt_graphics/camera.hpp"
 
 using namespace gt;
 
@@ -29,19 +32,21 @@ ENTRYPOINT
 	return EXIT_SUCCESS;
 }
 
-#if defined(__APPLE__)
+
 ptrFig makeEditor(){
+#if defined(__APPLE__)
 	gWorld.get()->openAddon("X11GL");
-	ptrFig rl = gWorld.get()->makeFig("run list");
+#elif defined(__linux)
+	gWorld.get()->openAddon("X11GL");
+#elif defined(_win32)
+#endif
+
+	ptrFig save = gWorld.get()->makeFig(cAnchor::hash());
+	ptrFig rl = gWorld.get()->makeFig(cRunList::hash());
+	ptrFig stage = gWorld.get()->makeFig(cStage::hash());
+	ptrFig film = gWorld.get()->makeFig(cFilm::hash());
+	ptrFig cam = gWorld.get()->makeFig(cCamera::hash());
 
 	return rl;
 }
-#elif defined(__linux)
-ptrFig makeEditor(){
-	gWorld.get()->openAddon("X11GL");
-}
-#elif defined(_win32)
-ptrFig makeEditor(){
 
-}
-#endif
