@@ -73,17 +73,17 @@ cStage::getLinks(std::list<ptrFig>* pOutLinks){
 
 void
 cStage::patLinkContent(ptrLead aLead){
-	aLead->getPlug(&mContent, xPT_content);
+	aLead->copyPlug(&mContent, xPT_content);
 }
 
 void
 cStage::patLinkCloser(ptrLead aLead){
-	aLead->getPlug(&mCloser, xPT_closer);
+	aLead->copyPlug(&mCloser, xPT_closer);
 }
 
 void
 cStage::patSetLayout(ptrLead aLead){
-	aLead->getPlug(&mLayout, xPT_layout);
+	aLead->copyPlug(&mLayout, xPT_layout);
 	refreshDim();
 }
 
@@ -95,6 +95,6 @@ cStage::patGetLayout(ptrLead aLead){
 void
 cStage::patSetFullscreen(ptrLead aLead){
 	bool fullscreen=false;
-	aLead->getValue(&fullscreen, xPT_fullscreen);
+	aLead->assignTo(&fullscreen, xPT_fullscreen);
 	setFullscreen(fullscreen);
 }

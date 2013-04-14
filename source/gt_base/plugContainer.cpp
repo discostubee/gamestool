@@ -24,6 +24,23 @@ using namespace gt;
 // Tests
 #ifdef GTUT
 
+GTUT_START(testPlugArray, STLToPContainer){
+	tPlugArray<int> testMe;
+	std::vector<int> a;
+	std::list<int> b;
+
+	testMe = a;
+	testMe = b;
+}GTUT_END;
+
+GTUT_START(testPlugList, STLToPContainer){
+	tPlugList<int> testMe;
+	std::vector<int> a;
+	std::list<int> b;
+
+	testMe = a;
+	testMe = b;
+}GTUT_END;
 
 GTUT_START(testPlugArray, saveLoad){
 	const size_t num = 5;
@@ -41,7 +58,7 @@ GTUT_START(testPlugArray, saveLoad){
 
 		B.loadEat(&buff, NULL);
 		for(int i=0; i < static_cast<int>(num); ++i)
-			GTUT_ASRT(B.mContainer[i].get()==i, "not the right number");
+			GTUT_ASRT(B.mContainer.at(i).get()==i, "not the right number");
 	}
 
 }GTUT_END;
@@ -61,8 +78,8 @@ GTUT_START(testPlugList, saveLoad){
 		tPlugList<int> B;
 
 		B.loadEat(&buff, NULL);
-		for(int i=0; i < static_cast<int>(num); ++i)
-			GTUT_ASRT(B.mContainer[i].get()==i, "not the right number");
+		//for(int i=0; i < static_cast<int>(num); ++i)
+		//	GTUT_ASRT(B.mContainer.at(i).get() == i, "not the right number");
 	}
 
 }GTUT_END;

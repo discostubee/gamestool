@@ -102,7 +102,7 @@ cThread::work(cContext* pCon){
 void
 cThread::patLink(ptrLead aLead){
 	stopThread();
-	aLead->getPlug(&link, xPT_fig);
+	aLead->copyPlug(&link, xPT_fig);
 }
 
 
@@ -143,6 +143,7 @@ cThread::getLoadPattern(){
 ////////////////////////////////////////////////////////////
 // Tests
 #if defined(GTUT) && defined(GT_THREADS)
+# include "unitTestFigments.hpp"
 
 GTUT_START(test_cThread, test_suit){
 	figmentTestSuit<cThread>();
@@ -157,7 +158,7 @@ namespace gt{
 
 		void patWrite(ptrLead aLead){
 			tPlug<std::string> tmp;
-			aLead->getPlug(&tmp, xPT_word);
+			aLead->copyPlug(&tmp, xPT_word);
 			chatter.get().append( tmp.get() );
 
 			chatter.get().append( "." );
@@ -203,8 +204,8 @@ namespace gt{
 		tPlug<std::string> phrase;
 
 		void patSetup(ptrLead aLead){
-			aLead->getPlug(&target, xPT_target);
-			aLead->getPlug(&phrase, xPT_word);
+			aLead->copyPlug(&target, xPT_target);
+			aLead->copyPlug(&phrase, xPT_word);
 		}
 	public:
 		static const cCommand::dUID xSetup;
@@ -301,7 +302,7 @@ namespace gt{
 			share.get()->jack(getHits, &fakeContext);
 
 			startLead(getHits, fakeContext.getSig());
-			getHits->getValue(&testCount, cShareTarget::xPT_hits);
+			getHits->assignTo(&testCount, cShareTarget::xPT_hits);
 			stopLead(getHits);
 
 			++time;
@@ -315,7 +316,7 @@ namespace gt{
 			share.get()->jack(getChatter, &fakeContext);
 
 			startLead(getChatter, fakeContext.getSig());
-			getChatter->getPlug(&chatter, cShareTarget::xPT_chatter);
+			getChatter->assignTo(&chatter, cShareTarget::xPT_chatter);
 			stopLead(getChatter);
 
 			DBUG_LO("chatter='" << chatter.get() << "'");

@@ -8,7 +8,7 @@ namespace gt{
 	//- Some helpful 'fake' figments.
 
 	//!\brief	A really simple figment used in tests, just used to store a single number.
-	class cTestNum: public cFigment, private tOutline<cTestNum>{
+	class cTestNum: public cFigment{
 	public:
 		static const cPlugTag *xPT_num;
 		static const cCommand::dUID	xGetData;
@@ -31,7 +31,7 @@ namespace gt{
 	};
 
 
-	class cSaveTester: public cFigment, private tOutline<cSaveTester>{
+	class cSaveTester: public cFigment{
 	public:
 		static const cPlugTag *xPT_str, *xPT_num;
 		static const cCommand::dUID	xGetData;

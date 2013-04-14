@@ -21,13 +21,9 @@
 using namespace gt;
 
 const cPlugTag* cFigFactory::xPT_figHash = tOutline<cFigFactory>::makePlugTag("fig name");
-
 const cPlugTag* cFigFactory::xPT_newFig = tOutline<cFigFactory>::makePlugTag("new figment");
-
 const cPlugTag* cFigFactory::xPT_catalog = tOutline<cFigFactory>::makePlugTag("catalog");
-
 const cPlugTag* cFigFactory::xPT_addons = tOutline<cFigFactory>::makePlugTag("addons");
-
 const cPlugTag* cFigFactory::xPT_addonName = tOutline<cFigFactory>::makePlugTag("addon name");
 
 const cCommand::dUID cFigFactory::xMakeFig = tOutline<cFigFactory>::makeCommand(
@@ -53,6 +49,11 @@ const cCommand::dUID cFigFactory::xGetFigCatalog = tOutline<cFigFactory>::makeCo
 	NULL
 );
 
+cFigFactory::cFigFactory(){
+}
+
+cFigFactory::~cFigFactory(){
+}
 
 
 void cFigFactory::patMakeFig(ptrLead aLead){
@@ -61,18 +62,19 @@ void cFigFactory::patMakeFig(ptrLead aLead){
 
 	ptrFig made = gWorld.get()->makeFig(hash);
 	aLead->assignFrom(made, xPT_figHash);
+}
+
+void cFigFactory::patGetAddons(ptrLead aLead){
 
 }
 
-void patGetAddons(ptrLead aLead){
-
+void cFigFactory::patOpenAddon(ptrLead aLead){
+	dStr addon;
+	aLead->assignTo(&addon, xPT_addonName);
+	gWorld.get()->openAddon(addon);
 }
 
-void patOpenAddon(ptrLead aLead){
-
-}
-
-void patGetFigCatalog(ptrLead aLead){
+void cFigFactory::patGetFigCatalog(ptrLead aLead){
 
 }
 
@@ -81,6 +83,7 @@ void patGetFigCatalog(ptrLead aLead){
 #ifdef GTUT
 
 GTUT_START(test_figFactory, makeFig){
+	cFigFactory test;
 }GTUT_END;
 
 #endif

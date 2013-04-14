@@ -258,7 +258,7 @@ cAnchor::getLinks(std::list<ptrFig>* pOutLinks){
 #include "runList.hpp"
 #include "unitTestFigments.hpp"
 
-tPlug<iFigment::ptrBuff> plugBuff;
+tPlug<ptrBuff> plugBuff;
 const dPlaChar *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
@@ -269,7 +269,7 @@ GTUT_START(testAnchor, basicSave){
 	tPlug<ptrFig> tester;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 
-	plugBuff = iFigment::ptrBuff(new cByteBuffer());
+	plugBuff = ptrBuff(new cByteBuffer());
 	tester = ptrFig(new cSaveTester(testStr, 42));
 
 	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot);
@@ -336,7 +336,7 @@ GTUT_START(testAnchor, chainSave){
 	rlist.get()->jack(add, &fakeCon);
 
 	ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);
-	plugBuff = iFigment::ptrBuff( iFigment::ptrBuff(new cByteBuffer()) );
+	plugBuff = ptrBuff(new cByteBuffer());
 	save->addPlug(&plugBuff, cAnchor::xPT_serialBuff);
 	ank->jack(save, &fakeCon);
 

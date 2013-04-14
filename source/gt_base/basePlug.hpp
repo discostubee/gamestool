@@ -40,9 +40,9 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////
-// fu
 namespace gt{
 
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Void assigns let us map different copying techniques to each type, for each type. If the target wasn't void, we wouldn't be
 	//!			able to map them as function pointers.
 	namespace voidAssign{
@@ -53,6 +53,7 @@ namespace gt{
 		}
 	}
 
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief
 	namespace voidAppend{
 
@@ -61,16 +62,6 @@ namespace gt{
 			*static_cast<A*>(pTo) += *pFrom;
 		}
 	}
-
-	template<typename A> class tDataPlug;
-
-	//!\brief	Specialise this for each type you want to have more than just a basic copy for.
-	//!\note	Made as a function separate from the class to make it easier to write new assignments.
-	template<typename A> typename tDataPlug<A>::dMapAssigns* getVoidAssignments();
-
-	//!\brief	Similar to getVoidAssignments.
-	template<typename A> typename tDataPlug<A>::dMapAppends* getVoidAppends();
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -132,13 +123,13 @@ namespace gt{
 
 		//--- interface
 		virtual dPlugType getType() const =0;
-		virtual void save(cByteBuffer* pSaveHere) = 0;	//!< Appends the buffer with binary data that should be understandable by any platform.
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) = 0;	//!< Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
+		virtual void save(cByteBuffer* pSaveHere) =0;	//!< Appends the buffer with binary data that should be understandable by any platform.
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) =0;	//!< Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
 		virtual void assign(void *aTo, dPlugType aType) const =0;	//!< Allows later implementation to assign into the memory addess. !\note Not the same as copying because things like smart pointers should work correctly with this.
 		virtual void append(void *aTo, dPlugType aType) const =0;	//!< Similar to assign, but for appending to the input argument.
 
-		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, should not copy any linked lead info.
 		virtual bool operator== (const cBase_plug &pD) const =0;
+		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, should not copy any linked lead info.
 		virtual cBase_plug& operator+= (const cBase_plug &pD) =0;
 
 		#ifdef GT_THREADS
@@ -167,6 +158,7 @@ namespace gt{
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Another step towards a full plug, designed just to manage assignments and appends.
+	//!\note	Putting the assignments and append maps in here so that it's easier to specialise
 	template<typename A>
 	class tDataPlug: public cBase_plug{
 	public:
@@ -183,9 +175,17 @@ namespace gt{
 
 		virtual bool operator== (const cBase_plug &pD) const;
 
-		//--- interface
+		//--- new interface
 		virtual A& get() = 0;
 		virtual const A& getConst() const =0;
+
+		//--- continued...
+		virtual cBase_plug& operator= (const cBase_plug &pD) =0;
+		virtual cBase_plug& operator+= (const cBase_plug &pD) =0;
+
+	private:
+		tDataPlug<A>& operator= (const tDataPlug<A> &dontcare){ return *this; }
+		tDataPlug<A>& operator+= (const tDataPlug<A> &dontcare){ return *this; }
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -193,76 +193,90 @@ namespace gt{
 	template<typename T>
 	class tLitePlug: public tDataPlug<T>{
 	public:
-		T *mRef;
-
 		tLitePlug(T *aRef) : mRef(aRef) {}
-		virtual ~tLitePlug();
+		~tLitePlug(){}
 
-		virtual void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
+		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
+		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
 
-		virtual	cBase_plug& operator= (const cBase_plug &pD) {
+		tLitePlug<T>& operator= (const tLitePlug<T> &aCopyMe) {
+			ASRT_NOTSELF(&aCopyMe);
+			mRef = aCopyMe.mRef;
+			return *this;
+		}
+
+		cBase_plug& operator= (const cBase_plug &pD) {
 			ASRT_NOTSELF(&pD);
 			pD.assign(mRef, cBase_plug::genPlugType<T>());
 			return *this;
 		}
 
-		virtual cBase_plug& operator+= (const cBase_plug &pD) {
+		cBase_plug& operator+= (const cBase_plug &pD) {
 			ASRT_NOTSELF(&pD);
 			pD.append(mRef, cBase_plug::genPlugType<T>());
 			return *this;
 		}
 
-		virtual T& get(){ return *mRef; }
-		virtual const T& getConst() const{ return *mRef; }
+		T& get(){ return *mRef; }
+		const T& getConst() const{ return *mRef; }
 
 		#ifdef GT_THREADS
-			virtual void updateStart(){ DONT_USE_THIS; }
-			virtual void updateFinish(){ DONT_USE_THIS; }
+			void updateStart(){ DONT_USE_THIS; }
+			void updateFinish(){ DONT_USE_THIS; }
 		#endif
 
 	protected:
 #		ifdef GT_THREADS
-			virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon){ DONT_USE_THIS; }
-			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
-			virtual void appendShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
+			void readShadow(cBase_plug *pWriteTo, dConSig aCon){ DONT_USE_THIS; }
+			void writeShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
+			void appendShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
 #		endif
+
+	private:
+		T *mRef;
 	};
 
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Specialise the class for each type you want to have more than just a basic copy for.
+	template<typename A>
+	class tOpOnAny{
+	public:
+
+		//!\brief
+		static typename tDataPlug<A>::dMapAssigns* assign(){
+			static bool setup = false;
+			static typename tDataPlug<A>::dMapAssigns ass;
+
+			if(!setup){
+				ass[ cBase_plug::genPlugType<A>() ] = voidAssign::basic<A>;
+				setup=true;
+			}
+
+			return &ass;
+		}
+
+		//!\brief
+		static typename tDataPlug<A>::dMapAppends* append(){
+			static bool setup = false;
+			static typename tDataPlug<A>::dMapAppends app;
+
+			if(!setup){
+				app[ cBase_plug::genPlugType<A>() ] = voidAppend::basic<A>;
+				setup=true;
+			}
+
+			return &app;
+		}
+
+	private:
+		tOpOnAny(){}
+		~tOpOnAny(){}
+	};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Template implementation
 namespace gt{
-
-	//----------------------------------------------------------------------------------------------------------------
-	template<typename A>
-	typename tDataPlug<A>::dMapAssigns*
-	getVoidAssignments(){
-		static bool setup = false;
-		static typename tDataPlug<A>::dMapAssigns ass;
-
-		if(!setup){
-			ass[ cBase_plug::genPlugType<A>() ] = voidAssign::basic<A>;
-			setup=true;
-		}
-
-		return &ass;
-	}
-
-	template<typename A>
-	typename tDataPlug<A>::dMapAppends*
-	getVoidAppends(){
-		static bool setup = false;
-		static typename tDataPlug<A>::dMapAppends app;
-
-		if(!setup){
-			app[ cBase_plug::genPlugType<A>() ] = voidAppend::basic<A>;
-			setup=true;
-		}
-
-		return &app;
-	}
 
 	//----------------------------------------------------------------------------------------------------------------
 	template<typename PLUG_TYPE>
@@ -305,7 +319,7 @@ namespace gt{
 		PROFILE;
 
 		tCoolFind<cBase_plug::dPlugType, fuAssign> assign(
-			*getVoidAssignments<A>(),
+			*tOpOnAny<A>::assign(),
 			aType
 		);
 
@@ -324,7 +338,7 @@ namespace gt{
 		PROFILE;
 
 		tCoolFind<cBase_plug::dPlugType, fuAssign> append(
-			*getVoidAppends<A>(),
+			*tOpOnAny<A>::append(),
 			aType
 		);
 
@@ -342,7 +356,6 @@ namespace gt{
 	tDataPlug<A>::operator== (const cBase_plug &pD) const {
 		return (cBase_plug::genPlugType<A>() == pD.getType());
 	}
-
 }
 
 

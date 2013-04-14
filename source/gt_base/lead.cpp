@@ -238,11 +238,9 @@ cLead::unplug(cBase_plug* aPlug){
 ////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
-
 using namespace gt;
 
-////////////////////////////////////////////////////////////
-#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		void gt::startLead(ptrLead lead, dConSig pSig){
 			lead->start(pSig);
 		}
@@ -259,12 +257,12 @@ using namespace gt;
 			lead.stop();
 		}
 
-#else
+#	else
 		void gt::startLead(ptrLead lead, dConSig pSig){}
 		void gt::stopLead(ptrLead lead){}
 		void gt::startLead(cLead &lead, dConSig sig){}
 		void gt::stopLead(cLead &lead){}
-#endif
+#	endif
 
 
 GTUT_START(testLead, tagging){

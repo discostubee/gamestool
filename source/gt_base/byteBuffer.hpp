@@ -70,8 +70,8 @@ public:
 	
 	void trimHead(size_t pSize, size_t pStart=0);	//!< Deletes a section, or just from the start, of the buffer and recombines it if there are 2 halves remaining.
 
-	void add( const dByte* pBuffIn, size_t pInSize);
-	void add( const cByteBuffer &pBuff ); //!< Copies itself and the content being pointed to into a new buffer that combines the two.
+	void add(const dByte* pBuffIn, size_t pInSize);
+	void add(const cByteBuffer &pBuff); //!< Copies itself and the content being pointed to into a new buffer that combines the two.
 	template<typename TYPE> void add(const TYPE *pIn);	//!< Copies the TYPE and adds it to the end of the buffer. Should be able to use this memory to refil a container of the same TYPE.
 
 	void overwrite(const dByte *pWriteWith, size_t pWriteSize, size_t pStart = 0);	//!< Overwrite part of the buffer with another one. Throws if you try to write past what the current buffer contains.

@@ -18,9 +18,10 @@
 
 #include "lead.hpp"
 
-using namespace gt;
 
 ////////////////////////////////////////////////////////////
+using namespace gt;
+
 cBase_plug::cBase_plug(){
 }
 
@@ -74,4 +75,14 @@ cBase_plug::unlinkLead(cLead *pLead){
 	}
 }
 
+//////////////////////////////////////////////////////////////
+using namespace gt;
 
+#ifdef GTUT
+
+GTUT_START(test_litePlug, makeFig){
+	int data = 3;
+	tLitePlug<int> testme(&data);
+}GTUT_END;
+
+#endif

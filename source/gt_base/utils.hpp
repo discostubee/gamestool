@@ -59,6 +59,10 @@
 #endif
 
 //------------------------------------------------------------------------------------------
+#if defined(__APPLE__)
+#	define SHITPANTS abort()
+#endif
+//------------------------------------------------------------------------------------------
 // some defines which are common in this project.
 typedef unsigned int	dHash;
 typedef unsigned int	dNameHash;

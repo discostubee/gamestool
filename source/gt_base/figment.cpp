@@ -17,7 +17,7 @@
 */
 
 #include "figment.hpp"
-
+#include "plugContainer.hpp"
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
@@ -42,22 +42,22 @@ const cCommand::dUID cFigment::xLoad = tOutline<cFigment>::makeCommand(
 );
 
 const cCommand::dUID cFigment::xGetName = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patLoad, cFigment::xPT_name,
+	"load", &cFigment::patGetName, cFigment::xPT_name,
 	NULL
 );
 
 const cCommand::dUID cFigment::xGetHash = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patLoad, cFigment::xPT_hash,
+	"load", &cFigment::patGetHash, cFigment::xPT_hash,
 	NULL
 );
 
 const cCommand::dUID cFigment::xGetCommands = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patLoad, cFigment::xPT_commands,
+	"load", &cFigment::patGetCommands, cFigment::xPT_commands,
 	NULL
 );
 
 const cCommand::dUID cFigment::xGetLinks = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patLoad, cFigment::xPT_links,
+	"load", &cFigment::patGetLinks, cFigment::xPT_links,
 	NULL
 );
 
@@ -245,12 +245,20 @@ cFigment::patGetHash(ptrLead aLead){
 
 void
 cFigment::patGetCommands(ptrLead aLead){
-
+//	tPlugArray<cCommand* const>  coms;
+//	dListComs tmp = gWorld.get()->getBlueprint(hash())->getAllComs();
+//	coms = tmp;
+//	aLead->setPlug(&coms, xPT_commands);
 }
 
 void
 cFigment::patGetLinks(ptrLead aLead){
-
+//	std::list<ptrFig> listLinks;
+//	tPlugArray<ptrFig> plugLinks;
+//	getLinks(&listLinks);
+//	plugLinks = listLinks;
+//
+//	aLead->setPlug(&plugLinks, xPT_links);
 }
 
 ////////////////////////////////////////////////////////////
