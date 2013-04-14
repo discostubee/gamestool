@@ -28,7 +28,9 @@
 #define PLUGCONTAINER_HPP
 
 #include "plug.hpp"
-
+#include <vector>
+#include <list>
+#include <map>
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Object types
@@ -57,11 +59,13 @@ namespace gt{
 		virtual cBase_plug& operator+= (const cBase_plug &pD);
 
 		//--- new
-		virtual	cBase_plug& operator = (const CONTAINER &pCopyMe);
+		virtual	cBase_plug& operator= (const CONTAINER &pCopyMe);
 		tPlugLinierContainer<CONTAINER>& operator= (const tPlugLinierContainer<CONTAINER> &pCopyMe);
-		template<typename OTHER> tPlugLinierContainer<CONTAINER>& operator+= (const OTHER &pCopyMe);
 
 		itr_t getItr();
+
+		template<typename OTHER> void copyContainer(const OTHER &pCopyMe);
+		template<typename OTHER> void addContainer(const OTHER &pCopyMe);
 
 #		ifdef GT_THREADS
 			virtual void updateStart();
@@ -87,20 +91,44 @@ namespace gt{
 
 		tPlugArray(){}
 		virtual ~tPlugArray(){}
+
+		template<typename OTHER> tPlugArray& operator= (const OTHER &pCopyMe){
+			ASRT_NOTSELF(&pCopyMe);
+			copyContainer(pCopyMe);
+			return *this;
+		}
+
+		template<typename OTHER> tPlugArray& operator+= (const OTHER &pCopyMe){
+			ASRT_NOTSELF(&pCopyMe);
+			addContainer(pCopyMe);
+			ASRT_NOTSELF(&pCopyMe);
+		}
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Implementation intended to make things easier that using tPlugLinierContainer
 	template<typename T>
-	class tPlugList : public tPlugLinierContainer< std::vector< tPlug<T> > > {
+	class tPlugList : public tPlugLinierContainer< std::list< tPlug<T> > > {
 	public:
 		typedef typename std::list< tPlug<T> > list_t;
 
 		tPlugList(){}
 		virtual ~tPlugList(){}
+
+		template<typename OTHER> tPlugList& operator= (const OTHER &pCopyMe){
+			ASRT_NOTSELF(&pCopyMe);
+			copyContainer(pCopyMe);
+			return *this;
+		}
+
+		template<typename OTHER> tPlugList& operator+= (const OTHER &pCopyMe){
+			ASRT_NOTSELF(&pCopyMe);
+			addContainer(pCopyMe);
+			ASRT_NOTSELF(&pCopyMe);
+		}
 	};
 
-
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief
 	template<typename KEY, typename T>
 	class tPlugMap : public cBase_plug {
@@ -164,6 +192,12 @@ namespace gt{
 	}
 
 	template<typename CONTAINER>
+	cBase_plug::dPlugType
+	tPlugLinierContainer<CONTAINER>::getType() const{
+		return cBase_plug::genPlugType<CONTAINER>();
+	}
+
+	template<typename CONTAINER>
 	void
 	tPlugLinierContainer<CONTAINER>::save(cByteBuffer* pSaveHere){
 		size_t s = mContainer.size();
@@ -179,7 +213,6 @@ namespace gt{
 
 		size_t s=0, i=0;
 		pChewToy->trimHead( pChewToy->fill(&s) );
-		mContainer.reserve(s);
 		while(i < s){
 			mContainer.push_back(element());
 			mContainer.back().loadEat(pChewToy, aReloads);
@@ -190,19 +223,33 @@ namespace gt{
 	template<typename CONTAINER>
 	void
 	tPlugLinierContainer<CONTAINER>::assign(void *aTo, dPlugType aType) const{
+		if(aType != cBase_plug::genPlugType<CONTAINER>())
+			throw excep::cantCopy("something", "linier container", __FILE__, __LINE__);
+
+		*reinterpret_cast<CONTAINER*>(aTo) = mContainer;
 	}
 
 	template<typename CONTAINER>
 	void
 	tPlugLinierContainer<CONTAINER>::append(void *aTo, dPlugType aType) const{
+		if(aType != cBase_plug::genPlugType<CONTAINER>())
+			throw excep::cantCopy("something", "linier container", __FILE__, __LINE__);
 
+		reinterpret_cast<CONTAINER*>(aTo)->insert(
+			reinterpret_cast<CONTAINER*>(aTo)->end(),
+			mContainer.begin(),
+			mContainer.end()
+		);
 	}
 
 	template<typename CONTAINER>
 	cBase_plug&
 	tPlugLinierContainer<CONTAINER>::operator= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.assign(&mContainer, getType());
+		if(pD.getType() == cBase_plug::genPlugType<CONTAINER>())
+			pD.assign(&mContainer, cBase_plug::genPlugType<CONTAINER>());
+		else
+			mContainer.assign(1, pD);
 		return *this;
 	}
 
@@ -216,15 +263,19 @@ namespace gt{
 	cBase_plug&
 	tPlugLinierContainer<CONTAINER>::operator+= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		CONTAINER tmp;
-		pD.assign(&tmp, getType());
-		mContainer.reserve(mContainer.size() + tmp.size());
-		for(
-			typename CONTAINER::const_iterator itr = tmp.begin();
-			itr != tmp.end();
-			++itr
-		)
-			mContainer.push_back(*itr);
+		if(pD.getType() == cBase_plug::genPlugType<CONTAINER>()){
+			CONTAINER tmp;
+			pD.assign(&tmp, getType());
+			mContainer.insert(
+				mContainer.end(),
+				tmp.begin(),
+				tmp.end()
+			);
+		}else{
+			typename CONTAINER::value_type tmp;
+			tmp = pD;
+			mContainer.push_back(tmp);
+		}
 
 		return *this;
 	}
@@ -246,26 +297,30 @@ namespace gt{
 	}
 
 	template<typename CONTAINER>
+	tCoolItr<CONTAINER>
+	tPlugLinierContainer<CONTAINER>::getItr(){
+		return tCoolItr<CONTAINER>(&mContainer);
+	}
+
+	template<typename CONTAINER>
 	template<typename OTHER>
-	tPlugLinierContainer<CONTAINER>&
-	tPlugLinierContainer<CONTAINER>::operator+=(const OTHER &pCopyMe){
-		mContainer.reserve(mContainer.size() + pCopyMe.size());
+	void
+	tPlugLinierContainer<CONTAINER>::copyContainer(const OTHER &pCopyMe){
+		mContainer.clear();
+		addContainer(pCopyMe);
+	}
+
+	template<typename CONTAINER>
+	template<typename OTHER>
+	void
+	tPlugLinierContainer<CONTAINER>::addContainer(const OTHER &pCopyMe){
 		for(
 			typename OTHER::const_iterator itr = pCopyMe.begin();
 			itr != pCopyMe.end();
 			++itr
 		)
 			mContainer.push_back(*itr);
-
-		return *this;
 	}
-
-	template<typename CONTAINER>
-	tCoolItr<CONTAINER>
-	tPlugLinierContainer<CONTAINER>::getItr(){
-		return tCoolItr<CONTAINER>(&mContainer);
-	}
-
 
 #	ifdef GT_THREADS
 
@@ -346,13 +401,21 @@ namespace gt{
 	template<typename KEY, typename T>
 	void
 	tPlugMap<KEY, T>::assign(void *aTo, dPlugType aType) const{
+		if(aType != cBase_plug::genPlugType<map_t>())
+			throw excep::cantCopy("something", "plug map", __FILE__, __LINE__);
 
+		*reinterpret_cast<map_t*>(aTo) = mContainer;
 	}
 
 	template<typename KEY, typename T>
 	void
 	tPlugMap<KEY, T>::append(void *aTo, dPlugType aType) const{
+		if(aType != cBase_plug::genPlugType<map_t>())
+			throw excep::cantCopy("append something", "plug map", __FILE__, __LINE__);
 
+		reinterpret_cast<map_t*>(aTo)->insert(
+			mContainer.begin(), mContainer.end()
+		);
 	}
 
 	template<typename KEY, typename T>

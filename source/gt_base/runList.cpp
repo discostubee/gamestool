@@ -69,9 +69,9 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 void
 cRunList::patAdd(ptrLead aLead){
 	PROFILE;
-	tPlug<ptrFig> addMe;
-	aLead->copyPlug(&addMe, xPT_single);
-	mList += addMe;
+	ptrFig addMe;
+	aLead->assignTo(&addMe, xPT_single);
+	mList.append(&addMe, cBase_plug::genPlugType<ptrFig>());
 }
 
 

@@ -98,8 +98,8 @@ namespace gt{
 		//!\return	false if the plug wasn't found using the get tag.
 		bool passPlug(cLead *passTo, const cPlugTag *pGetTag, const cPlugTag *pPutTag = NULL);
 
-		//!\brief	Lets you use direct types instead of plugs. Does this by assigning to the input.
-		//!\param	input	Pointer to where you want to copy the value.
+		//!\brief	Assigns into the provided memory location.
+		//!\param	output	Pointer to where you want to copy the value.
 		//!\param	tag		tag for the plug you wish to copy a value from.
 		//!\return	false if it couldn't find the plug
 		//!\note	Not const because of threadding.

@@ -28,12 +28,7 @@ cBitmap::~cBitmap(){
 
 void
 cBitmap::patSetRelation(ptrLead aLead){
-	std::vector< tPlug<jarRelation> > relations;
-	aLead->getPile(&relations);
-	while(!relations.empty()){
-		channelRelation[relations.back().get().get().inChan] = relations.back().get();
-		relations.pop_back();
-	}
+
 }
 
 void

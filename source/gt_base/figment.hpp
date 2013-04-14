@@ -119,7 +119,6 @@ namespace gt{
 		//!\note	You MUST replace this to identify your own
 		static const dPlaChar* identify(){ return "figment"; }
 
-		//- Not sure how I could eliminate this. I should be able to.
 		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return getHash<cFigment>(); }
 
@@ -150,11 +149,9 @@ namespace gt{
 		virtual void save(cByteBuffer* pSaveHere);	//!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
 		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL); //!< Override this if you require special loading that a load pattern can't handle. !\note NOT threadsafe.
 
-
 	protected:
 
-		//-----------------------------
-		// Patch through functions for use with command.
+		//- Patch through functions for use with command.
 		void patSave(ptrLead aLead);	//!< Allows you to call the save function using jack
 		void patLoad(ptrLead aLead);	//!< Same as the patSave function above.
 		void patGetName(ptrLead aLead);
@@ -202,6 +199,7 @@ namespace gt{
 // template specializations
 namespace gt{
 
+
 	//-----------------------------------------------------------------------------------
 	//!\brief	This is the most common plug, so it needs to be the most efficient.
 	template<>
@@ -213,7 +211,10 @@ namespace gt{
 		typedef std::map<dPlugType, fuAssign> dMapAssigns;
 		typedef std::map<dPlugType, fuAppend> dMapAppends;
 
-		virtual cBase_plug::dPlugType getType() const { return cBase_plug::genPlugType<ptrFig>(); }
+		//---
+		virtual cBase_plug::dPlugType getType() const {
+			return cBase_plug::genPlugType<ptrFig>();
+		}
 
 		virtual void assign(void *aTo, dPlugType aType) const {
 			if(aType != cBase_plug::genPlugType<ptrFig>())
@@ -233,6 +234,8 @@ namespace gt{
 		//---
 		virtual ptrFig& get() = 0;
 		virtual const ptrFig& getConst() const =0;
+		virtual cBase_plug& operator= (const cBase_plug &pD) =0;
+		virtual cBase_plug& operator+= (const cBase_plug &pD) =0;
 	};
 
 	//-----------------------------------------------------------------------------------
@@ -243,72 +246,13 @@ namespace gt{
 	//!			your plug is for a class that has a smart pointer, what that smart
 	//!			pointer refers to won't be protected by the shadow strategy.
 	template<>
-	class tPlug<ptrFig>: public PLUG_PARENT<ptrFig>
-	{
+	class tPlugFlakes<ptrFig>: public tDataPlug<ptrFig>{
 	public:
+		//---
+		virtual ptrFig& get() = 0;
+		virtual const ptrFig& getConst() const =0;
 
-		tPlug(){
-			mD = gWorld.get()->getEmptyFig();
-		}
-
-		tPlug(const cBase_plug &other){
-			other.assign(
-				&mD,
-				cBase_plug::genPlugType<ptrFig>()
-			);
-		}
-
-		tPlug(const ptrFig& pA){
-			mD = pA;
-		}
-
-		tPlug(const tPlug<ptrFig> &other){
-			mD = other.mD;
-		}
-
-		tPlug(const cBase_plug *other){
-			other->assign(
-				&mD,
-				cBase_plug::genPlugType<ptrFig>()
-			);
-		}
-
-		virtual ~tPlug(){}
-
-		virtual cBase_plug& operator= (const cBase_plug &pD){
-			NOTSELF(&pD);
-			pD.assign(&mD, getType());
-			return *this;
-		}
-
-		virtual bool operator== (const cBase_plug &pD) const {
-			return false;
-		}
-
-		cBase_plug& operator+= (const cBase_plug &pD){
-			NOTSELF(&pD);
-			return *this;
-		}
-
-		cBase_plug& operator= (const tPlug<ptrFig> &other){
-			NOTSELF(&other);
-			mD = other.mD;
-			return *this;
-		}
-
-		cBase_plug& operator= (const ptrFig& pA){
-			mD = pA;
-			return *this;
-		}
-
-		virtual ptrFig& get(){
-			return mD;
-		}
-
-		virtual const ptrFig& getConst() const{
-			return mD;
-		}
-
+		//---
 		virtual void save(cByteBuffer* pAddHere){
 			PROFILE;
 
@@ -331,10 +275,6 @@ namespace gt{
 
 			get() = itr->second->fig;
 		}
-
-	private:
-		ptrFig mD;	//!< Data
-
 	};
 
 }

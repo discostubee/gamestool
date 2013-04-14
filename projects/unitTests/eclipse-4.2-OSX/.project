@@ -3,7 +3,6 @@
 	<name>unitTests</name>
 	<comment></comment>
 	<projects>
-		<project>addonX11GL</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

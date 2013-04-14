@@ -19,59 +19,6 @@
 #include "plug.hpp"
 #include "figment.hpp"
 
-////////////////////////////////////////////////////////////
-using namespace gt;
-
-void
-gt::voidAssign::textToNStr(const dText *pFrom, void *pTo){
-	*reinterpret_cast<dNatStr*>(pTo) = ::toNStr(*pFrom);
-}
-
-void
-gt::voidAssign::textToPStr(const dText *pFrom, void *pTo){
-	*reinterpret_cast<dStr*>(pTo) = ::toPStr(*pFrom);
-}
-
-void
-gt::voidAssign::plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo){
-	*reinterpret_cast<dStr*>(pTo) = *pFrom;
-}
-
-void
-gt::voidAssign::plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo){
-	*reinterpret_cast<dNatStr*>(pTo) = ::toNStr(*pFrom);
-}
-
-void
-gt::voidAssign::plaCStrToText(const dPlaChar * const *pFrom, void *pTo){
-	*reinterpret_cast<dText*>(pTo) = ::toText(*pFrom);
-}
-
-void
-gt::voidAppend::textToText(const dText *pFrom, void *pTo){
-	reinterpret_cast<
-		std::basic_string<dTextChar, std::char_traits<dTextChar> >*
-	>(pTo)->append(*pFrom);
-}
-
-void
-gt::voidAppend::plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo){
-	reinterpret_cast<dStr*>(pTo)->append(*pFrom);
-}
-
-void
-gt::voidAppend::plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo){
-	reinterpret_cast<
-		std::basic_string<dNatChar, std::char_traits<dNatChar> >*
-	>(pTo)->append( ::toNStr(*pFrom) );
-}
-
-void
-gt::voidAppend::plaCStrToText(const dPlaChar * const *pFrom, void *pTo){
-	reinterpret_cast<
-		std::basic_string<dTextChar, std::char_traits<dTextChar> >*
-	>(pTo)->append( ::toText(*pFrom) );
-}
 
 ////////////////////////////////////////////////////////////
 using namespace gt;

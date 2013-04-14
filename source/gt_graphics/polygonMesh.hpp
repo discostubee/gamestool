@@ -11,20 +11,29 @@
 namespace gt{
 	typedef unsigned int dIdxVert;
 
+	//----------------------------------------------------------------------------------------------------------------
 	struct sVertex{
 		dUnitVDis x, y, z;
+
 		sVertex() : x(0.0), y(0.0), z(0.0) {}
 		sVertex(dUnitVDis pX, dUnitVDis pY, dUnitVDis pZ) : x(pX), y(pY), z(pZ) {}
 		~sVertex(){}
+
+		sVertex& operator+= (const sVertex &aCopyMe);
 	};
 
+	//----------------------------------------------------------------------------------------------------------------
 	struct sLine{
 		dIdxVert a, b;
+
 		sLine() : a(0), b(0) {}
 		sLine( dIdxVert pA, dIdxVert pB ) : a(pA), b(pB) {}
 		~sLine(){}
+
+		sLine& operator+= (const sLine &aCopyMe);
 	};
 
+	//----------------------------------------------------------------------------------------------------------------
 	struct sPoly{
 		dIdxVert a, b, c;
 		t3DVec<dUnitVDis> surfNorm;
@@ -32,22 +41,29 @@ namespace gt{
 
 		sPoly() : a(0), b(0), c(0) {}
 		sPoly(dIdxVert aA, dIdxVert aB, dIdxVert aC) : a(aA), b(aB), c(aC) {}
+
+		sPoly& operator+= (const sPoly &aCopyMe);
 	};
 
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Used to pass a mesh in an abstract manner.
 	struct sMesh{
 		std::vector<sVertex> mVertexes;
 		std::vector<sPoly> mPolys;
+
+		sMesh& operator+= (const sMesh &aCopyMe);
 	};
 
-	//!\brief	This class is meant to be a frontend for a native version, that takes a generic mesh format and creates a more efficient native version.
-	//!			The generic version is then deleted to save memory.
-	//!			When run, this figment should render a polygon mesh.
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	This class is meant to be a frontend for a native version, that takes a generic mesh format and creates
+	//!			a more efficient native version. The generic version is then deleted to save memory. When run, this
+	//!			figment should render a polygon mesh.
 	class cPolyMesh: public cFigment{
 	public:
-		const static cPlugTag* xPT_Mesh;	// Expects the sMesh struct.
-		const static cCommand::dUID xAddVert;	//!< Adds vertexes as a pile.
-		const static cCommand::dUID xAddPoly;	//!< Adds polygons as a pile.
+		const static cPlugTag* xPT_vert;
+		const static cPlugTag* xPT_poly;
+
+		const static cCommand::dUID xAddToMesh;	//!<
 		const static cCommand::dUID xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
 
 		GT_IDENTIFY("polymesh");
@@ -57,11 +73,9 @@ namespace gt{
 		virtual ~cPolyMesh();
 
 	protected:
-		sMesh* mLazyMesh;	//!<	the idea here is that we fill the lazy mesh up with data, and then on its next run, we take that data and fill up
-							//!		native format mesh. Then we delete the lazy mesh.
+		sMesh* mLazyMesh;	//!<	the idea here is that we fill the lazy mesh up with data, and then on its next run, we take that data and fill up native format mesh. Then we delete the lazy mesh.
 
-		void patAddVert(ptrLead aLead);
-		void patAddPoly(ptrLead aLead);
+		void patAddToMesh(ptrLead aLead);
 		void patGetMesh(ptrLead aLead);
 
 		void promiseLazy();	//!< Make sure the lazy mesh is there.
@@ -77,12 +91,9 @@ namespace gt{
 
 	//!\brief	Saving any class that is a dynamic size, we need a special plug flake type.
 	template<>
-	class tPlugFlakes<sMesh>: public cBase_plug{
+	class tPlugFlakes<sMesh>: public tDataPlug<sMesh>{
 	public:
-		tPlugFlakes(dPlugType pTI) :
-			cBase_plug(pTI)
-		{}
-
+		tPlugFlakes(dPlugType pTI){}
 		virtual ~tPlugFlakes(){}
 
 		//!\todo
@@ -107,8 +118,6 @@ namespace gt{
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
 
 		}
-
-		virtual sMesh& get() = 0;
 	};
 
 }

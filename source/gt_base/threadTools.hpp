@@ -71,11 +71,7 @@ namespace gt{
 
 		tMrSafety();
 		~tMrSafety();
-
-		//---
 		dLemming get();
-
-		//---
 		void take(T *takeMe); 		//!< Cleans up the old data if it exists, and becomes the custodian of the data being past in. Waits to acquire lock.
 		void cleanup();				//!< Deletes data. Waits to acquire lock.
 		void drop(); 				//!< Don't manage this anymore. Doesn't cleanup. Waits to acquire lock.
@@ -107,17 +103,19 @@ namespace gt{
 
 template<typename T>
 tMrSafety<T>::tMrSafety()
+: mData(NULL)
 {}
 
 template<typename T>
-tMrSafety<T>::~tMrSafety()
-{}
+tMrSafety<T>::~tMrSafety(){
+	cleanup();
+}
 
 template<typename T>
 typename tMrSafety<T>::dLemming
 tMrSafety<T>::get() {
 #	ifdef GT_THREADS
-		muData.lock();
+		dMuLock lock(muData);
 #	endif
 
 	return tSpitLemming<T>::get();
@@ -139,6 +137,7 @@ tMrSafety<T>::cleanup() {
 #	ifdef GT_THREADS
 		dMuLock lock(muData);
 #	endif
+
 	SAFEDEL(mData);
 }
 
@@ -189,19 +188,10 @@ tMrSafety<T>::getData(const dLemming *requester){
 template<typename T>
 void
 tMrSafety<T>::changeLem(dLemming *from, dLemming *to){
-	ASRT_TRUE(from->mParent == this, "Tried to change from a lemming that didn't come from this manager.");
-
-	if(to->mParent != this){
-		--to->mParent->inWild;
-
-#		ifdef GT_THREADS
-			to->mParent->muData.unlock();
-			muData.lock();	//- add to lock again
-#		endif
-	}
-
-	to->mParent = this;
-	from->mParent = NULL;
+#	ifdef GT_THREADS
+		dMuLock lock(muData);
+#	endif
+	tSpitLemming<T>::changeLem(from, to);
 }
 
 }

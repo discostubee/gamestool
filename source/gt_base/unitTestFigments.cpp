@@ -34,7 +34,7 @@
 	}
 
 	void cTestNum::patSetData(ptrLead aLead){
-		aLead->getPlug(&myNum, xPT_num);
+		aLead->copyPlug(&myNum, xPT_num);
 	}
 
 	////////////////////////////////////////////////////////////

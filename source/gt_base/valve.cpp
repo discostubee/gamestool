@@ -69,7 +69,7 @@ cValve::patSetState(ptrLead aLead){
 
 void
 cValve::patGetState(ptrLead aLead){
-	aLead->getPlug(&mState, xPT_state);
+	aLead->copyPlug(&mState, xPT_state);
 }
 
 iFigment::dMigrationPattern
@@ -88,6 +88,7 @@ cValve::getLoadPattern(){
 ////////////////////////////////////////////////////////////
 
 #ifdef GTUT
+#include "unitTestFigments.hpp"
 
 GTUT_START(test_cValve, test_suit){
 	tOutline<cValve>::draft();

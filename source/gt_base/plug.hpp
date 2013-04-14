@@ -20,10 +20,10 @@
 #define PLUG_HPP
 
 #include "lead.hpp"
-#include "binPacker.hpp"
-#include <vector>
+#include "opOnAny.hpp"
 
-
+///////////////////////////////////////////////////////////////////////////////////
+// Macros
 #ifdef GT_THREADS
 #	define PLUG_PARENT tShadowPlug
 #else
@@ -31,36 +31,16 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
-// fu
-namespace gt{
-
-	namespace voidAssign{
-		void textToNStr(const dText *pFrom, void *pTo);
-		void textToPStr(const dText *pFrom, void *pTo);
-		void plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo);
-		void plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo);
-		void plaCStrToText(const dPlaChar * const *pFrom, void *pTo);
-	}
-
-	namespace voidAppend{
-		void textToText(const dText *pFrom, void *pTo);
-		void plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo);
-		void plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo);
-		void plaCStrToText(const dPlaChar * const *pFrom, void *pTo);
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////
 // Object types
 namespace gt{
+
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Provides serialization as a healthy breakfast. Get it, cereal, haha haha, uuuuhhh.
 	template<typename A>
 	class tPlugFlakes: public tDataPlug<A>{
 	public:
-
-		//--- interface
+		//---
 		virtual A& get() = 0;
 		virtual const A& getConst() const =0;
 
@@ -105,8 +85,6 @@ namespace gt{
 		virtual void updateFinish();
 
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
-		virtual bool operator== (const cBase_plug &pD) const =0;
-
 		virtual A& get() = 0;	//!< Shouldn't need to be locked because only the containing figment should have access to this, and jacking/working are already locked.
 		virtual const A& getConst() const =0;
 
@@ -151,9 +129,8 @@ namespace gt{
 		tPlug(const cBase_plug *other);
 		virtual ~tPlug();
 
-		//- Polymorph
+		//--- Polymorph
 		virtual cBase_plug& operator= (const cBase_plug &pD);
-		virtual bool operator== (const cBase_plug &pD) const;
 		virtual cBase_plug& operator+= (const cBase_plug &pD);
 		virtual A& get();
 		virtual const A& getConst() const;
@@ -263,18 +240,21 @@ namespace gt{
 		template<typename A>
 		void
 		tShadowPlug<A>::readShadow(cBase_plug *pWriteTo, dConSig pSig){
+			PROFILE;
+
 			setTmpShadowRef(pSig);
 			if(tmpSRef->mMode == eSM_init){	//- This looks bad because it is possible that the unlocked interface is being used to change data at the point we are reading form it.
 				dLock lock(guardShadows);
 				tmpSRef->mData = get();
 			}
-			tLitePlug<A> tmp(&tmpSRef->mData);
-			*pWriteTo = tmp;
+			*pWriteTo = tmpSRef->mData;
 		}
 
 		template<typename A>
 		void
 		tShadowPlug<A>::writeShadow(const cBase_plug *pReadFrom, dConSig pSig){
+			PROFILE;
+
 			setTmpShadowRef(pSig);
 			pReadFrom->assign(
 				static_cast<void*>(&tmpSRef->mData),
@@ -286,6 +266,8 @@ namespace gt{
 		template<typename A>
 		void
 		tShadowPlug<A>::appendShadow(const cBase_plug *pReadFrom, dConSig aSig){
+			PROFILE;
+
 			setTmpShadowRef(aSig);
 			pReadFrom->append(
 				static_cast<void*>(&tmpSRef->mData),
@@ -397,102 +379,12 @@ namespace gt{
 // Template specializations.
 namespace gt{
 
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	plug leads are illegal. Don't make much sense anyhow.
 	template<>
 	class tPlug<cLead>: public PLUG_PARENT<cLead>{
 	};
 
-	//-------------------------------------------------------------------------------------
-	template<>
-	tDataPlug<dText>::dMapAssigns *
-	getVoidAssignments<dText>(){
-		static bool setup = false;
-		static tDataPlug<dText>::dMapAssigns copiers;
-
-		if(!setup){
-			copiers[ cBase_plug::genPlugType<dText>() ] = voidAssign::basic<dText>;
-			copiers[ cBase_plug::genPlugType<dNatStr>() ] = voidAssign::textToNStr;
-			copiers[ cBase_plug::genPlugType<dStr>() ] = voidAssign::textToPStr;
-			setup=true;
-		}
-
-		return &copiers;
-	}
-
-	template<>
-	tDataPlug<dText>::dMapAssigns *
-	getVoidAppends<dText>(){
-		static bool setup = false;
-		static tDataPlug<dText>::dMapAppends app;
-
-		if(!setup){
-			app[ cBase_plug::genPlugType<dText>() ] = voidAppend::textToText;
-			setup=true;
-		}
-
-		return &app;
-	}
-
-	//-------------------------------------------------------------------------------------
-	template<>
-	tDataPlug< const dPlaChar* >::dMapAssigns *
-	getVoidAssignments< const dPlaChar* >(){
-		static bool setup = false;
-		static tDataPlug<const dPlaChar*>::dMapAssigns copiers;
-
-		if(!setup){
-			copiers[ cBase_plug::genPlugType<dText>() ] = voidAssign::plaCStrToText;
-			copiers[ cBase_plug::genPlugType<dNatStr>() ] = voidAssign::plaCStrToNStr;
-			copiers[ cBase_plug::genPlugType<dStr>() ] = voidAssign::plaCStrToPStr;
-			setup=true;
-		}
-
-		return &copiers;
-	}
-
-	template<>
-	tDataPlug< const dPlaChar* >::dMapAssigns *
-	getVoidAppends< const dPlaChar* >(){
-		static bool setup = false;
-		static tDataPlug< const dPlaChar* >::dMapAppends app;
-
-		if(!setup){
-			app[ cBase_plug::genPlugType<dText>() ] = voidAppend::plaCStrToText;
-			app[ cBase_plug::genPlugType<dNatStr>() ] = voidAppend::plaCStrToNStr;
-			app[ cBase_plug::genPlugType<dStr>() ] = voidAppend::plaCStrToPStr;
-			setup=true;
-		}
-
-		return &app;
-	}
-
-	//-------------------------------------------------------------------------------------
-
-//	template<>
-//	tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAssigns *
-//	getVoidAssignments< boost::shared_ptr<cByteBuffer> >(){
-//		static bool setup = false;
-//		static tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAssigns ass;
-//
-//		if(!setup){
-//			setup=true;
-//		}
-//
-//		return &ass;
-//	}
-
-	template<>
-	tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAppends *
-	getVoidAppends< boost::shared_ptr<cByteBuffer> >(){
-		static bool setup = false;
-		static tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAppends app;
-
-		if(!setup){
-			setup=true;
-		}
-
-		return &app;
-	}
 }
 
 

@@ -86,8 +86,6 @@ namespace gt{
 			tLemming();
 			tLemming(tSpitLemming<T>* parent);
 
-			void parentDied();
-
 			tSpitLemming<T>* mParent;
 
 		friend class tSpitLemming<T>;
@@ -100,6 +98,8 @@ namespace gt{
 		virtual tSpitLemming<T>& operator= (const tSpitLemming<T>& spitter);
 
 	protected:
+		unsigned int inTheWild;
+
 		virtual T* getData(const tLemming* requester) =0;
 		virtual void first() =0;	//!< Called when the first lemming is made.
 		virtual void noMore() =0;	//!< Called when the last lemming dies
@@ -109,9 +109,6 @@ namespace gt{
 		void finish();	//!<
 
 	friend class tLemming;
-
-	private:
-		unsigned int inTheWild;
 	};
 
 	//------------------------------------------------------------------------------------------
@@ -263,30 +260,26 @@ namespace gt{
 namespace gt{
 
 	template<typename T>
-	tSpitLemming<T>::tLemming::tLemming(const tLemming& copy) : mParent(copy.mParent){
+	tSpitLemming<T>::tLemming::tLemming(const tLemming& copy)
+	: mParent(copy.mParent)
+	{
 		mParent->changeLem(const_cast<tLemming*>(&copy), this);
 	}
 
 	template<typename T>
-	tSpitLemming<T>::tLemming::tLemming(tSpitLemming<T>* parent) :
-		mParent(parent)
+	tSpitLemming<T>::tLemming::tLemming(tSpitLemming<T>* parent)
+	: mParent(parent)
 	{}
 
 	template<typename T>
-	tSpitLemming<T>::tLemming::tLemming() :
-		mParent(NULL)
+	tSpitLemming<T>::tLemming::tLemming()
+	: mParent(NULL)
 	{}
 
 	template<typename T>
 	tSpitLemming<T>::tLemming::~tLemming(){
 		if(mParent)
 			mParent->finish();
-	}
-
-	template<typename T>
-	void
-	tSpitLemming<T>::tLemming::parentDied(){
-		mParent = false;
 	}
 
 	template<typename T>
@@ -317,16 +310,22 @@ namespace gt{
 
 	//------------------------------------------------
 	template<typename T>
-	tSpitLemming<T>::tSpitLemming() : inTheWild(0) {
-
-	}
+	tSpitLemming<T>::tSpitLemming()
+	: inTheWild(0)
+	{}
 
 	template<typename T>
-	tSpitLemming<T>::~tSpitLemming() {}
+	tSpitLemming<T>::~tSpitLemming() {
+		if(inTheWild != 0)
+			SHITPANTS;
+	}
 
 	template<typename T>
 	typename tSpitLemming<T>::tLemming
 	tSpitLemming<T>::get(){
+		if(inTheWild==0)
+			first();
+
 		++inTheWild;
 		return tLemming(this);
 	}
@@ -341,9 +340,6 @@ namespace gt{
 	void
 	tSpitLemming<T>::changeLem(typename tSpitLemming<T>::tLemming *from, typename tSpitLemming<T>::tLemming *to){
 		ASRT_TRUE(from->mParent == this, "Tried to change from a lemming that didn't come from this manager.");
-
-		if(to->mParent != this)
-			--inTheWild;
 
 		to->mParent = this;
 		from->mParent = NULL;
