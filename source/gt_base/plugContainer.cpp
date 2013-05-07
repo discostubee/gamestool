@@ -24,84 +24,33 @@ using namespace gt;
 // Tests
 #ifdef GTUT
 
-GTUT_START(testPlugArray, STLToPContainer){
-	tPlugArray<int> testMe;
+GTUT_START(testPlugLinier, assignAppend){
+	tPlugLinierContainer<int, std::vector> testArray;
+	tPlugLinierContainer<int, std::list> testList;
 	std::vector<int> a;
 	std::list<int> b;
 
-	testMe = a;
-	testMe = b;
-}GTUT_END;
+	a.push_back(1);
+	a.push_back(2);
+	a.push_back(3);
+	testArray = a;
+	testList = a;
 
-GTUT_START(testPlugList, STLToPContainer){
-	tPlugList<int> testMe;
-	std::vector<int> a;
-	std::list<int> b;
+	b.push_back(1);
+	b.push_back(2);
+	b.push_back(3);
+	testArray += b;
+	testList += b;
 
-	testMe = a;
-	testMe = b;
-}GTUT_END;
-
-GTUT_START(testPlugArray, saveLoad){
-	const size_t num = 5;
-
-	cByteBuffer buff;
-	{
-		tPlugArray<int> A;
-		for(size_t i=0; i < num; ++i)
-			A.mContainer.push_back(i);
-
-		A.save(&buff);
-	}
-	{
-		tPlugArray<int> B;
-
-		B.loadEat(&buff, NULL);
-		for(int i=0; i < static_cast<int>(num); ++i)
-			GTUT_ASRT(B.mContainer.at(i).get()==i, "not the right number");
-	}
+	testArray += testList;
 
 }GTUT_END;
 
-GTUT_START(testPlugList, saveLoad){
-	const size_t num = 5;
-
-	cByteBuffer buff;
-	{
-		tPlugList<int> A;
-		for(size_t i=0; i < num; ++i)
-			A.mContainer.push_back(i);
-
-		A.save(&buff);
-	}
-	{
-		tPlugList<int> B;
-
-		B.loadEat(&buff, NULL);
-		//for(int i=0; i < static_cast<int>(num); ++i)
-		//	GTUT_ASRT(B.mContainer.at(i).get() == i, "not the right number");
-	}
+GTUT_START(testPlugLinier, saveLoad){
 
 }GTUT_END;
 
 GTUT_START(testPlugMap, saveLoad){
-	const short num = 5;
-
-	cByteBuffer buff;
-	{
-		tPlugMap< int, short > A;
-		for(short i=0; i < num; ++i)
-			A.mContainer[i] = i * 2;
-
-		A.save(&buff);
-	}
-	{
-		tPlugMap< int, short > B;
-
-		B.loadEat(&buff, NULL);
-		for(short i=0; i < num; ++i)
-			GTUT_ASRT(B.mContainer[i].get() == i * 2, "not the right number");
-	}
 
 }GTUT_END;
 

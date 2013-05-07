@@ -52,7 +52,7 @@ GTUT_START(testPlug, copyMem){
 	long numA;
 
 	A.get() = magic;
-	refA->assign(&numA, cBase_plug::genPlugType<long>());
+	refA->assignTo(&numA, cBase_plug::genPlugType<long>());
 	GTUT_ASRT(numA == magic, "A didn't copy into the target correctly.");
 
 }GTUT_END;

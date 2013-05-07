@@ -30,7 +30,7 @@
 	}
 
 	void cTestNum::patGetData(ptrLead aLead){
-		aLead->addPlug(&myNum, xPT_num);
+		aLead->linkPlug(&myNum, xPT_num);
 	}
 
 	void cTestNum::patSetData(ptrLead aLead){
@@ -51,8 +51,8 @@
 
 	void
 	cSaveTester::patGetData(ptrLead aLead){
-		aLead->addPlug(&myStr, xPT_str);
-		aLead->addPlug(&myNum, xPT_num);
+		aLead->linkPlug(&myStr, xPT_str);
+		aLead->linkPlug(&myNum, xPT_num);
 	}
 
 #endif

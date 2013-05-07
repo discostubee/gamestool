@@ -200,42 +200,35 @@ namespace gt{
 namespace gt{
 
 
-	//-----------------------------------------------------------------------------------
-	//!\brief	This is the most common plug, so it needs to be the most efficient.
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Specialise the class for each type you want to have more than just a basic copy for.
 	template<>
-	class tDataPlug<ptrFig>: public cBase_plug{
+	class tOpOnAny<ptrFig>{
 	public:
 
-		typedef void (*fuAssign)(const ptrFig *copyFrom, void *copyTo);
-		typedef void (*fuAppend)(const ptrFig *copyFrom, void *copyTo);
-		typedef std::map<dPlugType, fuAssign> dMapAssigns;
-		typedef std::map<dPlugType, fuAppend> dMapAppends;
+		//!\brief
+		static tDataPlug<ptrFig>::dMapAssigns* assign(){
+			static bool setup = false;
+			static tDataPlug<ptrFig>::dMapAssigns ass;
 
-		//---
-		virtual cBase_plug::dPlugType getType() const {
-			return cBase_plug::genPlugType<ptrFig>();
+			if(!setup){
+				ass[ cBase_plug::genPlugType<ptrFig>() ] = voidAssign::basic<ptrFig>;
+				setup=true;
+			}
+
+			return &ass;
 		}
 
-		virtual void assign(void *aTo, dPlugType aType) const {
-			if(aType != cBase_plug::genPlugType<ptrFig>())
-				throw excep::base_error("Can't assign none ptrFig to ptrFig", __FILE__, __LINE__);
-
-			*reinterpret_cast<ptrFig*>(aTo) = getConst();
+		//!\brief
+		static tDataPlug<ptrFig>::dMapAppends* append(){
+			static tDataPlug<ptrFig>::dMapAppends app;
+			return &app;
 		}
 
-		virtual void append(void *aTo, dPlugType aType) const {
-			throw excep::base_error("Can't append ptrFig, ever,", __FILE__, __LINE__);
-		}
-
-		virtual bool operator== (const cBase_plug &pD) const {
-			return (pD.getType() == cBase_plug::genPlugType<ptrFig>());
-		}
-
-		//---
-		virtual ptrFig& get() = 0;
-		virtual const ptrFig& getConst() const =0;
-		virtual cBase_plug& operator= (const cBase_plug &pD) =0;
-		virtual cBase_plug& operator+= (const cBase_plug &pD) =0;
+	private:
+		tOpOnAny(){}
+		~tOpOnAny(){}
 	};
 
 	//-----------------------------------------------------------------------------------
@@ -274,6 +267,10 @@ namespace gt{
 				throw excep::notFound("signature of reloaded figment", __FILE__, __LINE__);	//- figment remains empty.
 
 			get() = itr->second->fig;
+		}
+
+		virtual bool operator== (const cBase_plug &pD) const {
+			return (pD.getType() == cBase_plug::genPlugType<ptrFig>());
 		}
 	};
 

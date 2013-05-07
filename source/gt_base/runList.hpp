@@ -50,7 +50,7 @@ namespace gt{ //gamestool
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 
 	protected:
-		typedef tPlugList<ptrFig> dList;
+		typedef tPlugLinierContainer<ptrFig, std::vector> dList;
 
 		dList mList;
 

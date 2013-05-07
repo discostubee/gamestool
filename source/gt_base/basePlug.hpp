@@ -119,14 +119,15 @@ namespace gt{
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Made threadsafe in implementation.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Made threadsafe in implementation.
 
-		template<typename T> cBase_plug& operator= (const T &aFrom);	//!< Can only work on exactly equal types.
+		template<typename T> cBase_plug& operator= (const T &pFrom);	//!< Handy.
+		template<typename T> cBase_plug& operator+= (const T &pFrom);	//!< Handy.
 
 		//--- interface
 		virtual dPlugType getType() const =0;
+		virtual void assignTo(void *pTo, dPlugType pType) const =0;	//!< Allows later implementation to assign into the memory addess. !\note Not the same as copying because things like smart pointers should work correctly with this.
+		virtual void appendTo(void *pTo, dPlugType pType) const =0;	//!< Similar to assign, but for appending to the input argument.
 		virtual void save(cByteBuffer* pSaveHere) =0;	//!< Appends the buffer with binary data that should be understandable by any platform.
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) =0;	//!< Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
-		virtual void assign(void *aTo, dPlugType aType) const =0;	//!< Allows later implementation to assign into the memory addess. !\note Not the same as copying because things like smart pointers should work correctly with this.
-		virtual void append(void *aTo, dPlugType aType) const =0;	//!< Similar to assign, but for appending to the input argument.
 
 		virtual bool operator== (const cBase_plug &pD) const =0;
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, should not copy any linked lead info.
@@ -145,9 +146,10 @@ namespace gt{
 		dMapLeads::iterator itrLead;	//!< handy.
 
 		#ifdef GT_THREADS
-			virtual void readShadow(cBase_plug *pWriteTo, dConSig aCon) =0;
-			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig aCon) =0;
-			virtual void appendShadow(const cBase_plug *pReadFrom, dConSig aCon) =0;
+			virtual void readShadow(cBase_plug *pWriteTo, dConSig pSig) =0;
+			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig pSig) =0;
+			virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig) =0;
+			virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig) =0;
 		#endif
 
 	friend class cLead;
@@ -170,18 +172,16 @@ namespace gt{
 
 		//--- implemented
 		virtual cBase_plug::dPlugType getType() const;
-		virtual void assign(void *aTo, dPlugType aType) const;
-		virtual void append(void *aTo, dPlugType aType) const;
+		virtual void assignTo(void *pTo, dPlugType pType) const;
+		virtual void appendTo(void *pTo, dPlugType pType) const;
 
 		virtual bool operator== (const cBase_plug &pD) const;
+		virtual cBase_plug& operator= (const cBase_plug &pD);
+		virtual cBase_plug& operator+= (const cBase_plug &pD);
 
 		//--- new interface
-		virtual A& get() = 0;
+		virtual A& get() =0;
 		virtual const A& getConst() const =0;
-
-		//--- continued...
-		virtual cBase_plug& operator= (const cBase_plug &pD) =0;
-		virtual cBase_plug& operator+= (const cBase_plug &pD) =0;
 
 	private:
 		tDataPlug<A>& operator= (const tDataPlug<A> &dontcare){ return *this; }
@@ -196,29 +196,18 @@ namespace gt{
 		tLitePlug(T *aRef) : mRef(aRef) {}
 		~tLitePlug(){}
 
-		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
-		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
-
 		tLitePlug<T>& operator= (const tLitePlug<T> &aCopyMe) {
 			ASRT_NOTSELF(&aCopyMe);
 			mRef = aCopyMe.mRef;
 			return *this;
 		}
 
-		cBase_plug& operator= (const cBase_plug &pD) {
-			ASRT_NOTSELF(&pD);
-			pD.assign(mRef, cBase_plug::genPlugType<T>());
-			return *this;
-		}
-
-		cBase_plug& operator+= (const cBase_plug &pD) {
-			ASRT_NOTSELF(&pD);
-			pD.append(mRef, cBase_plug::genPlugType<T>());
-			return *this;
-		}
-
 		T& get(){ return *mRef; }
 		const T& getConst() const{ return *mRef; }
+
+		//---
+		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
+		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
 
 		#ifdef GT_THREADS
 			void updateStart(){ DONT_USE_THIS; }
@@ -229,11 +218,52 @@ namespace gt{
 #		ifdef GT_THREADS
 			void readShadow(cBase_plug *pWriteTo, dConSig aCon){ DONT_USE_THIS; }
 			void writeShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
-			void appendShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
+			virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig){ DONT_USE_THIS; }
+			virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig){ DONT_USE_THIS; }
 #		endif
 
 	private:
 		T *mRef;
+	};
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Used just for copying and appending with constant.
+	template<typename T>
+	class tLitePlugConst: public tDataPlug<T>{
+	public:
+		tLitePlugConst(const T *aRef) : mRef(aRef) {}
+		~tLitePlugConst(){}
+
+		tLitePlug<T>& operator= (const tLitePlugConst<T> &aCopyMe) {
+			ASRT_NOTSELF(&aCopyMe);
+			mRef = aCopyMe.mRef;
+			return *this;
+		}
+
+		T& get(){ DONT_USE_THIS; }
+		const T& getConst() const{ return *mRef; }
+
+		//---
+		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
+		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
+
+		#ifdef GT_THREADS
+			void updateStart(){ DONT_USE_THIS; }
+			void updateFinish(){ DONT_USE_THIS; }
+		#endif
+
+	protected:
+#		ifdef GT_THREADS
+			void readShadow(cBase_plug *pWriteTo, dConSig aCon){ DONT_USE_THIS; }
+			void writeShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
+			virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig){ DONT_USE_THIS; }
+			virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig){ DONT_USE_THIS; }
+#		endif
+
+	private:
+		const T *mRef;
+
+		tLitePlugConst(T *aRef){}
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -295,13 +325,22 @@ namespace gt{
 
 	template<typename T>
 	cBase_plug&
-	cBase_plug::operator= (const T &aFrom){
-		//- there should be no need to chech for yourself due to input type
+	cBase_plug::operator= (const T &pFrom){
+		//- there should be no need to check for yourself due to input type
 
-		if(cBase_plug::genPlugType<T>() != getType())
-			excep::cantCopy("plug", "raw type", __FILE__, __LINE__);
+		tLitePlugConst<T> tmp(&pFrom);
+		operator=(tmp);
 
-		dynamic_cast< tDataPlug<T>* >(this)->get() = aFrom;	//- Attempt down cast.
+		return *this;
+	}
+
+	template<typename T>
+	cBase_plug&
+	cBase_plug::operator+= (const T &pFrom){
+		//- there should be no need to check for yourself due to input type
+
+		tLitePlugConst<T> tmp(&pFrom);
+		operator+=(tmp);
 
 		return *this;
 	}
@@ -315,12 +354,12 @@ namespace gt{
 
 	template<typename A>
 	void
-	tDataPlug<A>::assign(void *aTo, cBase_plug::dPlugType aType) const{
+	tDataPlug<A>::assignTo(void *pTo, cBase_plug::dPlugType pType) const{
 		PROFILE;
 
 		tCoolFind<cBase_plug::dPlugType, fuAssign> assign(
 			*tOpOnAny<A>::assign(),
-			aType
+			pType
 		);
 
 		if(!assign.found())
@@ -328,18 +367,18 @@ namespace gt{
 
 		assign.get()(
 			&getConst(),
-			aTo
+			pTo
 		);
 	}
 
 	template<typename A>
 	void
-	tDataPlug<A>::append(void *aTo, cBase_plug::dPlugType aType) const{
+	tDataPlug<A>::appendTo(void *pTo, cBase_plug::dPlugType pType) const{
 		PROFILE;
 
 		tCoolFind<cBase_plug::dPlugType, fuAssign> append(
 			*tOpOnAny<A>::append(),
-			aType
+			pType
 		);
 
 		if(!append.found())
@@ -347,7 +386,7 @@ namespace gt{
 
 		append.get()(
 			&getConst(),
-			aTo
+			pTo
 		);
 	}
 
@@ -355,6 +394,22 @@ namespace gt{
 	bool
 	tDataPlug<A>::operator== (const cBase_plug &pD) const {
 		return (cBase_plug::genPlugType<A>() == pD.getType());
+	}
+
+	template<typename A>
+	cBase_plug&
+	tDataPlug<A>::operator= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		pD.assignTo(&get(), cBase_plug::genPlugType<A>());
+		return *this;
+	}
+
+	template<typename A>
+	cBase_plug&
+	tDataPlug<A>::operator+= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		pD.appendTo(&get(), cBase_plug::genPlugType<A>());
+		return *this;
 	}
 }
 

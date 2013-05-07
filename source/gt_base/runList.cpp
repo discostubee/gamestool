@@ -25,6 +25,7 @@ const cPlugTag *cRunList::xPT_single = tOutline<cRunList>::makePlugTag("single")
 
 const cCommand::dUID cRunList::xAdd = tOutline<cRunList>::makeCommand(
 	"add", &cRunList::patAdd,
+	xPT_single,
 	NULL
 );
 
@@ -69,9 +70,7 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 void
 cRunList::patAdd(ptrLead aLead){
 	PROFILE;
-	ptrFig addMe;
-	aLead->assignTo(&addMe, xPT_single);
-	mList.append(&addMe, cBase_plug::genPlugType<ptrFig>());
+	aLead->appendPlug(&mList, xPT_single);
 }
 
 

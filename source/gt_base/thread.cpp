@@ -168,10 +168,10 @@ namespace gt{
 			#endif
 		}
 		void patHits(ptrLead aLead){
-			aLead->addPlug(&hits, xPT_hits);
+			aLead->linkPlug(&hits, xPT_hits);
 		}
 		void patGetChatter(ptrLead aLead){
-			aLead->addPlug(&chatter, xPT_chatter);
+			aLead->linkPlug(&chatter, xPT_chatter);
 		}
 
 	public:
@@ -222,7 +222,7 @@ namespace gt{
 		virtual void work(cContext* pCon) {
 			//- Really inefficient, but who cares.
 			ptrLead writeLead = gWorld.get()->makeLead(cShareTarget::xWrite);
-			writeLead->addPlug(&phrase, cShareTarget::xPT_word);
+			writeLead->linkPlug(&phrase, cShareTarget::xPT_word);
 			target.get()->jack(writeLead, pCon);
 		}
 
@@ -273,11 +273,11 @@ namespace gt{
 			ptrLead setupA = gWorld.get()->makeLead(cWriter::xSetup);
 			ptrLead setupB = gWorld.get()->makeLead(cWriter::xSetup);
 
-			setupA->addPlug(&share, cWriter::xPT_target);
-			setupA->addPlug(&AChatter, cWriter::xPT_word);
+			setupA->linkPlug(&share, cWriter::xPT_target);
+			setupA->linkPlug(&AChatter, cWriter::xPT_word);
 
-			setupB->addPlug(&share, cWriter::xPT_target);
-			setupB->addPlug(&BChatter, cWriter::xPT_word);
+			setupB->linkPlug(&share, cWriter::xPT_target);
+			setupB->linkPlug(&BChatter, cWriter::xPT_word);
 
 			writerA.get()->jack(setupA, &fakeContext);
 			writerB.get()->jack(setupB, &fakeContext);
@@ -285,13 +285,13 @@ namespace gt{
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 
-			linkTest->addPlug(&writerA, cThread::xPT_fig);
+			linkTest->linkPlug(&writerA, cThread::xPT_fig);
 			threadA.get()->jack(linkTest, &fakeContext);
 		}
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xLinkFig);
 
-			linkTest->addPlug(&writerB, cThread::xPT_fig);
+			linkTest->linkPlug(&writerB, cThread::xPT_fig);
 			threadB.get()->jack(linkTest, &fakeContext);
 		}
 

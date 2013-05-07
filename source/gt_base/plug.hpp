@@ -91,7 +91,8 @@ namespace gt{
 	protected:
 		virtual void readShadow(cBase_plug *pWriteTo, dConSig pSig);
 		virtual void writeShadow(const cBase_plug *pReadFrom, dConSig pSig);
-		virtual void appendShadow(const cBase_plug *pReadFrom, dConSig aSig);
+		virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig);
+		virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig);
 
 	friend class cLead;
 
@@ -247,7 +248,9 @@ namespace gt{
 				dLock lock(guardShadows);
 				tmpSRef->mData = get();
 			}
-			*pWriteTo = tmpSRef->mData;
+
+			tLitePlug<A> tmp(&tmpSRef->mData);
+			*pWriteTo = tmp;
 		}
 
 		template<typename A>
@@ -256,25 +259,47 @@ namespace gt{
 			PROFILE;
 
 			setTmpShadowRef(pSig);
-			pReadFrom->assign(
-				static_cast<void*>(&tmpSRef->mData),
+
+			pReadFrom->assignTo(
+				&tmpSRef->mData,
 				cBase_plug::genPlugType<A>()
 			);
+
+			tmpSRef->mMode = eSM_write;
+		}
+
+
+
+		template<typename A>
+		void
+		tShadowPlug<A>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
+			PROFILE;
+
+			setTmpShadowRef(pSig);
+
+			pReadFrom->appendTo(
+				&tmpSRef->mData,
+				cBase_plug::genPlugType<A>()
+			);
+
 			tmpSRef->mMode = eSM_write;
 		}
 
 		template<typename A>
 		void
-		tShadowPlug<A>::appendShadow(const cBase_plug *pReadFrom, dConSig aSig){
+		tShadowPlug<A>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
 			PROFILE;
 
-			setTmpShadowRef(aSig);
-			pReadFrom->append(
-				static_cast<void*>(&tmpSRef->mData),
-				cBase_plug::genPlugType<A>()
-			);
-			tmpSRef->mMode = eSM_write;
+			setTmpShadowRef(pSig);
+			if(tmpSRef->mMode == eSM_init){	//- This looks bad because it is possible that the unlocked interface is being used to change data at the point we are reading form it.
+				dLock lock(guardShadows);
+				tmpSRef->mData = get();
+			}
+
+			tLitePlug<A> tmp(&tmpSRef->mData);
+			*pWriteTo += tmp;
 		}
+
 
 		template<typename A>
 		void
@@ -305,15 +330,16 @@ namespace gt{
 
 	template<typename A>
 	tPlug<A>::tPlug(const cBase_plug &other){
-		other.assign(
+		other.assignTo(
 			&mD,
 			cBase_plug::genPlugType<A>()
 		);
 	}
 
 	template<typename A>
-	tPlug<A>::tPlug(const A& pA){
-	}
+	tPlug<A>::tPlug(const A& pA)
+	: mD(pA)
+	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const tPlug<A> &other){
@@ -321,7 +347,7 @@ namespace gt{
 
 	template<typename A>
 	tPlug<A>::tPlug(const cBase_plug *other){
-		other->assign(
+		other->assignTo(
 			&mD,
 			cBase_plug::genPlugType<A>()
 		);
@@ -335,7 +361,7 @@ namespace gt{
 	cBase_plug&
 	tPlug<A>::operator= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.assign(&mD, cBase_plug::genPlugType<A>());
+		pD.assignTo(&mD, cBase_plug::genPlugType<A>());
 		return *this;
 	}
 
@@ -343,7 +369,7 @@ namespace gt{
 	cBase_plug&
 	tPlug<A>::operator+= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.append(&mD, cBase_plug::genPlugType<A>());
+		pD.appendTo(&mD, cBase_plug::genPlugType<A>());
 		return *this;
 	}
 
