@@ -85,7 +85,7 @@ template <typename T>
 class tCoolItr{
 public:
 
-	tCoolItr(T* pContainer, typename T::const_iterator pStartHere) :
+	tCoolItr(T* pContainer, typename T::iterator pStartHere) :
 		mContainerRef(pContainer), mCurrentSpot(pStartHere)
 	{}
 

@@ -102,9 +102,9 @@ GTUT_START(test_cPlugHound, houndGets){
 	tPlug<cCommand::dUID> comID = cTestNum::xGetData;
 	tPlug<cPlugTag::dUID> tagID = cTestNum::xPT_num->mID;
 
-	sendHound->addPlug(&targetType, cPlugHound::xPT_contextTargetID);
-	sendHound->addPlug(&comID, cPlugHound::xPT_command);
-	sendHound->addPlug(&tagID, cPlugHound::xPT_tag);
+	sendHound->linkPlug(&targetType, cPlugHound::xPT_contextTargetID);
+	sendHound->linkPlug(&comID, cPlugHound::xPT_command);
+	sendHound->linkPlug(&tagID, cPlugHound::xPT_tag);
 
 	testNum->start(&fakeConx);
 	hound->jack(sendHound, &fakeConx);

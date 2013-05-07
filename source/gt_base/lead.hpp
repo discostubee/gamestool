@@ -58,8 +58,9 @@ namespace gt{
 	//!			call (known as jacking) uses a messenger class, in this case it's called a lead. A lead must
 	//!			have a command so the figment getting jacked knows what to do with it. A lead then has multiple
 	//!			plugs, some are labeled/tagged, while others are in an ordered pile.
-	//!\note	The interface is all threadsafe because an unplug call can come at any time.
+	//!\note	The interface is all thread-safe because an unplug call can come at any time.
 	//!\note	Leads can not be contained by a plug.
+	//!\note	A lot of assignment methods are not constant because of threading.
 	class cLead{
 	public:
 		typedef tSpitLemming<cBase_plug>::tLemming dRef;
@@ -70,25 +71,20 @@ namespace gt{
 		cLead(const cLead &otherLead);
 		~cLead();
 
-		//!\brief	Adds a tagged reference to a plug to our lead.
-		//!\param	addMe	Plug to connect to lead.
-		//!\param	pTag	This is the tag we use to find our plug.
-		void addPlug(cBase_plug *addMe, const cPlugTag *pTag);
+		//!\brief	Links a tagged reference to a plug to our lead.
+		void linkPlug(cBase_plug *linkMe, const cPlugTag *pTag);
 
 		//!\brief	Get a plug from a lead by copying its value into another plug.
-		//!\param	setMe	The plug we want to copy into.
-		//!\param	pTag	This is the tag we use to find our plug.
-		//!\return	False if plug not found.
-		//!\note	Not const because of threadding.
 		bool copyPlug(cBase_plug *setMe, const cPlugTag* pTag);
 
 		//!\brief	If it has the tagged plug, it sets it to the value stored in the plug being passed in.
-		//!\param	pTag	This is the tag we use to find our plug.
 		bool setPlug(const cBase_plug *copyMe, const cPlugTag *pTag);
 
 		//!\brief	If it has the tagged plug, it appends that tagged plug.
-		//!\param	pTag	This is the tag we use to find our plug.
-		bool appendPlug(const cBase_plug *addFrom, const cPlugTag *pTag);
+		bool appendPlug(cBase_plug *addFrom, const cPlugTag *pTag);
+
+		//!\brief	If it has the tagged plug, it appends to the input.
+		bool plugAppends(cBase_plug *addTo,  const cPlugTag *pTag);
 
 		//!\brief	If you want to pass a plug from one lead to another, here's how you do it.
 		//!\param	passTo	This is the lead that will get the plug from this lead.
@@ -101,12 +97,9 @@ namespace gt{
 		//!\brief	Assigns into the provided memory location.
 		//!\param	output	Pointer to where you want to copy the value.
 		//!\param	tag		tag for the plug you wish to copy a value from.
-		//!\return	false if it couldn't find the plug
-		//!\note	Not const because of threadding.
 		template<typename CONTAIN> bool assignTo(CONTAIN *output, const cPlugTag *tag);
 
 		//!\brief	Uses a tagged plug's assignment operator.
-		//!\return	returns false if plug needed for assignment isn't found.
 		template<typename CONTAIN> bool assignFrom(CONTAIN &input, const cPlugTag *tag);
 
 		//!\brief	If you don't want to re-create a lead without this plug, or you don't want to over-ride it, you

@@ -70,10 +70,10 @@ cLead::~cLead(){
 }
 
 void
-cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
+cLead::linkPlug(cBase_plug *linkMe, const cPlugTag *aTag){
 	PROFILE;
 
-	ASRT_NOTNULL(addMe);
+	ASRT_NOTNULL(linkMe);
 	ASRT_NOTNULL(aTag);
 
 #	ifdef GT_THREADS
@@ -83,11 +83,11 @@ cLead::addPlug(cBase_plug *addMe, const cPlugTag *aTag){
 	scrItr = mTaggedData.find(aTag->mID);
 	if(scrItr != mTaggedData.end()){
 		scrItr->second->unlinkLead(this);
-		scrItr->second = addMe;
+		scrItr->second = linkMe;
 	}else{
-		mTaggedData[aTag->mID] =addMe;
+		mTaggedData[aTag->mID] =linkMe;
 	}
-	addMe->linkLead(this);
+	linkMe->linkLead(this);
 }
 
 bool
@@ -115,10 +115,10 @@ cLead::copyPlug(cBase_plug *setMe, const cPlugTag* pTag){
 }
 
 bool
-cLead::setPlug(const cBase_plug *setMe, const cPlugTag *aTag){
+cLead::setPlug(const cBase_plug *copyMe, const cPlugTag *aTag){
 	PROFILE;
 
-	ASRT_NOTNULL(setMe);
+	ASRT_NOTNULL(copyMe);
 	ASRT_NOTNULL(aTag);
 
 #	ifdef GT_THREADS
@@ -131,16 +131,16 @@ cLead::setPlug(const cBase_plug *setMe, const cPlugTag *aTag){
 
 #	ifdef GT_THREADS
 		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
-		scrItr->second->writeShadow(setMe, mCurrentSig);
+		scrItr->second->writeShadow(copyMe, mCurrentSig);
 #	else
-		*scrItr->second = *setMe;
+		*scrItr->second = *copyMe;
 #	endif
 
 	return true;
 }
 
 bool
-cLead::appendPlug(const cBase_plug *addFrom, const cPlugTag *pTag){
+cLead::appendPlug(cBase_plug *addFrom, const cPlugTag *pTag){
 	PROFILE;
 
 	ASRT_NOTNULL(addFrom);
@@ -156,7 +156,7 @@ cLead::appendPlug(const cBase_plug *addFrom, const cPlugTag *pTag){
 
 #	ifdef GT_THREADS
 		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
-		scrItr->second->appendShadow(addFrom, mCurrentSig);
+
 #	else
 		*scrItr->second += *addFrom;
 #	endif
@@ -183,7 +183,7 @@ cLead::passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag)
 	if(aPutTag == NULL)
 		aPutTag = aGetTag;
 
-	passTo->addPlug(scrItr->second, aPutTag);
+	passTo->linkPlug(scrItr->second, aPutTag);
 
 	return true;
 }
@@ -276,7 +276,7 @@ GTUT_START(testLead, tagging){
 
 	tPlug<int> numA, numB;
 	const int magic = 3;
-	tmpLead->addPlug(&numA, &tag);
+	tmpLead->linkPlug(&numA, &tag);
 
 	numA.get() = magic;
 
@@ -309,12 +309,12 @@ GTUT_START(testLead, shadowUpdate){
 		numA.get() = 0;
 
 		startLead(leadA, conxA.getSig());
-		leadA.addPlug(&numA, &tag);
+		leadA.linkPlug(&numA, &tag);
 		leadA.setPlug(&numB, &tag);
 		stopLead(leadA);
 
 		startLead(leadB, conxB.getSig());
-		leadB.addPlug(&numA, &tag);
+		leadB.linkPlug(&numA, &tag);
 		stopLead(leadB);
 
 		numB.get() = magic;

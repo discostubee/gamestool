@@ -243,7 +243,7 @@ cAnchor::patSetRoot(ptrLead aLead){
 
 void
 cAnchor::patGetRoot(ptrLead aLead){
-	aLead->addPlug(&mRoot, cAnchor::xPT_root);
+	aLead->linkPlug(&mRoot, cAnchor::xPT_root);
 }
 
 void
@@ -273,7 +273,7 @@ GTUT_START(testAnchor, basicSave){
 	tester = ptrFig(new cSaveTester(testStr, 42));
 
 	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot);
-	add->addPlug(&tester, cAnchor::xPT_root);
+	add->linkPlug(&tester, cAnchor::xPT_root);
 
 	ank->jack(add, &fakeCon);
 	ank->save(plugBuff.get().get());
@@ -324,20 +324,17 @@ GTUT_START(testAnchor, chainSave){
 	tPlug<ptrFig> rlist = gWorld.get()->makeFig(getHash<cRunList>());
 
 	ptrLead addRoot = gWorld.get()->makeLead(cAnchor::xSetRoot);
-	addRoot->addPlug(&rlist, cAnchor::xPT_root);
+	addRoot->linkPlug(&rlist, cAnchor::xPT_root);
 	ank->jack(addRoot, &fakeCon);
 
 	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
 	ptrLead add = gWorld.get()->makeLead(cRunList::xAdd);
-	add->addPlug(
-		&tester,
-		cRunList::xPT_single
-	);
+	add->linkPlug(&tester, cRunList::xPT_single);
 	rlist.get()->jack(add, &fakeCon);
 
 	ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);
 	plugBuff = ptrBuff(new cByteBuffer());
-	save->addPlug(&plugBuff, cAnchor::xPT_serialBuff);
+	save->linkPlug(&plugBuff, cAnchor::xPT_serialBuff);
 	ank->jack(save, &fakeCon);
 
 }GTUT_END;
