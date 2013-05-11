@@ -100,7 +100,7 @@ namespace gt{
 		typedef void (T::*ptrPatFoo)(ptrLead alead);
 
 		static void draft();				//!< Adds your figment to the world library.
-		static void removeFromWorld();
+		static void removeFromWorld();		//!< Only do this when an addon closes or the main program ends. Once removed, you'll need to reload an addon in order to regain commands. If you remove a core figment, you won't be able to get the commands back at runtime.
 
 		static const cCommand::dUID makeCommand(
 			const char* aName,
@@ -314,8 +314,8 @@ namespace gt{
 		{	//- Using braces to ensure that the pointer to the command map is correct.
 			dNameHash comUID;
 			{
-				dNatStr totalString = toNStr(T::identify());
-				totalString.t.append( toNStr(pName).t );
+				dNatStr totalString = PCStr2NStr(T::identify());
+				totalString.t.append( PCStr2NStr(pName).t );
 				comUID = makeHash( totalString );
 			}
 			dMapCom::iterator itrCom;
@@ -353,7 +353,7 @@ namespace gt{
 		dMapPTag::iterator itrTag = xPlugTags->end();
 
 		{
-			dNameHash tagUID = makeHash( toNStr(pName).t.c_str() );
+			dNameHash tagUID = makeHash( toNStr(pName) );
 
 			xPlugTags->insert( dMapPTag::value_type(tagUID,	cPlugTag(pName)) );
 

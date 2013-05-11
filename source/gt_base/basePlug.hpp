@@ -82,9 +82,7 @@ namespace gt{
 		):
 			mName(pPlugName),
 			mID(
-				makeHash( toNStr(
-					mName.c_str()
-				).t.c_str() )
+				makeHash( toNStr(mName) )
 			)
 		{}
 
@@ -118,9 +116,6 @@ namespace gt{
 
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Made threadsafe in implementation.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Made threadsafe in implementation.
-
-		template<typename T> cBase_plug& operator= (const T &pFrom);	//!< Handy.
-		template<typename T> cBase_plug& operator+= (const T &pFrom);	//!< Handy.
 
 		//--- interface
 		virtual dPlugType getType() const =0;
@@ -321,28 +316,6 @@ namespace gt{
 #			endif
 
 		return typeID;
-	}
-
-	template<typename T>
-	cBase_plug&
-	cBase_plug::operator= (const T &pFrom){
-		//- there should be no need to check for yourself due to input type
-
-		tLitePlugConst<T> tmp(&pFrom);
-		operator=(tmp);
-
-		return *this;
-	}
-
-	template<typename T>
-	cBase_plug&
-	cBase_plug::operator+= (const T &pFrom){
-		//- there should be no need to check for yourself due to input type
-
-		tLitePlugConst<T> tmp(&pFrom);
-		operator+=(tmp);
-
-		return *this;
 	}
 
 	//----------------------------------------------------------------------------------------------------------------

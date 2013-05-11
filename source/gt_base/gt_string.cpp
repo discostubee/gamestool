@@ -74,49 +74,13 @@ getTextEncode(){
 
 //--------------------------------------------------------
 
-dStr
-toPStr(const dNatStr &pString){
-	dStr strRtn;
-
-	if(pString.t.empty())
-		return strRtn;
-
-	#if defined(USE_LOCALE_GEN)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getPlatformEncode());
-	#elif defined(USE_BOOST_LOCALE)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, "UTF-8");
-	#else
-		strRtn = pString;	//!!! temporary measure.
-	#endif
-
-	return strRtn;
-}
-
-dText
-toText(const dNatStr &pString){
-	dText strRtn;
-
-	if(pString.t.empty())
-		return strRtn;
-
-	#if defined(USE_LOCALE_GEN)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, getTextEncode());
-	#elif defined(USE_BOOST_LOCALE)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, textEncoding);
-	#else
-		strRtn.t = pString.t;	//!!! temporary measure.
-	#endif
-
-	return strRtn;
-}
-
 size_t
 PCStrLen(const dPlaChar *pString){
 	return ::strlen(pString);
 }
 
 dNatStr
-toNStr(const dPlaChar *pString){
+PCStr2NStr(const dPlaChar *pString){
 	dNatStr strRtn;
 
 	if(pString == NULL)
@@ -139,6 +103,98 @@ toNStr(const dPlaChar *pString){
 	return strRtn;
 }
 
+dText
+PCStr2Text(const dPlaChar *pString){
+	dText strRtn;
+
+	if(pString == NULL)
+		return strRtn;
+
+	size_t inLen = PCStrLen(pString);
+
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], getTextEncode());
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], textEncoding);
+	#else
+		strRtn.t = pString.t;	//!!! temporary measure.
+	#endif
+
+	return strRtn;
+}
+
+
+size_t
+NCStrLen(const dNatChar *pString){
+	if(pString == NULL)
+		return 0;
+
+	return strlen(pString);
+}
+
+dStr
+NCStr2PStr(const dNatChar *pString){
+	dStr strRtn;
+
+	if(pString == NULL)
+		return strRtn;
+
+	size_t inLen = NCStrLen(pString);
+
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], getPlatformEncode());
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], "UTF-8");
+	#else
+		strRtn = pString;	//!!! temporary measure.
+	#endif
+
+	return strRtn;
+}
+
+dText
+NCStr2Text(const dNatChar *pString){
+	dText strRtn;
+
+	if(pString == NULL)
+		return strRtn;
+
+	size_t inLen = NCStrLen(pString);
+
+	#if defined(USE_LOCALE_GEN)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], getTextEncode());
+	#elif defined(USE_BOOST_LOCALE)
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], textEncoding);
+	#else
+		strRtn = pString;	//!!! temporary measure.
+	#endif
+
+	return strRtn;
+}
+
+
+dStr
+toPStr(const dNatStr &pString){
+	return NCStr2PStr(pString.t.c_str());
+}
+
+dText
+toText(const dNatStr &pString){
+	return NCStr2Text(pString.t.c_str());
+}
+
+dNatStr
+toNStr(const dStr &pString){
+	return PCStr2NStr(pString.c_str());
+}
+
+dText
+toText(const dStr &pString){
+	return PCStr2Text(pString.c_str());
+}
+
+
+
 dStr
 toPStr(const dText &pString){
 	dStr strRtn;
@@ -152,30 +208,6 @@ toPStr(const dText &pString){
 		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString.t, "UTF-8");
 	#else
 		strRtn = pString.t;	//!!! temporary measure.
-	#endif
-
-
-	return strRtn;
-}
-
-dText
-toText(const dPlaChar *pString){
-	dText strRtn;
-
-	if(pString == NULL)
-		return strRtn;
-
-	size_t inLen = PCStrLen(pString);
-
-	if(inLen==0)
-		return strRtn;
-
-	#if defined(USE_LOCALE_GEN)
-		strRtn = boost::locale::conv::to_utf<dTextChar>(pString, &pString[inLen], getTextEncode());
-	#elif defined(USE_BOOST_LOCALE)
-		strRtn = boost::locale::conv::to_utf<dTextChar>(pString, &pString[inLen], textEncoding);
-	#else
-		strRtn = dText(pString);	//!!! temporary measure.
 	#endif
 
 
@@ -200,15 +232,9 @@ toNStr(const dText &pString){
 	return strRtn;
 }
 
-dNatStr
-toNStr(const dStr &pString){
-	return toNStr(pString.c_str());
-}
 
-dText
-toText(const dStr &pString){
-	return toText(pString.c_str());
-}
+
+
 
 
 

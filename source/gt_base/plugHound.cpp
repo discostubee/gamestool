@@ -106,11 +106,12 @@ GTUT_START(test_cPlugHound, houndGets){
 	sendHound->linkPlug(&comID, cPlugHound::xPT_command);
 	sendHound->linkPlug(&tagID, cPlugHound::xPT_tag);
 
+	tPlug<int> num;
+
+
 	testNum->start(&fakeConx);
 	hound->jack(sendHound, &fakeConx);
 	testNum->stop(&fakeConx);
-
-	tPlug<int> num;
 
 	startLead(sendHound, fakeConx.getSig());
 	sendHound->copyPlug(&num, cPlugHound::xPT_plug);

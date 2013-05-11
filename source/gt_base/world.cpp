@@ -37,7 +37,7 @@ struct cWorld::sBlueprintHeader{
 	dNameHash mReplaced;
 
 	sBlueprintHeader():
-		mReplaced(uDoesntReplace)
+		mBlueprint(NULL), mReplaced(uDoesntReplace)
 	{}
 
 	sBlueprintHeader(cBlueprint* pBlue, dNameHash pName):
@@ -90,11 +90,6 @@ cWorld::~cWorld(){
 		mRoot.redirect(NULL);
 		mVillageBicycle.redirect(NULL);
 
-		while(!mBlueprints.empty()){
-			mBlueprints.begin()->second.mBlueprint->mCleanup();
-			mBlueprints.erase( mBlueprints.begin() );
-		}
-
 		primordial::cleanup();
 
 	}catch(...){
@@ -121,7 +116,7 @@ cWorld::addBlueprint(cBlueprint* pAddMe){
 			mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);	// Archive the old blueprint being replaced.
 
 			mScrBMapItr->second = sBlueprintHeader( pAddMe, mScrBMapItr->second.mReplaced );
-			DBUG_VERBOSE_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mBlueArchive[ mScrBMapItr->first ].mBlueprint->name() << "'");
+			DBUG_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mBlueArchive[ mScrBMapItr->first ].mBlueprint->name() << "'");
 		}else{
 			WARN_S(pAddMe->name() << " missing parent");
 		}
@@ -143,7 +138,7 @@ void
 cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	PROFILE;
 
-	DBUG_LO("Erasing blueprint '" << pRemoveMe->name());
+	DBUG_LO("Erasing blueprint: " << pRemoveMe->name());
 
 	//- If this figment replaced another, restore the original blueprint.
 	if(pRemoveMe->replace() != uDoesntReplace){
@@ -202,6 +197,8 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 		}
 
 		mBlueprints.erase(mScrBMapItr);
+	}else{
+		WARN_S("Tried to remove blueprint '" << pRemoveMe->mGetName() << "' when not drafted.");
 	}
 }
 
@@ -219,7 +216,7 @@ cWorld::makeFig(dNameHash pNameHash){
 
 ptrFig
 cWorld::makeFig(const dPlaChar *pName){
-	return makeFig(makeHash(toNStr(pName)));
+	return makeFig(makeHash(PCStr2NStr(pName)));
 }
 
 ptrLead
@@ -231,8 +228,8 @@ cWorld::makeLead(cCommand::dUID pComID){
 
 ptrLead
 cWorld::makeLead(const dPlaChar *aFigName, const dPlaChar *aComName){
-	dNatStr totalString = toNStr(aFigName);
-	totalString.t.append( toNStr(aComName) );
+	dNatStr totalString = PCStr2NStr(aFigName);
+	totalString.t.append( PCStr2NStr(aComName).t );
 	dNameHash hash = makeHash(totalString);
 	ptrLead rtnLead(new cLead(hash));
 	return rtnLead;
@@ -275,7 +272,7 @@ cWorld::getPlugTag(dNameHash pFigHash, cPlugTag::dUID pPTHash){
 }
 
 const cPlugTag*
-cWorld::getPlugTag(const dNatChar *figName, const dNatChar *tagName){
+cWorld::getPlugTag(const dPlaChar *figName, const dPlaChar *tagName){
 	return getPlugTag(
 		makeHash(toNStr(figName)),
 		makeHash(toNStr(tagName))
@@ -485,16 +482,12 @@ cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 			xLineGuard = pWorldNew->mLineGuard;
 #		endif
 
-		gWorld.take(pWorldNew);	//- Old world cleaned up by doing this.
-
-	}else{
-		gWorld.drop();
 	}
-
 }
 
 void
 cWorld::primordial::cleanup(){
+
 	lo("", true);
 	(void)makeProfileToken(NULL, 0, true);
 }

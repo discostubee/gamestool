@@ -100,7 +100,7 @@ namespace gt{
 	getHash(){
 		static dNameHash name = 0;
 		if(name == 0)
-			name = ::makeHash( toNStr(T::identify()) );
+			name = ::makeHash( PCStr2NStr(T::identify()) );
 		return name;
 	}
 }

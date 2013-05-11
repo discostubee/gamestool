@@ -64,7 +64,6 @@ namespace gt{
 	void figmentTestSuit(){
 		tOutline<FIGTYPE>::draft();
 		tPlug<ptrFig> me = gWorld.get()->makeFig(getHash<FIGTYPE>());
-		tOutline<FIGTYPE>::removeFromWorld();
 	}
 }
 
