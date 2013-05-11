@@ -116,7 +116,6 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1740361798" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
-									<listOptionValue builtIn="false" value="GT_THREADS"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.147232655" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1548248362" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
