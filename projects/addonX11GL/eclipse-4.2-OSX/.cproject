@@ -213,6 +213,15 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.715292638;cdt.managedbuild.tool.gnu.c.compiler.input.452977713">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.c.compiler.macosx.base.221584121;cdt.managedbuild.tool.gnu.c.compiler.input.800995535">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.base.1530194772;cdt.managedbuild.tool.gnu.cpp.compiler.input.1741159297">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.macosx.exe.release.60284155;cdt.managedbuild.config.macosx.exe.release.60284155.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.release.1164067484;cdt.managedbuild.tool.gnu.cpp.compiler.input.1127407702">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.base.984509570;cdt.managedbuild.tool.gnu.cpp.compiler.input.917384872">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
@@ -222,13 +231,10 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.1845346740;cdt.managedbuild.tool.gnu.cpp.compiler.input.1062517145">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.c.compiler.macosx.base.221584121;cdt.managedbuild.tool.gnu.c.compiler.input.800995535">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063.;cdt.managedbuild.tool.gnu.c.compiler.macosx.base.685347908;cdt.managedbuild.tool.gnu.c.compiler.input.1972529559">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394;cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.;cdt.managedbuild.tool.gnu.c.compiler.base.1416273593;cdt.managedbuild.tool.gnu.c.compiler.input.541508780">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.macosx.exe.release.60284155;cdt.managedbuild.config.macosx.exe.release.60284155.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.release.1164067484;cdt.managedbuild.tool.gnu.cpp.compiler.input.1127407702">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.macosx.exe.release.60284155;cdt.managedbuild.config.macosx.exe.release.60284155.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.release.68547606;cdt.managedbuild.tool.gnu.c.compiler.input.1432502350">
