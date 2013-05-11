@@ -223,8 +223,6 @@ namespace gt{
 		template<typename A>
 		void
 		tShadowPlug<A>::updateFinish(){
-			typedef PLUG_PARENT<A> p;
-
 			PROFILE;
 
 			dLock lock(guardShadows);
@@ -268,8 +266,6 @@ namespace gt{
 			tmpSRef->mMode = eSM_write;
 		}
 
-
-
 		template<typename A>
 		void
 		tShadowPlug<A>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
@@ -304,7 +300,6 @@ namespace gt{
 		template<typename A>
 		void
 		tShadowPlug<A>::setTmpShadowRef(dConSig pSig){
-
 			size_t s = static_cast<dConSig>(pSig);
 			if(mShadows.size() <= s){
 				dLock lock(guardShadows);

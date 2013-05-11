@@ -128,6 +128,10 @@ namespace gt{
 	//-------------------------------------------------------------------------------------
 	template<>
 	class tOpOnAny< ptrBuff >{
+	private:
+		static void appendPtr2Ptr(const ptrBuff *pFrom, void *pTo){
+			reinterpret_cast<ptrBuff*>(pTo)->get()->add(pFrom->get());
+		}
 	public:
 
 		static tDataPlug< ptrBuff >::dMapAssigns * assign(){
@@ -135,6 +139,7 @@ namespace gt{
 			static tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAssigns ass;
 
 			if(!setup){
+				ass[ cBase_plug::genPlugType<ptrBuff>() ] = voidAssign::basic<ptrBuff>;
 				setup=true;
 			}
 
@@ -146,6 +151,7 @@ namespace gt{
 			static tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAppends app;
 
 			if(!setup){
+				app[ cBase_plug::genPlugType<ptrBuff>() ] = appendPtr2Ptr;
 				setup=true;
 			}
 

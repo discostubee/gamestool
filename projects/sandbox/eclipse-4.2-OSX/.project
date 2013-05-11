@@ -4,6 +4,8 @@
 	<comment></comment>
 	<projects>
 		<project>addonX11GL</project>
+		<project>libgamestool</project>
+		<project>libgt_OSX</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

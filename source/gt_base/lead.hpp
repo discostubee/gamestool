@@ -39,9 +39,9 @@
 namespace gt{
 
 #	ifdef GUTU
-		void startLead(ptrLead, dConSig);
-		void stopLead(ptrLead);
-		void startLead(cLead &, dConSig);
+		void startLead(ptrLead, dConSig);	//!< In order to use a lead inside a unit tests, we need to treat it like it was jacked.
+		void stopLead(ptrLead);				//!< End with this.
+		void startLead(cLead &, dConSig);	//!< Handy if you're not using the usual smart pointer.
 		void stopLead(cLead &);
 #	endif
 }
@@ -80,11 +80,11 @@ namespace gt{
 		//!\brief	If it has the tagged plug, it sets it to the value stored in the plug being passed in.
 		bool setPlug(const cBase_plug *copyMe, const cPlugTag *pTag);
 
-		//!\brief	If it has the tagged plug, it appends that tagged plug.
-		bool appendPlug(cBase_plug *addFrom, const cPlugTag *pTag);
-
 		//!\brief	If it has the tagged plug, it appends to the input.
-		bool plugAppends(cBase_plug *addTo,  const cPlugTag *pTag);
+		bool appendPlug(cBase_plug *addTo, const cPlugTag *pTag);
+
+		//!\brief	If it has the tagged plug, it appends that tagged plug.
+		bool plugAppends(cBase_plug *addFrom,  const cPlugTag *pTag);
 
 		//!\brief	If you want to pass a plug from one lead to another, here's how you do it.
 		//!\param	passTo	This is the lead that will get the plug from this lead.

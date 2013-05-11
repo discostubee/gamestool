@@ -47,12 +47,16 @@ BOOST_STRONG_TYPEDEF(dText_def, dText);
 
 //--------------------------------------------------------
 
+size_t PCStrLen(const dPlaChar *pString);	//!< Find length of a platform string. Only platform strings offer raw buffer support, because string literals are all platform based.
+dNatStr PCStr2NStr(const dPlaChar *pString);	//!< Converts platform C style string to native C++ string instance.
+dText PCStr2Text(const dPlaChar *pString);	//!< Converts platform C style string to text string instance.
+
+size_t NCStrLen(const dNatChar *pString);
+dStr NCStr2PStr(const dNatChar *pString);
+dText NCStr2Text(const dNatChar *pString);
+
 dStr toPStr(const dNatStr &pString);
 dText toText(const dNatStr &pString);	//!< Converts a native C style string to a text string instance.
-
-size_t PCStrLen(const dPlaChar *pString);	//!< Find length of a platform string. Only platform strings offer raw buffer support, because string literals are all platform based.
-dNatStr toNStr(const dPlaChar *pString);	//!< Converts platform C style string to native C++ string instance.
-dText toText(const dPlaChar *pString);	//!< Converts platform C style string to text string instance.
 
 dNatStr toNStr(const dStr &pString);
 dText toText(const dStr &pString);

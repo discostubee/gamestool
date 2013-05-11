@@ -41,11 +41,11 @@ ptrFig makeEditor(){
 #elif defined(_win32)
 #endif
 
-	ptrFig save = gWorld.get()->makeFig(cAnchor::hash());
-	ptrFig rl = gWorld.get()->makeFig(cRunList::hash());
-	ptrFig stage = gWorld.get()->makeFig(cStage::hash());
-	ptrFig film = gWorld.get()->makeFig(cFilm::hash());
-	ptrFig cam = gWorld.get()->makeFig(cCamera::hash());
+	ptrFig save = gWorld.get()->makeFig(getHash<cAnchor>());
+	ptrFig rl = gWorld.get()->makeFig(getHash<cRunList>());
+	ptrFig stage = gWorld.get()->makeFig(getHash<cStage>());
+	ptrFig film = gWorld.get()->makeFig(getHash<cFilm>());
+	ptrFig cam = gWorld.get()->makeFig(getHash<c2DCamera>());
 
 	return rl;
 }

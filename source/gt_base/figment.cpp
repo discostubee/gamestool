@@ -168,7 +168,12 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 
 #		ifdef GT_THREADS
 			pLead->start(pCon->getSig());
-			mBlueprint->getCom(pLead->mCom)->use(this, pLead);
+			try{
+				mBlueprint->getCom(pLead->mCom)->use(this, pLead);
+			}catch(...){
+				pLead->stop();
+				throw;
+			}
 			pLead->stop();
 #		else
 			mBlueprint->getCom(pLead->mCom)->use(this, pLead);

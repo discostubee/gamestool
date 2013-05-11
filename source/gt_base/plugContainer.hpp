@@ -86,6 +86,7 @@ namespace gt{
 #		endif
 
 	private:
+		typedef typename dContainer::iterator itrFull_t;
 		dContainer mContainer;	//!<
 //
 //#		ifdef GT_THREADS
@@ -238,177 +239,41 @@ namespace gt{
 		template< typename PLUG_T, template<typename, typename> class CONT_T >
 		void
 		tPlugLinierContainer<PLUG_T, CONT_T>::updateStart(){
-			for(fullitr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+			for(itrFull_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
 				itr->updateStart();
 		}
 
 		template< typename PLUG_T, template<typename, typename> class CONT_T >
 		void
 		tPlugLinierContainer<PLUG_T, CONT_T>::updateFinish(){
-			for(fullitr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+			for(itrFull_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
 				itr->updateFinish();
 		}
-//
-//		template< typename PLUG_T, template<typename, typename> class CONT_T >
-//		void
-//		tPlugLinierContainer<PLUG_T, CONT_T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
-//		}
-//
-//		template< typename PLUG_T, template<typename, typename> class CONT_T >
-//		void
-//		tPlugLinierContainer<PLUG_T, CONT_T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
-//
-//		}
-//
-//		template< typename PLUG_T, template<typename, typename> class CONT_T >
-//		void
-//		shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
-//		}
-//
-//		template< typename PLUG_T, template<typename, typename> class CONT_T >
-//		void
-//		appendShadow(cBase_plug *pReadFrom, dConSig pSig){
-//		}
+
+		template< typename PLUG_T, template<typename, typename> class CONT_T >
+		void
+		tPlugLinierContainer<PLUG_T, CONT_T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
+		}
+
+		template< typename PLUG_T, template<typename, typename> class CONT_T >
+		void
+		tPlugLinierContainer<PLUG_T, CONT_T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
+
+		}
+
+		template< typename PLUG_T, template<typename, typename> class CONT_T >
+		void
+		tPlugLinierContainer<PLUG_T, CONT_T>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
+		}
+
+		template< typename PLUG_T, template<typename, typename> class CONT_T >
+		void
+		tPlugLinierContainer<PLUG_T, CONT_T>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
+		}
 
 #	endif
 
 
-//	//-----------------------------------------------------------------------------------------------
-//	template<typename KEY, typename T>
-//	tPlugMap<KEY, T>::tPlugMap(){
-//	}
-//
-//	template<typename KEY, typename T>
-//	tPlugMap<KEY, T>::~tPlugMap(){
-//	}
-//
-//	template<typename KEY, typename T>
-//	cBase_plug::dPlugType
-//	tPlugMap<KEY, T>::getType() const{
-//		return cBase_plug::genPlugType<map_t>();
-//	}
-//
-//	template<typename KEY, typename T>
-//	void
-//	tPlugMap<KEY, T>::save(cByteBuffer* pSaveHere){
-//		size_t s = mContainer.size();
-//		pSaveHere->add( &s );
-//		for(itr_t itr=mContainer.begin(); itr!=mContainer.end(); ++itr){
-//			pSaveHere->add(&itr->first);
-//			itr->second.save(pSaveHere);
-//		}
-//	}
-//
-//	template<typename KEY, typename T>
-//	void
-//	tPlugMap<KEY, T>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
-//		size_t s=0;
-//		KEY tmpKey=0;
-//		pChewToy->trimHead( pChewToy->fill(&s) );
-//		for(size_t i=0; i < s; ++i){
-//			pChewToy->trimHead( pChewToy->fill(&tmpKey) );
-//			mContainer.insert(
-//				entry(tmpKey, tPlug<T>() )
-//			).first->second.loadEat(pChewToy);
-//		}
-//	}
-//
-//	template<typename KEY, typename T>
-//	void
-//	tPlugMap<KEY, T>::assign(void *aTo, dPlugType aType) const{
-//		if(aType != cBase_plug::genPlugType<map_t>())
-//			throw excep::cantCopy("something", "plug map", __FILE__, __LINE__);
-//
-//		*reinterpret_cast<map_t*>(aTo) = mContainer;
-//	}
-//
-//	template<typename KEY, typename T>
-//	void
-//	tPlugMap<KEY, T>::append(void *aTo, dPlugType aType) const{
-//		if(aType != cBase_plug::genPlugType<map_t>())
-//			throw excep::cantCopy("append something", "plug map", __FILE__, __LINE__);
-//
-//		reinterpret_cast<map_t*>(aTo)->insert(
-//			mContainer.begin(), mContainer.end()
-//		);
-//	}
-//
-//	template<typename KEY, typename T>
-//	cBase_plug&
-//	tPlugMap<KEY, T>::operator= (const cBase_plug &pD){
-//		NOTSELF(&pD);
-//		pD.assign(
-//			&mContainer,
-//			cBase_plug::genPlugType< tPlugMap<KEY, T> >()
-//		);
-//		return *this;
-//	}
-//
-//	template<typename KEY, typename T>
-//	bool
-//	tPlugMap<KEY, T>::operator== (const cBase_plug &pD) const{
-//		return (getType() == pD.getType());
-//	}
-//
-//	template<typename KEY, typename T>
-//	cBase_plug&
-//	tPlugMap<KEY, T>::operator+= (const cBase_plug &pD){
-//		NOTSELF(&pD);
-//		map_t tmp;
-//		pD.assign(&tmp, getType());
-//		for(
-//			typename map_t::iterator itr = tmp.begin();
-//			itr != tmp.end();
-//			++itr
-//		){
-//			mContainer[ itr->first ] = itr->second;
-//		}
-//		return *this;
-//	}
-//
-//	template<typename KEY, typename T>
-//	tPlugMap<KEY, T>
-//	tPlugMap<KEY, T>::operator= (const tPlugMap<KEY, T> &copyMe){
-//		NOTSELF(&copyMe);
-//
-//		mContainer = copyMe.mContainer;
-//
-//		return *this;
-//	}
-//
-//
-//#	ifdef GT_THREADS
-//
-//		template<typename KEY, typename T>
-//		void
-//		tPlugMap<KEY, T>::updateStart(){
-//			for(itr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
-//				itr->second.updateStart();
-//		}
-//
-//		template<typename KEY, typename T>
-//		void
-//		tPlugMap<KEY, T>::updateFinish(){
-//			for(itr_t itr=mContainer.begin(); itr != mContainer.end(); ++itr)
-//				itr->second.updateFinish();
-//		}
-//
-//		template<typename KEY, typename T>
-//		void
-//		tPlugMap<KEY, T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
-//		}
-//
-//		template<typename KEY, typename T>
-//		void
-//		tPlugMap<KEY, T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
-//		}
-//
-//		template<typename KEY, typename T>
-//		void
-//		tPlugMap<KEY, T>::appendShadow(const cBase_plug *pReadFrom, dConSig aCon){
-//
-//		}
-//#	endif
 
 }
 

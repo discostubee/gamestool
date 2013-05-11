@@ -252,6 +252,8 @@ namespace gt{
 		tOutline<cWriter>::draft();
 		tOutline<cThread>::draft();
 
+		gWorld.get()->flushLines();
+
 		const int timeout = 10000;
 		const int testLength = 10;
 		int testCount = 0;

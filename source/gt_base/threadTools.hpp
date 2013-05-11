@@ -128,6 +128,8 @@ tMrSafety<T>::take(T* takeMe) {
 		dMuLock lock(muData);
 #	endif
 
+	if(mData != NULL)
+		cleanup();
 	mData = takeMe;
 }
 

@@ -140,7 +140,32 @@ cLead::setPlug(const cBase_plug *copyMe, const cPlugTag *aTag){
 }
 
 bool
-cLead::appendPlug(cBase_plug *addFrom, const cPlugTag *pTag){
+cLead::appendPlug(cBase_plug *addTo, const cPlugTag *pTag){
+	PROFILE;
+
+	ASRT_NOTNULL(addTo);
+	ASRT_NOTNULL(pTag);
+
+#	ifdef GT_THREADS
+		dLock lock(mu);
+#	endif
+
+	scrItr = mTaggedData.find(pTag->mID);
+	if(scrItr == mTaggedData.end())
+		return false;
+
+#	ifdef GT_THREADS
+		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
+		scrItr->second->shadowAppends(addTo, mCurrentSig);
+#	else
+		*addTo += *scrItr->second;
+#	endif
+
+	return true;
+}
+
+bool
+cLead::plugAppends(cBase_plug *addFrom,  const cPlugTag *pTag){
 	PROFILE;
 
 	ASRT_NOTNULL(addFrom);
@@ -156,7 +181,7 @@ cLead::appendPlug(cBase_plug *addFrom, const cPlugTag *pTag){
 
 #	ifdef GT_THREADS
 		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
-
+		scrItr->second->appendShadow(addFrom, mCurrentSig);
 #	else
 		*scrItr->second += *addFrom;
 #	endif
@@ -282,11 +307,12 @@ GTUT_START(testLead, tagging){
 
 	{
 		int testA=0;
-		tmpLead->assignTo(&testA, &tag);
-		GTUT_ASRT(testA == magic, "Lead didn't store A");
 
 		startLead(tmpLead, fakeConx.getSig());
-		tmpLead->copyPlug(&numB, &tag);
+			tmpLead->assignTo(&testA, &tag);
+			GTUT_ASRT(testA == magic, "Lead didn't store A");
+
+			tmpLead->copyPlug(&numB, &tag);
 		stopLead(tmpLead);
 
 		GTUT_ASRT(numB.get() == magic, "B didn't get A's number");

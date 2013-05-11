@@ -11,6 +11,7 @@ DYN_LIB_DEF(void)
 draftAll(gt::cWorld *pWorld){
 	try{
 		gt::cWorld::primordial::redirectWorld(pWorld);
+		gt::gWorld.take(pWorld);	//- Old world cleaned up by doing this.
 
 		gt::tOutline<gt::cFigment>::draft();
 		gt::tOutline<gt::cEmptyFig>::draft();
@@ -52,7 +53,7 @@ closeLib(){
 
 		DBUG_LO("closed x11 addon.");
 
-		gt::cWorld::primordial::redirectWorld(NULL);
+		gt::gWorld.drop();
 
 	}catch(excep::base_error &e){
 		excep::logExcep::add(e.what());
