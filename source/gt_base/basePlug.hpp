@@ -31,7 +31,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Includes
 
-#include "command.hpp"
 #include "context.hpp"
 
 #ifdef USE_TYPEINFO
@@ -68,30 +67,7 @@ namespace gt{
 // Classes
 namespace gt{
 
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	this helps to identify what each plug is on a lead.
-	class cPlugTag{
-	public:
-		typedef unsigned int dUID;	//!< Unique ID.
 
-		const dStr	mName;
-		const dUID	mID;
-
-		cPlugTag(
-			const dPlaChar* pPlugName
-		):
-			mName(pPlugName),
-			mID(
-				makeHash( toNStr(mName) )
-			)
-		{}
-
-		~cPlugTag()
-		{}
-
-	private:
-		cPlugTag& operator = (const cPlugTag&){ return *this; }
-	};
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	A plug is a data container that a lead can connect too. The lead can then connect that data to another
@@ -107,22 +83,21 @@ namespace gt{
 		//--- types
 		typedef dNameHash dPlugType;
 
-		//--- statics
-		template<typename PLUG_TYPE> static dPlugType genPlugType();	//!<
-
 		//--- implemented
 		cBase_plug();
 		virtual ~cBase_plug();
+
+		template<typename PLUG_TYPE> static dPlugType genPlugType();	//!<
 
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Made threadsafe in implementation.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Made threadsafe in implementation.
 
 		//--- interface
 		virtual dPlugType getType() const =0;
-		virtual void assignTo(void *pTo, dPlugType pType) const =0;	//!< Allows later implementation to assign into the memory addess. !\note Not the same as copying because things like smart pointers should work correctly with this.
+		virtual void assignTo(void *pTo, dPlugType pType) const =0;	//!< Allows later implementation to assign into the memory address. !\note Not the same as copying because things like smart pointers should work correctly with this.
 		virtual void appendTo(void *pTo, dPlugType pType) const =0;	//!< Similar to assign, but for appending to the input argument.
 		virtual void save(cByteBuffer* pSaveHere) =0;	//!< Appends the buffer with binary data that should be understandable by any platform.
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) =0;	//!< Reloads data from the buffer and delets the contents it used (because save or loading is a one to one operation).
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) =0;	//!< Reloads data from the buffer and deletes the contents it used (because save or loading is a one to one operation).
 
 		virtual bool operator== (const cBase_plug &pD) const =0;
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, should not copy any linked lead info.
@@ -138,7 +113,6 @@ namespace gt{
 		typedef std::map<cLead*, unsigned int> dMapLeads;
 
 		dMapLeads mLeadsConnected;		//!< Lead connections are not copied when copy plug values.
-		dMapLeads::iterator itrLead;	//!< handy.
 
 		#ifdef GT_THREADS
 			virtual void readShadow(cBase_plug *pWriteTo, dConSig pSig) =0;
@@ -148,6 +122,7 @@ namespace gt{
 		#endif
 
 	friend class cLead;
+	friend class cBasePlugLinierContainer;
 
 	private:
 		cBase_plug(const cBase_plug &pCopy);
@@ -330,15 +305,15 @@ namespace gt{
 	tDataPlug<A>::assignTo(void *pTo, cBase_plug::dPlugType pType) const{
 		PROFILE;
 
-		tCoolFind<cBase_plug::dPlugType, fuAssign> assign(
+		tCoolFind<cBase_plug::dPlugType, fuAssign> op(
 			*tOpOnAny<A>::assign(),
 			pType
 		);
 
-		if(!assign.found())
+		if(!op.found())
 			throw excep::cantCopy(typeid(A).name(), "unknown type", __FILE__, __LINE__);
 
-		assign.get()(
+		op.get()(
 			&getConst(),
 			pTo
 		);
@@ -349,15 +324,15 @@ namespace gt{
 	tDataPlug<A>::appendTo(void *pTo, cBase_plug::dPlugType pType) const{
 		PROFILE;
 
-		tCoolFind<cBase_plug::dPlugType, fuAssign> append(
+		tCoolFind<cBase_plug::dPlugType, fuAssign> op(
 			*tOpOnAny<A>::append(),
 			pType
 		);
 
-		if(!append.found())
+		if(!op.found())
 			throw excep::cantCopy(typeid(A).name(), "unknown type", __FILE__, __LINE__);
 
-		append.get()(
+		op.get()(
 			&getConst(),
 			pTo
 		);

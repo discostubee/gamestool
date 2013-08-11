@@ -66,7 +66,7 @@ namespace gt{
 	public:
 		tDirPtr();	//!< Starts without a link.
 		tDirPtr(T* pNewContent);	//!< Creates a new director and passes it the content.
-		tDirPtr(tDirPtr<T> const &pPtr);	//!< For the times we can't use a reference.
+		tDirPtr(tDirPtr<T> const &pPtr);	//!<
 		~tDirPtr();		//!< Unlinks itself from the director.
 
 		void redirect(tDirPtr<T> const &pFig);	//!< Also changes reference count used by smart pointers.
@@ -79,7 +79,7 @@ namespace gt{
 		tDirPtr<T>& operator=(tDirPtr<T> const &pFDir);	//!< creates another link to the director.
 		bool operator==(tDirPtr<T> const &pFDir) const;		//!< Compares memory address to see if two pointers are pointing at the same thing.
 		bool operator!=(tDirPtr<T> const &pFDir) const;		//!< Same.
-		T& operator*();		//!< Derefence a pointer passes back a reference... I guess.
+		T& operator*();		//!<
 
 	protected:
 		tDirector<T>* mDir;	//!< link to the director which contains the figment. Null until it is made equal to another pointer.

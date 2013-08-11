@@ -16,8 +16,22 @@
  *********************************************************************************************************
 */
 
-#include "command.hpp"
 #include "figment.hpp"
+
+////////////////////////////////////////////////////////////
+using namespace gt;
+
+cPlugTag::cPlugTag(const dPlaChar* pPlugName):
+	mName(pPlugName),
+	mID(
+		makeHash( toNStr(mName) )
+	)
+{}
+
+cPlugTag::~cPlugTag()
+{}
+
+cPlugTag& cPlugTag::operator = (const cPlugTag&){ return *this; }
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
@@ -42,7 +56,7 @@ cCommand::~cCommand(){
 // Tests
 #ifdef GTUT
 
-class cComTestFig: public cFigment, private tOutline<cComTestFig>{
+class cComTestFig: public cFigment{
 public:
 	static const cPlugTag* xPT_testTag;
 

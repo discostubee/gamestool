@@ -28,7 +28,7 @@
 
 namespace gt{
 
-	class cOSX_fileIO: public cBase_fileIO, private tOutline<cOSX_fileIO>{
+	class cOSX_fileIO: public cBase_fileIO{
 	public:
 
 		cOSX_fileIO();

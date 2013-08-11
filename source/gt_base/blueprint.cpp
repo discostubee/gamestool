@@ -16,7 +16,7 @@
  *********************************************************************************************************
 */
 
-#include "blueprint.hpp"
+#include "world.hpp"
 
 using namespace gt;
 
@@ -32,6 +32,7 @@ cBlueprint::cBlueprint():
 	mGetPlugTag(NULL),
 	mGetAllComs(NULL),
 	mGetAllTags(NULL),
+	mGetExtensions(NULL),
 	mHasPlugTag(NULL)
 {}
 
@@ -41,9 +42,9 @@ cBlueprint::~cBlueprint(){
 ptrFig
 cBlueprint::make(){
 	ASRT_NOTNULL(mFuncMake);
-	ptrFig tmp = mFuncMake();
-	tmp->mBlueprint = this;
-	return tmp;
+	ptrFig rtn = mFuncMake();
+	iniFig(rtn);
+	return rtn;
 }
 
 dNameHash
@@ -112,12 +113,50 @@ cBlueprint::operator = (const cBlueprint* pCopy){
 	{
 		mHash = pCopy->mHash;
 		mReplaces = pCopy->mReplaces;
-		mGetPlugTag = pCopy->mGetPlugTag;
+		mExtends = pCopy->mExtends;
 		mFuncMake = pCopy->mFuncMake;
+		mGetName = pCopy->mGetName;
 		mGetCom = pCopy->mGetCom;
+		mGetPlugTag = pCopy->mGetPlugTag;
 		mGetAllComs = pCopy->mGetAllComs;
 		mGetAllTags = pCopy->mGetAllTags;
+		mGetExtensions = pCopy->mGetExtensions;
 		mHasPlugTag = pCopy->mHasPlugTag;
 	}
 	return this;
+}
+
+void
+cBlueprint::setup(
+	dNameHash pHash,
+	dNameHash pReplaces,
+	dNameHash pExtends,
+	ptrFig (*pFuncMake)(),
+	const dPlaChar* (*pGetName)(),
+	const cCommand* (*pGetCom)(cCommand::dUID),
+	const cPlugTag* (*pGetPlugTag)(cPlugTag::dUID),
+	dListComs (*pGetAllComs)(),
+	dListPTags (*pGetAllTags)(),
+	dExtensions (*pGetExtensions)(),
+	bool (*pHasPlugTag)(cPlugTag::dUID)
+){
+	mHash = pHash;
+	mReplaces = pReplaces;
+	mExtends = pExtends;
+	mFuncMake = pFuncMake;
+	mGetName = pGetName;
+	mGetCom = pGetCom;
+	mGetPlugTag = pGetPlugTag;
+	mGetAllComs = pGetAllComs;
+	mGetAllTags = pGetAllTags;
+	mGetExtensions = pGetExtensions;
+	mHasPlugTag = pHasPlugTag;
+
+	DBUG_LO("blueprint '" << mGetName() << "' setup.");
+}
+
+
+void
+cBlueprint::iniFig(ptrFig &iniMe){
+	iniMe->ini(this, iniMe.getDir());
 }

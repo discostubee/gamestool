@@ -79,8 +79,9 @@ namespace gt{
 		virtual void stop(cContext *con)=0;
 		virtual void save(cByteBuffer* pSaveHere) =0;
 		virtual void loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads = NULL) =0;
-		virtual dMigrationPattern getLoadPattern() =0;	 //!< NOT THREADSAFE.
+		virtual dMigrationPattern getLoadPattern() =0;
 		virtual dStr const& requiredAddon() const =0;
+		virtual ptrFig getSmart() =0;	//!< Figments are cleaned up using smart pointers, so the only way to hand out references to yourself is to use this function.
 
 		//static dNameHash replaces()	// You will need these static class in your figment if you replace.
 		virtual dNameHash getReplacement() const =0;
@@ -91,11 +92,8 @@ namespace gt{
 		//static dNumVer version()	// same as extends and replaces.
 		virtual dNumVer getVersion() const =0;
 
-		virtual ptrFig getSmart();		//!< Figments are cleaned up using smart pointers, so the only way to hand out references to yourself is to use this function.
-
 	protected:
-		cBlueprint* mBlueprint;
-		tDirector<iFigment> *self;	//!< used by getSmart.
+		virtual void ini(cBlueprint *pBlue, tDirector<iFigment> *pSelf) =0;
 
 	friend class cBlueprint;
 	};
@@ -115,11 +113,13 @@ namespace gt{
 		bool operator != (ptrFig const &pPtr) const;		//!< Same.
 
 	protected:
+
+		//- gives access to director.
 		void linkDir(tDirector<iFigment> *aDirector);
 		tDirector<iFigment> *getDir();
 
-		friend class cBlueprint;	//!< gives access to director.
-		friend class iFigment;
+		friend class cFigment;
+		friend class cBlueprint;
 	};
 
 

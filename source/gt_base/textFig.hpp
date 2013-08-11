@@ -24,7 +24,7 @@
 namespace gt{
 
 	//!\brief	Simple gamestool container for UTF-8 text.
-	class cTextFig: public cFigment, private tOutline<cTextFig>{
+	class cTextFig: public cFigment{
 	public:
 		static const cPlugTag* xPT_text;
 		static const cCommand::dUID xSetText;

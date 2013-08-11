@@ -226,10 +226,6 @@ cFigContext::cFigContext() :
 	currentCon(NULL),
 	locked(false)
 {
-	//- From parent.
-	mBlueprint = NULL;
-	self = NULL;
-
 #	ifdef GT_THREADS
 		updating = false;
 #	endif
@@ -334,8 +330,6 @@ cFigContext::remFromRoster(cBase_plug *pPlug){
 		}
 #	endif
 }
-
-
 
 void
 cFigContext::emergencyStop(){

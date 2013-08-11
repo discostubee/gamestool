@@ -23,7 +23,7 @@
 #ifndef COMMAND_HPP
 #define COMMAND_HPP
 
-#include "world.hpp"
+#include "iFigment.hpp"
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +34,22 @@ namespace gt{
 
 ///////////////////////////////////////////////////////////////////////////////////
 namespace gt{
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	this helps to identify what each plug is on a lead.
+	class cPlugTag{
+	public:
+		typedef unsigned int dUID;	//!< Unique ID.
+
+		const dStr	mName;
+		const dUID	mID;
+
+		cPlugTag(const dPlaChar* pPlugName);
+		~cPlugTag();
+
+	private:
+		cPlugTag& operator = (const cPlugTag&);
+	};
 
 	//----------------------------------------------------------------------------
 	//!\brief	A command defines how the generic jack interface is used by a figment.
@@ -63,99 +79,7 @@ namespace gt{
 		virtual cCommand *respawn(dNameHash diffParent) const =0;	//!< Allows you to create a copy of this command but with a different parent.
 	};
 
-	//----------------------------------------------------------------------------
-	template<typename T>
-	class tActualCommand : public cCommand{
-	public:
-		typedef void (T::*ptrPatFoo)(ptrLead aLead);	//!< Pointer to our patch through function.
-
-		tActualCommand(
-			const dUID pID,
-			const char* pName,
-			const dNameHash pParentHash,
-			ptrPatFoo aFoo
-		);
-
-		virtual ~tActualCommand();
-
-		virtual bool usesTag(const cPlugTag* pTag) const;
-		virtual void addTag(const cPlugTag* pTag);
-		virtual void use(iFigment *aFig, ptrLead aLead) const;
-		virtual cCommand *respawn(dNameHash diffParent) const;
-
-	private:
-		std::set<const cPlugTag*> mDataTags;
-		ptrPatFoo myFoo;
-	};
-
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-// Template functions
-namespace gt{
-
-	//!\brief	Generates a hash for this figment and remembers is, so it won't regenerate it every time.
-	template <typename T>
-	dNameHash
-	getHash(){
-		static dNameHash name = 0;
-		if(name == 0)
-			name = ::makeHash( PCStr2NStr(T::identify()) );
-		return name;
-	}
-}
-
-////////////////////////////////////////////////////////////
-// template definitions
-namespace gt{
-
-	template<typename T>
-	tActualCommand<T>::tActualCommand(
-		const dUID pID,
-		const char* pName,
-		const dNameHash pParentHash,
-		ptrPatFoo aFoo
-	) :
-		cCommand(pID, pName, pParentHash),
-		myFoo(aFoo)
-	{}
-
-	template<typename T>
-	tActualCommand<T>::~tActualCommand(){
-	}
-
-	template<typename T>
-	bool
-	tActualCommand<T>::usesTag(const cPlugTag* pTag) const{
-		if( mDataTags.find(pTag) != mDataTags.end() )
-			return true;
-
-		return false;
-	}
-
-	template<typename T>
-	void
-	tActualCommand<T>::addTag(const cPlugTag* pTag){
-		ASRT_NOTNULL(pTag);
-
-		mDataTags.insert(pTag);
-	}
-
-	template<typename T>
-	void
-	tActualCommand<T>::use(iFigment *aFig, ptrLead aLead) const {
-		if(aFig->hash() == mParent){
-			( dynamic_cast<T*>(aFig)->*myFoo )(aLead);
-		}else{
-			THROW_ERROR(aFig->name() << " can't use command " << mName << " (" << aFig->hash() << ", " << mParent << ")");
-		}
-	}
-
-	template<typename T>
-	cCommand*
-	tActualCommand<T>::respawn(dNameHash diffParent) const {
-		return new tActualCommand<T>(mID, mName.c_str(), diffParent, myFoo);
-	}
-}
 
 #endif

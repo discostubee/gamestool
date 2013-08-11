@@ -43,8 +43,8 @@
 #endif
 
 //------------------------------------------------------------------------------------------
-#define SAFEDEL(P) if(P != NULL){ delete P; P=NULL; }
-#define SAFEDEL_ARR(P) if(P != NULL){ delete [] P; P=NULL; }
+#define SAFEDEL(P) {delete P; P=NULL;}
+#define SAFEDEL_ARR(P) {delete [] P; P=NULL;}
 
 //------------------------------------------------------------------------------------------
 // Useful for making addon functions easy to implement.

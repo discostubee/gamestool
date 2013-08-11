@@ -71,7 +71,9 @@ const cCommand::dUID cFigment::xGetLinks = tOutline<cFigment>::makeCommand(
 
 #endif
 
-cFigment::cFigment(){
+cFigment::cFigment()
+:	mBlueprint(NULL), mSelf(NULL)
+{
 	DBUG_TRACK_START("figment");
 }
 
@@ -196,6 +198,20 @@ cFigment::run(cContext* pCon){
 	updatePlugs();
 	work(pCon);
 	stop(pCon);
+}
+
+void
+cFigment::ini(cBlueprint *pBlue, tDirector<iFigment> *pSelf){
+	mBlueprint = pBlue;
+	mSelf = pSelf;
+}
+
+ptrFig
+cFigment::getSmart(){
+	ASRT_NOTNULL(mSelf);
+	ptrFig rtnFig;
+	rtnFig.linkDir(mSelf);
+	return rtnFig;
 }
 
 void

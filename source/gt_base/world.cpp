@@ -16,7 +16,7 @@
  *********************************************************************************************************
 */
 
-#include "figment.hpp"	//- so we get all implementation.
+#include "figment.hpp"
 
 
 ////////////////////////////////////////////////////////////
@@ -117,6 +117,7 @@ cWorld::addBlueprint(cBlueprint* pAddMe){
 
 			mScrBMapItr->second = sBlueprintHeader( pAddMe, mScrBMapItr->second.mReplaced );
 			DBUG_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mBlueArchive[ mScrBMapItr->first ].mBlueprint->name() << "'");
+
 		}else{
 			WARN_S(pAddMe->name() << " missing parent");
 		}
@@ -535,8 +536,6 @@ public:
 
 	virtual dNameHash hash() const { return getHash<testDraftChild>(); };
 
-	virtual dNumVer getVersion() const { return 0; }
-	virtual dStr const& requiredAddon() const { DONT_USE_THIS; };
 	static dNameHash extends(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getExtension() const { return extends(); }
 
@@ -550,21 +549,11 @@ public:
 
 	virtual dNameHash hash() const { return getHash<testDraftReplace>(); };
 
-	virtual dNumVer getVersion() const { return 0; }
-	virtual dStr const& requiredAddon() const { DONT_USE_THIS; };
 	static dNameHash replaces(){ return getHash<testDraftParent>(); }
 	virtual dNameHash getReplacement() const { return replaces(); };
 
 	virtual ~testDraftReplace(){}
 };
-
-GTUT_START(test_figInterface, getSmart){
-	tOutline<cFigment>::draft();
-
-	ptrFig testMe = gWorld.get()->makeFig(getHash<cFigment>());
-	ptrFig testSmart = testMe->getSmart();
-	GTUT_ASRT(testSmart->hash() == getHash<cFigment>(), "didn't get the same figment");
-}GTUT_END;
 
 GTUT_START(test_world, drafting){
 	tOutline<testDraftParent>::draft();
@@ -575,15 +564,26 @@ GTUT_START(test_world, drafting){
 	tOutline<testDraftReplace>::draft();
 	GTUT_ASRT(gWorld.get()->makeFig(getHash<testDraftReplace>())->hash() == getHash<testDraftReplace>(), "didn't make the right figment");
 	GTUT_ASRT(gWorld.get()->makeFig(getHash<testDraftParent>())->hash() == getHash<testDraftReplace>(), "didn't make the right figment");
+	GTUT_ASRT(gWorld.get()->makeFig(getHash<testDraftChild>())->hash() == getHash<testDraftChild>(), "didn't make the right figment");
 }GTUT_END;
 
 GTUT_START(test_world, extend_commands){
+	gWorld.get()->getBlueprint(getHash<testDraftReplace>())->getCom(testDraftParent::xCommandA);
+	gWorld.get()->getBlueprint(getHash<testDraftParent>())->getCom(testDraftParent::xCommandA);
 	gWorld.get()->getBlueprint(getHash<testDraftChild>())->getCom(testDraftParent::xCommandA);
+
+	cContext dontcare;
+	ptrLead testLead = gWorld.get()->makeLead(testDraftParent::xCommandA);
+	ptrFig replace = gWorld.get()->makeFig(getHash<testDraftReplace>());
+	ptrFig parent = gWorld.get()->makeFig(getHash<testDraftParent>());
+	ptrFig child = gWorld.get()->makeFig(getHash<testDraftChild>());
+
+	replace->jack(testLead, &dontcare);
+	parent->jack(testLead, &dontcare);
+	child->jack(testLead, &dontcare);
+
 }GTUT_END;
 
-GTUT_START(test_world, extend_plugTags){
-
-}GTUT_END;
 
 #endif
 

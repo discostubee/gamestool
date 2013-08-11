@@ -79,6 +79,9 @@ namespace gt{
 		tShadowPlug();
 		virtual ~tShadowPlug();
 
+		//virtual void assignTo(void *pTo, dPlugType pType) const;
+		//virtual void appendTo(void *pTo, dPlugType pType) const;
+
 		virtual void linkLead(cLead* pLead);
 		virtual void unlinkLead(cLead* pLead);
 		virtual void updateStart();
@@ -97,21 +100,36 @@ namespace gt{
 	friend class cLead;
 
 	private:
+		typedef boost::lock_guard<boost::recursive_mutex> dLock;
+
 		struct tShadow{
+			boost::recursive_mutex mGuard;
 			eShadowMode mMode;
 			A mData;
 			dConSig mSig;
 		};
 
-		typedef boost::lock_guard<boost::recursive_mutex> dLock;
-		typedef std::vector< tShadow* > dVecShadow;
+		//!\brief	Used to manage access to an individual shadow.
+		class tCheckout{
+		public:
+			tCheckout(tShadow *manage);
+			tCheckout(const tCheckout &copyMe);
+			~tCheckout();
 
-		boost::recursive_mutex guardShadows, guardLinks;
-		dVecShadow mShadows;
-		typename dVecShadow::iterator itrShadow;	//!< handy.
-		tShadow *tmpSRef;	//!< handy.
+			tShadow* operator-> ();
+			tShadow& operator* ();
 
-		void setTmpShadowRef(dConSig pSig);	//!< Expands the shadow list, if needed, and sets tmpSRef to the shadow for this thread.
+		protected:
+			tShadow *mShadow;
+		};
+
+		typedef std::vector< tShadow* > dVecShadows;
+		typedef typename dVecShadows::iterator itrShadow;
+
+		boost::recursive_mutex mGuardShadows, mGuardData, mGuardLinks;
+		dVecShadows mShadows;
+
+		tCheckout getShadow(dConSig pSig);	//!< Expands the shadow list, if needed.
 	};
 #	endif
 
@@ -162,19 +180,24 @@ namespace gt{
 		tShadowPlug<A>::~tShadowPlug(){
 			typedef tPlugFlakes<A> p;
 			try{
+				dLock a(mGuardShadows);
+				dLock b(mGuardData);
+				dLock c(mGuardLinks);
 
 				//- We need to unplug first before destroying shadows.
+				cBase_plug::dMapLeads test;//!!!
 				for(
-					p::itrLead = p::mLeadsConnected.begin();
-					p::itrLead != p::mLeadsConnected.end();
-					++p::itrLead
+					cBase_plug::dMapLeads::iterator itr = p::mLeadsConnected.begin();
+					itr != p::mLeadsConnected.end();
+					++itr
 				)
-					p::itrLead->first->unplug(this);
+					itr->first->unplug(this);
 
 				p::mLeadsConnected.clear();
 
-				for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow)
-					delete (*itrShadow);
+				for(itrShadow itr = mShadows.begin(); itr != mShadows.end(); ++itr){
+					delete (*itr);
+				}
 
 			}catch(...){
 				WARN_S("Unknown error when destroying a plug");
@@ -187,7 +210,7 @@ namespace gt{
 		tShadowPlug<A>::linkLead(cLead* pLead){
 			PROFILE;
 
-			dLock lock(guardLinks);
+			dLock lock(mGuardLinks);
 			cBase_plug::linkLead(pLead);
 		}
 
@@ -196,7 +219,7 @@ namespace gt{
 		tShadowPlug<A>::unlinkLead(cLead* pLead){
 			PROFILE;
 
-			dLock lock(guardLinks);
+			dLock lock(mGuardLinks);
 			cBase_plug::unlinkLead(pLead);
 		}
 
@@ -205,16 +228,23 @@ namespace gt{
 		tShadowPlug<A>::updateStart(){
 			PROFILE;
 
-			dLock lock(guardShadows);
+			dLock lock(mGuardShadows);
+			dLock lockData(mGuardData);
 
-			dRefWorld tmpW = gWorld.get();
-			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
-				tmpSRef = (*itrShadow);
-				if(tmpSRef != NULL){
-					if(!tmpW->activeContext(tmpSRef->mSig)){
-						SAFEDEL(*itrShadow);
-					}else if(tmpSRef->mMode == eSM_write){
-						get() = tmpSRef->mData;
+			for(itrShadow itr = mShadows.begin(); itr != mShadows.end(); ++itr){
+				if(*itr != NULL){
+					if(!gWorld.get()->activeContext( (*itr)->mSig) ){
+						tShadow *delMe = NULL;
+						{
+							dLock lockShadow((*itr)->mGuard);
+							delMe = *itr;
+							*itr = NULL;
+						}
+						SAFEDEL(delMe);
+
+					}else if((*itr)->mMode == eSM_write){
+						dLock lockShadow((*itr)->mGuard);
+						get() = (*itr)->mData;
 					}
 				}
 			}
@@ -225,13 +255,14 @@ namespace gt{
 		tShadowPlug<A>::updateFinish(){
 			PROFILE;
 
-			dLock lock(guardShadows);
+			dLock lockShadows(mGuardShadows);
+			dLock lockData(mGuardData);
 
-			for(itrShadow = mShadows.begin(); itrShadow != mShadows.end(); ++itrShadow){
-				tmpSRef = (*itrShadow);
-				if(tmpSRef != NULL){
-					tmpSRef->mData = get();
-					tmpSRef->mMode = eSM_read;
+			for(itrShadow itr = mShadows.begin(); itr != mShadows.end(); ++itr){
+				if(*itr != NULL){
+					dLock lockShadow((*itr)->mGuard);
+					(*itr)->mData = get();
+					(*itr)->mMode = eSM_read;
 				}
 			}
 		}
@@ -241,13 +272,14 @@ namespace gt{
 		tShadowPlug<A>::readShadow(cBase_plug *pWriteTo, dConSig pSig){
 			PROFILE;
 
-			setTmpShadowRef(pSig);
-			if(tmpSRef->mMode == eSM_init){	//- This looks bad because it is possible that the unlocked interface is being used to change data at the point we are reading form it.
-				dLock lock(guardShadows);
-				tmpSRef->mData = get();
+			tCheckout shadow( getShadow(pSig) );
+
+			if(shadow->mMode == eSM_init){
+				dLock lock(mGuardData);
+				shadow->mData = get();
 			}
 
-			tLitePlug<A> tmp(&tmpSRef->mData);
+			tLitePlug<A> tmp(&shadow->mData);
 			*pWriteTo = tmp;
 		}
 
@@ -256,14 +288,14 @@ namespace gt{
 		tShadowPlug<A>::writeShadow(const cBase_plug *pReadFrom, dConSig pSig){
 			PROFILE;
 
-			setTmpShadowRef(pSig);
+			tCheckout shadow( getShadow(pSig) );
 
 			pReadFrom->assignTo(
-				&tmpSRef->mData,
+				&shadow->mData,
 				cBase_plug::genPlugType<A>()
 			);
 
-			tmpSRef->mMode = eSM_write;
+			shadow->mMode = eSM_write;
 		}
 
 		template<typename A>
@@ -271,14 +303,14 @@ namespace gt{
 		tShadowPlug<A>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
 			PROFILE;
 
-			setTmpShadowRef(pSig);
+			tCheckout shadow( getShadow(pSig) );
 
 			pReadFrom->appendTo(
-				&tmpSRef->mData,
+				&shadow->mData,
 				cBase_plug::genPlugType<A>()
 			);
 
-			tmpSRef->mMode = eSM_write;
+			shadow->mMode = eSM_write;
 		}
 
 		template<typename A>
@@ -286,34 +318,80 @@ namespace gt{
 		tShadowPlug<A>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
 			PROFILE;
 
-			setTmpShadowRef(pSig);
-			if(tmpSRef->mMode == eSM_init){	//- This looks bad because it is possible that the unlocked interface is being used to change data at the point we are reading form it.
-				dLock lock(guardShadows);
-				tmpSRef->mData = get();
+			tCheckout shadow( getShadow(pSig) );
+
+			if(shadow->mMode == eSM_init){	//- This looks bad because it is possible that the unlocked interface is being used to change data at the point we are reading form it.
+				dLock lock(mGuardData);
+				shadow->mData = get();
 			}
 
-			tLitePlug<A> tmp(&tmpSRef->mData);
+			tLitePlug<A> tmp(&shadow->mData);
 			*pWriteTo += tmp;
 		}
 
 
 		template<typename A>
-		void
-		tShadowPlug<A>::setTmpShadowRef(dConSig pSig){
+		typename tShadowPlug<A>::tCheckout
+		tShadowPlug<A>::getShadow(dConSig pSig){
+			dLock lockShadows(mGuardShadows);
+
 			size_t s = static_cast<dConSig>(pSig);
 			if(mShadows.size() <= s){
-				dLock lock(guardShadows);
 				while(mShadows.size() <= s)
 					mShadows.push_back(NULL);
 			}
 
-			tmpSRef = mShadows[pSig];
-
-			if(tmpSRef==NULL){
-				dLock lock(guardShadows);
-				tmpSRef = new tShadow();
-				tmpSRef->mMode = eSM_init;
+			if(mShadows[pSig] == NULL){
+				mShadows[pSig] = new tShadow();
+				mShadows[pSig]->mMode = eSM_init;
 			}
+
+			return tCheckout( mShadows[pSig] );
+		}
+
+
+		//--------------------------------------
+		template<typename A>
+		tShadowPlug<A>::tCheckout::tCheckout(tShadow *manage){
+			manage->mGuard.lock();
+			mShadow = manage;
+		}
+
+		template<typename A>
+		tShadowPlug<A>::tCheckout::tCheckout(const tCheckout &transfer)
+		: mShadow(NULL)
+		{
+			if(transfer.mShadow != NULL){
+				tCheckout &ref = const_cast<tCheckout&>(transfer);
+
+				mShadow = ref.mShadow;
+				ref.mShadow = NULL;
+			}
+		}
+
+		template<typename A>
+		tShadowPlug<A>::tCheckout::~tCheckout(){
+			try{
+				if(mShadow != NULL)
+					mShadow->mGuard.unlock();
+
+			}catch(std::exception &e){
+				WARN_S(e.what());
+			}catch(...){
+
+			}
+		}
+
+		template<typename A>
+		typename tShadowPlug<A>::tShadow*
+		tShadowPlug<A>::tCheckout::operator-> (){
+			return mShadow;
+		}
+
+		template<typename A>
+		typename tShadowPlug<A>::tShadow&
+		tShadowPlug<A>::tCheckout::operator* (){
+			return *mShadow;
 		}
 
 #	endif
@@ -337,8 +415,9 @@ namespace gt{
 	{}
 
 	template<typename A>
-	tPlug<A>::tPlug(const tPlug<A> &other){
-	}
+	tPlug<A>::tPlug(const tPlug<A> &other)
+	: mD(other.mD)
+	{}
 
 	template<typename A>
 	tPlug<A>::tPlug(const cBase_plug *other){

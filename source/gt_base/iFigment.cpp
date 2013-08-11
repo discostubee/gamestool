@@ -91,11 +91,3 @@ tDirector<iFigment> *ptrFig::getDir(){
 	return mDir;
 }
 
-////////////////////////////////////////////////////////////
-ptrFig
-iFigment::getSmart(){
-	ASRT_NOTNULL(self);
-	ptrFig rtnFig;
-	rtnFig.linkDir(self);
-	return rtnFig;
-}

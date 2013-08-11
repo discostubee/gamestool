@@ -48,7 +48,7 @@ ENTRYPOINT
 #include "gt_base/figment.hpp"
 
 namespace gt{
-
+#if 0
 	//- Include anything else we want to unit test here.
 	GTUT_START(test_addon, load){
 		cContext fake;
@@ -79,6 +79,6 @@ namespace gt{
 		}
 		GTUT_ASRT(addonBlueprintRemoved, "didn't remove blueprints.");
 	}GTUT_END;
-
+#endif
 }
 

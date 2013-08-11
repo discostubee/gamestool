@@ -22,7 +22,7 @@
 #ifndef FIGMENT_HPP
 #define FIGMENT_HPP
 
-#include "blueprint.hpp"
+#include "outline.hpp"
 #include "context.hpp"
 #include "plug.hpp"
 
@@ -110,6 +110,7 @@ namespace gt{
 		virtual void jack(ptrLead pLead, cContext* pCon);
 
 		void run(cContext* pCon);	//!< Performs all the normal stuff needed before doing work, such as using the context to ensure it doesn't run into itself or other threads.
+		ptrFig getSmart();
 
 		//-----------------------------
 		// These things are REQUIRED for any figment class.
@@ -159,8 +160,11 @@ namespace gt{
 		void patGetCommands(ptrLead aLead);
 		void patGetLinks(ptrLead aLead);
 
+		void ini(cBlueprint *pBlue, tDirector<iFigment> *pSelf);
+
 	private:
-		ptrLead tmpLead;	//!< Avoids mem alloc.
+		cBlueprint *mBlueprint;	//!< This should last longer than any figment.
+		tDirector<iFigment> *mSelf;
 	};
 
 	//-------------------------------------------------------------------------------------

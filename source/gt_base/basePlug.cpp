@@ -31,12 +31,12 @@ cBase_plug::cBase_plug(const cBase_plug &pCopy){
 
 cBase_plug::~cBase_plug(){
 	for(
-		itrLead = mLeadsConnected.begin();
-		itrLead != mLeadsConnected.end();
-		++itrLead
+		dMapLeads::iterator itr = mLeadsConnected.begin();
+		itr != mLeadsConnected.end();
+		++itr
 	){
 		try{
-			itrLead->first->unplug(this);	//- the count is irrelevant.
+			itr->first->unplug(this);	//- the count is irrelevant.
 		}catch(excep::base_error &e){
 			WARN(e);
 		}catch(...){
@@ -50,11 +50,11 @@ cBase_plug::linkLead(cLead *pLead){
 	PROFILE;
 	ASRT_NOTNULL(pLead);
 
-	itrLead = mLeadsConnected.find(pLead);
-	if(itrLead==mLeadsConnected.end()){
+	dMapLeads::iterator itr = mLeadsConnected.find(pLead);
+	if(itr==mLeadsConnected.end()){
 		mLeadsConnected[pLead] = 1;
 	}else{
-		++itrLead->second;
+		++itr->second;
 	}
 }
 
@@ -63,11 +63,11 @@ cBase_plug::unlinkLead(cLead *pLead){
 	PROFILE;
 	ASRT_NOTNULL(pLead);
 
-	itrLead = mLeadsConnected.find(pLead);
-	if(itrLead != mLeadsConnected.end()){
-		--itrLead->second;
-		if(itrLead->second == 0){
-			mLeadsConnected.erase(itrLead);
+	dMapLeads::iterator itr = mLeadsConnected.find(pLead);
+	if(itr != mLeadsConnected.end()){
+		--itr->second;
+		if(itr->second == 0){
+			mLeadsConnected.erase(itr);
 		}
 
 	}else{

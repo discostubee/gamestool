@@ -39,18 +39,16 @@ namespace gt{ //gamestool
 		cRunList();
 		virtual ~cRunList();
 
-		//- Required
 		GT_IDENTIFY("run list");
 		GT_EXTENDS(cFigment);
 		GT_VERSION(1);
 		virtual dNameHash hash() const{ return getHash<cRunList>(); }
 
-		//- Optional
 		virtual void work(cContext* pCon);	//!< runs every element in the list
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 
 	protected:
-		typedef tPlugLinierContainer<ptrFig, std::vector> dList;
+		typedef tPlugLinearContainer<ptrFig, std::vector> dList;
 
 		dList mList;
 

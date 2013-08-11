@@ -151,7 +151,7 @@ GTUT_START(test_cThread, test_suit){
 
 namespace gt{
 
-	class cShareTarget : public cFigment, private tOutline<cShareTarget>{
+	class cShareTarget : public cFigment{
 	protected:
 		tPlug<std::string> chatter;
 		tPlug<int> hits;

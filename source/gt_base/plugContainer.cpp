@@ -18,15 +18,27 @@
 
 #include "plugContainer.hpp"
 
+////////////////////////////////////////////////////////////
 using namespace gt;
+cBasePlugContainer::cBasePlugContainer(){
+
+}
+
+cBasePlugContainer::~cBasePlugContainer(){
+}
+
+cBase_plug::dPlugType
+cBasePlugContainer::getType() const{
+	return cBase_plug::genPlugType<cBasePlugContainer>();
+}
 
 ////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
 
 GTUT_START(testPlugLinier, assignAppend){
-	tPlugLinierContainer<int, std::vector> testArray;
-	tPlugLinierContainer<int, std::list> testList;
+	tPlugLinearContainer<int, std::vector> testArray;
+	tPlugLinearContainer<int, std::list> testList;
 	std::vector<int> a;
 	std::list<int> b;
 
@@ -34,12 +46,12 @@ GTUT_START(testPlugLinier, assignAppend){
 	a.push_back(2);
 	a.push_back(3);
 	testArray = a;
-	testList = a;
+	//testList = a;		//- can't copy different containers directly
 
-	b.push_back(1);
-	b.push_back(2);
-	b.push_back(3);
-	testArray += b;
+	b.push_back(4);
+	b.push_back(5);
+	b.push_back(6);
+	//testArray += b;	//- can't copy different containers directly
 	testList += b;
 
 	testArray += testList;
@@ -50,9 +62,6 @@ GTUT_START(testPlugLinier, saveLoad){
 
 }GTUT_END;
 
-GTUT_START(testPlugMap, saveLoad){
-
-}GTUT_END;
 
 
 
