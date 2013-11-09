@@ -16,76 +16,86 @@
  *********************************************************************************************************
 */
 
-#include "runList.hpp"
+#include "chainLink.hpp"
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag *cRunList::xPT_single = tOutline<cRunList>::makePlugTag("single");
+const cPlugTag *cChainLink::xPT_link = tOutline<cChainLink>::makePlugTag("link");
 
-const cCommand::dUID cRunList::xAdd = tOutline<cRunList>::makeCommand(
-	"add", &cRunList::patAdd,
-	xPT_single,
+const cCommand::dUID cChainLink::xGetLink = tOutline<cChainLink>::makeCommand(
+	"get link", &cChainLink::patGetLink,
+	xPT_link,
 	NULL
 );
 
-cRunList::cRunList(){
-	addUpdRoster(&mList);
+const cCommand::dUID cChainLink::xSetLink = tOutline<cChainLink>::makeCommand(
+	"set link", &cChainLink::patSetLink,
+	xPT_link,
+	NULL
+);
+
+cChainLink::cChainLink(){
+	addUpdRoster(&mLink);
 }
 
-cRunList::~cRunList(){
+cChainLink::~cChainLink(){
+
 }
 
 void
-cRunList::work(cContext* pCon){
-	PROFILE;
-	ASRT_NOTNULL(pCon);
-	for(size_t i=0; i < mList.getCount(); ++i)
-		mList.getActual(i).get()->run(pCon);
+cChainLink::work(cContext* pCon){
+	mLink.get()->run(pCon);
 }
 
 cFigment::dMigrationPattern
-cRunList::getLoadPattern(){
+cChainLink::getLoadPattern(){
 	PROFILE;
 
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-	version1.push_back(&mList);
+	version1.push_back(&mLink);
 
 	pattern.push_back(version1);
 	return pattern;
 }
 
 void
-cRunList::getLinks(std::list<ptrFig>* pOutLinks){
-	PROFILE;
-	ASRT_NOTNULL(pOutLinks);
-	for(size_t i=0; i < mList.getCount(); ++i)
-		pOutLinks->push_back(mList.getActual(i).get());
+cChainLink::getLinks(std::list<ptrFig>* pOutLinks){
+	pOutLinks->push_back(mLink.get());
 }
 
 void
-cRunList::patAdd(ptrLead aLead){
-	PROFILE;
-	aLead->appendPlug(&mList, xPT_single);
+cChainLink::patSetLink(ptrLead aLead){
+	preLink();
+	if(!aLead->copyPlug(&mLink, xPT_link))
+		WARN_S("Unable to copy plug");
+	postLink();
+}
+
+void
+cChainLink::patGetLink(ptrLead aLead){
+	aLead->linkPlug(&mLink, xPT_link);
+}
+
+void
+cChainLink::preLink(){
+	//- Base version does nothing.
+}
+
+void
+cChainLink::postLink(){
+	//- Base version does nothing.
 }
 
 
 #ifdef GTUT
-#	include "unitTestFigments.hpp"
 
-GTUT_START(test_cRunList, test_suit){
-	tOutline<cFigment>::draft();
-	figmentTestSuit<cRunList>();
-}GTUT_END;
-
-#	include "thread.hpp"
-
-GTUT_START(test_cRunList, test_thread){
-	tOutline<cRunList>::draft();
+GTUT_START(test_cChainLink, test_suit){
 
 }GTUT_END;
+
 
 #endif
 

@@ -35,9 +35,9 @@ namespace gt{
 	//-------------------------------------------------------------------------------------
 	//!\brief	The content director is used to direct the smart
 	//!			pointers to the content instance. This is different to just using boost
-	//!			smart pointers because you are able to redirect every pointer to another
-	//!			figment. When the count reaches 0, this content is cleaned up by the pointers.
-	//!\note	Created because the boost smart pointers didn't provide a way to redirect all pointers to a new memory location.
+	//!			smart pointers because you are able to redirect every smart pointer to
+	//!			another location. When the count reaches 0, this content is cleaned up by
+	//!			the pointers.
 	//!\todo	Prevent circular redirections.
 	template<typename T>
 	class tDirector{

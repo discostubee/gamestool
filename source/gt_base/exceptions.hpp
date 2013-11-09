@@ -25,6 +25,27 @@
 #include "gt_string.hpp"
 #include <sstream>
 
+//!\brief	Useful macro to make writing error bombs easier.
+#define THROW_ERROR(s) { std::stringstream ss; ss << s; throw excep::base_error(ss.str().c_str(), __FILE__, __LINE__); }
+
+//!\brief	Some functions are stubbed so that an abstract class can be instantiated, but not intended for use.
+#define DONT_USE_THIS	throw excep::dontUseThis(__FILE__, __LINE__)
+
+//!\brief	Makes it easier to spot checks typical in operator functions.
+#define NOTSELF(p)		if(p == this) return *this
+
+#ifdef DEBUG
+	#define ASRT_TRUE(p, s)			if(!(p)) throw ::excep::base_error(s, __FILE__, __LINE__)
+	#define ASRT_NOTNULL(p) 		if(p == NULL) throw ::excep::isNull( __FILE__, __LINE__)
+	#define ASRT_INRANGE(vec, idx)	if( idx < 0 || idx >= vec.size() ) throw ::excep::outOfRange(vec.size(), idx, __FILE__, __LINE__)
+	#define ASRT_NOTSELF(p)			if(static_cast<const void*>(p) == this) throw ::excep::base_error("Pointer is self", __FILE__, __LINE__)
+#else
+	#define ASRT_TRUE(p, s)
+	#define ASRT_NOTNULL(p)
+	#define ASRT_INRANGE(vec, ite)
+	#define ASRT_NOTSELF(p)
+#endif
+
 namespace excep{
 
 	//!\brief	Base type of all errors. Uses a stored string that is filled out on creation. These exceptions are not meant to be used to handle
@@ -34,36 +55,15 @@ namespace excep{
         dStr mInfo;
 
     public:
-        base_error(const char* pFile, const unsigned int pLine) throw(){
-			try{
-				std::stringstream ss;
-				ss << "Problem in file '" << pFile << "' at line " << pLine << ". Info: ";
-				mInfo = ss.str();
-			}catch(...){
-			}
-        }
-
-		base_error(const char* pExtraInfo, const char* pFile, const unsigned int pLine){
-			try{
-				std::stringstream ss;
-				ss << "Error in file '" << pFile << "' at line " << pLine << ". Info: " << pExtraInfo;
-				mInfo = ss.str();
-			}catch(...){
-			}
-		}
-
-        virtual ~base_error() throw(){}
-
-		virtual const char* what() const throw(){ return mInfo.data(); }
-
-        void addInfo(const dStr &pInfo){ mInfo.append(pInfo); }
+        base_error(const char* pFile, const unsigned int pLine) throw();
+		base_error(const char* pExtraInfo, const char* pFile, const unsigned int pLine) throw();
+        virtual ~base_error() throw();
+		virtual const char* what() const throw();
+        void addInfo(const dStr &pInfo);
 
         template<typename T>
         dStr operator << (const T &pT) { dStr out; out + mInfo + pT; return out; }
     };
-
-    //!\brief	Useful macro to make writing error bombs easier.
-	#define THROW_ERROR(s) { std::stringstream ss; ss << s; throw excep::base_error(ss.str().c_str(), __FILE__, __LINE__); }
 
     //!\brief	Nobody knows.
 	class unknownError: public base_error{
@@ -189,20 +189,5 @@ namespace excep{
 	};
 }
 
-#define DONT_USE_THIS			throw excep::dontUseThis(__FILE__, __LINE__)
-
-#ifdef DEBUG
-	#define ASRT_TRUE(p, s)			if(!(p)) throw ::excep::base_error(s, __FILE__, __LINE__)
-	#define ASRT_NOTNULL(p) 		if(p == NULL) throw ::excep::isNull( __FILE__, __LINE__)
-	#define ASRT_INRANGE(vec, idx)	if( idx < 0 || idx >= vec.size() ) throw ::excep::outOfRange(vec.size(), idx, __FILE__, __LINE__)
-	#define ASRT_NOTSELF(p)			if(static_cast<const void*>(p) == this) throw ::excep::base_error("Pointer is self", __FILE__, __LINE__)
-#else
-	#define ASRT_TRUE(p, s)
-	#define ASRT_NOTNULL(p)
-	#define ASRT_INRANGE(vec, ite)
-	#define ASRT_NOTSELF(p)
-#endif
-
-#define NOTSELF(p)			if(p == this) return *this
 
 #endif

@@ -20,35 +20,10 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag* cAnchor::xPT_root = tOutline<cAnchor>::makePlugTag("root");
-
-const cCommand::dUID cAnchor::xSetRoot = tOutline<cAnchor>::makeCommand(
-	"set root",
-	&cAnchor::patSetRoot,
-	cAnchor::xPT_root,
-	NULL
-);
-
-const cCommand::dUID cAnchor::xGetRoot = tOutline<cAnchor>::makeCommand(
-	"get root",
-	&cAnchor::patGetRoot,
-	cAnchor::xPT_root,
-	NULL
-);
-
-////////////////////////////////////////////////////////////
-using namespace gt;
-
 cAnchor::cAnchor(){
-	addUpdRoster(&mRoot);
 }
 
 cAnchor::~cAnchor() {
-}
-
-void
-cAnchor::work(cContext* pCon) {
-	mRoot.get()->run(pCon);
 }
 
 void
@@ -66,8 +41,8 @@ cAnchor::save(cByteBuffer* pAddHere){
 	dFigSaveSig			chunkSig = 0;
 
 	try{
-		mRoot.get()->getLinks(branches);
-		figs.insert( mRoot.get().get() );
+		mLink.get()->getLinks(branches);
+		figs.insert( mLink.get().get() );
 
 		do{ //- while there are branches still left to explore. Must prevent circular references.
 			PROFILE;
@@ -114,7 +89,7 @@ cAnchor::save(cByteBuffer* pAddHere){
 			}
 		}
 
-		chunkSig = reinterpret_cast<dFigSaveSig>(mRoot.get().get());
+		chunkSig = reinterpret_cast<dFigSaveSig>(mLink.get().get());
 		pAddHere->add( &chunkSig ); // Save reference to the root.
 
 		for( std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i ){	//- Now save each figment.
@@ -221,7 +196,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 			}
 		}
 
-		mRoot.get() = reloads[rootSig]->fig;
+		mLink.get() = reloads[rootSig]->fig;
 
 	}catch(...){
 		for(dReloadMap::iterator itr = reloads.begin(); itr != reloads.end(); ++itr){	//- Cleanup
@@ -236,20 +211,6 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	pBuff->trimHead(readSpot);
 }
 
-void
-cAnchor::patSetRoot(ptrLead aLead){
-	aLead->copyPlug(&mRoot, cAnchor::xPT_root);
-}
-
-void
-cAnchor::patGetRoot(ptrLead aLead){
-	aLead->linkPlug(&mRoot, cAnchor::xPT_root);
-}
-
-void
-cAnchor::getLinks(std::list<ptrFig>* pOutLinks){
-	pOutLinks->push_back(mRoot.get());
-}
 
 ////////////////////////////////////////////////////////////
 
@@ -264,16 +225,19 @@ const dPlaChar *testStr = "proper job";
 GTUT_START(testAnchor, basicSave){
 	tOutline<cFigment>::draft();
 	tOutline<cSaveTester>::draft();
+	tOutline<cChainLink>::draft();
 	tOutline<cAnchor>::draft();
-	cContext fakeCon;
-	tPlug<ptrFig> tester;
-	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 
 	plugBuff = ptrBuff(new cByteBuffer());
+
+	cContext fakeCon;
+	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
+
+	tPlug<ptrFig> tester;
 	tester = ptrFig(new cSaveTester(testStr, 42));
 
-	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetRoot);
-	add->linkPlug(&tester, cAnchor::xPT_root);
+	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetLink);
+	add->linkPlug(&tester, cAnchor::xPT_link);
 
 	ank->jack(add, &fakeCon);
 	ank->save(plugBuff.get().get());
@@ -283,20 +247,24 @@ GTUT_START(testAnchor, basicLoad){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	cContext fake;
 
-	ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad);
-	dReloadMap dontcare;
-	ank->loadEat(plugBuff.get().get(), &dontcare);
+	{
+		ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad);
+		dReloadMap dontcare;
+		ank->loadEat(plugBuff.get().get(), &dontcare);
+	}
 
-	ptrLead root = gWorld.get()->makeLead(cAnchor::xGetRoot);
-	ank->jack(root, &fake);
-	tPlug<ptrFig> reload;
+	tPlug<ptrFig> tester;
+	{
+		ptrLead getlink = gWorld.get()->makeLead(cAnchor::xGetLink);
+		ank->jack(getlink, &fake);
 
-	startLead(root, fake.getSig());
-	root->copyPlug(&reload, cAnchor::xPT_root);
-	stopLead(root);
+		startLead(getlink, fake.getSig());
+		getlink->copyPlug(&tester, cAnchor::xPT_link);
+		stopLead(getlink);
+	}
 
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
-	reload.get()->jack(checkData, &fake);
+	tester.get()->jack(checkData, &fake);
 
 	tPlug<dStr> myStr;
 	tPlug<int> myNum;
@@ -323,9 +291,9 @@ GTUT_START(testAnchor, chainSave){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> rlist = gWorld.get()->makeFig(getHash<cRunList>());
 
-	ptrLead addRoot = gWorld.get()->makeLead(cAnchor::xSetRoot);
-	addRoot->linkPlug(&rlist, cAnchor::xPT_root);
-	ank->jack(addRoot, &fakeCon);
+	ptrLead linkRoot = gWorld.get()->makeLead(cAnchor::xSetLink);
+	linkRoot->linkPlug(&rlist, cAnchor::xPT_link);
+	ank->jack(linkRoot, &fakeCon);
 
 	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
 	ptrLead add = gWorld.get()->makeLead(cRunList::xAdd);

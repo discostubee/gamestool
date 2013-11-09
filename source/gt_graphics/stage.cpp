@@ -2,17 +2,9 @@
 
 using namespace gt;
 
-const cPlugTag*	cStage::xPT_content = tOutline<cStage>::makePlugTag("content");
 const cPlugTag*	cStage::xPT_closer = tOutline<cStage>::makePlugTag("closer");
 const cPlugTag*	cStage::xPT_layout = tOutline<cStage>::makePlugTag("layout");
 const cPlugTag*	cStage::xPT_fullscreen = tOutline<cStage>::makePlugTag("fullscreen");
-
-const cCommand::dUID cStage::xLinkContent= tOutline<cStage>::makeCommand(
-	"link content",
-	&cStage::patLinkContent,
-	cStage::xPT_content,
-	NULL
-);
 
 const cCommand::dUID cStage::xLinkCloser= tOutline<cStage>::makeCommand(
 	"link closer",
@@ -55,7 +47,7 @@ cStage::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
-	version1.push_back(&mContent);
+	version1.push_back(&mLink);
 	version1.push_back(&mCloser);
 	version1.push_back(&mLayout);
 
@@ -67,13 +59,8 @@ void
 cStage::getLinks(std::list<ptrFig>* pOutLinks){
 	PROFILE;
 	ASRT_NOTNULL(pOutLinks);
-	pOutLinks->push_back(mContent.get());
+	cChainLink::getLinks(pOutLinks);
 	pOutLinks->push_back(mCloser.get());
-}
-
-void
-cStage::patLinkContent(ptrLead aLead){
-	aLead->copyPlug(&mContent, xPT_content);
 }
 
 void

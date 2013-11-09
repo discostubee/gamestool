@@ -83,6 +83,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>BIN_LOC</name>
+			<type>2</type>
+			<locationURI>BIN_LOC</locationURI>
+		</link>
+		<link>
 			<name>eclipse_share</name>
 			<type>2</type>
 			<locationURI>SHARED_LOC</locationURI>
@@ -109,6 +114,10 @@
 		</link>
 	</linkedResources>
 	<variableList>
+		<variable>
+			<name>BIN_LOC</name>
+			<value>$%7BPARENT-3-PROJECT_LOC%7D/bin</value>
+		</variable>
 		<variable>
 			<name>PROJECT_SOURCE_LOC</name>
 			<value>$%7BPARENT-1-PROJECT_LOC%7D/source</value>

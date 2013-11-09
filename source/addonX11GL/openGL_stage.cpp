@@ -184,10 +184,10 @@ cStage_X11GL::work(cContext* pCon){
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if(mContent.get()->hash()==getHash<cEmptyFig>()){
+    if(mLink.get()->hash()==getHash<cEmptyFig>()){
     	testPattern();
     }else{
-		mContent.get()->run(pCon);
+		mLink.get()->run(pCon);
     }
 
 	if(mDoubleBuffered) glXSwapBuffers(mDisplay, mWindow); else glFlush();
