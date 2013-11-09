@@ -22,7 +22,7 @@
 #ifndef	ANCHOR_HPP
 #define ANCHOR_HPP
 
-#include "fileIO.hpp"
+#include "chainLink.hpp"
 
 namespace gt{ //gamestool
 
@@ -32,32 +32,18 @@ namespace gt{ //gamestool
 	//!			into/out of a buffer
 	//!\note	Because stuff is joined together like links in a chain, it makes sense to think of the
 	//!			object which forms the root of the chain as the anchor.
-	//!\todo	Rename, because we are not dealing with a chain, we are dealing with a network (which
-	//!			is not the same as dealing with a single direction tree).
-	class cAnchor: public cFigment{
+	class cAnchor: public cChainLink{
 	public:
-		static const cPlugTag*	xPT_root;
-		static const cCommand::dUID	xSetRoot;	//!\todo	Rename to linkRoot. Gotta keep the term link consistent.
-		static const cCommand::dUID	xGetRoot;
 
 		cAnchor();
 		virtual ~cAnchor();
 
 		GT_IDENTIFY("anchor");
-		GT_EXTENDS(cFigment);
+		GT_EXTENDS(cChainLink);
 		virtual dNameHash hash() const { return getHash<cAnchor>(); }
 
-		virtual void work(cContext* pCon);
 		virtual void save(cByteBuffer* pAddHereb);	//!< Performs special saving.
 		virtual void loadEat(cByteBuffer* pBuff, dReloadMap* pReloads = NULL);	//!< Performs special loading.
-		virtual void getLinks(std::list<ptrFig>* pOutLinks);
-
-	protected:
-		void patSetRoot(ptrLead aLead);
-		void patGetRoot(ptrLead aLead);
-
-	private:
-		tPlug<ptrFig>	mRoot;
 	};
 }
 

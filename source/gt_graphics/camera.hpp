@@ -11,7 +11,7 @@
 
 namespace gt{
 
-	class c3DCamera: public cFigment{
+	class c3DCamera: public cChainLink{
 	public:
 
 		c3DCamera();
@@ -22,7 +22,7 @@ namespace gt{
 
 	};
 
-	class c2DCamera: public cFigment{
+	class c2DCamera: public cChainLink{
 	public:
 
 		c2DCamera();

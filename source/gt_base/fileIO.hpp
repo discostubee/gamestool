@@ -45,9 +45,9 @@ namespace gt{
 		static const cPlugTag*	xPT_fileSize;
 		static const cPlugTag*	xPT_filePath;
 
-		static const cCommand::dUID	xSetPath;	//!< set the path to the file you want to manipulate.
-		static const cCommand::dUID	xRead;		//!< write to the file specified with set path.
-		static const cCommand::dUID	xWrite;
+		static const cCommand::dUID	xSetPath;	//!< Set the path to the file you want to manipulate.
+		static const cCommand::dUID	xRead;		//!< Write to the buffer
+		static const cCommand::dUID	xWrite;		//!< Write to the file specified with set path.
 		static const cCommand::dUID	xInsert;
 		static const cCommand::dUID	xDeleteFile;
 		static const cCommand::dUID	xGetSize;
@@ -71,7 +71,6 @@ namespace gt{
 		void patDelFile(ptrLead aLead);
 		void patGetFileSize(ptrLead aLead);
 
-		//!\fn		virtual cByteBuffer read(const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 )
 		//!\brief	Fills the provided buffer with file contents.
 		//!\brief	aOutput
 		//!\param	pStartPoint		0 means starts at the beginning of the file.
@@ -82,19 +81,16 @@ namespace gt{
 		virtual void write(const cByteBuffer* pBuff)
 			{ DUMB_REF_ARG(pBuff); DONT_USE_THIS; }
 
-		//!\fn		virtual void append(const cByteBuffer& pBuff, const dFilePoint pStartPoint)
 		//!\brief	inserts data to some point in the file.
 		//!\param	pBuff		Buffer to be sandwiched in the file.
 		//!\param	pStartSpot	Spot to insert in the file. Use ENDOF_FILE if you want to append to, well, the end of the file.
 		virtual void insert(const cByteBuffer* pBuff, dFilePoint pStartSpot)
 			{ DUMB_REF_ARG(pBuff); DUMB_REF_ARG(pStartSpot); DONT_USE_THIS; }
 
-		//!\fn		virtual void deleteFile()
 		//!\brief	Delete the file.
 		virtual void deleteFile()
 			{ DONT_USE_THIS; }
 
-		//!\fn		virtual size_t getFileSize()
 		//!\brief	Get the size of a file.
 		virtual size_t getFileSize()
 			{ DONT_USE_THIS; return 0; }

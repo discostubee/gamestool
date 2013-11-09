@@ -69,7 +69,7 @@ cValve::patSetState(ptrLead aLead){
 
 void
 cValve::patGetState(ptrLead aLead){
-	aLead->copyPlug(&mState, xPT_state);
+	aLead->linkPlug(&mState, xPT_state);
 }
 
 iFigment::dMigrationPattern

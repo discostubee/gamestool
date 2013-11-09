@@ -49,7 +49,7 @@ cTextFig::patSetText(ptrLead aLead){
 
 void
 cTextFig::patGetText(ptrLead aLead){
-	aLead->copyPlug(&mText, xPT_text);
+	aLead->linkPlug(&mText, xPT_text);
 }
 
 iFigment::dMigrationPattern

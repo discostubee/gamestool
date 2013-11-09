@@ -20,8 +20,8 @@ ENTRYPOINT
 #	ifdef GT_THREADS
 		std::cout << " Threaded";
 #	endif
-		std::cout << std::endl;
 
+		std::cout << std::endl;
 		gt::gWorld.take( new gt::cTerminalWorld() );
 
 #	ifdef GTUT_GOOGLE
@@ -33,6 +33,7 @@ ENTRYPOINT
 		gt::gWorld.cleanup();
 		cTracker::makeReport(std::cout);
 		excep::logExcep::shake();
+		result = EXIT_SUCCESS;
 
 	}catch(std::exception &e){
 		std::cout << e.what() << std::endl;
@@ -48,16 +49,13 @@ ENTRYPOINT
 #include "gt_base/figment.hpp"
 
 namespace gt{
-#if 0
 	//- Include anything else we want to unit test here.
 	GTUT_START(test_addon, load){
 		cContext fake;
 
 		gWorld.get()->openAddon(dStr("X11GL"));
 
-		gWorld.get()->setRoot(
-			gWorld.get()->makeFig("stage")
-		);
+		gWorld.get()->setRoot( gWorld.get()->makeFig("stage") );
 	}GTUT_END;
 
 	GTUT_START(test_addon, unload){
@@ -79,6 +77,5 @@ namespace gt{
 		}
 		GTUT_ASRT(addonBlueprintRemoved, "didn't remove blueprints.");
 	}GTUT_END;
-#endif
 }
 

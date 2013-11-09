@@ -61,6 +61,8 @@
 //------------------------------------------------------------------------------------------
 #if defined(__APPLE__)
 #	define SHITPANTS abort()
+#elif defined(__linux)
+#	define SHITPANTS abort()
 #endif
 //------------------------------------------------------------------------------------------
 // some defines which are common in this project.

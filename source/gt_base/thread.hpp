@@ -23,7 +23,7 @@
 #ifndef THREAD_HPP
 #define THREAD_HPP
 
-#include "figment.hpp"
+#include "chainLink.hpp"
 
 namespace gt{
 
@@ -33,27 +33,19 @@ namespace gt{
 	//!			actual thread to run its loop again. The figment however, doesn't wait to
 	//!			see if the thread finished or not. This is ideal for tasks which take an
 	//!			unknown amount of time to finish.
-	class cThread: public cFigment{
+	class cThread: public cChainLink{
 	public:
-
-		static const cPlugTag *xPT_fig;	//!< The figment to link.
-		static const cCommand::dUID xLinkFig;	//!< Link figment to run in the separate thread.
-
 
 		cThread();
 		virtual ~cThread();
 
 		GT_IDENTIFY("thread");
-		GT_EXTENDS(cFigment);
-		GT_VERSION(1);
+		GT_EXTENDS(cChainLink);
 		virtual dNameHash hash() const{ return getHash<cThread>(); }
 
 		virtual void work(cContext* pCon);	//!< Begins a new thread if the link plug is set. Threads run through once and wait until this figment is run to go again. This is opposed to running a tight loop in every thread figment.
 
 	protected:
-		tPlug<ptrFig> link;
-
-		void patLink(ptrLead aLead);
 
 #ifdef GT_THREADS
 		typedef boost::unique_lock<boost::mutex> dLock;
@@ -67,6 +59,8 @@ namespace gt{
 #endif
 
 		static void runThread(cThread *me);
+
+		void preLink();
 		void stopThread();
 	};
 }

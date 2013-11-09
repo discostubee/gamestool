@@ -111,7 +111,10 @@ extern const char *MSG_UNKNOWN_ERROR;
 	//- Adds line flushing per test. Sadly, if a test fails the lines are not flushed until the next test. At this point I can't see a way to fix this.
 #	undef GTUT_END
 #	define GTUT_END\
-		catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }  gt::gWorld.get()->flushLines(); }
+		catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }\
+		catch(std::exception &e){ GTUT_ASRT(false, e.what()); }\
+		catch(...){ GTUT_ASRT(false, "Unknown error"); }\
+		gt::gWorld.get()->flushLines(); }
 #endif
 
 #ifdef DEBUG
@@ -121,14 +124,14 @@ extern const char *MSG_UNKNOWN_ERROR;
 		{ std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
 #else
 #	define PROFILE
-#	define DBUG_LO(x)
+#	define DBUG_LO(x) {}
 #endif
 
 #if defined(DBUG_VERBOSE) && defined(DEBUG)
 #	define DBUG_VERBOSE_LO(x)\
 		{ std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
 #else
-#	define DBUG_VERBOSE_LO(x)
+#	define DBUG_VERBOSE_LO(x) {}
 #endif
 
 

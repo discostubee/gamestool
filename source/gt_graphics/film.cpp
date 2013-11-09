@@ -2,16 +2,8 @@
 
 using namespace gt;
 
-const cPlugTag*	cFilm::xPT_content = tOutline<cFilm>::makePlugTag("content");
 const cPlugTag*	cFilm::xPT_layout = tOutline<cFilm>::makePlugTag("layout");
 const cPlugTag*	cFilm::xPT_rez = tOutline<cFilm>::makePlugTag("rez");
-
-const cCommand::dUID cFilm::xLinkContent = tOutline<cFilm>::makeCommand(
-	"link content",
-	&cFilm::patSetLink,
-	cFilm::xPT_content,
-	NULL
-);
 
 const cCommand::dUID cFilm::xSetLayout = tOutline<cFilm>::makeCommand(
 	"set layout",
@@ -40,13 +32,6 @@ cFilm::cFilm(){
 cFilm::~cFilm(){
 }
 
-void
-cFilm::getLinks(std::list<ptrFig>* pOutLinks){
-	PROFILE;
-	ASRT_NOTNULL(pOutLinks);
-	pOutLinks->push_back(mLink.get());
-}
-
 cFigment::dMigrationPattern
 cFilm::getLoadPattern(){
 	PROFILE;
@@ -59,11 +44,6 @@ cFilm::getLoadPattern(){
 
 	pattern.push_back(version1);
 	return pattern;
-}
-
-void
-cFilm::patSetLink(ptrLead aLead){
-	aLead->setPlug(&mLink, xPT_content);
 }
 
 void

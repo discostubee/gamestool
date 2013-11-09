@@ -86,15 +86,10 @@ PCStr2NStr(const dPlaChar *pString){
 	if(pString == NULL)
 		return strRtn;
 
-	size_t inLen = PCStrLen(pString);
-
-	if(inLen==0)
-		return strRtn;
-
 	#if defined(USE_LOCALE_GEN)
-		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], nativeEncoding, boost::locale::conv::skip);
+		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[PCStrLen(pString)], nativeEncoding, boost::locale::conv::skip);
 	#elif defined(USE_BOOST_LOCALE)
-		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[inLen], nativeEncoding);
+		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[PCStrLen(pString)], nativeEncoding);
 	#else
 		strRtn = pString;	//!!! temporary measure.
 	#endif
@@ -110,14 +105,12 @@ PCStr2Text(const dPlaChar *pString){
 	if(pString == NULL)
 		return strRtn;
 
-	size_t inLen = PCStrLen(pString);
-
 	#if defined(USE_LOCALE_GEN)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], getTextEncode());
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[PCStrLen(pString)], getTextEncode());
 	#elif defined(USE_BOOST_LOCALE)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], textEncoding);
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[PCStrLen(pString)], textEncoding);
 	#else
-		strRtn.t = pString.t;	//!!! temporary measure.
+		strRtn.t = pString;	//!!! temporary measure.
 	#endif
 
 	return strRtn;
@@ -139,12 +132,10 @@ NCStr2PStr(const dNatChar *pString){
 	if(pString == NULL)
 		return strRtn;
 
-	size_t inLen = NCStrLen(pString);
-
 	#if defined(USE_LOCALE_GEN)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], getPlatformEncode());
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[NCStrLen(pString)], getPlatformEncode());
 	#elif defined(USE_BOOST_LOCALE)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], "UTF-8");
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[NCStrLen(pString)], "UTF-8");
 	#else
 		strRtn = pString;	//!!! temporary measure.
 	#endif
@@ -159,12 +150,10 @@ NCStr2Text(const dNatChar *pString){
 	if(pString == NULL)
 		return strRtn;
 
-	size_t inLen = NCStrLen(pString);
-
 	#if defined(USE_LOCALE_GEN)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], getTextEncode());
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[NCStrLen(pString)], getTextEncode());
 	#elif defined(USE_BOOST_LOCALE)
-		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[inLen], textEncoding);
+		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[NCStrLen(pString)], textEncoding);
 	#else
 		strRtn = pString;	//!!! temporary measure.
 	#endif

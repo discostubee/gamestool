@@ -16,7 +16,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}_d" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.922621546" name="Debug" parent="cdt.managedbuild.config.gnu.macosx.exe.debug">
+				<configuration artifactName="${ProjName}_d" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.922621546" name="Debug" parent="cdt.managedbuild.config.gnu.macosx.exe.debug" postbuildStep="cp -f ${ProjDirPath}/${ConfigName}/${BuildArtifactFileBaseName} ${ProjDirPath}/../../../bin; ${ProjDirPath}/../../../bin/${BuildArtifactFileBaseName}">
 					<folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.922621546." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.base.1400669182" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.MachO64" id="cdt.managedbuild.target.gnu.platform.macosx.base.1707325879" name="Debug Platform" osList="macosx" superClass="cdt.managedbuild.target.gnu.platform.macosx.base"/>
@@ -24,10 +24,11 @@
 							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.base.1206355269" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.base"/>
 							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.base.691130779" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.base">
 								<option id="macosx.cpp.link.option.libs.1999155136" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gamestool_d"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gt_OSX_d"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_system"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_locale"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gamestool_d"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gt_OSX_d"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gt_graphics_d"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.48497611" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>

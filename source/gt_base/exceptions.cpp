@@ -22,6 +22,41 @@
 #include "exceptions.hpp"
 #include "threadTools.hpp"
 
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+base_error::base_error(const char* pFile, const unsigned int pLine) throw(){
+	try{
+		std::stringstream ss;
+		ss << "Problem in file '" << pFile << "' at line " << pLine << ". Info: ";
+		mInfo = ss.str();
+	}catch(...){
+	}
+}
+
+base_error::base_error(const char* pExtraInfo, const char* pFile, const unsigned int pLine) throw(){
+	try{
+		std::stringstream ss;
+		ss << "Error in file '" << pFile << "' at line " << pLine << ". Info: " << pExtraInfo;
+		mInfo = ss.str();
+	}catch(...){
+	}
+}
+
+base_error::~base_error() throw(){
+}
+
+const char*
+base_error::what() const throw(){
+	return mInfo.data();
+}
+
+void
+base_error::addInfo(const dStr &pInfo){
+	mInfo.append(pInfo);
+}
+
+///////////////////////////////////////////////////////////////////////
 using namespace excep;
 
 char logExcep::xBuff[512];
