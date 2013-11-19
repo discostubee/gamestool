@@ -21,11 +21,9 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag *cRunList::xPT_single = tOutline<cRunList>::makePlugTag("single");
-
 const cCommand::dUID cRunList::xAdd = tOutline<cRunList>::makeCommand(
 	"add", &cRunList::patAdd,
-	xPT_single,
+	xPT_links,
 	NULL
 );
 
@@ -68,7 +66,7 @@ cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 void
 cRunList::patAdd(ptrLead aLead){
 	PROFILE;
-	aLead->appendPlug(&mList, xPT_single);
+	aLead->appendPlug(&mList, xPT_links);
 }
 
 
@@ -76,16 +74,9 @@ cRunList::patAdd(ptrLead aLead){
 #	include "unitTestFigments.hpp"
 
 GTUT_START(test_cRunList, test_suit){
-	tOutline<cFigment>::draft();
 	figmentTestSuit<cRunList>();
 }GTUT_END;
 
-#	include "thread.hpp"
-
-GTUT_START(test_cRunList, test_thread){
-	tOutline<cRunList>::draft();
-
-}GTUT_END;
 
 #endif
 

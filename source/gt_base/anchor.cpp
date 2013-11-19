@@ -44,7 +44,8 @@ cAnchor::save(cByteBuffer* pAddHere){
 		mLink.get()->getLinks(branches);
 		figs.insert( mLink.get().get() );
 
-		do{ //- while there are branches still left to explore. Must prevent circular references.
+		//todo Must prevent circular references.
+		do{ //- while there are branches still left to explore.
 			PROFILE;
 			std::list<ptrFig>* temp = prev;
 			prev = branches;
@@ -151,7 +152,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 		size_t numAddons = 0;
 		readSpot += pBuff->fill(&numAddons, readSpot);
 
-		DBUG_VERBOSE_LO("Number of addons: " << numAddons)
+		DBUG_VERBOSE_LO("Number of addons: " << numAddons);
 
 		for(size_t i=0; i<numAddons; ++i){
 			dStr addonName;
@@ -223,10 +224,7 @@ tPlug<ptrBuff> plugBuff;
 const dPlaChar *testStr = "proper job";
 
 GTUT_START(testAnchor, basicSave){
-	tOutline<cFigment>::draft();
 	tOutline<cSaveTester>::draft();
-	tOutline<cChainLink>::draft();
-	tOutline<cAnchor>::draft();
 
 	plugBuff = ptrBuff(new cByteBuffer());
 
@@ -237,7 +235,7 @@ GTUT_START(testAnchor, basicSave){
 	tester = ptrFig(new cSaveTester(testStr, 42));
 
 	ptrLead add = gWorld.get()->makeLead(cAnchor::xSetLink);
-	add->linkPlug(&tester, cAnchor::xPT_link);
+	add->linkPlug(&tester, cAnchor::xPT_links);
 
 	ank->jack(add, &fakeCon);
 	ank->save(plugBuff.get().get());
@@ -255,12 +253,9 @@ GTUT_START(testAnchor, basicLoad){
 
 	tPlug<ptrFig> tester;
 	{
-		ptrLead getlink = gWorld.get()->makeLead(cAnchor::xGetLink);
+		ptrLead getlink = gWorld.get()->makeLead(cAnchor::xGetLinks);
+		getlink->linkPlug(&tester, cAnchor::xPT_links);
 		ank->jack(getlink, &fake);
-
-		startLead(getlink, fake.getSig());
-		getlink->copyPlug(&tester, cAnchor::xPT_link);
-		stopLead(getlink);
 	}
 
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
@@ -278,26 +273,21 @@ GTUT_START(testAnchor, basicLoad){
 	GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
 
 	plugBuff.get().reset();
+
 }GTUT_END;
 
-
 GTUT_START(testAnchor, chainSave){
-	tOutline<cFigment>::draft();
-	tOutline<cSaveTester>::draft();
-	tOutline<cAnchor>::draft();
-	tOutline<cRunList>::draft();
-
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	tPlug<ptrFig> rlist = gWorld.get()->makeFig(getHash<cRunList>());
 
 	ptrLead linkRoot = gWorld.get()->makeLead(cAnchor::xSetLink);
-	linkRoot->linkPlug(&rlist, cAnchor::xPT_link);
+	linkRoot->linkPlug(&rlist, cAnchor::xPT_links);
 	ank->jack(linkRoot, &fakeCon);
 
 	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
 	ptrLead add = gWorld.get()->makeLead(cRunList::xAdd);
-	add->linkPlug(&tester, cRunList::xPT_single);
+	add->linkPlug(&tester, cRunList::xPT_links);
 	rlist.get()->jack(add, &fakeCon);
 
 	ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);
@@ -308,11 +298,6 @@ GTUT_START(testAnchor, chainSave){
 }GTUT_END;
 
 GTUT_START(testAnchor, chainLoad){
-	tOutline<cFigment>::draft();
-	tOutline<cSaveTester>::draft();
-	tOutline<cAnchor>::draft();
-	tOutline<cRunList>::draft();
-
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 	dReloadMap dontcare;
@@ -343,7 +328,6 @@ GTUT_START(testAnchor, chainLoad){
 }GTUT_END;
 
 GTUT_START(test_cAnchor, test_suit){
-	tOutline<cFigment>::draft();
 	figmentTestSuit<cAnchor>();
 }GTUT_END;
 

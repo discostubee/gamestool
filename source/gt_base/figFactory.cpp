@@ -81,9 +81,10 @@ void cFigFactory::patGetFigCatalog(ptrLead aLead){
 ////////////////////////////////////////////////////////////
 
 #ifdef GTUT
+#	include "unitTestFigments.hpp"
 
-GTUT_START(test_figFactory, makeFig){
-	cFigFactory test;
+GTUT_START(test_figFactory, test_suit){
+	figmentTestSuit<cFigFactory>();
 }GTUT_END;
 
 #endif

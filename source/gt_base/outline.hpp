@@ -37,8 +37,8 @@ namespace gt{
 	public:
 		typedef void (T::*ptrPatFoo)(ptrLead alead);
 
-		static void draft();				//!< Adds your figment to the world library.
-		static void removeFromWorld();		//!< Only do this when an addon closes or the main program ends. Once removed, you'll need to reload an addon in order to regain commands. If you remove a core figment, you won't be able to get the commands back at runtime.
+		static void draft();	//!< Adds your figment to the world library and increments the reference count.
+		static void remove(bool force=false);	//!< If this is the last request for removal, you'll need to reload an addon in order to regain commands. If you remove a core figment, you won't be able to get the commands back at runtime. Only do this when an addon closes or the main program ends
 
 		static const cCommand::dUID makeCommand(
 			const char* aName,
@@ -63,18 +63,17 @@ namespace gt{
 		static dExtensions xExtensions;	//!< This is the list of blueprints that this outline can use commands and tags from. If you replace a figment you automatically take that blueprint as an extension.
 		static dMapCom* xCommands;
 		static dMapPTag* xPlugTags;
+		static int xDraftCount;
 
 		tOutline();
 		~tOutline();
 
-		static void cleanup();
 		static ptrFig makeFig();
+		static void removeForce();
 
 		friend class cBlueprint;
 
 	private:
-		static bool xDrafted;
-
 		static void readyCommands(bool pDontCleanup=true);	//!<
 		static void readyTags(bool pDontCleanup=true);
 	};
@@ -126,7 +125,7 @@ namespace gt{
 	typename tOutline<T>::dMapPTag *tOutline<T>::xPlugTags;	//- Don't assign anything here.
 
 	template<typename T>
-	bool tOutline<T>::xDrafted = false;
+	int tOutline<T>::xDraftCount = 0; //- Ok to assign here.
 
 	template<typename T>
 	void
@@ -139,13 +138,15 @@ namespace gt{
 				delete xCommands;
 				xCommands = NULL;
 				setup=false;
-				DBUG_LO("Deleting commands for " << T::identify());
+				DBUG_VERBOSE_LO("Deleting commands for " << T::identify());
+				DBUG_TRACK_START("commands");
 			}
 		}else{
 			if(!setup){
 				xCommands = new dMapCom();
 				setup = true;
-				DBUG_VERBOSE_LO(T::identify() << " readied commands");
+				DBUG_VERBOSE_LO("Made commands for " << T::identify());
+				DBUG_TRACK_END("commands");
 			}
 		}
 	}
@@ -159,13 +160,15 @@ namespace gt{
 				delete xPlugTags;
 				xPlugTags = NULL;
 				setup = false;
-				DBUG_LO("Deleting tags for " << T::identify());
+				DBUG_VERBOSE_LO("Deleting tags for " << T::identify());
+				DBUG_TRACK_START("tags");
 			}
 		}else{
 			if(!setup){
 				xPlugTags = new dMapPTag();
 				setup = true;
-				DBUG_VERBOSE_LO(T::identify() << " readied plug tags");
+				DBUG_VERBOSE_LO("Made plug tags for " << T::identify());
+				DBUG_TRACK_END("tags");
 			}
 		}
 	}
@@ -181,7 +184,7 @@ namespace gt{
 	template<typename T>
 	void
 	tOutline<T>::draft(){
-		if(!xDrafted){
+		if(xDraftCount == 0){
 			readyCommands(); // You can't be sure a makeCommand has been run.
 			readyTags(); // just in case.
 			xBlueprint.setup(
@@ -195,7 +198,8 @@ namespace gt{
 				&getAllCommands,
 				&getAllTags,
 				&getExtensions,
-				&hasPlugTag
+				&hasPlugTag,
+				&removeForce
 			);
 
 			cBlueprint const *tmpBlue = NULL;
@@ -220,27 +224,29 @@ namespace gt{
 			}
 
 			gWorld.get()->addBlueprint(&xBlueprint);
-
-			xDrafted=true;
 		}
+		++xDraftCount;
 	}
 
 	template<typename T>
 	void
-	tOutline<T>::removeFromWorld(){
-		cleanup();
+	tOutline<T>::remove(bool force){
+		if(xDraftCount==0){
+			WARN_S("Figment not drafted.");
+			return;
+		}
+
+		if(force)
+			xDraftCount =0;
+		else
+			--xDraftCount;
+
+		if(!force && xDraftCount>0)
+			return;
+
 		gWorld.get()->removeBlueprint(&xBlueprint);
-	}
-
-	template<typename T>
-	void
-	tOutline<T>::cleanup(){
-		if(xDrafted){
-			readyCommands(false);
-			readyTags(false);
-
-			xDrafted=false;
-		}
+		readyCommands(false);
+		readyTags(false);
 	}
 
 	template<typename T>
@@ -248,6 +254,12 @@ namespace gt{
 	tOutline<T>::makeFig(){
 		DBUG_VERBOSE_LO("making a " << T::identify());
 		return ptrFig(new T());
+	}
+
+	template <typename T>
+	void
+	tOutline<T>::removeForce(){
+		remove(true);
 	}
 
 	template <typename T>

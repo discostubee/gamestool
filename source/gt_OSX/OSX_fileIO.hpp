@@ -35,7 +35,7 @@ namespace gt{
 		virtual ~cOSX_fileIO();
 
 		GT_IDENTIFY("OSX file");
-		GT_EXTENDS(cBase_fileIO);
+		GT_REPLACES(cBase_fileIO);
 		virtual dNameHash hash() const{ return getHash<cOSX_fileIO>(); }
 
 	protected:

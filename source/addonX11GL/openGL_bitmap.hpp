@@ -20,7 +20,7 @@ namespace gt{
 		GT_REPLACES(cBitmap);
 		virtual dNameHash hash() const { return getHash<cBitmap_X11GL>(); }
 
-		virtual void run(cContext *pCon);
+		virtual void run(cContext *pCon);	//!< Applies all the dirty rects (hehe).
 
 	protected:
 		virtual ptrBitmap getBitmap();

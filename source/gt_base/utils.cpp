@@ -63,7 +63,7 @@ void cTracker::ensureSetup(bool setup){
 		if(objectsActiveSetup){
 			delete xObjectsActive;
 			xObjectsActive = NULL;
-			objectsActiveSetup = true;
+			objectsActiveSetup = false;
 		}
 	}
 }
@@ -88,7 +88,9 @@ cTracker::stop(const char* pName){
 	ensureSetup();
 
 	xTempHash = makeHash(pName);
-	--(*xObjectsActive)[ xTempHash ].mCount;
+	xItemItr = xObjectsActive->find(xTempHash);
+	if(xItemItr != xObjectsActive->end())
+		--xItemItr->second.mCount;
 }
 
 void

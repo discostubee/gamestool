@@ -35,13 +35,14 @@ using namespace gt;
 struct cWorld::sBlueprintHeader{
 	cBlueprint* mBlueprint;
 	dNameHash mReplaced;
+	int mTimesAdded;
 
 	sBlueprintHeader():
-		mBlueprint(NULL), mReplaced(uDoesntReplace)
+		mBlueprint(NULL), mReplaced(uDoesntReplace), mTimesAdded(0)
 	{}
 
 	sBlueprintHeader(cBlueprint* pBlue, dNameHash pName):
-		mBlueprint(pBlue), mReplaced(pName)
+		mBlueprint(pBlue), mReplaced(pName), mTimesAdded(0)
 	{}
 
 	~sBlueprintHeader()
@@ -62,14 +63,14 @@ using namespace gt;
 bool gt::cWorld::thereCanBeOnlyOne = false;
 
 cWorld::cWorld():
-	mKeepLooping(true),
-	mBicycleSetup(false)
+	mKeepLooping(true)
 {
 	if(thereCanBeOnlyOne)
 		THROW_ERROR("can only create the world once");
 
 	thereCanBeOnlyOne = true;
 
+	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
 	mRoot = ptrFig(new cWorldShutoff());
 
@@ -87,6 +88,12 @@ cWorld::cWorld():
 
 cWorld::~cWorld(){
 	try{
+		for(mScrBMapItr = mBlueprints.begin(); mScrBMapItr != mBlueprints.end(); ++mScrBMapItr)
+			mScrBMapItr->second.mBlueprint->mCleanup();
+
+		for(mScrBMapItr = mBlueArchive.begin(); mScrBMapItr != mBlueArchive.end(); ++mScrBMapItr)
+			mScrBMapItr->second.mBlueprint->mCleanup();
+
 		mRoot.redirect(NULL);
 		mVillageBicycle.redirect(NULL);
 
@@ -100,28 +107,27 @@ void
 cWorld::addBlueprint(cBlueprint* pAddMe){
 	PROFILE;
 
-	// Even if this figment replaces another, it still appears under its own name hash.
-	if( mBlueprints.find(pAddMe->hash()) == mBlueprints.end()){	//new blueprint
+	mScrBMapItr = mBlueprints.find(pAddMe->hash());
+	if(mScrBMapItr == mBlueprints.end()){
+		// Even if this figment replaces another, it still appears under its own name hash.
 		mBlueprints[pAddMe->hash()] = sBlueprintHeader( pAddMe, uDoesntReplace );
-		DBUG_LO("Blueprint '" << pAddMe->name() << "' added to library");
 
-	}else{
-		DBUG_LO("Blueprint '" <<  pAddMe->name() << "', has already been added");
-		return;
-	}
+		if( pAddMe->replace() != uDoesntReplace ){
+			mScrBMapItr = mBlueprints.find(pAddMe->replace());
+			if(mScrBMapItr != mBlueprints.end()){
+				mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);	// Archive the old blueprint being replaced.
+				mScrBMapItr->second = sBlueprintHeader( pAddMe, mScrBMapItr->second.mReplaced );
 
-	if( pAddMe->replace() != uDoesntReplace ){
-		mScrBMapItr = mBlueprints.find(pAddMe->replace());
-		if(mScrBMapItr != mBlueprints.end()){
-			mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);	// Archive the old blueprint being replaced.
+				DBUG_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mBlueArchive[ mScrBMapItr->first ].mBlueprint->name() << "'");
 
-			mScrBMapItr->second = sBlueprintHeader( pAddMe, mScrBMapItr->second.mReplaced );
-			DBUG_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mBlueArchive[ mScrBMapItr->first ].mBlueprint->name() << "'");
-
+			}else{
+				WARN_S(pAddMe->name() << " missing parent");
+			}
 		}else{
-			WARN_S(pAddMe->name() << " missing parent");
+			DBUG_LO("Blueprint '" << pAddMe->name() << "' added to library");
 		}
 	}
+	++mScrBMapItr->second.mTimesAdded;
 }
 
 const cBlueprint*
@@ -130,7 +136,7 @@ cWorld::getBlueprint(dNameHash pNameHash){
 
 	mScrBMapItr = mBlueprints.find(pNameHash);
 	if(mScrBMapItr == mBlueprints.end())
-		throw excep::base_error("couldn't find blueprint", __FILE__, __LINE__);
+		throw excep::notFound("couldn't find blueprint", __FILE__, __LINE__);
 
 	return mScrBMapItr->second.mBlueprint;
 }
@@ -139,68 +145,79 @@ void
 cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	PROFILE;
 
-	DBUG_LO("Erasing blueprint: " << pRemoveMe->name());
+	mScrBMapItr = mBlueprints.find(pRemoveMe->hash());
+
+	if(mScrBMapItr == mBlueprints.end()){
+		WARN_S("Tried to remove blueprint '" << pRemoveMe->mGetName() << "' when not drafted.");
+		return;
+	}
+
+	--mScrBMapItr->second.mTimesAdded;
+	if(mScrBMapItr->second.mTimesAdded > 0)
+		return;
+
+	std::list<ptrFig> linksA, linksB;
+	std::list<ptrFig>*	branches = &linksA;
+	std::list<ptrFig>*	prev = &linksB;
+	std::map<iFigment*, ptrFig> figs;
+
+	//- Find and empty any objects using this blueprint.
+	mRoot->getLinks(branches);
+	prev->push_back(mRoot);
+
+	do{ //- while there are branches still left to explore.
+		std::list<ptrFig>* temp = prev;
+		prev = branches;
+		branches = temp;
+		branches->clear();
+
+		for(
+			std::list<ptrFig>::iterator i = prev->begin();
+			i != prev->end();
+			++i
+		){
+			if( figs.find( i->get() ) == figs.end() ){ // first time funny.
+				(*i)->getLinks( branches );	//add to the next series of branches.
+
+				if( i->get()->hash() == pRemoveMe->hash() ){
+					figs[i->get()] = *i;
+				}
+			}
+		}
+
+	}while(branches->size() > 0);
+
+	for(	//- Empty the figments
+		std::map<iFigment*, ptrFig>::iterator itr = figs.begin();
+		itr != figs.end();
+		++itr
+	){
+		DBUG_VERBOSE_LO( "Emptying figment " << itr->first->name() );
+
+		itr->second.redirect(getEmptyFig());
+	}
 
 	//- If this figment replaced another, restore the original blueprint.
 	if(pRemoveMe->replace() != uDoesntReplace){
-		mScrBMapItr = mBlueprints.find(pRemoveMe->replace());
-		if(mScrBMapItr != mBlueprints.end()){
-			mScrBMapItr = mBlueArchive.find(mScrBMapItr->first);
-			if(mScrBMapItr != mBlueArchive.end()){
-				mBlueprints[pRemoveMe->replace()] = mScrBMapItr->second;
-				DBUG_LO("Blueprint '" << mScrBMapItr->second.mBlueprint->name() << "' restored. Archive entry removed");
+		dBlueprintMap::iterator foundRep = mBlueprints.find(pRemoveMe->replace());
+		dBlueprintMap::iterator foundArc = mBlueArchive.find(pRemoveMe->replace());
+		if(foundRep != mBlueprints.end()){
+			if(foundArc != mBlueArchive.end()){
+				DBUG_LO("Blueprint '" << mScrBMapItr->second.mBlueprint->name() << "' restored. Archive entry removed"
+				);
+				foundRep->second = foundArc->second;
+				mBlueArchive.erase(foundArc);
+
+			}else{
+				WARN_S("Replaced figment not found in archive.");
 			}
-			mBlueArchive.erase(mScrBMapItr);
+		}else{
+			WARN_S("Replaced figment not found in active blueprints.");
 		}
 	}
 
-	mScrBMapItr = mBlueprints.find(pRemoveMe->hash());
-	if(mScrBMapItr != mBlueprints.end()){
-		std::list<ptrFig> linksA, linksB;
-		std::list<ptrFig>*	branches = &linksA;
-		std::list<ptrFig>*	prev = &linksB;
-		std::map<iFigment*, ptrFig> figs;
-
-		//- Find and empty any objects using this blueprint.
-		mRoot->getLinks(branches);
-		prev->push_back(mRoot);
-
-		do{ //- while there are branches still left to explore.
-			std::list<ptrFig>* temp = prev;
-			prev = branches;
-			branches = temp;
-			branches->clear();
-
-			for(
-				std::list<ptrFig>::iterator i = prev->begin();
-				i != prev->end();
-				++i
-			){
-				if( figs.find( i->get() ) == figs.end() ){ // first time funny.
-					(*i)->getLinks( branches );	//add to the next series of branches.
-
-					if( i->get()->hash() == pRemoveMe->hash() ){
-						figs[i->get()] = *i;
-					}
-				}
-			}
-
-		}while(branches->size() > 0);
-
-		for(	//- Empty the figments
-			std::map<iFigment*, ptrFig>::iterator itr = figs.begin();
-			itr != figs.end();
-			++itr
-		){
-			DBUG_VERBOSE_LO( "Emptying figment " << itr->first->name() );
-
-			itr->second.redirect(getEmptyFig());
-		}
-
-		mBlueprints.erase(mScrBMapItr);
-	}else{
-		WARN_S("Tried to remove blueprint '" << pRemoveMe->mGetName() << "' when not drafted.");
-	}
+	mBlueprints.erase(mScrBMapItr);
+	DBUG_LO("Erased blueprint: " << pRemoveMe->name());
 }
 
 ptrFig
@@ -307,13 +324,6 @@ cWorld::setRoot(ptrFig pNewRoot){
 
 ptrFig
 cWorld::getEmptyFig(){
-	if(mBicycleSetup == false){
-		if(mBlueprints.find(getHash<cEmptyFig>()) == mBlueprints.end()){
-			tOutline<cEmptyFig>::draft();
-		}
-		mBicycleSetup = true;
-	}
-
 	return mVillageBicycle;
 }
 
@@ -488,7 +498,7 @@ cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 
 void
 cWorld::primordial::cleanup(){
-
+	//todo cleanup blueprints.
 	lo("", true);
 	(void)makeProfileToken(NULL, 0, true);
 }

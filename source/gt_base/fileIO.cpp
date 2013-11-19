@@ -105,10 +105,11 @@ cBase_fileIO::patRead(ptrLead aLead){
 
 void
 cBase_fileIO::patWrite(ptrLead aLead){
+	ptrBuff buffer;
 
-	tPlug<cByteBuffer>  writeHere;
-	write(&writeHere.get());
-	aLead->setPlug(&writeHere, xPT_buffer);
+	aLead->assignTo(&buffer, xPT_buffer);
+
+	write(buffer.get());
 }
 
 void
@@ -137,7 +138,6 @@ cBase_fileIO::patGetFileSize(ptrLead aLead){
 #	include "unitTestFigments.hpp"
 
 GTUT_START(test_cBase_fileIO, test_suit){
-	tOutline<cFigment>::draft();
 	figmentTestSuit<cBase_fileIO>();
 }GTUT_END;
 

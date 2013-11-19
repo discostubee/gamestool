@@ -25,15 +25,17 @@ void draftAll(){
 	//- This needs to be a complete list of everything in the gamestool lib.
 	tOutline<cFigment>::draft();
 	tOutline<cEmptyFig>::draft();
+	tOutline<cWorldShutoff>::draft();
+	tOutline<cChainLink>::draft();
 	tOutline<cAnchor>::draft();
 	tOutline<cRunList>::draft();
 	tOutline<cBase_fileIO>::draft();
 	tOutline<cAlias>::draft();
 	tOutline<cFigFactory>::draft();
-	tOutline<cWorldShutoff>::draft();
 	tOutline<cTextFig>::draft();
 	tOutline<cThread>::draft();
 	tOutline<cValve>::draft();
+	tOutline<cBase_fileIO>::draft();
 
 	//- Draft in stuff specific for platform.
 #	if defined(__APPLE__)
@@ -47,8 +49,10 @@ gt::ptrFig getRootAnchor(){
 	using namespace gt;
 
 	cContext conxLoading;
+	tPlug<ptrFig> root;
+	tPlug<ptrFig> file = gWorld.get()->makeFig(getHash<cBase_fileIO>());
+	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 
-	ptrFig file = gWorld.get()->makeFig(getHash<cBase_fileIO>());
 	{
 		tPlug<dStr> path;
 		ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath);
@@ -56,48 +60,54 @@ gt::ptrFig getRootAnchor(){
 		//todo allow sandbox to load from another file.
 		path = "editor.gtf";
 		setPath->setPlug(&path, cBase_fileIO::xPT_filePath);
-		file->jack(setPath, &conxLoading);
-	}
+		file.get()->jack(setPath, &conxLoading);
 
-	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
-	{
-		tPlug<ptrFig> plugFile;
 		ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad);
-
-		plugFile = file;
-		load->setPlug(&plugFile, cAnchor::xPT_serialBuff);
+		load->setPlug(&file, cAnchor::xPT_serialBuff);
 		ank->jack(load, &conxLoading);
 	}
 
-	ptrFig root;
 	{
-		tPlug<ptrFig> plugRoot;
-		ptrLead getRoot = gWorld.get()->makeLead(cAnchor::xGetRoot);
-
-		getRoot->setPlug(&plugRoot, cAnchor::xPT_root);
+		ptrLead getRoot = gWorld.get()->makeLead(cAnchor::xGetLinks);
+		getRoot->setPlug(&root, cAnchor::xPT_links);
 		ank->jack(getRoot, &conxLoading);
-
-		root = plugRoot.get();
 	}
 
-	return root;
+	return root.get();
 }
 
 ENTRYPOINT
 {
 	using namespace gt;
+	try{
+		gWorld.take(
+#			if defined(__APPLE__)
+				new cOSXWorld()
+#			endif
+		);
 
-	gWorld.take(
-#	if defined(__APPLE__)
-		new cOSXWorld()
-#	endif
-	);
+		try{
+			draftAll();
 
-	draftAll();
+			gWorld.get()->setRoot( getRootAnchor() );
+			gWorld.get()->loop();
+		}catch(std::exception &e){
+			excep::logExcep::add(e.what());
+		}
+		catch(...){
+			excep::logExcep::add("Boom! Didn't see that coming.");
+		}
 
-	gWorld.get()->setRoot( getRootAnchor() );
+		gWorld.cleanup();	//- Done here so that we can log destruction faults.
+		excep::logExcep::shake();
 
-	gWorld.get()->loop();
+	}catch(std::exception &e){
+		//todo trigger stack dump
+		return EXIT_FAILURE;
+	}catch(...){
+		//todo trigger stack dump
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }

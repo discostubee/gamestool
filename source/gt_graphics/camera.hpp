@@ -18,6 +18,7 @@ namespace gt{
 		virtual ~c3DCamera();
 
 		GT_IDENTIFY("3d camera");
+		GT_EXTENDS(cChainLink);
 		virtual dNameHash hash() const { return getHash<c3DCamera>(); }
 
 	};
@@ -29,6 +30,7 @@ namespace gt{
 		virtual ~c2DCamera();
 
 		GT_IDENTIFY("2d camera");
+		GT_EXTENDS(cChainLink);
 		virtual dNameHash hash() const { return getHash<c2DCamera>(); }
 
 	};

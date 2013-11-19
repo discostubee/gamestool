@@ -185,7 +185,6 @@ namespace gt{
 				dLock c(mGuardLinks);
 
 				//- We need to unplug first before destroying shadows.
-				cBase_plug::dMapLeads test;//!!!
 				for(
 					cBase_plug::dMapLeads::iterator itr = p::mLeadsConnected.begin();
 					itr != p::mLeadsConnected.end();

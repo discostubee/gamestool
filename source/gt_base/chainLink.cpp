@@ -21,17 +21,9 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const cPlugTag *cChainLink::xPT_link = tOutline<cChainLink>::makePlugTag("link");
-
-const cCommand::dUID cChainLink::xGetLink = tOutline<cChainLink>::makeCommand(
-	"get link", &cChainLink::patGetLink,
-	xPT_link,
-	NULL
-);
-
 const cCommand::dUID cChainLink::xSetLink = tOutline<cChainLink>::makeCommand(
 	"set link", &cChainLink::patSetLink,
-	xPT_link,
+	xPT_links,
 	NULL
 );
 
@@ -63,20 +55,16 @@ cChainLink::getLoadPattern(){
 
 void
 cChainLink::getLinks(std::list<ptrFig>* pOutLinks){
-	pOutLinks->push_back(mLink.get());
+	if(mLink.get().valid())
+		pOutLinks->push_back(mLink.get());
 }
 
 void
 cChainLink::patSetLink(ptrLead aLead){
 	preLink();
-	if(!aLead->copyPlug(&mLink, xPT_link))
+	if(!aLead->copyPlug(&mLink, xPT_links))
 		WARN_S("Unable to copy plug");
 	postLink();
-}
-
-void
-cChainLink::patGetLink(ptrLead aLead){
-	aLead->linkPlug(&mLink, xPT_link);
 }
 
 void

@@ -30,24 +30,13 @@ using namespace gt;
 
 ptrFig makeEditor();
 
-ENTRYPOINT
-{
-
-	gt::gWorld.take(new gt::cTerminalWorld());
-
-	tPlug<ptrFig> save = gWorld.get()->makeFig(getHash<cAnchor>());
-	ptrLead linkEdit = gWorld.get()->makeLead(cAnchor::)
-	 makeEditor();
-
-	return EXIT_SUCCESS;
-}
-
 void draftAll(){
 	using namespace gt;
 
 	//- This needs to be a complete list of everything in the gamestool lib.
 	tOutline<cFigment>::draft();
 	tOutline<cEmptyFig>::draft();
+	tOutline<cChainLink>::draft();
 	tOutline<cAnchor>::draft();
 	tOutline<cRunList>::draft();
 	tOutline<cBase_fileIO>::draft();
@@ -66,14 +55,27 @@ void draftAll(){
 #	endif
 }
 
+void cleanupAll(){
+
+	tOutline<cEmptyFig>::remove();
+	tOutline<cAnchor>::remove();
+	tOutline<cRunList>::remove();
+	tOutline<cBase_fileIO>::remove();
+	tOutline<cAlias>::remove();
+	tOutline<cFigFactory>::remove();
+	tOutline<cWorldShutoff>::remove();
+	tOutline<cTextFig>::remove();
+	tOutline<cThread>::remove();
+	tOutline<cValve>::remove();
+	tOutline<cChainLink>::remove();
+	tOutline<cFigment>::remove();
+}
+
 void openAddons(){
 	gWorld.get()->openAddon(dStr("X11GL"));
 }
 
 ptrFig makeEditor(){
-	draftAll();
-
-	openAddons();
 
 	cContext setupConx;
 	ptrFig rlTop = gWorld.get()->makeFig(getHash<cRunList>());
@@ -86,30 +88,79 @@ ptrFig makeEditor(){
 
 	{	//- link components.
 		ptrLead linkFilm = gWorld.get()->makeLead(cStage::xSetLink);
-		linkFilm->setPlug(&film, cStage::xPT_link);
+		linkFilm->linkPlug(&film, cStage::xPT_links);
 		stage.get()->jack(linkFilm, &setupConx);
 
 		ptrLead linkClose = gWorld.get()->makeLead(cStage::xLinkCloser);
-		linkClose->setPlug(&close, cStage::xPT_closer);
+		linkClose->linkPlug(&close, cStage::xPT_closer);
 		stage.get()->jack(linkClose, &setupConx);
 
 		ptrLead linkCam = gWorld.get()->makeLead(cFilm::xSetLink);
-		linkCam->setPlug(&cam, cFilm::xPT_link);
+		linkCam->linkPlug(&cam, cFilm::xPT_links);
 		film.get()->jack(linkCam, &setupConx);
-	}
 
-	{	//- write file.
-		tPlug<ptrFig> writer = gWOrld.get()->makeFig(getHash<cBase_fileIO>())
-		tPlug<dStr> path;
-		ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath);
+		tPlugLinearContainer<ptrFig, std::vector> contain;
+		contain.add(stage);
 
-		path = "editor.gtf";
-		setPath->setPlug(&path, cBase_fileIO::xPT_filePath);
-		writer->jack(setPath);
-
-		ptrLead write = gWorld.get()->makeLead(cBase_fileIO::xWrite);
+		ptrLead topLinks = gWorld.get()->makeLead(cRunList::xAdd);
+		topLinks->linkPlug(&contain, cRunList::xPT_link);
+		rlTop->jack(topLinks, &setupConx);
 	}
 
 	return rlTop;
 }
+
+ENTRYPOINT
+{
+	try{
+		gt::gWorld.take(new gt::cTerminalWorld());
+
+		draftAll();
+		openAddons();
+
+		{
+			tPlug<ptrBuff> buff(ptrBuff(new cByteBuffer()));
+			cContext conxSetup;
+
+			{
+				tPlug<ptrFig> ank = gWorld.get()->makeFig(getHash<cAnchor>());
+				tPlug<ptrFig> editor = makeEditor();
+
+				ptrLead linkEdit = gWorld.get()->makeLead(cAnchor::xSetLink);
+				linkEdit->linkPlug(&editor, cAnchor::xPT_links);
+				ank.get()->jack(linkEdit, &conxSetup);
+
+				ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);
+				save->linkPlug(&buff, cAnchor::xPT_serialBuff);
+				ank.get()->jack(save, &conxSetup);
+			}
+
+			{	//- write file.
+				tPlug<ptrFig> writer = gWorld.get()->makeFig(getHash<cBase_fileIO>());
+				tPlug<dStr> path;
+				ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath);
+
+				path = "editor.gtf";
+				setPath->linkPlug(&path, cBase_fileIO::xPT_filePath);
+				writer.get()->jack(setPath, &conxSetup);
+
+				ptrLead write = gWorld.get()->makeLead(cBase_fileIO::xWrite);
+				write->linkPlug(&buff, cBase_fileIO::xPT_buffer);
+				writer.get()->jack(write, &conxSetup);
+			}
+		}
+
+		cleanupAll();
+		gt::gWorld.cleanup();	//- Done here so that we can log destruction faults.
+		excep::logExcep::shake();
+
+	}catch(std::exception &e){
+		std::cout << e.what() << std::endl;
+	}catch(...){
+		std::cout << "Unknown error." << std::endl;
+	}
+
+	return EXIT_SUCCESS;
+}
+
 
