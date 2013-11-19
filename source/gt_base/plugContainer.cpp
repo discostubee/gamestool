@@ -59,7 +59,44 @@ GTUT_START(testPlugLinier, assignAppend){
 }GTUT_END;
 
 GTUT_START(testPlugLinier, saveLoad){
+	tPlugLinearContainer<int, std::vector> vec;
+	tPlugLinearContainer<int, std::list> list;
+	tPlug<int> A(1), B(2), C(3);
+	cByteBuffer saved;
+	dReloadMap dontcare;
 
+	vec += A;
+	vec += B;
+	vec += C;
+	vec.save(&saved);
+	vec.clear();
+	GTUT_ASRT(vec.getCount() == 0, "didn't clear");
+	vec.loadEat(&saved, &dontcare);
+	GTUT_ASRT(*vec.getPlug(0) == A, "A isn't right");
+	GTUT_ASRT(*vec.getPlug(1) == B, "B isn't right");
+	GTUT_ASRT(*vec.getPlug(2) == C, "C isn't right");
+
+	list += A;
+	list += B;
+	list += C;
+	list.save(&saved);
+	list.clear();
+	GTUT_ASRT(list.getCount() == 0, "didn't clear");
+	list.loadEat(&saved, &dontcare);
+	GTUT_ASRT(*list.getPlug(0) == A, "A isn't right");
+	GTUT_ASRT(*list.getPlug(1) == B, "B isn't right");
+	GTUT_ASRT(*list.getPlug(2) == C, "C isn't right");
+
+}GTUT_END;
+
+GTUT_START(testPlugLinier, toSinglePlug){
+	tPlug<int> A(0), magic(3), prime(7);
+	tPlugLinearContainer<int, std::vector> contain;
+
+	contain += magic;
+	contain += prime;
+	A = contain;
+	GTUT_ASRT(A == magic, "Container didn't assign the right plug.");
 }GTUT_END;
 
 

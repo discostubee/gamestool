@@ -141,7 +141,7 @@ namespace gt{
 		tPlug<ptrFig> testMe = gWorld.get()->makeFig(getHash<cFigment>());
 		ptrLead linkIt = gWorld.get()->makeLead(cThread::xSetLink);
 
-		linkIt->linkPlug(&testMe, cThread::xPT_link);
+		linkIt->linkPlug(&testMe, cThread::xPT_links);
 		A->jack(linkIt, &fakeContext);
 		B->jack(linkIt, &fakeContext);
 		C->jack(linkIt, &fakeContext);
@@ -240,7 +240,6 @@ namespace gt{
 	GTUT_START(test_Thread, sharedData){
 		tOutline<cShareTarget>::draft();
 		tOutline<cWriter>::draft();
-		tOutline<cThread>::draft();
 
 		gWorld.get()->flushLines();
 
@@ -277,13 +276,13 @@ namespace gt{
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xSetLink);
 
-			linkTest->linkPlug(&writerA, cThread::xPT_link);
+			linkTest->linkPlug(&writerA, cThread::xPT_links);
 			threadA.get()->jack(linkTest, &fakeContext);
 		}
 		{
 			ptrLead linkTest = gWorld.get()->makeLead(cThread::xSetLink);
 
-			linkTest->linkPlug(&writerB, cThread::xPT_link);
+			linkTest->linkPlug(&writerB, cThread::xPT_links);
 			threadB.get()->jack(linkTest, &fakeContext);
 		}
 
@@ -323,8 +322,6 @@ namespace gt{
 			}
 		}
 
-		tOutline<cShareTarget>::removeFromWorld();
-		tOutline<cWriter>::removeFromWorld();
 	}GTUT_END;
 
 }

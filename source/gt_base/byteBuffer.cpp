@@ -229,12 +229,5 @@ GTUT_START(testByteBuffer, trimMiddle){
 	GTUT_ASRT(strncmp("hungry hippos", reinterpret_cast<const char*>(test.get()), 4)==0, "didn't trim correctly");
 }GTUT_END;
 
-GTUT_START(testByteBuffer, take){
-
-}GTUT_END;
-
-GTUT_START(testByteBuffer, fill){
-
-}GTUT_END;
 
 #endif

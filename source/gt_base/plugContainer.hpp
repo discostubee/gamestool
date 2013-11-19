@@ -216,6 +216,8 @@ namespace gt{
 
 		typedef typename dContainer::value_type element;
 
+		clear();
+
 		size_t s=0, i=0;
 		pChewToy->trimHead( pChewToy->fill(&s) );
 		while(i < s){
@@ -369,7 +371,7 @@ namespace gt{
 			clear();
 
 		if(pD.getType() == getType()){
-			const cBasePlugContainer *tmp = static_cast<const cBasePlugContainer*>(&pD);
+			const cBasePlugContainer *tmp = dynamic_cast<const cBasePlugContainer*>(&pD);
 			for(size_t i=0; i < tmp->getCount(); ++i)
 				mContainer.push_back(tPlug<PLUG_T>( *tmp->getPlugConst(i) ));
 		}else{
@@ -381,6 +383,9 @@ namespace gt{
 	void
 	tPlugLinearContainer<PLUG_T, CONT_T>::internalAssignTo(void *pTo, dPlugType pType, bool pClear, dConSig aCon) const{
 		PROFILE;
+
+		if(mContainer.empty())
+			return;
 
 		if(pType == getType()){
 			cBasePlugContainer *tmp = static_cast<cBasePlugContainer*>(pTo);
@@ -401,7 +406,7 @@ namespace gt{
 			}
 
 		}else{
-			DBUG_LO("currently no support for assigning to none container");
+			mContainer.front().assignTo(pTo, pType);
 		}
 	}
 

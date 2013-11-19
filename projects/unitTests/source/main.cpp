@@ -2,6 +2,7 @@
 //!\brief	Start of unit tests
 
 #include "gt_terminal/entryPoint.hpp"
+#include "gt_base/draftAll.hpp"
 
 ENTRYPOINT
 {
@@ -23,6 +24,7 @@ ENTRYPOINT
 
 		std::cout << std::endl;
 		gt::gWorld.take( new gt::cTerminalWorld() );
+		gt::draftAll();
 
 #	ifdef GTUT_GOOGLE
 		::testing::InitGoogleTest(&argc, argv);
@@ -49,23 +51,19 @@ ENTRYPOINT
 #include "gt_base/figment.hpp"
 
 namespace gt{
-	//- Include anything else we want to unit test here.
-	GTUT_START(test_addon, load){
-		cContext fake;
 
+	GTUT_START(test_addon, load){
 		gWorld.get()->openAddon(dStr("X11GL"));
 
 		gWorld.get()->setRoot( gWorld.get()->makeFig("stage") );
 	}GTUT_END;
 
 	GTUT_START(test_addon, unload){
-		tOutline<cWorldShutoff>::draft();
-
 		bool addonBlueprintRemoved = false;
 
 		gWorld.get()->setRoot(
 			gWorld.get()->makeFig("world shutoff")
-		);	// Will take out everything, and should close the addon.
+		);	// Will take out the addon
 
 		gWorld.get()->loop();
 

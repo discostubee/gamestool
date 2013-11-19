@@ -6,6 +6,7 @@
  */
 
 #include "addonX11GL.hpp"
+#include "gt_graphics/printworks.hpp"
 
 DYN_LIB_DEF(void)
 draftAll(gt::cWorld *pWorld){
@@ -13,8 +14,6 @@ draftAll(gt::cWorld *pWorld){
 		gt::cWorld::primordial::redirectWorld(pWorld);
 		gt::gWorld.take(pWorld);	//- Old world cleaned up by doing this.
 
-		gt::tOutline<gt::cFigment>::draft();
-		gt::tOutline<gt::cEmptyFig>::draft();
 		gt::tOutline<gt::cStage>::draft();
 		gt::tOutline<gt::cStage_X11GL>::draft();
 		gt::tOutline<gt::cFilm>::draft();
@@ -25,6 +24,7 @@ draftAll(gt::cWorld *pWorld){
 		gt::tOutline<gt::c3DCamera_X11GL>::draft();
 		gt::tOutline<gt::c2DCamera>::draft();
 		gt::tOutline<gt::c2DCamera_X11GL>::draft();
+		gt::tOutline<gt::cPrintworks>::draft();
 
 		DBUG_LO("x11 addon open.");
 
@@ -39,21 +39,22 @@ draftAll(gt::cWorld *pWorld){
 DYN_LIB_DEF(void)
 closeLib(){
 	try{
-
-		gt::tOutline<gt::cStage_X11GL>::removeFromWorld();
-		gt::tOutline<gt::cStage>::removeFromWorld();
-		gt::tOutline<gt::cFilm_X11GL>::removeFromWorld();
-		gt::tOutline<gt::cFilm>::removeFromWorld();
-		gt::tOutline<gt::cPolyMesh_X11GL>::removeFromWorld();
-		gt::tOutline<gt::cPolyMesh>::removeFromWorld();
-		gt::tOutline<gt::c3DCamera_X11GL>::removeFromWorld();
-		gt::tOutline<gt::c3DCamera>::removeFromWorld();
-		gt::tOutline<gt::c2DCamera_X11GL>::removeFromWorld();
-		gt::tOutline<gt::c2DCamera>::removeFromWorld();
+		gt::tOutline<gt::cFilm_X11GL>::remove();
+		gt::tOutline<gt::cFilm>::remove();
+		gt::tOutline<gt::cPolyMesh_X11GL>::remove();
+		gt::tOutline<gt::cPolyMesh>::remove();
+		gt::tOutline<gt::c3DCamera_X11GL>::remove();
+		gt::tOutline<gt::c3DCamera>::remove();
+		gt::tOutline<gt::c2DCamera_X11GL>::remove();
+		gt::tOutline<gt::c2DCamera>::remove();
+		gt::tOutline<gt::cStage_X11GL>::remove();
+		gt::tOutline<gt::cStage>::remove();
+		gt::tOutline<gt::cPrintworks>::remove();
 
 		DBUG_LO("closed x11 addon.");
 
 		gt::gWorld.drop();
+		cTracker::makeReport(std::cout);
 
 	}catch(excep::base_error &e){
 		excep::logExcep::add(e.what());

@@ -32,9 +32,7 @@ namespace gt{ //gamestool
 	//!\		adds to the links being passed back.
 	class cChainLink: public cFigment{
 	public:
-		static const cPlugTag *xPT_link;
-		static const cCommand::dUID xGetLink;
-		static const cCommand::dUID xSetLink;
+		static const cCommand::dUID xSetLink;	//!< Set the single figment link.
 
 		cChainLink();
 		virtual ~cChainLink();
@@ -51,7 +49,6 @@ namespace gt{ //gamestool
 		tPlug<ptrFig> mLink;
 
 		void patSetLink(ptrLead aLead);
-		void patGetLink(ptrLead aLead);	//!< Gets only the linked figment.
 
 		virtual void preLink();
 		virtual void postLink();

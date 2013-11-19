@@ -30,18 +30,24 @@ cBase_plug::cBase_plug(const cBase_plug &pCopy){
 }
 
 cBase_plug::~cBase_plug(){
-	for(
-		dMapLeads::iterator itr = mLeadsConnected.begin();
-		itr != mLeadsConnected.end();
-		++itr
-	){
-		try{
-			itr->first->unplug(this);	//- the count is irrelevant.
-		}catch(excep::base_error &e){
-			WARN(e);
-		}catch(...){
-			//- carry on removing.
+	try{
+		for(
+			dMapLeads::iterator itr = mLeadsConnected.begin();
+			itr != mLeadsConnected.end();
+			++itr
+		){
+			try{
+				itr->first->unplug(this);	//- the count is irrelevant.
+			}catch(excep::base_error &e){
+				WARN(e);
+			}catch(...){
+				//- carry on removing.
+			}
 		}
+	}catch(excep::base_error &e){
+		WARN(e);
+	}catch(...){
+		WARN_S("Error destroying base plug.");
 	}
 }
 
@@ -80,9 +86,10 @@ using namespace gt;
 
 #ifdef GTUT
 
-GTUT_START(test_litePlug, makeFig){
+GTUT_START(test_litePlug, assign){
 	int data = 3;
 	tLitePlug<int> testme(&data);
+	GTUT_ASRT(testme.get() == data, "lite plug didn't get assigned correctly");
 }GTUT_END;
 
 #endif

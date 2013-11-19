@@ -29,6 +29,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>bin</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/gamestool/bin</locationURI>
+		</link>
+		<link>
 			<name>source</name>
 			<type>2</type>
 			<locationURI>PROJ_SOURCE_LOC</locationURI>

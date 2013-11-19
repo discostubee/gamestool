@@ -24,7 +24,7 @@ namespace gt{
 		virtual ~cFilm();
 
 		GT_IDENTIFY("film");
-		GT_EXTENDS(cFigment);
+		GT_EXTENDS(cChainLink);
 		GT_VERSION(1);
 		virtual dNameHash hash() const { return getHash<cFilm>(); }
 

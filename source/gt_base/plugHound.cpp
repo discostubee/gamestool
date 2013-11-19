@@ -84,7 +84,6 @@ cPlugHound::patGoGetit(ptrLead aLead){
 #include "unitTestFigments.hpp"
 
 GTUT_START(test_cPlugHound, test_suit){
-	tOutline<cFigment>::draft();
 	figmentTestSuit<cPlugHound>();
 }GTUT_END;
 

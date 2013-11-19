@@ -34,7 +34,7 @@ namespace gt{
 		virtual ~cStage();
 
 		GT_IDENTIFY("stage");
-		GT_EXTENDS(cFigment);
+		GT_EXTENDS(cChainLink);
 		GT_VERSION(1);
 		virtual dNameHash hash() const{ return getHash<cStage>(); }
 

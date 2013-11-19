@@ -23,6 +23,7 @@ using namespace gt;
 
 ////////////////////////////////////////////////////////////
 cBlueprint::cBlueprint():
+	mCleanup(NULL),
 	mHash(0),
 	mReplaces(uDoesntReplace),
 	mExtends(uDoesntExtend),
@@ -122,6 +123,7 @@ cBlueprint::operator = (const cBlueprint* pCopy){
 		mGetAllTags = pCopy->mGetAllTags;
 		mGetExtensions = pCopy->mGetExtensions;
 		mHasPlugTag = pCopy->mHasPlugTag;
+		mCleanup = pCopy->mCleanup;
 	}
 	return this;
 }
@@ -138,7 +140,8 @@ cBlueprint::setup(
 	dListComs (*pGetAllComs)(),
 	dListPTags (*pGetAllTags)(),
 	dExtensions (*pGetExtensions)(),
-	bool (*pHasPlugTag)(cPlugTag::dUID)
+	bool (*pHasPlugTag)(cPlugTag::dUID),
+	void (*pCleanup)()
 ){
 	mHash = pHash;
 	mReplaces = pReplaces;
@@ -151,8 +154,9 @@ cBlueprint::setup(
 	mGetAllTags = pGetAllTags;
 	mGetExtensions = pGetExtensions;
 	mHasPlugTag = pHasPlugTag;
+	mCleanup = pCleanup;
 
-	DBUG_LO("blueprint '" << mGetName() << "' setup.");
+	DBUG_VERBOSE_LO("blueprint '" << mGetName() << "' setup.");
 }
 
 

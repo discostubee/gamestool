@@ -67,6 +67,7 @@ namespace gt{
 		const static cCommand::dUID xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
 
 		GT_IDENTIFY("polymesh");
+		GT_EXTENDS(cFigment);
 		virtual dNameHash hash() const { return getHash<cPolyMesh>(); }
 
 		cPolyMesh();

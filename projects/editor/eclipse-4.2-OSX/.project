@@ -30,6 +30,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>bin</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/gamestool/bin</locationURI>
+		</link>
+		<link>
 			<name>gt_terminal</name>
 			<type>2</type>
 			<locationURI>GT_SOURCE/gt_terminal</locationURI>

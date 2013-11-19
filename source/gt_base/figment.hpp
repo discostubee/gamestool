@@ -92,7 +92,7 @@ namespace gt{
 		static const cPlugTag* xPT_name;
 		static const cPlugTag* xPT_hash;
 		static const cPlugTag* xPT_commands;	//!< An array plug to contain
-		static const cPlugTag* xPT_links;	//!< An array plug to contain all the figments.
+		static const cPlugTag* xPT_links;	//!< An array of plug to contain all the figments.
 
 		static const cCommand::dUID	xSave;	//!< Serialization is a base level ability. Expects a xPT_serialBuff.
 		static const cCommand::dUID	xLoad;	//!< Expects a xPT_serialBuff and xPT_loadingParty

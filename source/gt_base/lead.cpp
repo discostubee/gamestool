@@ -61,11 +61,10 @@ cLead::~cLead(){
 		}
 
 		DBUG_TRACK_END("lead");
-	}catch(std::exception &e){
-		WARN_S("Destroying lead " << e.what());
-	}catch(...){
-		excep::base_error e("Unknown exception when destroying a lead", __FILE__, __LINE__);
+	}catch(excep::base_error &e){
 		WARN(e);
+	}catch(...){
+		WARN_S("Unknown exception when destroying a lead");
 	}
 }
 
@@ -236,9 +235,16 @@ cLead::unplug(cBase_plug* aPlug){
 #	endif
 
 	//- Search for plug.
-	for(scrItr = mTaggedData.begin(); scrItr != mTaggedData.end(); ++scrItr){
+	scrItr = mTaggedData.begin();
+	while(scrItr != mTaggedData.end()){
 		if(scrItr->second == aPlug){
-			mTaggedData.erase(scrItr);
+			dDataMap::iterator delMe = scrItr;
+			++scrItr;
+			mTaggedData.erase(delMe);
+			if(scrItr == mTaggedData.end())
+				break;
+		}else{
+			++scrItr;
 		}
 	}
 }

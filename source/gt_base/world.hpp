@@ -174,7 +174,7 @@ namespace gt{
 		//--------------------------------------------------------
 		// Blueprint stuff
 		void addBlueprint(cBlueprint* pAddMe);	//!<	Adds a blueprint to the library. Will replace a blueprint if the new ones say to.
-		const cBlueprint* getBlueprint(dNameHash pNameHash);
+		const cBlueprint* getBlueprint(dNameHash pNameHash);	//!< Returns a blueprint if one found. Or throws on fail.
 
 		//!\brief	Removed, or un-draft, a blueprint from the world.
 		//!\note	Super slow.
@@ -320,7 +320,6 @@ namespace gt{
 		std::vector<const cCommand*> mCommands;
 		dBlueprintMap::iterator mScrBMapItr;	//!< scratch variable for iterating over blueprint library.
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
-		bool mBicycleSetup;	//!< Faster than looking for it in the library every time.
 		dContextLookup mContexts; //!< We keep track of all the contexts here in the world.
 
 		cWorld& operator=(cWorld&) { return *this; };	//!< Banned.

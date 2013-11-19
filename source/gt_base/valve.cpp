@@ -91,7 +91,6 @@ cValve::getLoadPattern(){
 #include "unitTestFigments.hpp"
 
 GTUT_START(test_cValve, test_suit){
-	tOutline<cValve>::draft();
 	figmentTestSuit<cValve>();
 }GTUT_END;
 

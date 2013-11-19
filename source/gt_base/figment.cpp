@@ -42,22 +42,22 @@ const cCommand::dUID cFigment::xLoad = tOutline<cFigment>::makeCommand(
 );
 
 const cCommand::dUID cFigment::xGetName = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patGetName, cFigment::xPT_name,
+	"get name", &cFigment::patGetName, cFigment::xPT_name,
 	NULL
 );
 
 const cCommand::dUID cFigment::xGetHash = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patGetHash, cFigment::xPT_hash,
+	"get hash", &cFigment::patGetHash, cFigment::xPT_hash,
 	NULL
 );
 
 const cCommand::dUID cFigment::xGetCommands = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patGetCommands, cFigment::xPT_commands,
+	"get commands", &cFigment::patGetCommands, cFigment::xPT_commands,
 	NULL
 );
 
 const cCommand::dUID cFigment::xGetLinks = tOutline<cFigment>::makeCommand(
-	"load", &cFigment::patGetLinks, cFigment::xPT_links,
+	"get links", &cFigment::patGetLinks, cFigment::xPT_links,
 	NULL
 );
 
@@ -266,20 +266,22 @@ cFigment::patGetHash(ptrLead aLead){
 
 void
 cFigment::patGetCommands(ptrLead aLead){
-//	tPlugArray<cCommand* const>  coms;
-//	dListComs tmp = gWorld.get()->getBlueprint(hash())->getAllComs();
-//	coms = tmp;
-//	aLead->setPlug(&coms, xPT_commands);
+	tPlugLinearContainer<cCommandContain, std::list> coms;
+	dListComs tmp = gWorld.get()->getBlueprint(hash())->getAllComs();
+	for(dListComs::iterator itr=tmp.begin(); itr != tmp.end(); ++itr)
+		coms += cCommandContain(*itr);
+
+	aLead->setPlug(&coms, xPT_commands);
 }
 
 void
 cFigment::patGetLinks(ptrLead aLead){
-//	std::list<ptrFig> listLinks;
-//	tPlugArray<ptrFig> plugLinks;
-//	getLinks(&listLinks);
-//	plugLinks = listLinks;
-//
-//	aLead->setPlug(&plugLinks, xPT_links);
+	std::list<ptrFig> links;
+	getLinks(&links);
+
+	tPlugLinearContainer<ptrFig, std::list> plugs;
+	plugs = links;
+	aLead->setPlug(&plugs, xPT_links);
 }
 
 ////////////////////////////////////////////////////////////
@@ -321,9 +323,6 @@ GTUT_START(test_cWorldShutoff, test_suit){
 }GTUT_END;
 
 GTUT_START(test_figment, polymorphNames){
-	tOutline<cFigment>::draft();
-	tOutline<cEmptyFig>::draft();
-	tOutline<cWorldShutoff>::draft();
 
 	ptrFig stdFig = gWorld.get()->makeFig(getHash<cFigment>());
 	ptrFig emptyFig = gWorld.get()->makeFig(getHash<cEmptyFig>());
@@ -347,7 +346,6 @@ GTUT_START(test_figment, polymorphNames){
 }GTUT_END;
 
 GTUT_START(test_figment, hashes){
-	tOutline<cFigment>::draft();
 	cFigment test;
 
 	GTUT_ASRT(getHash<cFigment>()==test.hash(), "hashes don't match");
@@ -501,6 +499,7 @@ GTUT_START(test_context, preventDoubleJackStack){
 	GTUT_ASRT(B.timesJacked == 1, "B not stacked right.");
 
 	gt::gWorld.get()->flushLines();	//- So we clear out warnings.
+
 }GTUT_END;
 
 #endif

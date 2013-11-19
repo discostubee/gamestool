@@ -52,10 +52,8 @@ namespace gt{
 	};
 
 	//----------------------------------------------------------------------------
-	//!\brief	A command defines how the generic jack interface is used by a figment.
-	//!			That means linking to the callback function, defining what figment
-	//!			uses it, as well as what tagged data this command uses.
-	class cCommand{
+	//!\brief Contains the commands info only, allowing it to be instantiated.
+	class cCommandInfo{
 	public:
 		typedef unsigned int dUID;	//!< unique command ID
 
@@ -65,6 +63,40 @@ namespace gt{
 		const dStr	mName;
 		const dNameHash mParent;	//!< Used to determine which figment this command belongs too. Not using a callback from the actual command so that extending classes can make use of this command when respawned.
 
+		cCommandInfo(
+			const dUID pID,
+			const char* pName,
+			const dNameHash pParentHash
+		);
+
+		cCommandInfo(const cCommandInfo &copyMe);
+		~cCommandInfo();
+	};
+
+	//----------------------------------------------------------------------------
+	//!\brief	Provides copy-able references to commands
+	class cCommandContain{
+	public:
+		static const cCommandInfo * DUMMY;
+
+		cCommandInfo const *mCom;
+
+		cCommandContain();
+		cCommandContain(const cCommandContain &copyMe);
+		cCommandContain(const cCommandInfo *copyMe);
+
+		cCommandContain& operator=(const cCommandContain &copyMe);
+		cCommandContain& operator=(const cCommandInfo *copyMe);
+		cCommandContain& operator+=(const cCommandContain &copyMe);
+		cCommandContain& operator+=(const cCommandInfo *copyMe);
+	};
+
+	//----------------------------------------------------------------------------
+	//!\brief	A command defines how the generic jack interface is used by a figment.
+	//!			That means linking to the callback function, defining what figment
+	//!			uses it, as well as what tagged data this command uses.
+	class cCommand: public cCommandInfo{
+	public:
 		cCommand(
 			const dUID pID,
 			const char* pName,

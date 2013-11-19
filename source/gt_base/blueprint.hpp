@@ -78,12 +78,14 @@ namespace gt{
 			dListComs (*pGetAllComs)(),
 			dListPTags (*pGetAllTags)(),
 			dExtensions (*pGetExtensions)(),
-			bool (*pHasPlugTag)(cPlugTag::dUID)
+			bool (*pHasPlugTag)(cPlugTag::dUID),
+			void (*pCleanup)()
 		);
 
 	protected:
 
-		void (*mCleanup)();	//!< Used when the world is destroyed.
+		void (*mCleanup)();	//!< Cleans up the outline as well.
+
 
 	friend class cWorld;
 
