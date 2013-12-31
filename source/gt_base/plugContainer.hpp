@@ -35,13 +35,14 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // class
 namespace gt{
+
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Allows for easy specialisation.
 	template<
 		typename PLUG_T,
 		template<typename, typename> class CONT_T
 	>
-	class tGetter{
+	class tGetterPlug{
 	public:
 		typedef CONT_T<
 			tPlug<PLUG_T>,
@@ -59,23 +60,6 @@ namespace gt{
 		static
 		tPlug<PLUG_T>&
 		getActual(dContainer &from, size_t idx) {DONT_USE_THIS; return tPlug<PLUG_T>(); }
-	};
-
-
-	//----------------------------------------------------------------------------------------------------------------
-	class cBasePlugContainer : public cBase_plug {
-	public:
-		cBasePlugContainer();
-		virtual ~cBasePlugContainer();
-
-		virtual dPlugType getType() const;	//!< Any type of linier container should see any other linear
-
-		//- Would like to protect these, but can't.
-		virtual size_t getCount() const =0;
-		virtual cBase_plug* getPlug(size_t idx) =0;
-		virtual const cBase_plug* getPlugConst(size_t idx) const =0;
-		virtual void add(const cBase_plug &addMe) =0;
-		virtual void clear() =0;
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -120,10 +104,13 @@ namespace gt{
 			std::allocator<PLUG_T>
 		> dBaseContainer;
 
+		typedef tCoolItr< dContainer > dItr;
+
 		tPlugLinearContainer();
 		virtual ~tPlugLinearContainer();
 
 		tPlug<PLUG_T>& getActual(size_t idx);
+		dItr getItr();
 
 		tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const dBaseContainer &pCopyMe);
 		tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const dBaseContainer &pCopyMe);
@@ -147,8 +134,6 @@ namespace gt{
 #		endif
 
 	private:
-		typedef typename dContainer::iterator dItr;
-
 		dContainer mContainer;	//!<
 
 		void internalAssign(const cBase_plug &pD, bool pClear, dConSig aCon = SL_NO_ENTRY);
@@ -202,7 +187,7 @@ namespace gt{
 
 		size_t s = mContainer.size();
 		pSaveHere->add( &s );
-		for(dItr itr = mContainer.begin(); itr != mContainer.end(); ++itr)
+		for(typename dContainer::iterator itr = mContainer.begin(); itr != mContainer.end(); ++itr)
 			itr->save(pSaveHere);
 	}
 
@@ -230,7 +215,13 @@ namespace gt{
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
 	tPlug<PLUG_T>&
 	tPlugLinearContainer<PLUG_T, CONT_T>::getActual(size_t idx){
-		return tGetter<PLUG_T, CONT_T>::getActual(mContainer, idx);
+		return tGetterPlug<PLUG_T, CONT_T>::getActual(mContainer, idx);
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	typename tPlugLinearContainer<PLUG_T, CONT_T>::dItr
+	tPlugLinearContainer<PLUG_T, CONT_T>::getItr(){
+		return dItr(&mContainer);
 	}
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
@@ -330,7 +321,7 @@ namespace gt{
 			if(mClearTo != NO_CLEAR)
 				idx += mClearTo;
 #		endif
-		return tGetter<PLUG_T, CONT_T>::get(mContainer, idx);
+		return tGetterPlug<PLUG_T, CONT_T>::get(mContainer, idx);
 	}
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
@@ -340,7 +331,7 @@ namespace gt{
 			if(mClearTo != NO_CLEAR)
 				idx += mClearTo;
 #		endif
-		return tGetter<PLUG_T, CONT_T>::getConst(mContainer, idx);
+		return tGetterPlug<PLUG_T, CONT_T>::getConst(mContainer, idx);
 	}
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
@@ -373,9 +364,10 @@ namespace gt{
 		if(pD.getType() == getType()){
 			const cBasePlugContainer *tmp = dynamic_cast<const cBasePlugContainer*>(&pD);
 			for(size_t i=0; i < tmp->getCount(); ++i)
-				mContainer.push_back(tPlug<PLUG_T>( *tmp->getPlugConst(i) ));
+				mContainer.push_back(*tmp->getPlugConst(i));
+
 		}else{
-			mContainer.push_back(tPlug<PLUG_T>(pD));
+			mContainer.push_back(pD);
 		}
 	}
 
@@ -421,14 +413,14 @@ namespace gt{
 				if(mClearTo == 1){
 					mContainer.erase(mContainer.begin());
 				}else{
-					dItr end;
+					dContainer::iterator end;
 					std::advance(end, mClearTo-1);
 					mContainer.erase(mContainer.begin(), end);
 				}
 				mClearTo = NO_CLEAR;
 			}
 
-			for(dItr itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+			for(dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
 				itr->updateStart();
 		}
 
@@ -437,7 +429,7 @@ namespace gt{
 		tPlugLinearContainer<PLUG_T, CONT_T>::updateFinish(){
 			PROFILE;
 			dLock lock(mGuard);
-			for(dItr itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+			for(dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
 				itr->updateFinish();
 		}
 
@@ -475,7 +467,7 @@ namespace gt{
 namespace gt{
 
 	template<typename PLUG_T>
-	class tGetter<PLUG_T, std::vector>{
+	class tGetterPlug<PLUG_T, std::vector>{
 	public:
 		typedef std::vector<
 			tPlug<PLUG_T>,
@@ -505,7 +497,7 @@ namespace gt{
 	};
 
 	template<typename PLUG_T>
-	class tGetter<PLUG_T, std::list>{
+	class tGetterPlug<PLUG_T, std::list>{
 	public:
 		typedef std::list<
 			tPlug<PLUG_T>,

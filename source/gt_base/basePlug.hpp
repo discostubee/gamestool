@@ -67,8 +67,6 @@ namespace gt{
 // Classes
 namespace gt{
 
-
-
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	A plug is a data container that a lead can connect too. The lead can then connect that data to another
 	//!			object via the jack function, as well as automatically disconnect itself from its linked leads when it
@@ -129,6 +127,24 @@ namespace gt{
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Used by containers to appear the same no matter what the underlying container type is.
+	class cBasePlugContainer : public cBase_plug {
+	public:
+		cBasePlugContainer();
+		virtual ~cBasePlugContainer();
+
+		virtual dPlugType getType() const;	//!< Any type of linear container should see any other linear
+
+		//- Would like to protect these, but can't.
+		virtual size_t getCount() const =0;
+		virtual cBase_plug* getPlug(size_t idx) =0;
+		virtual const cBase_plug* getPlugConst(size_t idx) const =0;
+		virtual void add(const cBase_plug &addMe) =0;
+		virtual void clear() =0;
+
+	};
+
+	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Another step towards a full plug, designed just to manage assignments and appends.
 	//!\note	Putting the assignments and append maps in here so that it's easier to specialise
 	template<typename A>
@@ -156,84 +172,6 @@ namespace gt{
 	private:
 		tDataPlug<A>& operator= (const tDataPlug<A> &dontcare){ return *this; }
 		tDataPlug<A>& operator+= (const tDataPlug<A> &dontcare){ return *this; }
-	};
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Used just for copying and appending.
-	template<typename T>
-	class tLitePlug: public tDataPlug<T>{
-	public:
-		tLitePlug(T *aRef) : mRef(aRef) {}
-		~tLitePlug(){}
-
-		tLitePlug<T>& operator= (const tLitePlug<T> &aCopyMe) {
-			ASRT_NOTSELF(&aCopyMe);
-			mRef = aCopyMe.mRef;
-			return *this;
-		}
-
-		T& get(){ return *mRef; }
-		const T& getConst() const{ return *mRef; }
-
-		//---
-		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
-		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
-
-		#ifdef GT_THREADS
-			void updateStart(){ DONT_USE_THIS; }
-			void updateFinish(){ DONT_USE_THIS; }
-		#endif
-
-	protected:
-#		ifdef GT_THREADS
-			void readShadow(cBase_plug *pWriteTo, dConSig aCon){ DONT_USE_THIS; }
-			void writeShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
-			virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig){ DONT_USE_THIS; }
-			virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig){ DONT_USE_THIS; }
-#		endif
-
-	private:
-		T *mRef;
-	};
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Used just for copying and appending with constant.
-	template<typename T>
-	class tLitePlugConst: public tDataPlug<T>{
-	public:
-		tLitePlugConst(const T *aRef) : mRef(aRef) {}
-		~tLitePlugConst(){}
-
-		tLitePlug<T>& operator= (const tLitePlugConst<T> &aCopyMe) {
-			ASRT_NOTSELF(&aCopyMe);
-			mRef = aCopyMe.mRef;
-			return *this;
-		}
-
-		T& get(){ DONT_USE_THIS; }
-		const T& getConst() const{ return *mRef; }
-
-		//---
-		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
-		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
-
-		#ifdef GT_THREADS
-			void updateStart(){ DONT_USE_THIS; }
-			void updateFinish(){ DONT_USE_THIS; }
-		#endif
-
-	protected:
-#		ifdef GT_THREADS
-			void readShadow(cBase_plug *pWriteTo, dConSig aCon){ DONT_USE_THIS; }
-			void writeShadow(const cBase_plug *pReadFrom, dConSig aCon){ DONT_USE_THIS; }
-			virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig){ DONT_USE_THIS; }
-			virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig){ DONT_USE_THIS; }
-#		endif
-
-	private:
-		const T *mRef;
-
-		tLitePlugConst(T *aRef){}
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -272,6 +210,7 @@ namespace gt{
 		tOpOnAny(){}
 		~tOpOnAny(){}
 	};
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -359,6 +298,8 @@ namespace gt{
 		pD.appendTo(&get(), cBase_plug::genPlugType<A>());
 		return *this;
 	}
+
+
 }
 
 

@@ -80,16 +80,3 @@ cBase_plug::unlinkLead(cLead *pLead){
 		WARN_S("lead isn't connected to this plug.");
 	}
 }
-
-//////////////////////////////////////////////////////////////
-using namespace gt;
-
-#ifdef GTUT
-
-GTUT_START(test_litePlug, assign){
-	int data = 3;
-	tLitePlug<int> testme(&data);
-	GTUT_ASRT(testme.get() == data, "lite plug didn't get assigned correctly");
-}GTUT_END;
-
-#endif

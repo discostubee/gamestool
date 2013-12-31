@@ -4,7 +4,7 @@
  */
 
 #ifndef PRINTWORKS_HPP
-#define PRINTWORKSS_HPP
+#define PRINTWORKS_HPP
 
 #include "stage.hpp"
 

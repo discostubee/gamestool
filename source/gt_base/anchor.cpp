@@ -40,6 +40,9 @@ cAnchor::save(cByteBuffer* pAddHere){
 	dNameHash			chunkHash = 0;
 	dFigSaveSig			chunkSig = 0;
 
+	if(!mLink.get().valid())
+		return;
+
 	try{
 		mLink.get()->getLinks(branches);
 		figs.insert( mLink.get().get() );
@@ -261,12 +264,12 @@ GTUT_START(testAnchor, basicLoad){
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
 	tester.get()->jack(checkData, &fake);
 
-	tPlug<dStr> myStr;
-	tPlug<int> myNum;
+	tPlug<dStr> myStr("");
+	tPlug<int> myNum(0);
 
 	startLead(checkData, fake.getSig());
-	checkData->copyPlug(&myStr, cSaveTester::xPT_str);
-	checkData->copyPlug(&myNum, cSaveTester::xPT_num);
+	GTUT_ASRT(checkData->copyPlug(&myStr, cSaveTester::xPT_str), "didn't find plug");
+	GTUT_ASRT(checkData->copyPlug(&myNum, cSaveTester::xPT_num), "didn't find plug");
 	stopLead(checkData);
 
 	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");

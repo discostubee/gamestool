@@ -41,16 +41,16 @@ namespace gt{
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 
 	protected:
-		tPlug<ptrFig>	mCloser;	//!< The object to run when this window is closed.
-		tPlug< shape::rectangle<dUnitPix> >	mLayout;
+		tPlug<ptrFig> mCloser;	//!< The object to run when this window is closed.
+		tPlug< shape::tRectangle<dUnitPix> > mLayout;
 
 		void patLinkCloser(ptrLead aLead);
 		void patSetLayout(ptrLead aLead);
 		void patGetLayout(ptrLead aLead);
 		void patSetFullscreen(ptrLead aLead);
 
-		virtual void refreshDim() {}	//!< Takes the current layout and applies it.
-		virtual void setFullscreen(bool pFullescreen) {}
+		virtual void refreshDim() { DONT_USE_THIS; } //!< Takes the current layout and applies it.
+		virtual void setFullscreen(bool pFullescreen) { DONT_USE_THIS; }
 	};
 
 }

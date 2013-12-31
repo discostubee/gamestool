@@ -18,66 +18,90 @@
 
 #include "binPacker.hpp"
 
-void
-bpk::pack(const dNatStr *packMe, dByte **output, size_t *sizeOut){
-	ASRT_NOTNULL(packMe); ASRT_NOTNULL(output);
+template<typename CONT_T, typename CHAR_T>
+void strPack(const CONT_T *packMe, dByte output[], size_t *sizeOut, size_t outLimit){
+	ASRT_NOTNULL(packMe); ASRT_NOTNULL(sizeOut);
 
-	const dNatStr_def *ref = &packMe->t;
+	(*sizeOut) = sizeof(size_t);
 
-	if(ref->empty()){
-		(*sizeOut) = sizeof(size_t);
-	}else{
-		(*sizeOut) = ((ref->length() + 1) * sizeof(dNatChar)) + sizeof(size_t);
-	}
+	if(!packMe->empty())
+		(*sizeOut) += (packMe->length() * sizeof(CHAR_T));
+
+	if(outLimit < *sizeOut)
+		throw excep::underFlow(__FILE__, __LINE__);
+
+	*reinterpret_cast<size_t*>(output) = packMe->length();
+	if(packMe->length() == 0)
+		return;
+
+	memcpy(&output[sizeof(size_t)], packMe->data(), packMe->length() * sizeof(CHAR_T));
+}
+
+template<typename CONT_T, typename CHAR_T>
+void strPack(const CONT_T *packMe, dByte **output, size_t *sizeOut){
+	ASRT_NOTNULL(packMe); ASRT_NOTNULL(sizeOut);
+
+	(*sizeOut) = sizeof(size_t);
+
+	if(!packMe->empty())
+		(*sizeOut) += (packMe->length() * sizeof(CHAR_T));
 
 	delete [] (*output);
 	(*output) = new dByte[*sizeOut];
-	*reinterpret_cast<size_t*>(*output) = ref->length();
 
-	if(!ref->empty()){
-		memcpy(
-			(*output)+sizeof(size_t),
-			ref->data(),
-			ref->length() * sizeof(dNatChar)
-		);
-		memset(
-			(*output) +sizeof(size_t) + (ref->length() * sizeof(dNatChar)),
-			0,
-			sizeof(dNatChar)
-		);
-	}
+	*reinterpret_cast<size_t*>(*output) = packMe->length();
+	if(packMe->length() == 0)
+		return;
+
+	memcpy(&(*output)[sizeof(size_t)], packMe->data(), packMe->length() * sizeof(CHAR_T));
 }
 
-void
-bpk::unpack(const dByte *unpackFrom, dNatStr *unpackTo, size_t *sizeOut, size_t limit){
+//!\brief
+template<typename CONT_T, typename CHAR_T>
+void strUnpack(const dByte *unpackFrom, CONT_T *unpackTo, size_t *sizeOut, size_t limit){
 	ASRT_NOTNULL(unpackFrom); ASRT_NOTNULL(unpackTo); ASRT_NOTNULL(sizeOut);
 
-	dNatStr_def *ref = &unpackTo->t;
+	*sizeOut = sizeof(size_t);
 
-	if(limit < sizeof(size_t))
+	if(limit < *sizeOut)
 		throw excep::underFlow(__FILE__, __LINE__);
 
 	size_t numChars=0;
 	memcpy(&numChars, unpackFrom, sizeof(size_t));
 
-	if(numChars!=0)
-		++numChars;	//- So we get the null terminator.
+	if(numChars == 0)
+		return;
 
-	(*sizeOut) = sizeof(size_t) + numChars;	//- Assume 8 bits per char
+	*sizeOut += sizeof(CHAR_T) * numChars;
 
-	if(limit < (*sizeOut))
+	if(limit < *sizeOut)
 		throw excep::underFlow(__FILE__, __LINE__);
 
-	if(numChars!=0){
-		ref->assign(
-			reinterpret_cast<const dNatChar*>(
-				unpackFrom+sizeof(size_t)
-			), (numChars - 1)
-		);	//- Don't assign the null.
-	}else{
-		ref->clear();
-	}
+	CHAR_T const *tmp = &unpackFrom[sizeof(size_t)];
+
+	unpackTo->reserve(numChars);
+	for(size_t i=0; i < numChars; ++i)
+		unpackTo->push_back(tmp[i]);
 }
+
+
+
+void
+bpk::pack(const dNatStr *packMe, dByte **output, size_t *sizeOut){
+	strPack<dNatStr_def, dNatChar>(&packMe->t, output, sizeOut);
+}
+
+void
+bpk::pack(const dNatStr *packMe, dByte output[], size_t *sizeOut, size_t outLimit){
+	strPack<dNatStr_def, dNatChar>(&packMe->t, output, sizeOut, outLimit);
+}
+
+void
+bpk::unpack(const dByte *unpackFrom, dNatStr *unpackTo, size_t *sizeOut, size_t limit){
+	strUnpack<dNatStr_def, dNatChar>(unpackFrom, &unpackTo->t, sizeOut, limit);
+}
+
+
 
 void
 bpk::pack(const dStr *packMe, dByte **output, size_t *sizeOut){
@@ -85,6 +109,14 @@ bpk::pack(const dStr *packMe, dByte **output, size_t *sizeOut){
 
 	dText tmp = toText(packMe->c_str());
 	pack(&tmp, output, sizeOut);
+}
+
+void
+bpk::pack(const dStr *packMe, dByte output[], size_t *sizeOut, size_t outLimit){
+	ASRT_NOTNULL(packMe); ASRT_NOTNULL(sizeOut);
+
+	dText tmp = toText(packMe->c_str());
+	pack(&tmp, output, sizeOut, outLimit);
 }
 
 void
@@ -96,66 +128,22 @@ bpk::unpack(const dByte *unpackFrom, dStr *unpackTo, size_t *sizeOut, size_t lim
 	*unpackTo = toPStr(tmp);
 }
 
+
+
 void
 bpk::pack(const dText *packMe, dByte **output, size_t *sizeOut){
-	ASRT_NOTNULL(packMe); ASRT_NOTNULL(output);
-
 	//- For now we are duplicating how the native string packer works, until more is understood about the best way to serialize UTF8
-	const dText_def *ref = &packMe->t;
+	strPack<dText_def, dTextChar>(&packMe->t, output, sizeOut);
+}
 
-	if(ref->empty()){
-		(*sizeOut) = sizeof(size_t);
-	}else{
-		(*sizeOut) = ((ref->length() + 1) * sizeof(dTextChar)) + sizeof(size_t);
-	}
-
-	delete [] (*output);
-	(*output) = new dByte[*sizeOut];
-	*reinterpret_cast<size_t*>(*output) = ref->length();
-
-	if(!ref->empty()){
-		memcpy(
-			(*output) + sizeof(size_t),
-			ref->data(),
-			ref->length() * sizeof(dTextChar)
-		);
-		memset(
-			(*output) + sizeof(size_t) + (ref->length() * sizeof(dTextChar)),
-			0,
-			sizeof(dTextChar)
-		);
-	}
+void
+bpk::pack(const dText *packMe, dByte output[], size_t *sizeOut, size_t outLimit){
+	strPack<dText_def, dTextChar>(&packMe->t, output, sizeOut, outLimit);
 }
 
 void
 bpk::unpack(const dByte *unpackFrom, dText *unpackTo, size_t *sizeOut, size_t limit){
-	ASRT_NOTNULL(unpackFrom); ASRT_NOTNULL(unpackTo); ASRT_NOTNULL(sizeOut);
-
-	dText_def *ref = &unpackTo->t;
-
-	if(limit < sizeof(size_t))
-		throw excep::underFlow(__FILE__, __LINE__);
-
-	size_t numChars=0;
-	memcpy(&numChars, unpackFrom, sizeof(size_t));
-
-	if(numChars!=0)
-		++numChars;	//- So we get the null terminator.
-
-	(*sizeOut) = sizeof(size_t) + numChars;	//- Assume 8 bits per char
-
-	if(limit < (*sizeOut))
-		throw excep::underFlow(__FILE__, __LINE__);
-
-	if(numChars!=0){
-		ref->assign(
-			reinterpret_cast<const dTextChar*>(
-				unpackFrom+sizeof(size_t)
-			), (numChars - 1)
-		);	//- Don't assign the null.
-	}else{
-		ref->clear();
-	}
+	strUnpack<dText_def, dTextChar>(unpackFrom, &unpackTo->t, sizeOut, limit);
 }
 
 ////////////////////////////////////////////////////////////

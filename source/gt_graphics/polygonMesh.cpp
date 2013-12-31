@@ -20,6 +20,15 @@ sLine::operator+= (const sLine &aCopyMe){
 	return *this;
 }
 
+sTexMap&
+sTexMap::operator+= (const sTexMap &aCopyMe){
+	ASRT_NOTSELF(&aCopyMe);
+	memcpy(u, aCopyMe.u, sizeof(u));
+	memcpy(v, aCopyMe.v, sizeof(v));
+	idxBMap = aCopyMe.idxBMap;
+	return *this;
+}
+
 sPoly&
 sPoly::operator+= (const sPoly &aCopyMe){
 	ASRT_NOTSELF(&aCopyMe);
@@ -32,70 +41,121 @@ sPoly::operator+= (const sPoly &aCopyMe){
 sMesh&
 sMesh::operator+= (const sMesh &aCopyMe){
 	ASRT_NOTSELF(&aCopyMe);
+	//todo
 	return *this;
 }
 
 
 
 ////////////////////////////////////////////////////////////
-const cPlugTag* cPolyMesh::xPT_vert = tOutline<cPolyMesh>::makePlugTag("vertex");
-const cPlugTag* cPolyMesh::xPT_poly = tOutline<cPolyMesh>::makePlugTag("polygon");
+const cPlugTag* cPolyMesh::xPT_vertexs = tOutline<cPolyMesh>::makePlugTag("vertexes");
+const cPlugTag* cPolyMesh::xPT_polies = tOutline<cPolyMesh>::makePlugTag("polies");
+const cPlugTag*	cPolyMesh::xPT_box = tOutline<cPolyMesh>::makePlugTag("box");
+const cPlugTag*	cPolyMesh::xPT_sphere = tOutline<cPolyMesh>::makePlugTag("sphere");
+const cPlugTag*	cPolyMesh::xPT_bitmaps = tOutline<cPolyMesh>::makePlugTag("bitmaps");
+const cPlugTag*	cPolyMesh::xPT_texMapping = tOutline<cPolyMesh>::makePlugTag("texture mapping");
 
 const cCommand::dUID cPolyMesh::xAddToMesh = tOutline<cPolyMesh>::makeCommand(
 	"add to mesh", &cPolyMesh::patAddToMesh,
+	cPolyMesh::xPT_vertexs,
+	cPolyMesh::xPT_polies,
 	NULL
 );
 
 const cCommand::dUID cPolyMesh::xGetMesh = tOutline<cPolyMesh>::makeCommand(
 	"get mesh", &cPolyMesh::patGetMesh,
-	xPT_vert,
-	xPT_poly,
+	cPolyMesh::xPT_vertexs,
+	cPolyMesh::xPT_polies,
+	NULL
+);
+
+const cCommand::dUID cPolyMesh::xMeasure = tOutline<cPolyMesh>::makeCommand(
+	"measure", &cPolyMesh::patMeasure,
+	cPolyMesh::xPT_box,
+	cPolyMesh::xPT_sphere,
+	NULL
+);
+
+const cCommand::dUID cPolyMesh::xTexturize = tOutline<cPolyMesh>::makeCommand(
+	"texturize", &cPolyMesh::patTexturize,
+	cPolyMesh::xPT_bitmaps,
+	cPolyMesh::xPT_texMapping,
 	NULL
 );
 
 
-cPolyMesh::cPolyMesh(): mLazyMesh(NULL){
-}
+cPolyMesh::cPolyMesh()
+: mUpdateLazy(false)
+{}
 
 cPolyMesh::~cPolyMesh(){
 	cleanLazy();
+}
+
+cFigment::dMigrationPattern
+cPolyMesh::getLoadPattern(){
+	PROFILE;
+
+	dMigrationPattern pattern;
+	dVersionPlugs version1;
+
+	downloadLazy();
+	version1.push_back(mLazyMesh);
+	version1.push_back(mBMaps);
+
+	pattern.push_back(version1);
+	return pattern;
 }
 
 void
 cPolyMesh::patAddToMesh(ptrLead aLead){
 	PROFILE;
 
-	promiseLazy();
-	//aLead->assignTo(&mLazyMesh->mVertexes, xPT_vert);
-	//aLead->assignTo(&mLazyMesh->mPolys, xPT_poly);
+	aLead->appendTo(&mLazyMesh.get().mVertexes, xPT_vertexs);
+	aLead->appendTo(&mLazyMesh.get().mPolys, xPT_polies);
+
+	mUpdateLazy = true;
 }
 
 void
 cPolyMesh::patGetMesh(ptrLead aLead){
 	PROFILE;
 
-	promiseLazy();
-	//aLead->assignFrom(mLazyMesh->mVertexes, xPT_vert);
-	//aLead->assignFrom(mLazyMesh->mPolys, xPT_poly);
+	downloadLazy();
+	aLead->appendFrom(mLazyMesh.get().mVertexes, xPT_vertexs);
+	aLead->appendFrom(mLazyMesh.get().mPolys, xPT_polies);
+	aLead->appendFrom(mLazyMesh.get().mPolys, xPT_texMapping);
 }
 
-void
-cPolyMesh::promiseLazy(){
-	if(!mLazyMesh) mLazyMesh = new sMesh;
+void cPolyMesh::patMeasure(ptrLead aLead){
+	PROFILE;
+	if(aLead->has(xPT_box)){
+		geometry::tCube<dUnitVDis> cube;
+		measure(cube);
+		aLead->assignFrom(cube, xPT_box);
+	}else if(aLead->has(xPT_sphere)){
+		geometry::tSphere<dUnitVDis> sphere;
+		measure(sphere);
+		aLead->assignFrom(sphere, xPT_sphere);
+	}
+}
+
+void cPolyMesh::patTexturize(ptrLead aLead){
+	PROFILE;
+
+	aLead->appendTo(&mLazyMesh.get().mTMap, xPT_texMapping);
+	aLead->plugAppends(&mBMaps, xPT_bitmaps);
+
+	mUpdateLazy = true;
 }
 
 void
 cPolyMesh::cleanLazy(){
-	delete mLazyMesh; mLazyMesh = NULL;
+	mLazyMesh.get().mPolys.clear();
+	mLazyMesh.get().mTMap.clear();
+	mLazyMesh.get().mVertexes.clear();
 }
 
-sMesh
-cPolyMesh::getCurrentMesh(){
-	if(!mLazyMesh)
-		throw excep::base_error("no mesh", __FILE__, __LINE__);
-
-	return *mLazyMesh;
-}
 
 #ifdef GTUT
 

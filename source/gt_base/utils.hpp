@@ -87,12 +87,16 @@ template <typename T>
 class tCoolItr{
 public:
 
-	tCoolItr(T* pContainer, typename T::iterator pStartHere) :
-		mContainerRef(pContainer), mCurrentSpot(pStartHere)
+	tCoolItr(T* pContainer, typename T::iterator pStartHere)
+	: mContainerRef(pContainer), mCurrentSpot(pStartHere)
 	{}
 
-	tCoolItr(T* pContainer) :
-		mContainerRef(pContainer), mCurrentSpot(mContainerRef->begin())
+	tCoolItr(T* pContainer)
+	: mContainerRef(pContainer), mCurrentSpot(mContainerRef->begin())
+	{}
+
+	tCoolItr(const tCoolItr &copyMe)
+	: mContainerRef( const_cast<T*>(copyMe.mContainerRef) )
 	{}
 
 	bool stillGood() {

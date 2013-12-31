@@ -52,28 +52,28 @@ ENTRYPOINT
 
 namespace gt{
 
-	GTUT_START(test_addon, load){
-		gWorld.get()->openAddon(dStr("X11GL"));
-
-		gWorld.get()->setRoot( gWorld.get()->makeFig("stage") );
-	}GTUT_END;
-
-	GTUT_START(test_addon, unload){
-		bool addonBlueprintRemoved = false;
-
-		gWorld.get()->setRoot(
-			gWorld.get()->makeFig("world shutoff")
-		);	// Will take out the addon
-
-		gWorld.get()->loop();
-
-		try{
-			gWorld.get()->getBlueprint(makeHash("stage"));
-		}catch(excep::base_error){
-			DBUG_LO("removed the window frame blueprint.");
-			addonBlueprintRemoved = true;
-		}
-		GTUT_ASRT(addonBlueprintRemoved, "didn't remove blueprints.");
-	}GTUT_END;
+//	GTUT_START(test_addon, load){
+//		gWorld.get()->openAddon(dStr("X11GL"));
+//
+//		gWorld.get()->setRoot( gWorld.get()->makeFig("stage") );
+//	}GTUT_END;
+//
+//	GTUT_START(test_addon, unload){
+//		bool addonBlueprintRemoved = false;
+//
+//		gWorld.get()->setRoot(
+//			gWorld.get()->makeFig("world shutoff")
+//		);	// Will take out the addon
+//
+//		gWorld.get()->loop();
+//
+//		try{
+//			gWorld.get()->getBlueprint(makeHash("stage"));
+//		}catch(excep::base_error){
+//			DBUG_LO("removed the window frame blueprint.");
+//			addonBlueprintRemoved = true;
+//		}
+//		GTUT_ASRT(addonBlueprintRemoved, "didn't remove blueprints.");
+//	}GTUT_END;
 }
 

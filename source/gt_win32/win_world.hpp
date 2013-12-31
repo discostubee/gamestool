@@ -11,6 +11,10 @@
 
 #include "gt_base/world.hpp"
 
+//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
+#define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
+#define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
+
 //!\brief	Contains windows helper functions.
 namespace win{
 	//--------------------------------------------------------

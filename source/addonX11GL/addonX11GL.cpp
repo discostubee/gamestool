@@ -6,7 +6,11 @@
  */
 
 #include "addonX11GL.hpp"
-#include "gt_graphics/printworks.hpp"
+
+#include "openGL_stage.hpp"
+#include "openGL_film.hpp"
+#include "openGL_polyMesh.hpp"
+#include "openGL_camera.hpp"
 
 DYN_LIB_DEF(void)
 draftAll(gt::cWorld *pWorld){
@@ -24,7 +28,6 @@ draftAll(gt::cWorld *pWorld){
 		gt::tOutline<gt::c3DCamera_X11GL>::draft();
 		gt::tOutline<gt::c2DCamera>::draft();
 		gt::tOutline<gt::c2DCamera_X11GL>::draft();
-		gt::tOutline<gt::cPrintworks>::draft();
 
 		DBUG_LO("x11 addon open.");
 
@@ -32,7 +35,7 @@ draftAll(gt::cWorld *pWorld){
 		excep::logExcep::add(e.what());
 
 	}catch(...){
-		excep::logExcep::add("unknown error while opening X11GL addon");
+		excep::logExcep::add("unknown error while opening addon");
 	}
 }
 
@@ -49,7 +52,6 @@ closeLib(){
 		gt::tOutline<gt::c2DCamera>::remove();
 		gt::tOutline<gt::cStage_X11GL>::remove();
 		gt::tOutline<gt::cStage>::remove();
-		gt::tOutline<gt::cPrintworks>::remove();
 
 		DBUG_LO("closed x11 addon.");
 
@@ -60,6 +62,6 @@ closeLib(){
 		excep::logExcep::add(e.what());
 
 	}catch(...){
-		excep::logExcep::add("unknown error while closing X11GL addon");
+		excep::logExcep::add("unknown error while closing addon");
 	}
 }

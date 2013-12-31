@@ -87,16 +87,6 @@
 ////////////////////////////////////////////////////////////////////
 // Macros
 
-#ifdef WIN32
-	//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
-#	define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
-#	define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
-#else
-	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
-#	define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
-#	define DYN_LIB_DEF(rnt) rnt
-#endif
-
 #define WARN(x)\
 	gt::cWorld::primordial::warnError(x, __FILE__, __LINE__)
 

@@ -40,6 +40,9 @@ namespace gt{
 		static void draft();	//!< Adds your figment to the world library and increments the reference count.
 		static void remove(bool force=false);	//!< If this is the last request for removal, you'll need to reload an addon in order to regain commands. If you remove a core figment, you won't be able to get the commands back at runtime. Only do this when an addon closes or the main program ends
 
+		//!\brief	Use a unique name and a pointer to a function, along with an optional, BUT ALWAYS NULL TERMINATED, list of plug tags to create a command.
+		//!\note	The string name provided here, and the one for the class, is used to create a unique identifier. So make these names unique for the class.
+		//!\note	Any and all provided tagged plugs are always assumed to be optional. Functions SHOULD NOT ERROR if arguments are not provided.
 		static const cCommand::dUID makeCommand(
 			const char* aName,
 			ptrPatFoo aFoo,

@@ -103,7 +103,7 @@ ptrFig makeEditor(){
 		contain.add(stage);
 
 		ptrLead topLinks = gWorld.get()->makeLead(cRunList::xAdd);
-		topLinks->linkPlug(&contain, cRunList::xPT_link);
+		topLinks->linkPlug(&contain, cRunList::xPT_links);
 		rlTop->jack(topLinks, &setupConx);
 	}
 
