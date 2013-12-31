@@ -39,6 +39,7 @@ namespace gt{
 		size_t vertCount;
 
 		void formatGLMesh();	//!< Takes the lazy mesh and turns it into the best format for openGL.
+
 	};
 }
 

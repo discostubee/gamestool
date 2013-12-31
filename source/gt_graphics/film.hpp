@@ -29,7 +29,7 @@ namespace gt{
 		virtual dNameHash hash() const { return getHash<cFilm>(); }
 
 	protected:
-		tPlug< shape::rectangle<dUnitPix> > mLayout;
+		tPlug< shape::tRectangle<dUnitPix> > mLayout;
 
 		void patSetLayout(ptrLead aLead);
 		void patGetLayout(ptrLead aLead);

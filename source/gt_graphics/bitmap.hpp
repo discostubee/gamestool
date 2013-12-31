@@ -60,10 +60,10 @@ namespace gt{
 		dListDirty mPendingAdds;		//!< List of dirty rectangles, ooo, that need to be copied into this bitmap.
 		dRelations channelRelation;		//!< How channels from each dirty rect are copied into this bitmap.
 
-		virtual ptrBitmap getBitmap(){ DONT_USE_THIS; return ptrBitmap(NULL); };	//!< The implementation converts its native format into the portable channel streams format and outputs it.
-
 		void patSetRelation(ptrLead aLead);
 		void patAdd(ptrLead aLead);
+
+		virtual ptrBitmap getBitmap(){ DONT_USE_THIS; return ptrBitmap(NULL); };	//!< The implementation converts its native format into the portable channel streams format and outputs it.
 	};
 }
 

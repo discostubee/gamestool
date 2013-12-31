@@ -249,6 +249,17 @@ cLead::unplug(cBase_plug* aPlug){
 	}
 }
 
+bool
+cLead::has(const cPlugTag *pTag) const{
+	PROFILE;
+
+#	ifdef GT_THREADS
+		dLock lock(mu);
+#	endif
+
+	return mTaggedData.end() != mTaggedData.find(pTag->mID);
+}
+
 
 
 #ifdef GT_THREADS
@@ -362,5 +373,29 @@ GTUT_START(testLead, shadowUpdate){
 		GTUT_ASRT(numB.get() == numA.get(), "something went wrong using multiple shadows");
 	#endif
 }GTUT_END;
+
+GTUT_START(testLead, appending){
+	cContext fakeConx;
+	cPlugTag tag("some tag");
+	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
+	ptrLead testMe = gWorld.get()->makeLead(fakeCom.mID);
+	tPlug<int> a(6);
+	int b=3;
+
+	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
+
+	startLead(testMe, fakeConx.getSig());
+		testMe->linkPlug(&a, &tag);
+		GTUT_ASRT(testMe->appendFrom(b, &tag), "append failed");
+	stopLead(testMe);
+	GTUT_ASRT(a.get() == 9, "Didn't append");
+
+	startLead(testMe, fakeConx.getSig());
+		GTUT_ASRT(testMe->appendTo(&b, &tag), "append failed");
+	stopLead(testMe);
+	GTUT_ASRT(b==12, "Didn't append");
+
+}GTUT_END;
+
 
 #endif

@@ -9,6 +9,7 @@
 
 #define GL_GLEXT_PROTOTYPES
 
+#include "addonX11GL.hpp"
 #include "gt_graphics/stage.hpp"
 
 #include <GL/gl.h>
@@ -20,11 +21,6 @@
 #include <X11/keysym.h> // keysym.h contains key symbols which we use to resolve what keys that are being pressed
 
 namespace gt{
-
-class X11GLAddon{
-public:
-	static const dPlaChar* getAddonName() { return "X11GL"; }
-};
 
 class cStage_X11GL: public cStage, public tAddonDependent<X11GLAddon>{
 public:

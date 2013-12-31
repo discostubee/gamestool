@@ -7,7 +7,9 @@
 #define POLYGONMESH_HPP
 
 #include "stage.hpp"
+#include "gt_base/plugContainer.hpp"
 
+///////////////////////////////////////////////////////////////////////////////////
 namespace gt{
 	typedef unsigned int dIdxVert;
 
@@ -22,7 +24,6 @@ namespace gt{
 		sVertex& operator+= (const sVertex &aCopyMe);
 	};
 
-	//----------------------------------------------------------------------------------------------------------------
 	struct sLine{
 		dIdxVert a, b;
 
@@ -33,7 +34,15 @@ namespace gt{
 		sLine& operator+= (const sLine &aCopyMe);
 	};
 
-	//----------------------------------------------------------------------------------------------------------------
+	struct sTexMap{
+		dUnitVDis u[4], v[4];
+		unsigned int idxBMap;	//!< Index into the bitmap list.
+
+		sTexMap() : idxBMap(-1) { memset(u, 0, sizeof(u)); memset(v, 0, sizeof(u)); }
+
+		sTexMap& operator+= (const sTexMap &aCopyMe);
+	};
+
 	struct sPoly{
 		dIdxVert a, b, c;
 		t3DVec<dUnitVDis> surfNorm;
@@ -45,44 +54,13 @@ namespace gt{
 		sPoly& operator+= (const sPoly &aCopyMe);
 	};
 
-	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Used to pass a mesh in an abstract manner.
 	struct sMesh{
 		std::vector<sVertex> mVertexes;
 		std::vector<sPoly> mPolys;
+		std::vector<sTexMap> mTMap;
 
 		sMesh& operator+= (const sMesh &aCopyMe);
-	};
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	This class is meant to be a frontend for a native version, that takes a generic mesh format and creates
-	//!			a more efficient native version. The generic version is then deleted to save memory. When run, this
-	//!			figment should render a polygon mesh.
-	class cPolyMesh: public cFigment{
-	public:
-		const static cPlugTag* xPT_vert;
-		const static cPlugTag* xPT_poly;
-
-		const static cCommand::dUID xAddToMesh;	//!<
-		const static cCommand::dUID xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
-
-		GT_IDENTIFY("polymesh");
-		GT_EXTENDS(cFigment);
-		virtual dNameHash hash() const { return getHash<cPolyMesh>(); }
-
-		cPolyMesh();
-		virtual ~cPolyMesh();
-
-	protected:
-		sMesh* mLazyMesh;	//!<	the idea here is that we fill the lazy mesh up with data, and then on its next run, we take that data and fill up native format mesh. Then we delete the lazy mesh.
-
-		void patAddToMesh(ptrLead aLead);
-		void patGetMesh(ptrLead aLead);
-
-		void promiseLazy();	//!< Make sure the lazy mesh is there.
-		void cleanLazy();	//!< Just a little something to remind you you have to manage the lazy mesh.
-
-		virtual sMesh getCurrentMesh();	//!< Returns a generic mesh.
 	};
 }
 
@@ -94,33 +72,121 @@ namespace gt{
 	template<>
 	class tPlugFlakes<sMesh>: public tDataPlug<sMesh>{
 	public:
+		tPlugFlakes(){}
 		tPlugFlakes(dPlugType pTI){}
 		virtual ~tPlugFlakes(){}
 
 		//!\todo
 		virtual void save(cByteBuffer* pSaveHere){
-			sMesh &m = get();
+			static const size_t LIMIT = sizeof(dUnitVDis);
 			size_t tmpSize, outSize;
-			dByte *tmpBuff=NULL;
+			dByte tmpBuff[LIMIT];
 
-			tmpSize = m.mPolys.size();
-			bpk::pack(&tmpSize, &tmpBuff, &outSize);
-			pSaveHere->add(tmpBuff, outSize);
-			SAFEDEL_ARR(tmpBuff);
+			//-
+			tmpSize = get().mVertexes.size();
+			bpk::pack(&tmpSize, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
 
-			for(std::vector<sPoly>::iterator itr = m.mPolys.begin(); itr != m.mPolys.end(); ++itr){
-				bpk::pack(&itr->a, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
-				bpk::pack(&itr->b, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
-				bpk::pack(&itr->c, &tmpBuff, &outSize);		SAFEDEL_ARR(tmpBuff);
+			for(std::vector<sVertex>::iterator itr = get().mVertexes.begin(); itr != get().mVertexes.end(); ++itr){
+				bpk::pack(&itr->x, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				bpk::pack(&itr->y, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				bpk::pack(&itr->z, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
 			}
+
+			//-
+			tmpSize = get().mPolys.size();
+			bpk::pack(&tmpSize, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+
+			for(std::vector<sPoly>::iterator itr = get().mPolys.begin(); itr != get().mPolys.end(); ++itr){
+				bpk::pack(&itr->a, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				bpk::pack(&itr->b, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				bpk::pack(&itr->c, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+			}
+
 		}
 
 		//!\todo
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
+			size_t readPt=0;
 
+			{
+				size_t num=0;
+				readPt += pChewToy->fill(&num, readPt);
+				get().mVertexes.resize(readPt);
+			}
+
+			for(std::vector<sVertex>::iterator itr = get().mVertexes.begin(); itr != get().mVertexes.end(); ++itr){
+				readPt += pChewToy->fill(&itr->x, readPt);
+				readPt += pChewToy->fill(&itr->y, readPt);
+				readPt += pChewToy->fill(&itr->z, readPt);
+			}
+
+			{
+				size_t num=0;
+				readPt += pChewToy->fill(&num, readPt);
+				get().mPolys.reserve(readPt);
+			}
+
+			for(std::vector<sPoly>::iterator itr = get().mPolys.begin(); itr != get().mPolys.end(); ++itr){
+				readPt += pChewToy->fill(&itr->a, readPt);
+				readPt += pChewToy->fill(&itr->b, readPt);
+				readPt += pChewToy->fill(&itr->c, readPt);
+			}
+
+			pChewToy->trimHead(readPt);
 		}
 	};
-
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+// template specializations
+namespace gt{
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	This class is meant to be a frontend for a native version, that takes a generic mesh format and creates
+	//!			a more efficient native version. The generic version is then deleted to save memory. When run, this
+	//!			figment should render a polygon mesh.
+	//!\note	It's up to the implementation to detect new data in the lazy mesh and regenerate the native data.
+	class cPolyMesh: public cFigment{
+	public:
+		static const cPlugTag* xPT_vertexs;
+		static const cPlugTag* xPT_polies;
+		static const cPlugTag* xPT_bitmaps;
+		static const cPlugTag* xPT_texMapping;
+		static const cPlugTag* xPT_box;
+		static const cPlugTag* xPT_sphere;
+
+		static const cCommand::dUID xAddToMesh;	//!< Adds any polies or vertexes to the current mesh. It does NOT clear the old mesh.
+		static const cCommand::dUID xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
+		static const cCommand::dUID	xMeasure;	//!< Attempts to set a bounding box first, as a measurement of the mesh, and a sphere second.
+		static const cCommand::dUID	xTexturize;	//!< Links bitmaps and gets
+
+		GT_IDENTIFY("poly mesh");
+		GT_EXTENDS(cFigment);
+		GT_VERSION(1);
+		virtual dNameHash hash() const { return getHash<cPolyMesh>(); }
+
+		cPolyMesh();
+		virtual ~cPolyMesh();
+
+	protected:
+		typedef tPlugLinearContainer<ptrFig, std::list> dFigPlugList;
+
+		tPlug<sMesh> mLazyMesh;	//!< The lazy mesh isn't always a complete mesh. It's a way for the implemented version to upload and download bits and pieces of information.
+		dFigPlugList mBMaps;	//!< These are the bitmaps referenced by the lazy mesh. They are not the bitmaps used by the implementation, which is why they're not part of the lazy mesh.
+		bool mUpdateLazy;
+
+		void patAddToMesh(ptrLead aLead);
+		void patGetMesh(ptrLead aLead);
+		void patMeasure(ptrLead aLead);
+		void patTexturize(ptrLead aLead);
+
+		void cleanLazy();	//!< Just a little something to remind you you have to manage the lazy mesh.
+
+		virtual void downloadLazy(){ DONT_USE_THIS; }	//!< The implementation needs to take its specific data and build the generic version.
+		virtual void measure(geometry::tCube<dUnitVDis> &pOutCube){ DONT_USE_THIS; }
+		virtual void measure(geometry::tSphere<dUnitVDis> &pOutSphere){ DONT_USE_THIS; }
+	};
+}
+
 
 #endif

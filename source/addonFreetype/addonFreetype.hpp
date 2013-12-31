@@ -1,6 +1,6 @@
 
-#ifndef ADDONX11GL_HPP
-#define ADDONX11GL_HPP
+#ifndef ADDONFREETYPE_HPP
+#define ADDONFREETYPE_HPP
 
 #if defined(__APPLE__)
 #	include "gt_OSX/OSX_world.hpp"
@@ -12,9 +12,9 @@
 
 namespace gt{
 
-class X11GLAddon{
+class FreetypeAddon{
 public:
-	static const dPlaChar* getAddonName() { return "X11GL"; }
+	static const dPlaChar* getAddonName() { return "Freetype"; }
 };
 
 }

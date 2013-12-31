@@ -21,22 +21,24 @@ cPolyMesh_X11GL::run(cContext *pCon){
 
 	start(pCon);
 
-	if(mLazyMesh)
+	if(mUpdateLazy){
 		formatGLMesh();
+		mUpdateLazy = false;
+	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBO);
 
 	glPushMatrix();
 
-		//!!! test code.
-		static GLfloat rotate = 0.0f;
-		rotate += 1.0f;
-		glTranslatef(0.0f, 0.0f, -7.0f);
-		glRotatef(rotate, 1.0f, 0.5f, 0.25f);
-		glScalef(1.0f, 1.0f, 1.0f);
-		glColor3f(1.0f, 1.0f, 0.0f);
-		//!!!
+	//!!! test code.
+	static GLfloat rotate = 0.0f;
+	rotate += 1.0f;
+	glTranslatef(0.0f, 0.0f, -7.0f);
+	glRotatef(rotate, 1.0f, 0.5f, 0.25f);
+	glScalef(1.0f, 1.0f, 1.0f);
+	glColor3f(1.0f, 1.0f, 0.0f);
+	//!!!
 
 	glDrawElements(GL_TRIANGLES, polyCount*DIMENSIONS, GL_UNSIGNED_INT, 0);
 
@@ -49,14 +51,16 @@ void
 cPolyMesh_X11GL::formatGLMesh(){
 	PROFILE;
 
-	if(mLazyMesh->mVertexes.empty())
+	sMesh &ref = mLazyMesh.get();
+
+	if(ref.mVertexes.empty())
 		THROW_ERROR("lazy mesh has no vertexes");
 
-	if(mLazyMesh->mPolys.empty())
+	if(ref.mPolys.empty())
 		THROW_ERROR("lazy mesh has no polies");
 
-	polyCount = mLazyMesh->mPolys.size();
-	vertCount = mLazyMesh->mVertexes.size();
+	polyCount = ref.mPolys.size();
+	vertCount = ref.mVertexes.size();
 
 	if(mIBO){
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -74,9 +78,9 @@ cPolyMesh_X11GL::formatGLMesh(){
 
 	try{
 		for(size_t iVert=0; iVert < vertCount; ++iVert){
-			vbuff[iVert + IOA_X] = static_cast<dGLFloat>( mLazyMesh->mVertexes[iVert].x );
-			vbuff[iVert + IOA_Y] = static_cast<dGLFloat>( mLazyMesh->mVertexes[iVert].y );
-			vbuff[iVert + IOA_Z] = static_cast<dGLFloat>( mLazyMesh->mVertexes[iVert].z );
+			vbuff[iVert + IOA_X] = static_cast<dGLFloat>( ref.mVertexes[iVert].x );
+			vbuff[iVert + IOA_Y] = static_cast<dGLFloat>( ref.mVertexes[iVert].y );
+			vbuff[iVert + IOA_Z] = static_cast<dGLFloat>( ref.mVertexes[iVert].z );
 		}
 
 		glGenBuffers(1, &mVBO);		// Generate 1 vertex array.
@@ -92,17 +96,17 @@ cPolyMesh_X11GL::formatGLMesh(){
 
 		size_t iPoly=0;
 		for(
-			std::vector<sPoly>::iterator itrP = mLazyMesh->mPolys.begin();
-			itrP != mLazyMesh->mPolys.end();
+			std::vector<sPoly>::iterator itrP = ref.mPolys.begin();
+			itrP != ref.mPolys.end();
 			++itrP
 		){
-			ASRT_INRANGE(mLazyMesh->mVertexes, itrP->a);
+			ASRT_INRANGE(ref.mVertexes, itrP->a);
 			ibuff[iPoly++] = static_cast<dIdxV>(itrP->a);
 
-			ASRT_INRANGE(mLazyMesh->mVertexes, itrP->b);
+			ASRT_INRANGE(ref.mVertexes, itrP->b);
 			ibuff[iPoly++] = static_cast<dIdxV>(itrP->b);
 
-			ASRT_INRANGE(mLazyMesh->mVertexes, itrP->c);
+			ASRT_INRANGE(ref.mVertexes, itrP->c);
 			ibuff[iPoly++] = static_cast<dIdxV>(itrP->c);
 		}
 
@@ -130,3 +134,4 @@ cPolyMesh_X11GL::formatGLMesh(){
 
 	cleanLazy();
 }
+

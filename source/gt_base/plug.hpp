@@ -143,8 +143,8 @@ namespace gt{
 	public:
 		tPlug();
 		tPlug(const cBase_plug &other);
-		tPlug(const A& pA);
 		tPlug(const tPlug<A> &other);
+		tPlug(const A &pA);
 		tPlug(const cBase_plug *other);
 		virtual ~tPlug();
 

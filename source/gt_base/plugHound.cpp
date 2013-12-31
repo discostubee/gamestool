@@ -107,7 +107,6 @@ GTUT_START(test_cPlugHound, houndGets){
 
 	tPlug<int> num;
 
-
 	testNum->start(&fakeConx);
 	hound->jack(sendHound, &fakeConx);
 	testNum->stop(&fakeConx);

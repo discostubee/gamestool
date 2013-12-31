@@ -11,6 +11,10 @@
 #include <sys/time.h> // for gettimeofday and timeval
 #include <dlfcn.h>	// MUST include the dl library in whatever binary you build.
 
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
+#define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
+#define DYN_LIB_DEF(rnt) rnt
+
 namespace gt{
 
 	//--------------------------------------------------------
