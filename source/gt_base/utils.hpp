@@ -235,8 +235,8 @@ isPowerOf2(int i)
 }
 
 //------------------------------------------------------------------------------------------
-typedef unsigned int dIDSLookup;	//!< index into a short lookup table.
-static const dIDSLookup SL_NO_ENTRY = static_cast<unsigned int>(-1);
+typedef unsigned int dIDSLookup;	//!< index into a short lookup table. Not nested in class because it's a template.
+static const dIDSLookup SL_NO_ENTRY = static_cast<dIDSLookup>(-1);
 
 //!\brief	Stores a smaller number of elements (65,535 which should be enough), and keeps track of holes, refilling them when needed.
 template<typename T>

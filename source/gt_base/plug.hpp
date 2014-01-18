@@ -69,6 +69,8 @@ namespace gt{
 		eSM_write,	//!< Data is written to the source.
 	};
 
+#	define PLUG_REFRESH(p) p.updateStart(); p.updateFinish()
+
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	The shadow plug allows you to manipulate a plug in a multi-threaded environment, while avoiding deadlocks.
 	//!			It does this by using copies/shadows of its data per thread that tries to access it via the lead. When it runs,
@@ -131,6 +133,8 @@ namespace gt{
 
 		tCheckout getShadow(dConSig pSig);	//!< Expands the shadow list, if needed.
 	};
+#	else
+#		define PLUG_REFRESH(p)
 #	endif
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -210,6 +214,7 @@ namespace gt{
 			PROFILE;
 
 			dLock lock(mGuardLinks);
+
 			cBase_plug::linkLead(pLead);
 		}
 
@@ -219,6 +224,7 @@ namespace gt{
 			PROFILE;
 
 			dLock lock(mGuardLinks);
+
 			cBase_plug::unlinkLead(pLead);
 		}
 
@@ -232,19 +238,9 @@ namespace gt{
 
 			for(itrShadow itr = mShadows.begin(); itr != mShadows.end(); ++itr){
 				if(*itr != NULL){
-					if(!gWorld.get()->activeContext( (*itr)->mSig) ){
-						tShadow *delMe = NULL;
-						{
-							dLock lockShadow((*itr)->mGuard);
-							delMe = *itr;
-							*itr = NULL;
-						}
-						SAFEDEL(delMe);
+					dLock lockShadow((*itr)->mGuard);
 
-					}else if((*itr)->mMode == eSM_write){
-						dLock lockShadow((*itr)->mGuard);
-						get() = (*itr)->mData;
-					}
+					get() = (*itr)->mData;
 				}
 			}
 		}
@@ -259,10 +255,18 @@ namespace gt{
 
 			for(itrShadow itr = mShadows.begin(); itr != mShadows.end(); ++itr){
 				if(*itr != NULL){
-					dLock lockShadow((*itr)->mGuard);
-					(*itr)->mData = get();
-					(*itr)->mMode = eSM_read;
+					if(!gWorld.get()->activeContext( (*itr)->mSig )){	//- It's fine that we don't lock here because guard data is locked.
+						SAFEDEL(*itr);
+					}else{
+						dLock lockShadow((*itr)->mGuard);
+
+						(*itr)->mData = get();
+						(*itr)->mMode = eSM_read;
+					}
+
+
 				}
+
 			}
 		}
 
@@ -275,10 +279,12 @@ namespace gt{
 
 			if(shadow->mMode == eSM_init){
 				dLock lock(mGuardData);
+
 				shadow->mData = get();
 			}
 
 			tLitePlug<A> tmp(&shadow->mData);
+
 			*pWriteTo = tmp;
 		}
 
@@ -304,6 +310,12 @@ namespace gt{
 
 			tCheckout shadow( getShadow(pSig) );
 
+			if(shadow->mMode == eSM_init){
+				dLock lock(mGuardData);
+
+				shadow->mData = get();
+			}
+
 			pReadFrom->appendTo(
 				&shadow->mData,
 				cBase_plug::genPlugType<A>()
@@ -319,8 +331,9 @@ namespace gt{
 
 			tCheckout shadow( getShadow(pSig) );
 
-			if(shadow->mMode == eSM_init){	//- This looks bad because it is possible that the unlocked interface is being used to change data at the point we are reading form it.
+			if(shadow->mMode == eSM_init){
 				dLock lock(mGuardData);
+
 				shadow->mData = get();
 			}
 

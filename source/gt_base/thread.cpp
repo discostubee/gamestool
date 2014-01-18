@@ -131,27 +131,27 @@ namespace gt{
 
 	//- Testing if a thread can cleanup after itself.
 	GTUT_START(test_Thread, threadDestruction){
-	const short testLength = 3;
+		const short testLength = 3;
 
-	for(short i=0; i < testLength; ++i){
-		cContext fakeContext;
-		ptrFig A = gWorld.get()->makeFig(getHash<cThread>());
-		ptrFig B = gWorld.get()->makeFig(getHash<cThread>());
-		ptrFig C = gWorld.get()->makeFig(getHash<cThread>());
-		tPlug<ptrFig> testMe = gWorld.get()->makeFig(getHash<cFigment>());
-		ptrLead linkIt = gWorld.get()->makeLead(cThread::xSetLink);
+		for(short i=0; i < testLength; ++i){
+			cContext fakeContext;
+			ptrFig A = gWorld.get()->makeFig(getHash<cThread>());
+			ptrFig B = gWorld.get()->makeFig(getHash<cThread>());
+			ptrFig C = gWorld.get()->makeFig(getHash<cThread>());
+			tPlug<ptrFig> testMe = gWorld.get()->makeFig(getHash<cFigment>());
+			ptrLead linkIt = gWorld.get()->makeLead(cThread::xSetLink);
 
-		linkIt->linkPlug(&testMe, cThread::xPT_links);
-		A->jack(linkIt, &fakeContext);
-		B->jack(linkIt, &fakeContext);
-		C->jack(linkIt, &fakeContext);
+			linkIt->linkPlug(&testMe, cThread::xPT_links);
+			A->jack(linkIt, &fakeContext);
+			B->jack(linkIt, &fakeContext);
+			C->jack(linkIt, &fakeContext);
 
-		for(short j=0; j < testLength; ++j){
-			A->run(&fakeContext);
-			B->run(&fakeContext);
-			C->run(&fakeContext);
+			for(short j=0; j < testLength; ++j){
+				A->run(&fakeContext);
+				B->run(&fakeContext);
+				C->run(&fakeContext);
+			}
 		}
-	}
 	}GTUT_END;
 
 	class cShareTarget : public cFigment{
@@ -256,8 +256,8 @@ namespace gt{
 		tPlug<ptrFig> threadA = gWorld.get()->makeFig(getHash<cThread>());
 		tPlug<ptrFig> threadB = gWorld.get()->makeFig(getHash<cThread>());
 
-		AChatter = "cat";
-		BChatter = "dog";
+		AChatter = "The fat lazy cats";
+		BChatter = "The big silly dog";
 
 		GTUT_ASRT(AChatter.get().length() == BChatter.get().length(), "you didn't choose 2 strings of equal length.");
 		{
