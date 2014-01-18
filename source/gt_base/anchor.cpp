@@ -257,21 +257,25 @@ GTUT_START(testAnchor, basicLoad){
 	tPlug<ptrFig> tester;
 	{
 		ptrLead getlink = gWorld.get()->makeLead(cAnchor::xGetLinks);
+
 		getlink->linkPlug(&tester, cAnchor::xPT_links);
 		ank->jack(getlink, &fake);
 	}
 
-	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
-	tester.get()->jack(checkData, &fake);
-
 	tPlug<dStr> myStr("");
 	tPlug<int> myNum(0);
+	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
+
+	PLUG_REFRESH(tester);
+	tester.get()->jack(checkData, &fake);
 
 	startLead(checkData, fake.getSig());
 	GTUT_ASRT(checkData->copyPlug(&myStr, cSaveTester::xPT_str), "didn't find plug");
 	GTUT_ASRT(checkData->copyPlug(&myNum, cSaveTester::xPT_num), "didn't find plug");
 	stopLead(checkData);
 
+	PLUG_REFRESH(myStr);
+	PLUG_REFRESH(myNum);
 	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
 	GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
 

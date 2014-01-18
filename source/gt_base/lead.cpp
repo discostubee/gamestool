@@ -250,7 +250,7 @@ cLead::unplug(cBase_plug* aPlug){
 }
 
 bool
-cLead::has(const cPlugTag *pTag) const{
+cLead::has(const cPlugTag *pTag){
 	PROFILE;
 
 #	ifdef GT_THREADS
@@ -388,6 +388,7 @@ GTUT_START(testLead, appending){
 		testMe->linkPlug(&a, &tag);
 		GTUT_ASRT(testMe->appendFrom(b, &tag), "append failed");
 	stopLead(testMe);
+	PLUG_REFRESH(a);
 	GTUT_ASRT(a.get() == 9, "Didn't append");
 
 	startLead(testMe, fakeConx.getSig());

@@ -129,7 +129,7 @@ namespace gt{
 		//!\brief	When a plug dies, it must let the lead know it is no longer valid.
 		void unplug(cBase_plug* pPlug);
 
-		bool has(const cPlugTag *pTag) const;
+		bool has(const cPlugTag *pTag);
 
 	protected:
 		typedef std::map<cPlugTag::dUID, cBase_plug*> dDataMap;

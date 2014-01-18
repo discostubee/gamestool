@@ -402,63 +402,63 @@ namespace gt{
 		}
 	}
 
-#	ifdef GT_THREADS
+#ifdef GT_THREADS
 
-		template< typename PLUG_T, template<typename, typename> class CONT_T >
-		void
-		tPlugLinearContainer<PLUG_T, CONT_T>::updateStart(){
-			PROFILE;
-			dLock lock(mGuard);
-			if(mClearTo != NO_CLEAR){
-				if(mClearTo == 1){
-					mContainer.erase(mContainer.begin());
-				}else{
-					dContainer::iterator end;
-					std::advance(end, mClearTo-1);
-					mContainer.erase(mContainer.begin(), end);
-				}
-				mClearTo = NO_CLEAR;
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	void
+	tPlugLinearContainer<PLUG_T, CONT_T>::updateStart(){
+		PROFILE;
+		dLock lock(mGuard);
+		if(mClearTo != NO_CLEAR){
+			if(mClearTo == 1){
+				mContainer.erase(mContainer.begin());
+			}else{
+				typename dContainer::iterator end;
+				std::advance(end, mClearTo-1);
+				mContainer.erase(mContainer.begin(), end);
 			}
-
-			for(dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
-				itr->updateStart();
+			mClearTo = NO_CLEAR;
 		}
 
-		template< typename PLUG_T, template<typename, typename> class CONT_T >
-		void
-		tPlugLinearContainer<PLUG_T, CONT_T>::updateFinish(){
-			PROFILE;
-			dLock lock(mGuard);
-			for(dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
-				itr->updateFinish();
-		}
+		for(typename dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+			itr->updateStart();
+	}
 
-		template< typename PLUG_T, template<typename, typename> class CONT_T >
-		void
-		tPlugLinearContainer<PLUG_T, CONT_T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
-			internalAssignTo(pWriteTo, pWriteTo->getType(), true, aCon);
-		}
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	void
+	tPlugLinearContainer<PLUG_T, CONT_T>::updateFinish(){
+		PROFILE;
+		dLock lock(mGuard);
+		for(typename dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
+			itr->updateFinish();
+	}
 
-		template< typename PLUG_T, template<typename, typename> class CONT_T >
-		void
-		tPlugLinearContainer<PLUG_T, CONT_T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
-			internalAssign(*pReadFrom, true, aCon);
-		}
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	void
+	tPlugLinearContainer<PLUG_T, CONT_T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
+		internalAssignTo(pWriteTo, pWriteTo->getType(), true, aCon);
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	void
+	tPlugLinearContainer<PLUG_T, CONT_T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
+		internalAssign(*pReadFrom, true, aCon);
+	}
 
 
-		template< typename PLUG_T, template<typename, typename> class CONT_T >
-		void
-		tPlugLinearContainer<PLUG_T, CONT_T>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
-			internalAssignTo(pWriteTo, pWriteTo->getType(), false, pSig);
-		}
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	void
+	tPlugLinearContainer<PLUG_T, CONT_T>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
+		internalAssignTo(pWriteTo, pWriteTo->getType(), false, pSig);
+	}
 
-		template< typename PLUG_T, template<typename, typename> class CONT_T >
-		void
-		tPlugLinearContainer<PLUG_T, CONT_T>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
-			internalAssign(*pReadFrom, false, pSig);
-		}
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	void
+	tPlugLinearContainer<PLUG_T, CONT_T>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
+		internalAssign(*pReadFrom, false, pSig);
+	}
 
-#	endif
+#endif
 
 }
 
