@@ -71,7 +71,7 @@ namespace excep{
 #define GT_VERSION(x)\
 		static dNumVer version(){ return x; }\
 		virtual dNumVer getVersion() const { return version(); }\
-		virtual dMigrationPattern getLoadPattern();
+		virtual dMigrationPattern getLoadPattern()
 
 
 

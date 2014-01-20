@@ -45,7 +45,7 @@ cThread::runThread(cThread *me){
 	}
 	me->threading = false;
 #else
-	DUMB_REF_ARG(me);
+	DUMB_REF_PAR(me);
 #endif
 }
 

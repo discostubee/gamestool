@@ -141,6 +141,8 @@ void
 cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	PROFILE;
 
+	DUMB_REF_PAR(pReloads);
+
 	dReloadMap		reloads;
 	dFigSaveSig		rootSig;
 	dNameHash		tempHash;

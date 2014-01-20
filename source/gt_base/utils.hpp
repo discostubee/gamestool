@@ -37,9 +37,9 @@
 //!\brief	useful for those odd occasions when you need a parameter in a function 
 //			interface, but don't want to use it in a given implementation.
 #ifdef DEBUG
-	#define DUMB_REF_ARG(A) (void)A;
+	#define DUMB_REF_PAR(A) (void)A;
 #else
-	#define DUMB_REF_ARG(A)
+	#define DUMB_REF_PAR(A)
 #endif
 
 //------------------------------------------------------------------------------------------

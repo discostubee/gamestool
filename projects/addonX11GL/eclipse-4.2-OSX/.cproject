@@ -95,7 +95,7 @@
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063" moduleId="org.eclipse.cdt.core.settings" name="DebugThreads">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063" moduleId="org.eclipse.cdt.core.settings" name="DebugThreading">
 				<externalSettings>
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/addonX11GL"/>
@@ -113,7 +113,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="dylib" artifactName="${ProjName}_dt" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.sharedLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.sharedLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063" name="DebugThreads" parent="cdt.managedbuild.config.gnu.macosx.exe.debug" postbuildStep="cp -f ${ProjDirPath}/${ConfigName}/${BuildArtifactFileBaseName}.dylib ${ProjDirPath}/../../../bin">
+				<configuration artifactExtension="dylib" artifactName="${ProjName}_dt" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.sharedLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.sharedLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063" name="DebugThreading" parent="cdt.managedbuild.config.gnu.macosx.exe.debug" postbuildStep="cp -f ${ProjDirPath}/${ConfigName}/${BuildArtifactFileBaseName}.dylib ${ProjDirPath}/../../../bin">
 					<folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1983536394.2017660063." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.base.612503584" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.MachO64" id="cdt.managedbuild.target.gnu.platform.macosx.base.1862152429" name="Debug Platform" osList="macosx" superClass="cdt.managedbuild.target.gnu.platform.macosx.base"/>

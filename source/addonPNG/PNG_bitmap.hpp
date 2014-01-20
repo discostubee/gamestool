@@ -1,9 +1,9 @@
-#ifndef OPENGL_BITMAP_HPP
-#define OPENGL_BITMAP_HPP
+#ifndef PNG_BITMAP_HPP
+#define PNG_BITMAP_HPP
 
 #include "addonPNG.hpp"
 #include "gt_graphics/bitmap.hpp"
-
+#include "gt_base/plugContainer.hpp" //!!!
 namespace gt{
 
 	//!\brief	Uses the PNG format to store bitmap images.
@@ -20,7 +20,6 @@ namespace gt{
 
 	protected:
 		virtual ptrBitmap getBitmap();
-
 	};
 }
 
