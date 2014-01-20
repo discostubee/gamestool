@@ -47,9 +47,19 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 // Typedefs
 namespace gt{
-	typedef long long dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
+	typedef
+#if defined(__APPLE__)
+	unsigned long long
+#elif defined(__linux)
+	unsigned long long
+#elif defined(WIN32)
+	INT64
+#endif
+		dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
+
 	typedef boost::shared_ptr<cLead> ptrLead;	//!<
 	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
+
 }
 
 ////////////////////////////////////////////////////////////////////

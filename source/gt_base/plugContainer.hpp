@@ -71,27 +71,30 @@ namespace gt{
 	class tPlugLinearContainer : public cBasePlugContainer{
 	public:
 
-		//---
-		virtual void assignTo(void *pTo, dPlugType pType) const;
-		virtual void appendTo(void *pTo, dPlugType pType) const;
-		virtual void save(cByteBuffer* pSaveHere);
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL);
-
-		virtual bool operator== (const cBase_plug &pD) const;
-		virtual	cBase_plug& operator= (const cBase_plug &pD);
-		virtual cBase_plug& operator+= (const cBase_plug &pD);
-
-#		ifdef GT_THREADS
-			virtual void updateStart();
-			virtual void updateFinish();
-#		endif
-
-		//---
+		//--- override container
 		size_t getCount() const;
 		cBase_plug* getPlug(size_t idx);
 		const cBase_plug* getPlugConst(size_t idx) const;
 		void add(const cBase_plug &addMe);
 		void clear();
+
+		cBasePlugContainer& operator= (const cBasePlugContainer &pCopyMe);
+		cBasePlugContainer& operator+= (const cBasePlugContainer &pCopyMe);
+
+		//--- override base plug
+		void assignTo(void *pTo, dPlugType pType) const;
+		void appendTo(void *pTo, dPlugType pType) const;
+		void save(cByteBuffer* pSaveHere);
+		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL);
+
+		bool operator== (const cBase_plug &pD) const;
+		cBase_plug& operator= (const cBase_plug &pD);
+		cBase_plug& operator+= (const cBase_plug &pD);
+
+#		ifdef GT_THREADS
+			virtual void updateStart();
+			virtual void updateFinish();
+#		endif
 
 		//--- new
 		typedef CONT_T<
@@ -112,10 +115,12 @@ namespace gt{
 		tPlug<PLUG_T>& getActual(size_t idx);
 		dItr getItr();
 
-		tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const dBaseContainer &pCopyMe);
-		tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const dBaseContainer &pCopyMe);
-		template<typename OTHER> tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const OTHER &pCopyMe);
-		template<typename OTHER> tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const OTHER &pCopyMe);
+									tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const tPlugLinearContainer<PLUG_T, CONT_T> &pCopyMe);
+									tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const tPlugLinearContainer<PLUG_T, CONT_T> &pCopyMe);
+									tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const dBaseContainer &pCopyMe);
+									tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const dBaseContainer &pCopyMe);
+		template<typename OTHER>	tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const OTHER &pCopyMe);
+		template<typename OTHER>	tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const OTHER &pCopyMe);
 
 	protected:
 
@@ -166,6 +171,96 @@ namespace gt{
 	}
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	tPlug<PLUG_T>&
+	tPlugLinearContainer<PLUG_T, CONT_T>::getActual(size_t idx){
+		return tGetterPlug<PLUG_T, CONT_T>::getActual(mContainer, idx);
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	typename tPlugLinearContainer<PLUG_T, CONT_T>::dItr
+	tPlugLinearContainer<PLUG_T, CONT_T>::getItr(){
+		return dItr(&mContainer);
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<PLUG_T, CONT_T>&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const tPlugLinearContainer<PLUG_T, CONT_T> &pCopyMe){
+		ASRT_NOTSELF(&pCopyMe);
+
+		mContainer.clear();
+		return operator+=(pCopyMe);
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<PLUG_T, CONT_T>&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const tPlugLinearContainer<PLUG_T, CONT_T> &pCopyMe){
+		ASRT_NOTSELF(&pCopyMe);
+
+		for(typename dContainer::const_iterator itr = pCopyMe.mContainer.begin(); itr != pCopyMe.mContainer.end();  ++itr)
+			mContainer.push_back(*itr);
+
+		return *this;
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<PLUG_T, CONT_T>&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (
+		const tPlugLinearContainer<PLUG_T, CONT_T>::dBaseContainer &pCopyMe
+	){
+		PROFILE;
+#		ifdef GT_THREADS
+			dLock lock(mGuard);
+#		endif
+
+		mContainer.clear();
+		return tPlugLinearContainer<PLUG_T, CONT_T>::operator+=(pCopyMe);
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<PLUG_T, CONT_T>&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (
+		const tPlugLinearContainer<PLUG_T, CONT_T>::dBaseContainer &pCopyMe
+	){
+		PROFILE;
+#		ifdef GT_THREADS
+			dLock lock(mGuard);
+#		endif
+
+		for(typename dBaseContainer::const_iterator itr = pCopyMe.begin(); itr != pCopyMe.end();  ++itr)
+			mContainer.push_back(tPlug<PLUG_T>(*itr));
+
+		return *this;
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template<typename OTHER>
+	tPlugLinearContainer<PLUG_T, CONT_T>&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const OTHER &pCopyMe){
+		PROFILE;
+#		ifdef GT_THREADS
+			dLock lock(mGuard);
+			mClearTo = mContainer.size();
+#		endif
+
+		mContainer.clear();
+		mContainer.push_back(tPlug<PLUG_T>(pCopyMe));
+		return *this;
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template<typename OTHER>
+	tPlugLinearContainer<PLUG_T, CONT_T>&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const OTHER &pCopyMe){
+		PROFILE;
+#		ifdef GT_THREADS
+			dLock lock(mGuard);
+#		endif
+
+		mContainer.push_back(tPlug<PLUG_T>(pCopyMe));
+		return *this;
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
 	void
 	tPlugLinearContainer<PLUG_T, CONT_T>::assignTo(void *aTo, dPlugType aType) const{
 		internalAssignTo(aTo, aType, true);
@@ -213,18 +308,6 @@ namespace gt{
 	}
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlug<PLUG_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::getActual(size_t idx){
-		return tGetterPlug<PLUG_T, CONT_T>::getActual(mContainer, idx);
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	typename tPlugLinearContainer<PLUG_T, CONT_T>::dItr
-	tPlugLinearContainer<PLUG_T, CONT_T>::getItr(){
-		return dItr(&mContainer);
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
 	bool
 	tPlugLinearContainer<PLUG_T, CONT_T>::operator== (const cBase_plug &pD) const{
 		return (getType() == pD.getType());
@@ -243,63 +326,6 @@ namespace gt{
 	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const cBase_plug &pD){
 		NOTSELF(&pD);
 		internalAssign(pD, false);
-		return *this;
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (
-		const tPlugLinearContainer<PLUG_T, CONT_T>::dBaseContainer &pCopyMe
-	){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
-		mContainer.clear();
-		return operator+=(pCopyMe);
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (
-		const tPlugLinearContainer<PLUG_T, CONT_T>::dBaseContainer &pCopyMe
-	){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
-		for(typename dBaseContainer::const_iterator itr = pCopyMe.begin(); itr != pCopyMe.end();  ++itr)
-			mContainer.push_back(tPlug<PLUG_T>(*itr));
-
-		return *this;
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	template<typename OTHER>
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const OTHER &pCopyMe){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-			mClearTo = mContainer.size();
-#		endif
-
-		mContainer.push_back(tPlug<PLUG_T>(pCopyMe));
-		return *this;
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	template<typename OTHER>
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const OTHER &pCopyMe){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
-		mContainer.push_back(tPlug<PLUG_T>(pCopyMe));
 		return *this;
 	}
 
@@ -348,6 +374,22 @@ namespace gt{
 #		else
 			mContainer.clear();
 #		endif
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	cBasePlugContainer&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const cBasePlugContainer &pCopyMe){
+		NOTSELF(&pCopyMe);
+		internalAssign(pCopyMe, true);
+		return *this;
+	}
+
+	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	cBasePlugContainer&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const cBasePlugContainer &pCopyMe){
+		NOTSELF(&pCopyMe);
+		internalAssign(pCopyMe, false);
+		return *this;
 	}
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >

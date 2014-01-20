@@ -42,8 +42,8 @@ typedef std::basic_string<dPlaChar, std::char_traits<dPlaChar> > dStr;	//!< stl 
 typedef std::basic_string<dNatChar, std::char_traits<dNatChar> > dNatStr_def;	//!< stl string wrapper of the string type native to gamestool.
 typedef std::basic_string<dTextChar, std::char_traits<dTextChar> > dText_def;	//!< Text strings are used for displaying text.
 
-BOOST_STRONG_TYPEDEF(dNatStr_def, dNatStr);
-BOOST_STRONG_TYPEDEF(dText_def, dText);
+BOOST_STRONG_TYPEDEF(dNatStr_def, dNatStr)
+BOOST_STRONG_TYPEDEF(dText_def, dText)
 
 //--------------------------------------------------------
 

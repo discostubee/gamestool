@@ -70,7 +70,7 @@ public:
 	private:
 		cProfiler *mProfiler;	//!< When the parent is destroyed, it has to inform remaining tokens and it does this by setting mProfiler to null.
 
-		cToken& operator=(cToken& pToken){ DUMB_REF_ARG(pToken); return *this; }	//!< Banned.
+		cToken& operator=(cToken& pToken){ DUMB_REF_PAR(pToken); return *this; }	//!< Banned.
 	};
 
 	std::set<cToken*> mActiveTokens;	//!< Allows you to inform a token when it's parent has been cleaned up.

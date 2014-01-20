@@ -231,7 +231,7 @@ cFigment::requiredAddon() const {
 
 void 
 cFigment::getLinks(std::list<ptrFig>* pOutLinks){
-	DUMB_REF_ARG(pOutLinks);
+	DUMB_REF_PAR(pOutLinks);
 }
 
 void

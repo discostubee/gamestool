@@ -26,7 +26,7 @@ cBase_plug::cBase_plug(){
 }
 
 cBase_plug::cBase_plug(const cBase_plug &pCopy){
-
+	DUMB_REF_PAR(pCopy);
 }
 
 cBase_plug::~cBase_plug(){

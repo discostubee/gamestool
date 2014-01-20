@@ -175,10 +175,10 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099.1146640166;cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099.1146640166.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.1606681092;cdt.managedbuild.tool.gnu.c.compiler.input.161832612">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099;cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.1915657520;cdt.managedbuild.tool.gnu.c.compiler.input.1985903647">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099;cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099.;cdt.managedbuild.tool.gnu.c.compiler.base.497400117;cdt.managedbuild.tool.gnu.c.compiler.input.77585313">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099;cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099.;cdt.managedbuild.tool.gnu.c.compiler.base.497400117;cdt.managedbuild.tool.gnu.c.compiler.input.77585313">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099;cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.1915657520;cdt.managedbuild.tool.gnu.c.compiler.input.1985903647">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099;cdt.managedbuild.config.gnu.macosx.exe.debug.1396720099.;cdt.managedbuild.tool.gnu.cpp.compiler.base.736594850;cdt.managedbuild.tool.gnu.cpp.compiler.input.1338106945">

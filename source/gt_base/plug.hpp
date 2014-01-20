@@ -53,6 +53,7 @@ namespace gt{
 		}
 
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
+			DUMB_REF_PAR(aReloads);
 			pChewToy->trimHead( pChewToy->fill(&get()) );
 		}
 
@@ -66,7 +67,7 @@ namespace gt{
 	enum eShadowMode{
 		eSM_init,	//!< Initial value.
 		eSM_read,	//!< The data has only be read from, or nothing has happened. So just update the shadow and nothing else.
-		eSM_write,	//!< Data is written to the source.
+		eSM_write	//!< Data is written to the source.
 	};
 
 #	define PLUG_REFRESH(p) p.updateStart(); p.updateFinish()

@@ -150,6 +150,8 @@ namespace gt{
 		bool operator== (const cBase_plug &pD) const;
 		cBase_plug& operator= (const cBase_plug &pD);
 		cBase_plug& operator+= (const cBase_plug &pD);
+		cBasePlugContainer& operator= (const cBasePlugContainer &pCopyMe);
+		cBasePlugContainer& operator+= (const cBasePlugContainer &pCopyMe);
 
 
 		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
@@ -271,6 +273,33 @@ namespace gt{
 		internalFrom( const_cast<cBase_plug&>(pD), false );
 		return *this;
 	}
+
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	cBasePlugContainer&
+	tLitePlugLinearContainer<ELEM_T, CONT_T>::operator= (const cBasePlugContainer &pCopyMe){
+		NOTSELF(&pCopyMe);
+		internalFrom(
+			const_cast<cBase_plug&>(
+				static_cast<const cBase_plug&>(	pCopyMe )
+			),
+			true
+		);
+		return *this;
+	}
+
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	cBasePlugContainer&
+	tLitePlugLinearContainer<ELEM_T, CONT_T>::operator+= (const cBasePlugContainer &pCopyMe){
+		NOTSELF(&pCopyMe);
+		internalFrom(
+			const_cast<cBase_plug&>(
+				static_cast<const cBase_plug&>(	pCopyMe )
+			),
+			false
+		);
+		return *this;
+	}
+
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void

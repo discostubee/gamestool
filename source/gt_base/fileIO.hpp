@@ -76,16 +76,16 @@ namespace gt{
 		//!\param	pStartPoint		0 means starts at the beginning of the file.
 		//!\param	pReadAmount		0 means read the entire file.
 		virtual void read(cByteBuffer* aOutput, const dFilePoint pStartPoint = 0, const size_t pReadAmount = 0 )
-			{ DUMB_REF_ARG(pStartPoint); DUMB_REF_ARG(pReadAmount); DONT_USE_THIS; }
+			{ DUMB_REF_PAR(pStartPoint); DUMB_REF_PAR(pReadAmount); DONT_USE_THIS; }
 
 		virtual void write(const cByteBuffer* pBuff)
-			{ DUMB_REF_ARG(pBuff); DONT_USE_THIS; }
+			{ DUMB_REF_PAR(pBuff); DONT_USE_THIS; }
 
 		//!\brief	inserts data to some point in the file.
 		//!\param	pBuff		Buffer to be sandwiched in the file.
 		//!\param	pStartSpot	Spot to insert in the file. Use ENDOF_FILE if you want to append to, well, the end of the file.
 		virtual void insert(const cByteBuffer* pBuff, dFilePoint pStartSpot)
-			{ DUMB_REF_ARG(pBuff); DUMB_REF_ARG(pStartSpot); DONT_USE_THIS; }
+			{ DUMB_REF_PAR(pBuff); DUMB_REF_PAR(pStartSpot); DONT_USE_THIS; }
 
 		//!\brief	Delete the file.
 		virtual void deleteFile()

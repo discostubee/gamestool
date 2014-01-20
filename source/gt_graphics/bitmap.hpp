@@ -7,6 +7,7 @@
 #define BITMAP_HPP
 
 #include "stage.hpp"
+#include "gt_base/plugContainer.hpp"
 
 namespace gt{
 
