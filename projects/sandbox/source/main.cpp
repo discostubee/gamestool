@@ -93,20 +93,20 @@ ENTRYPOINT
 			gWorld.get()->setRoot( getRootAnchor() );
 			gWorld.get()->loop();
 		}catch(std::exception &e){
-			excep::logExcep::add(e.what());
+			excep::delayExcep::add(e.what());
 		}
 		catch(...){
-			excep::logExcep::add("Boom! Didn't see that coming.");
+			excep::delayExcep::add("Boom! Didn't see that coming.");
 		}
 
 		gWorld.cleanup();	//- Done here so that we can log destruction faults.
-		excep::logExcep::shake();
+		excep::delayExcep::shake();
 
 	}catch(std::exception &e){
-		//todo trigger stack dump
+		try{ cleanupAll(); }catch(...){}
 		return EXIT_FAILURE;
 	}catch(...){
-		//todo trigger stack dump
+		try{ cleanupAll(); }catch(...){}
 		return EXIT_FAILURE;
 	}
 

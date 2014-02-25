@@ -37,6 +37,8 @@ const char * cOSXWorld::ADDON_POSTFIX =
 
 const char * cOSXWorld::ADDON_CACHE_FILE = "addoncache.txt";
 
+const char * cOSXWorld::LOG_FILE = "log.txt";
+
 timeval cOSXWorld::tempTime;
 
 dMillisec
@@ -81,8 +83,11 @@ cOSXWorld::loop(){
 
 void
 cOSXWorld::flushLines(){
+	std::fstream fs(LOG_FILE, std::ios::out);
+	for(dLines::iterator l=mLines->begin(); l != mLines->end(); ++l)
+		fs << *l << std::endl;
+
 	mLines->clear();
-	excep::delayExcep::shake();
 }
 
 tAutoPtr<cWorld>
