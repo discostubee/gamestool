@@ -98,8 +98,8 @@
 								<option id="macosx.cpp.link.option.libs.203042991" name="Libraries (-l)" superClass="macosx.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_system"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_locale"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gamestool_dt"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_thread"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gamestool_dt"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gt_OSX_dt"/>
 								</option>
 								<option id="macosx.cpp.link.option.paths.2096986135" name="Library search path (-L)" superClass="macosx.cpp.link.option.paths" valueType="libPaths">
@@ -157,6 +157,9 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="DebugThreading">
+			<resource resourceType="PROJECT" workspacePath="/sandbox"/>
+		</configuration>
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/sandbox"/>
 		</configuration>
@@ -188,4 +191,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
