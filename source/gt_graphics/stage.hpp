@@ -21,14 +21,13 @@ namespace gt{
 	//!			  stage    film   camera
 	class cStage: public cChainLink{
 	public:
-		static const cPlugTag*	xPT_closer;
 		static const cPlugTag*	xPT_layout;
 		static const cPlugTag*	xPT_fullscreen;
 
-		static const cCommand::dUID	xLinkCloser;	//!< Links a figment which is run when the OS tells the window to close.
 		static const cCommand::dUID	xSetLayout;		//!<
 		static const cCommand::dUID xGetLayout;	//!< Get the pixel dimensions and position of the window.
 		static const cCommand::dUID xSetFullscreen;	//!< Goes into or out of fullscreen.
+		static const cCommand::dUID xLinkCloser;
 
 		cStage();
 		virtual ~cStage();

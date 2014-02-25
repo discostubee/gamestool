@@ -25,6 +25,30 @@
 ///////////////////////////////////////////////////////////////////////
 using namespace excep;
 
+fatal_error::fatal_error(const char* pFile, const unsigned int pLine) throw(){
+	try{
+		std::stringstream ss;
+		ss << "Fatal error in file '" << pFile << "' at line " << pLine;
+	}catch(...){
+
+	}
+}
+
+fatal_error::~fatal_error() throw(){
+}
+
+const char*
+fatal_error::what() const throw(){
+	try{
+		return mInfo.data();
+	}catch(...){
+		return "";
+	}
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
 base_error::base_error(const char* pFile, const unsigned int pLine) throw(){
 	try{
 		std::stringstream ss;
@@ -48,7 +72,11 @@ base_error::~base_error() throw(){
 
 const char*
 base_error::what() const throw(){
-	return mInfo.data();
+	try{
+		return mInfo.data();
+	}catch(...){
+		return "";
+	}
 }
 
 void
@@ -59,10 +87,10 @@ base_error::addInfo(const dStr &pInfo){
 ///////////////////////////////////////////////////////////////////////
 using namespace excep;
 
-char logExcep::xBuff[512];
-size_t logExcep::xPos;
+char delayExcep::xBuff[512];
+size_t delayExcep::xPos;
 
-void logExcep::add(const char *msg){
+void delayExcep::add(const char *msg){
 	CRITSEC;
 
 	static bool setup = false;
@@ -84,28 +112,28 @@ void logExcep::add(const char *msg){
 	}
 }
 
-void logExcep::shake(){
+void delayExcep::shake(){
 	CRITSEC;
 
 	if(xPos != 0){
-		logExcep e(xBuff);
+		delayExcep e(xBuff);
 		clearAll();
 		throw e;
 	}
 }
 
-void logExcep::clearAll(){
+void delayExcep::clearAll(){
 	memset(xBuff, 0, sizeof(xBuff));
 	xPos = 0;
 }
 
-logExcep::~logExcep() throw(){
+delayExcep::~delayExcep() throw(){
 }
 
-const char* logExcep::what() const throw(){
+const char* delayExcep::what() const throw(){
 	return mMsg.c_str();
 }
 
-logExcep::logExcep(const char *msg):
+delayExcep::delayExcep(const char *msg):
 	mMsg(msg)
 {}

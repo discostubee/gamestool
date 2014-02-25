@@ -19,13 +19,13 @@ namespace gt{
 	//--------------------------------------------------------
 	//!\brief	Overrides the normal 'sandbox' world to output
 	//!			to the terminal instead.
-	class cTerminalWorld:
+	class cTerminalWorld: public
 #if defined(__APPLE__)
-		public cOSXWorld
+		cOSXWorld
 #elif defined(__linux)
-		public cLinuxWorld
+		cLinuxWorld
 #elif defined(_WIN32)
-		public cWinWorld
+		cWinWorld
 #endif
 	{
 	public:

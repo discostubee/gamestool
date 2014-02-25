@@ -9,11 +9,6 @@ cTerminalWorld::cTerminalWorld(){
 
 cTerminalWorld::~cTerminalWorld(){
 	try{
-		for(std::list<dStr>::iterator itr = mAddonsToClose.begin(); itr != mAddonsToClose.end(); ++itr)
-			closeAddon(*itr);
-
-		mAddonsToClose.clear();
-		mRoot.redirect(NULL);	//so that our console displays that all figments were destroyed.
 		flushLines();
 	}catch(...){
 	}

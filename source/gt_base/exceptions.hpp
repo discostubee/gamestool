@@ -51,6 +51,16 @@
 
 namespace excep{
 
+	class fatal_error: public std::exception{
+    private:
+        dStr mInfo;
+
+    public:
+        fatal_error(const char* pFile, const unsigned int pLine) throw();
+        virtual ~fatal_error() throw();
+		virtual const char* what() const throw();
+	};
+
 	//!\brief	Base type of all errors. Uses a stored string that is filled out on creation. These exceptions are not meant to be used to handle
 	//!			memory exceptions, and so dynamic objects should still be fine to use for these exceptions.
     class base_error: public std::exception{
@@ -168,13 +178,13 @@ namespace excep{
 
 	};
 
-	//!\brief	Used when we want to log an error rather than throw, such as an error during destruction.
-	class logExcep: public std::exception{
+	//!\brief	Used when we want to delay a throw, for instance when there's an error in a destructor.
+	class delayExcep: public std::exception{
 	public:
 		static void add(const char *msg);
 		static void shake();	//!< throws if any errors have been logged.
 
-		virtual ~logExcep() throw();
+		virtual ~delayExcep() throw();
 
 		virtual const char* what() const throw();
 
@@ -188,7 +198,7 @@ namespace excep{
 
 		const std::string mMsg;
 
-		logExcep(const char *msg);
+		delayExcep(const char *msg);
 	};
 }
 

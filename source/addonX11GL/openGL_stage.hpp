@@ -22,7 +22,7 @@
 
 namespace gt{
 
-class cStage_X11GL: public cStage, public tAddonDependent<X11GLAddon>{
+class cStage_X11GL: public cStage{
 public:
 	cStage_X11GL();
 	virtual ~cStage_X11GL();

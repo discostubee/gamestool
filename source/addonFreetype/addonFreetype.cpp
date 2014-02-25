@@ -16,13 +16,13 @@ draftAll(gt::cWorld *pWorld){
 
 		gt::tOutline<gt::cPrintworks_freetype>::draft();
 
-		DBUG_LO(gt::FreetypeAddon::getAddonName() << " addon open.");
+		DBUG_LO("Freetype addon open.");
 
 	}catch(excep::base_error &e){
-		excep::logExcep::add(e.what());
+		excep::delayExcep::add(e.what());
 
 	}catch(...){
-		excep::logExcep::add("unknown error while opening addon");
+		excep::delayExcep::add("unknown error while opening Freetype addon");
 	}
 }
 
@@ -31,15 +31,15 @@ closeLib(){
 	try{
 		gt::tOutline<gt::cPrintworks_freetype>::remove();
 
-		DBUG_LO("closed " << gt::FreetypeAddon::getAddonName() << " addon.");
+		DBUG_LO("closed Freetype addon.");
 
 		gt::gWorld.drop();
 		cTracker::makeReport(std::cout);
 
 	}catch(excep::base_error &e){
-		excep::logExcep::add(e.what());
+		excep::delayExcep::add(e.what());
 
 	}catch(...){
-		excep::logExcep::add("unknown error while closing addon");
+		excep::delayExcep::add("unknown error while closing Freetype addon");
 	}
 }

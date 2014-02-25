@@ -31,11 +31,11 @@ draftAll(gt::cWorld *pWorld){
 
 		DBUG_LO("x11 addon open.");
 
-	}catch(excep::base_error &e){
-		excep::logExcep::add(e.what());
+	}catch(std::exception &e){
+		excep::delayExcep::add(e.what());
 
 	}catch(...){
-		excep::logExcep::add("unknown error while opening addon");
+		excep::delayExcep::add("unknown error while opening addon");
 	}
 }
 
@@ -58,10 +58,10 @@ closeLib(){
 		gt::gWorld.drop();
 		cTracker::makeReport(std::cout);
 
-	}catch(excep::base_error &e){
-		excep::logExcep::add(e.what());
+	}catch(std::exception &e){
+		excep::delayExcep::add(e.what());
 
 	}catch(...){
-		excep::logExcep::add("unknown error while closing addon");
+		excep::delayExcep::add("unknown error while closing addon");
 	}
 }

@@ -254,7 +254,10 @@ namespace gt{
 			PROFILE;
 
 			//- Using the pointer as a unique number to identify the referenced figment.
-			dFigSaveSig saveSig = reinterpret_cast<dFigSaveSig>( get().get() );
+			dFigSaveSig saveSig = 0;
+			if(get().valid())
+				saveSig = reinterpret_cast<dFigSaveSig>( get().get() );
+
 			pAddHere->add( (dByte*)(&saveSig), sizeof(dFigSaveSig) );
 		}
 
@@ -264,6 +267,9 @@ namespace gt{
 			dFigSaveSig saveSig = 0;
 			pChewToy->fill(&saveSig);
 			pChewToy->trimHead(sizeof saveSig);
+
+			if(saveSig == 0)
+				return;
 
 			dReloadMap::iterator itr = aReloads->find(saveSig);
 

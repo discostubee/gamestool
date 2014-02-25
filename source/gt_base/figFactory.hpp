@@ -37,12 +37,9 @@ namespace gt{
 		static const cPlugTag* xPT_figHash;	//!< The hash of the figment we want.
 		static const cPlugTag* xPT_newFig;	//!< The plug to put the new figment in.
 		static const cPlugTag* xPT_catalog;	//!<
-		static const cPlugTag* xPT_addons;
-		static const cPlugTag* xPT_addonName;
 
 		static const cCommand::dUID	xMakeFig;		//!< Makes a new fig of the given hash, and puts it into the provided plug.
 		static const cCommand::dUID	xGetAddons;		//!< Gives a list of the addons.
-		static const cCommand::dUID	xOpenAddon;
 		static const cCommand::dUID	xGetFigCatalog;	//!< Creates a list of all the available figments as 2 plug containers: names and hashes.
 
 		cFigFactory();
@@ -54,8 +51,6 @@ namespace gt{
 
 	protected:
 		void patMakeFig(ptrLead aLead);
-		void patGetAddons(ptrLead aLead);
-		void patOpenAddon(ptrLead aLead);
 		void patGetFigCatalog(ptrLead aLead);
 	};
 

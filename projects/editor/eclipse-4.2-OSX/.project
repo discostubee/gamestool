@@ -3,10 +3,8 @@
 	<name>editor</name>
 	<comment></comment>
 	<projects>
-		<project>addonX11GL</project>
-		<project>libgamestool</project>
+		<project>libgt_graphics</project>
 		<project>libgt_OSX</project>
-		<project>sandbox</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

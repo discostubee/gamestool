@@ -28,48 +28,13 @@ gt::tMrSafety<gt::cWorld> gt::gWorld;
 
 
 ////////////////////////////////////////////////////////////
-// Blueprint stuff
-using namespace gt;
-
-//!\brief	Used to keep track of the things which may have been replaced by this blueprint.
-struct cWorld::sBlueprintHeader{
-	cBlueprint* mBlueprint;
-	dNameHash mReplaced;
-	int mTimesAdded;
-
-	sBlueprintHeader():
-		mBlueprint(NULL), mReplaced(uDoesntReplace), mTimesAdded(0)
-	{}
-
-	sBlueprintHeader(cBlueprint* pBlue, dNameHash pName):
-		mBlueprint(pBlue), mReplaced(pName), mTimesAdded(0)
-	{}
-
-	~sBlueprintHeader()
-	{}
-
-	//sBlueprintHeader operator = (const sBlueprintHeader* pCopyMe){
-	//	const_cast<cBlueprint*>(mBlueprint) = pCopyMe->mBlueprint;
-	//	mReplaced = pCopyMe->mReplaced;
-	//	return *this;
-	//}
-};
-
-////////////////////////////////////////////////////////////
 // World
 
 using namespace gt;
 
-bool gt::cWorld::thereCanBeOnlyOne = false;
-
 cWorld::cWorld():
 	mKeepLooping(true)
 {
-	if(thereCanBeOnlyOne)
-		THROW_ERROR("can only create the world once");
-
-	thereCanBeOnlyOne = true;
-
 	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
 	mRoot = ptrFig(new cWorldShutoff());
@@ -77,7 +42,7 @@ cWorld::cWorld():
 	(void)primordial::makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
 	mProfiler = primordial::xProfiler;
 
-	primordial::lo("World created."); //- Ensure it exists.
+	primordial::lo("World created."); //- Ensure lines exists.
 	mLines = primordial::xLines;
 
 #	ifdef GT_THREADS
@@ -87,149 +52,182 @@ cWorld::cWorld():
 }
 
 cWorld::~cWorld(){
-	try{
-		for(mScrBMapItr = mBlueprints.begin(); mScrBMapItr != mBlueprints.end(); ++mScrBMapItr)
-			mScrBMapItr->second.mBlueprint->mCleanup();
-
-		for(mScrBMapItr = mBlueArchive.begin(); mScrBMapItr != mBlueArchive.end(); ++mScrBMapItr)
-			mScrBMapItr->second.mBlueprint->mCleanup();
-
-		mRoot.redirect(NULL);
-		mVillageBicycle.redirect(NULL);
-
-		primordial::cleanup();
-
-	}catch(...){
-	}
 }
 
 void
-cWorld::addBlueprint(cBlueprint* pAddMe){
-	PROFILE;
+cWorld::closeWorld(){
+	mRoot.redirect(NULL);
+	mVillageBicycle.redirect(NULL);
+	dAddons::iterator found;
 
-	mScrBMapItr = mBlueprints.find(pAddMe->hash());
-	if(mScrBMapItr == mBlueprints.end()){
-		// Even if this figment replaces another, it still appears under its own name hash.
-		mBlueprints[pAddMe->hash()] = sBlueprintHeader( pAddMe, uDoesntReplace );
+	while(!mOpenAddons.empty()){
+		dAddons::iterator found = mAvailableAddons.find(*mOpenAddons.begin());
+		if(found == mAvailableAddons.end()){
+			WARN_S("open addon not found in available addons");
+			mOpenAddons.erase(mOpenAddons.begin());
+			continue;
+		}
 
-		if( pAddMe->replace() != uDoesntReplace ){
-			mScrBMapItr = mBlueprints.find(pAddMe->replace());
-			if(mScrBMapItr != mBlueprints.end()){
-				mBlueArchive[ mScrBMapItr->first ] = sBlueprintHeader(mScrBMapItr->second.mBlueprint, mScrBMapItr->first);	// Archive the old blueprint being replaced.
-				mScrBMapItr->second = sBlueprintHeader( pAddMe, mScrBMapItr->second.mReplaced );
+		closeAddon(found->second);
+	}
 
-				DBUG_LO("Blueprint '" << pAddMe->name() << "' replaced '" << mBlueArchive[ mScrBMapItr->first ].mBlueprint->name() << "'");
+	for(dBlueprintMap::iterator bp = mBlueprints.begin(); bp != mBlueprints.end(); ++bp){
+		if(bp->second.mUsing != NULL)
+			bp->second.mUsing->mCleanup();
+	}
 
+	mBlueprints.clear();
+}
+
+void
+cWorld::addBlueprint(cBlueprint* pAddMe, const dStr &pFromAddon){
+	ASRT_NOTNULL(pAddMe);
+
+	DBUG_LO("Adding blueprint " << pAddMe->name());
+
+	dNameHash addon = 0;
+	if(!pFromAddon.empty()){
+		addon = makeHash(pFromAddon.c_str());
+		if(mAvailableAddons.find(addon) == mAvailableAddons.end())
+			THROW_ERROR(pAddMe->name() << " required addon " << pFromAddon << " not supported.");
+	}
+
+	dBlueprintMap::iterator bp = mBlueprints.find(pAddMe->hash());
+
+	if(bp == mBlueprints.end()){
+		bp = mBlueprints.insert(
+			mBlueprints.begin(),
+			dBlueprintMap::value_type(pAddMe->hash(), sBlueBook())
+		);
+	}
+
+	if(addon != 0){
+		bp->second.mOpenedWith = addon;
+		bp->second.mInAddons.insert(addon);
+	}
+
+	if(pAddMe->replace() != uDoesntReplace){
+		dBlueprintMap::iterator replace = mBlueprints.find(pAddMe->replace());
+		if(replace != mBlueprints.end()){
+			if(replace->second.mUsing != NULL){
+				if(replace->second.mArchived == NULL){
+					replace->second.mArchived = replace->second.mUsing;
+					replace->second.mArchiveOW = replace->second.mOpenedWith;
+					replace->second.mOpenedWith = addon;
+					replace->second.mUsing = pAddMe;
+					DBUG_VERBOSE_LO("	" << replace->second.mArchived->name() << " replaced by " << pAddMe->name());
+				}else{
+					DBUG_VERBOSE_LO("	" << replace->second.mArchived->name() << " already replaced.");
+				}
 			}else{
-				WARN_S(pAddMe->name() << " missing parent");
+				DBUG_VERBOSE_LO("	" << pAddMe->name() << " can't replace inactive blueprint.");
 			}
 		}else{
-			DBUG_LO("Blueprint '" << pAddMe->name() << "' added to library");
+			WARN_S("	" << pAddMe->name() << " couldn't find replacement blueprint");
 		}
 	}
-	++mScrBMapItr->second.mTimesAdded;
+
+	bp->second.mUsing = pAddMe;
 }
 
 const cBlueprint*
 cWorld::getBlueprint(dNameHash pNameHash){
 	PROFILE;
 
-	mScrBMapItr = mBlueprints.find(pNameHash);
-	if(mScrBMapItr == mBlueprints.end())
-		throw excep::notFound("couldn't find blueprint", __FILE__, __LINE__);
+	dBlueprintMap::iterator found = mBlueprints.find(pNameHash);
+	if(found == mBlueprints.end())
+		return NULL;
 
-	return mScrBMapItr->second.mBlueprint;
+	return found->second.mUsing;
+}
+
+cWorld::dBlueList
+cWorld::getAllBlueprints(){
+	dBlueList out;
+
+	for(dBlueprintMap::iterator itr = mBlueprints.begin(); itr != mBlueprints.end(); ++itr){
+		if(itr->second.mUsing != NULL){
+			if(itr->second.mArchived != NULL)
+				out.push_back(itr->second.mArchived);
+			else
+				out.push_back(itr->second.mUsing);
+		}
+	}
+
+	return out;
 }
 
 void
-cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
+cWorld::removeBlueprint(const cBlueprint* pRemoveMe, const dStr &pFromAddon){
 	PROFILE;
 
-	mScrBMapItr = mBlueprints.find(pRemoveMe->hash());
+	DBUG_LO("Removing blueprint " << pRemoveMe->name());
 
-	if(mScrBMapItr == mBlueprints.end()){
-		WARN_S("Tried to remove blueprint '" << pRemoveMe->mGetName() << "' when not drafted.");
+	dBlueprintMap::iterator found = mBlueprints.find(pRemoveMe->hash());
+	if(found == mBlueprints.end()){
+		WARN_S("	Tried to remove a blueprint '" << pRemoveMe->mGetName() << "' that didn't exist.");
 		return;
 	}
 
-	--mScrBMapItr->second.mTimesAdded;
-	if(mScrBMapItr->second.mTimesAdded > 0)
+	if(found->second.mUsing == NULL){
+		WARN_S("	Tried to remove an inactive blueprint " << pRemoveMe->mGetName());
 		return;
-
-	std::list<ptrFig> linksA, linksB;
-	std::list<ptrFig>*	branches = &linksA;
-	std::list<ptrFig>*	prev = &linksB;
-	std::map<iFigment*, ptrFig> figs;
+	}
 
 	//- Find and empty any objects using this blueprint.
-	mRoot->getLinks(branches);
-	prev->push_back(mRoot);
+	std::list<ptrFig> figs;
+	findFigs(pRemoveMe->hash(), &figs);
 
-	do{ //- while there are branches still left to explore.
-		std::list<ptrFig>* temp = prev;
-		prev = branches;
-		branches = temp;
-		branches->clear();
-
-		for(
-			std::list<ptrFig>::iterator i = prev->begin();
-			i != prev->end();
-			++i
-		){
-			if( figs.find( i->get() ) == figs.end() ){ // first time funny.
-				(*i)->getLinks( branches );	//add to the next series of branches.
-
-				if( i->get()->hash() == pRemoveMe->hash() ){
-					figs[i->get()] = *i;
-				}
-			}
-		}
-
-	}while(branches->size() > 0);
-
-	for(	//- Empty the figments
-		std::map<iFigment*, ptrFig>::iterator itr = figs.begin();
-		itr != figs.end();
-		++itr
-	){
-		DBUG_VERBOSE_LO( "Emptying figment " << itr->first->name() );
-
-		itr->second.redirect(getEmptyFig());
+	for(std::list<ptrFig>::iterator itr = figs.begin(); itr != figs.end(); ++itr){
+		DBUG_VERBOSE_LO( "	Emptying figment " << (*itr)->name() );
+		itr->redirect(getEmptyFig());
 	}
 
-	//- If this figment replaced another, restore the original blueprint.
-	if(pRemoveMe->replace() != uDoesntReplace){
-		dBlueprintMap::iterator foundRep = mBlueprints.find(pRemoveMe->replace());
-		dBlueprintMap::iterator foundArc = mBlueArchive.find(pRemoveMe->replace());
-		if(foundRep != mBlueprints.end()){
-			if(foundArc != mBlueArchive.end()){
-				DBUG_LO("Blueprint '" << mScrBMapItr->second.mBlueprint->name() << "' restored. Archive entry removed"
-				);
-				foundRep->second = foundArc->second;
-				mBlueArchive.erase(foundArc);
-
-			}else{
-				WARN_S("Replaced figment not found in archive.");
-			}
-		}else{
-			WARN_S("Replaced figment not found in active blueprints.");
+	//- Make blueprint inactive or restore from archive.
+	if(found->second.mArchived == NULL){
+		dBlueprintMap::iterator replaced = mBlueprints.find(
+			found->second.mUsing->replace()
+		);
+		if(replaced != mBlueprints.end()){
+			replaced->second.mUsing = replaced->second.mArchived;
+			replaced->second.mArchived = NULL;
 		}
+		found->second.mUsing = NULL;
+		found->second.mOpenedWith = 0;
+
+	}else{
+		found->second.mUsing = found->second.mArchived;
+		found->second.mOpenedWith = found->second.mArchiveOW;
+		found->second.mArchived = NULL;
+		found->second.mArchiveOW = 0;
 	}
 
-	mBlueprints.erase(mScrBMapItr);
-	DBUG_LO("Erased blueprint: " << pRemoveMe->name());
 }
 
 ptrFig
 cWorld::makeFig(dNameHash pNameHash){
 	PROFILE;
 
-	mScrBMapItr = mBlueprints.find(pNameHash);
+	dBlueprintMap::iterator found = mBlueprints.find(pNameHash);
+	if(found == mBlueprints.end())
+		throw excep::notFound("Blueprint", __FILE__, __LINE__);
 
-	if(mScrBMapItr == mBlueprints.end())
-		THROW_ERROR("Can't make figment as the provided name hash isn't drafted.");
+	if(found->second.mUsing == NULL){
+		if(found->second.mInAddons.empty())
+			THROW_ERROR(pNameHash << " no addons have this blueprint.");
 
-	return mScrBMapItr->second.mBlueprint->make();
+		dAddons::iterator addon = mAvailableAddons.find( *found->second.mInAddons.begin() );
+		if(addon == mAvailableAddons.end())
+			THROW_ERROR("bad addon hash");
+
+		openAddon(addon->second);
+
+		if(found->second.mUsing == NULL)
+			THROW_ERROR(pNameHash << " could not be made by addon " << addon->second);
+	}
+
+	return found->second.mUsing->make();
+	return ptrFig(NULL);
 }
 
 ptrFig
@@ -268,25 +266,18 @@ cWorld::activeContext(dConSig pSig){
 	return mContexts.valid(pSig);
 }
 
-void
-cWorld::lazyCloseAddon(const dPlaChar* pAddonName){
-	for(std::list<dStr>::iterator itr = mAddonsToClose.begin(); itr != mAddonsToClose.end(); ++itr)
-		if(itr->compare(pAddonName)==0)
-			return;
-
-	mAddonsToClose.push_back(pAddonName);
-}
-
 const cPlugTag* 
-cWorld::getPlugTag(dNameHash pFigHash, cPlugTag::dUID pPTHash){
+cWorld::getPlugTag(dNameHash pFigBlueprint, cPlugTag::dUID pPTHash){
 	PROFILE;
 
-	mScrBMapItr =  mBlueprints.find(pFigHash);
+	dBlueprintMap::iterator found =  mBlueprints.find(pFigBlueprint);
+	if(found == mBlueprints.end())
+		THROW_ERROR("blueprint wasn't found");
 
-	if(mScrBMapItr == mBlueprints.end())
-		THROW_ERROR("figment wasn't found");
+	if(found->second.mUsing == NULL)
+		THROW_ERROR("blueprint is inactive");
 
-	return mScrBMapItr->second.mBlueprint->getPlugTag(pPTHash);
+	return found->second.mUsing->getPlugTag(pPTHash);
 }
 
 const cPlugTag*
@@ -295,26 +286,6 @@ cWorld::getPlugTag(const dPlaChar *figName, const dPlaChar *tagName){
 		makeHash(toNStr(figName)),
 		makeHash(toNStr(tagName))
 	);
-}
-
-const cPlugTag*
-cWorld::getPlugTag(cPlugTag::dUID aID){
-	PROFILE;
-
-	const cPlugTag* tmp=NULL;
-
-	for(
-		dBlueprintMap::iterator bp = mBlueprints.begin();
-		bp != mBlueprints.end() && tmp==NULL;
-		++bp
-	){
-		tmp = bp->second.mBlueprint->getPlugTag(aID);
-	}
-
-	if(tmp==NULL)
-		throw excep::notFound("plug tag", __FILE__, __LINE__);
-
-	return tmp;
 }
 
 void
@@ -330,6 +301,102 @@ cWorld::getEmptyFig(){
 const cWorld::dContextLookup&
 cWorld::getContextLookup(){
 	return mContexts;
+}
+
+void
+cWorld::checkAddons(){
+	dAddons addons;
+	dAddons::iterator addName;
+	dBlue2Addons bluesInAddons;
+	dAddon2Fresh fresh;
+	bool writeCache=false;
+
+	getAddonList(addons);
+	mAvailableAddons = addons;
+	readAddonCache(addons, bluesInAddons, fresh);
+	for(dAddon2Fresh::iterator f = fresh.begin(); f != fresh.end(); ++f){
+		addName = addons.find(f->first);
+		if(!f->second && addName != addons.end()){
+			writeCache = true;
+
+			tAutoPtr<cWorld> underworld(makeWorld());
+			underworld->mAvailableAddons = addons;
+			underworld->openAddon(addName->second);
+			dBlueList blueprints = underworld->getAllBlueprints();
+			dBlue2Addons::iterator existing;
+			for(dBlueList::iterator b = blueprints.begin(); b != blueprints.end(); ++b){
+				existing = bluesInAddons.find((*b)->name());
+				if(existing == bluesInAddons.end())
+					existing = bluesInAddons.insert(
+						bluesInAddons.begin(),
+						dBlue2Addons::value_type((*b)->name(), dRefAddons())
+					);
+
+				existing->second.insert(addName->first);
+			}
+			underworld->closeAddon(addName->second);
+		}
+	}
+
+	if(writeCache)
+		writeAddonCache(bluesInAddons);
+
+	{
+		dNameHash bname;
+		dBlueprintMap::iterator found;
+		for(dBlue2Addons::iterator b = bluesInAddons.begin(); b != bluesInAddons.end(); ++b){
+			bname = makeHash(PCStr2NStr(b->first.c_str()));
+			found = mBlueprints.find(bname);
+			if(found == mBlueprints.end())
+				found = mBlueprints.insert(mBlueprints.begin(), dBlueprintMap::value_type(bname, sBlueBook()));
+
+			found->second.mInAddons = b->second;
+		}
+	}
+}
+
+void
+cWorld::findFigs(dNameHash pName, std::list<ptrFig> *output){
+	if(!mRoot.valid())
+		return;
+
+	if(mRoot.get() == NULL)
+		return;
+
+	std::set<iFigment*> scanned;
+	std::list<ptrFig> linksA, linksB;
+	std::list<ptrFig>* branches = &linksA;
+	std::list<ptrFig>* prev = &linksB;
+
+	mRoot->getLinks(branches);
+	prev->push_back(mRoot);
+
+	do{ //- while there are branches still left to explore.
+		std::list<ptrFig>* temp = prev;
+		prev = branches;
+		branches = temp;
+		branches->clear();
+
+		for(
+			std::list<ptrFig>::iterator i = prev->begin();
+			i != prev->end();
+			++i
+		){
+			if(scanned.find(i->get()) != scanned.end())
+				continue;
+
+			scanned.insert(i->get());
+			(*i)->getLinks( branches );	//add to the next series of branches.
+
+			if(i->get()->hash() == pName)
+				output->push_back(*i);
+		}
+
+	}while(branches->size() > 0);
+}
+
+void closeUselessAddons(){
+
 }
 
 
@@ -389,12 +456,12 @@ cWorld::primordial::lo(const dStr& pLine, bool cleanup){
 void
 cWorld::primordial::warnError(const char *msg, const char* pFile, const unsigned int pLine){
 	std::stringstream ss;
-	ss << "<!> Warning detected in file '" << pFile << "' on line " << pLine << std::endl << ". Info: " << msg;
+	ss << "Warning detected in file '" << pFile << "' on line " << pLine << std::endl << ". Info: " << msg;
 	lo(ss.str());
 }
 
 void
-cWorld::primordial::warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine){
+cWorld::primordial::warnError(std::exception &pE, const char* pFile, const unsigned int pLine){
 	warnError(pE.what(), pFile, pLine);
 }
 
@@ -458,23 +525,16 @@ cWorld::primordial::makeProfileReport(std::ostream &log){
 void
 cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 	if(pWorldNew){
-
-		if(xLines == pWorldNew->mLines || xProfiler == pWorldNew->mProfiler)
-			return;
-
-#		ifdef GT_THREADS
-			boost::lock_guard<boost::recursive_mutex> lockA(*xLineGuard);
-			boost::lock_guard<boost::recursive_mutex> lockB(*xProfileGuard);
-#		endif
+		lo("");	//- This shouldn't add a line, but it ensures it's initialised.
+		(void)makeProfileToken(NULL, 0);	//- same.
 
 		{
 #			ifdef GT_THREADS
+				boost::lock_guard<boost::recursive_mutex> lockA(*xLineGuard);
+				boost::lock_guard<boost::recursive_mutex> lockB(*xProfileGuard);
 				boost::lock_guard<boost::recursive_mutex> lockC(*pWorldNew->mProfileGuard);
 				boost::lock_guard<boost::recursive_mutex> lockD(*pWorldNew->mLineGuard);
 #			endif
-
-			lo("");	//- This shouldn't add a line, but it ensures it's initialised.
-			(void)makeProfileToken(NULL, 0);	//- same.
 
 			if(!xLines->empty())
 				pWorldNew->mLines->splice(pWorldNew->mLines->end(), *xLines);
@@ -489,10 +549,12 @@ cWorld::primordial::redirectWorld(cWorld* pWorldNew){
 		}
 
 #		ifdef GT_THREADS
+			delete xProfileGuard;
+			delete xLineGuard;
+
 			xProfileGuard = pWorldNew->mProfileGuard;
 			xLineGuard = pWorldNew->mLineGuard;
 #		endif
-
 	}
 }
 

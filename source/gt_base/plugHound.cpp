@@ -69,7 +69,7 @@ cPlugHound::patGoGetit(ptrLead aLead){
 	ptrLead getLead = gWorld.get()->makeLead(mCom.get());
 	ptrFig fig = currentCon->getFirstOfType(mTarget.get());
 
-	const cPlugTag *tagTarget = gWorld.get()->getPlugTag(mTag.get());
+	const cPlugTag *tagTarget = gWorld.get()->getPlugTag(fig->hash(), mTag.get());
 
 	fig->jack(getLead, currentCon);
 	getLead->passPlug(

@@ -225,6 +225,26 @@ namespace gt{
 			return *data;
 		}
 	};
+
+	//------------------------------------------------------------------------------------------
+	//!\brief	Handy as the boost lib uses copy operator on pointer.
+	template<typename TYPE>
+	class tAutoPtr{
+	public:
+		tAutoPtr(const tAutoPtr<TYPE> &pTransfer) {
+			mManage = const_cast< tAutoPtr<TYPE> &>(pTransfer).mManage;
+			const_cast< tAutoPtr<TYPE> &>(pTransfer).mManage = NULL;
+		}
+
+		tAutoPtr(TYPE *pManageMe) : mManage(pManageMe) {}
+		~tAutoPtr() { delete mManage; }
+
+		TYPE* operator*() { return mManage; }
+		TYPE* operator->() { return mManage; }
+
+	private:
+		TYPE *mManage;
+	};
 }
 
 

@@ -1,5 +1,4 @@
 /*
- *
  * !\file
  * !\brief
  */
@@ -13,7 +12,7 @@
 
 namespace gt{
 
-	class cFilm_X11GL: public cFilm, public tAddonDependent<X11GLAddon>{
+	class cFilm_X11GL: public cFilm{
 	public:
 		cFilm_X11GL();
 		virtual ~cFilm_X11GL();

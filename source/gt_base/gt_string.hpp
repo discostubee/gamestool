@@ -64,5 +64,6 @@ dText toText(const dStr &pString);
 dNatStr toNStr(const dText &pString);	//!< Convert from a text C style string to a native string instance.
 dStr toPStr(const dText &pString);	//!< Convert from a text C style string to a platform string instance.
 
+bool hasWildStr(const char *findIn, const char *wildStr);
 
 #endif

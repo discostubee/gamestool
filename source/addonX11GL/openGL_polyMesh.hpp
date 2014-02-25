@@ -10,7 +10,7 @@ namespace gt{
 	//!\brief	Open GL 3.1 version of the polygon mesh.
 	//!\note	Code taken from http://www.opengl.org/wiki/http://www.opengl.org/wiki/Tutorial:_OpenGL_3.1_The_First_Triangle_%28C%2B%2B/Win%29
 	//!\todo	Make GL meshes coordinate with the rest of the openGL system, adding to a single vertex+index buffer.
-	class cPolyMesh_X11GL : public cPolyMesh, public tAddonDependent<X11GLAddon>{
+	class cPolyMesh_X11GL : public cPolyMesh{
 	public:
 		cPolyMesh_X11GL();
 		virtual ~cPolyMesh_X11GL();

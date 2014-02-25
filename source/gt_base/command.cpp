@@ -21,15 +21,20 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-cPlugTag::cPlugTag(const dPlaChar* pPlugName):
-	mName(pPlugName),
-	mID(makeHash( toNStr(mName) ))
+cPlugTag::cPlugTag(const dPlaChar* pPlugName)
+: mName(pPlugName), mID(makeHash( toNStr(mName) ))
+{}
+
+cPlugTag::cPlugTag(const cPlugTag &pCopyMe)
+: mName(pCopyMe.mName), mID(pCopyMe.mID)
 {}
 
 cPlugTag::~cPlugTag()
 {}
 
-cPlugTag& cPlugTag::operator = (const cPlugTag&){ return *this; }
+cPlugTag& cPlugTag::operator = (const cPlugTag &pCopyMe){
+	return *this;
+}
 
 ////////////////////////////////////////////////////////////
 using namespace gt;

@@ -23,24 +23,10 @@ using namespace gt;
 const cPlugTag* cFigFactory::xPT_figHash = tOutline<cFigFactory>::makePlugTag("fig name");
 const cPlugTag* cFigFactory::xPT_newFig = tOutline<cFigFactory>::makePlugTag("new figment");
 const cPlugTag* cFigFactory::xPT_catalog = tOutline<cFigFactory>::makePlugTag("catalog");
-const cPlugTag* cFigFactory::xPT_addons = tOutline<cFigFactory>::makePlugTag("addons");
-const cPlugTag* cFigFactory::xPT_addonName = tOutline<cFigFactory>::makePlugTag("addon name");
 
 const cCommand::dUID cFigFactory::xMakeFig = tOutline<cFigFactory>::makeCommand(
 	"make figment", &cFigFactory::patMakeFig,
 	cFigFactory::xPT_figHash,
-	NULL
-);
-
-const cCommand::dUID cFigFactory::xGetAddons  = tOutline<cFigFactory>::makeCommand(
-	"get addons", &cFigFactory::patGetAddons,
-	cFigFactory::xPT_addons,
-	NULL
-);
-
-const cCommand::dUID cFigFactory::xOpenAddon = tOutline<cFigFactory>::makeCommand(
-	"open addon", &cFigFactory::patOpenAddon,
-	cFigFactory::xPT_addonName,
 	NULL
 );
 
@@ -62,16 +48,6 @@ void cFigFactory::patMakeFig(ptrLead aLead){
 
 	ptrFig made = gWorld.get()->makeFig(hash);
 	aLead->assignFrom(made, xPT_figHash);
-}
-
-void cFigFactory::patGetAddons(ptrLead aLead){
-
-}
-
-void cFigFactory::patOpenAddon(ptrLead aLead){
-	dStr addon;
-	aLead->assignTo(&addon, xPT_addonName);
-	gWorld.get()->openAddon(addon);
 }
 
 void cFigFactory::patGetFigCatalog(ptrLead aLead){

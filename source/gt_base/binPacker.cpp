@@ -97,7 +97,7 @@ bpk::pack(const dNatStr *packMe, dByte output[], size_t *sizeOut, size_t outLimi
 }
 
 void
-bpk::unpack(const dByte *unpackFrom, dNatStr *unpackTo, size_t *sizeOut, size_t limit){
+bpk::unpack(dNatStr *unpackTo, const dByte *unpackFrom, size_t *sizeOut, size_t limit){
 	strUnpack<dNatStr_def, dNatChar>(unpackFrom, &unpackTo->t, sizeOut, limit);
 }
 
@@ -120,11 +120,11 @@ bpk::pack(const dStr *packMe, dByte output[], size_t *sizeOut, size_t outLimit){
 }
 
 void
-bpk::unpack(const dByte *unpackFrom, dStr *unpackTo, size_t *sizeOut, size_t limit){
+bpk::unpack(dStr *unpackTo, const dByte *unpackFrom, size_t *sizeOut, size_t limit){
 	ASRT_NOTNULL(unpackFrom); ASRT_NOTNULL(unpackTo); ASRT_NOTNULL(sizeOut);
 
 	dText tmp;
-	unpack(unpackFrom, &tmp, sizeOut, limit);
+	unpack(&tmp, unpackFrom, sizeOut, limit);
 	*unpackTo = toPStr(tmp);
 }
 
@@ -142,7 +142,7 @@ bpk::pack(const dText *packMe, dByte output[], size_t *sizeOut, size_t outLimit)
 }
 
 void
-bpk::unpack(const dByte *unpackFrom, dText *unpackTo, size_t *sizeOut, size_t limit){
+bpk::unpack(dText *unpackTo, const dByte *unpackFrom, size_t *sizeOut, size_t limit){
 	strUnpack<dText_def, dTextChar>(unpackFrom, &unpackTo->t, sizeOut, limit);
 }
 
@@ -150,52 +150,70 @@ bpk::unpack(const dByte *unpackFrom, dText *unpackTo, size_t *sizeOut, size_t li
 // Tests
 #ifdef GTUT
 
-GTUT_START(test_string, intPacking){
+GTUT_START(test_packer, intPacking){
 	int meaning = 42, reply = 0;
 	dByte *buff = NULL;
 	size_t sizeBuff = 0, sizeUnpack = 0;
 
 	bpk::pack(&meaning, &buff, &sizeBuff);
-	bpk::unpack(buff, &reply, &sizeUnpack, sizeBuff);
+	bpk::unpack(&reply, buff, &sizeUnpack, sizeBuff);
 	GTUT_ASRT(meaning == reply, "failed to pack/unpack an int");
 
 	delete [] buff;
 }GTUT_END;
 
-GTUT_START(test_string, nativePackUnpack){
+GTUT_START(test_packer, nativePackUnpack){
 	dNatStr packMe, unpackMe;
 	dByte *buff = NULL;
 	size_t sizeBuff = 0, unpackSize = 0;
 
 	packMe = "test me";
 	bpk::pack(&packMe, &buff, &sizeBuff);
-	bpk::unpack(buff, &unpackMe, &unpackSize, sizeBuff);
+	bpk::unpack(&unpackMe, buff, &unpackSize, sizeBuff);
 	GTUT_ASRT(packMe.t.compare(unpackMe.t)==0, "failed packing or unpacking");
 	delete [] buff;
 }GTUT_END;
 
-GTUT_START(test_string, platformPackUnpack){
+GTUT_START(test_packer, platformPackUnpack){
 	dStr packMe = "てすと";
 	dStr unpackMe;
 	dByte *buff = NULL;
 	size_t sizeBuff = 0, unpackSize = 0;
 
 	bpk::pack(&packMe, &buff, &sizeBuff);
-	bpk::unpack(buff, &unpackMe, &unpackSize, sizeBuff);
+	bpk::unpack(&unpackMe, buff, &unpackSize, sizeBuff);
 	GTUT_ASRT(packMe.compare(unpackMe)==0, "failed packing or unpacking");
 	delete [] buff;
 }GTUT_END;
 
-GTUT_START(test_string, textPackUnpack){
+GTUT_START(test_packer, textPackUnpack){
 	dText packMe, unpackMe;
 	dByte *buff = NULL;
 	size_t sizeBuff = 0, unpackSize = 0;
 
 	packMe = "てすと";
 	bpk::pack(&packMe, &buff, &sizeBuff);
-	bpk::unpack(buff, &unpackMe, &unpackSize, sizeBuff);
+	bpk::unpack(&unpackMe, buff, &unpackSize, sizeBuff);
 	GTUT_ASRT(packMe.t.compare(unpackMe.t)==0, "failed packing or unpacking");
 	delete [] buff;
+}GTUT_END;
+
+GTUT_START(test_packer, arrayPack){
+	const size_t NUM = 4;
+	const size_t LIMIT = NUM * sizeof(size_t);
+	size_t sizeOut = 0;
+	size_t arrIn[NUM] = {0};
+	size_t arrOut[NUM] = {0};
+	dByte buff[LIMIT] = {0};
+
+	for(size_t i=0; i < NUM; ++i)
+		arrIn[i] = i;
+
+	bpk::pack_a(arrIn, buff, &sizeOut, LIMIT);
+	bpk::unpack_a(arrOut, buff, &sizeOut, LIMIT);
+	for(size_t i=0; i < NUM; ++i){
+		GTUT_ASRT(arrOut[i]==i, "didn't unpack right");
+	}
 }GTUT_END;
 
 #endif

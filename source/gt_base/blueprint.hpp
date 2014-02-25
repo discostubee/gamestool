@@ -45,33 +45,34 @@ namespace gt{
 // Classes
 namespace gt{
 
+
 	//---------------------------------------------------------------------------------------------------
 	//!\brief	Blueprint for a figment, used by the world when making figments and is the interface to
 	//!			to the outline.
 	class cBlueprint{
 	public:
 		cBlueprint();
-		~cBlueprint();
+		virtual ~cBlueprint();
 
-		ptrFig make();
-		dNameHash hash() const;
-		const dPlaChar* name() const;
-		dNameHash replace() const;
-		dNameHash extend() const;
-		const cCommand* getCom(cCommand::dUID pHash) const;
-		const cPlugTag* getPlugTag(cPlugTag::dUID pPT) const;
-		dListComs getAllComs() const;
-		dListPTags getAllTags() const;
-		dExtensions getExtensions() const;
-		bool hasPlugTag(cPlugTag::dUID pPT) const;
+		virtual ptrFig make();
+		virtual void unmade();
+		virtual dNameHash hash() const;
+		virtual const dPlaChar* name() const;
+		virtual dNameHash replace() const;
+		virtual dNameHash extend() const;
+		virtual const cCommand* getCom(cCommand::dUID pHash) const;
+		virtual const cPlugTag* getPlugTag(cPlugTag::dUID pPT) const;
+		virtual dListComs getAllComs() const;
+		virtual dListPTags getAllTags() const;
+		virtual dExtensions getExtensions() const;
+		virtual bool hasPlugTag(cPlugTag::dUID pPT) const;
 
-		const cBlueprint* operator = (const cBlueprint* pCopy);
-
-		void setup(
+		void install(
 			dNameHash pHash,
 			dNameHash pReplaces,
 			dNameHash pExtends,
-			ptrFig (*pFuncMake)(),
+			ptrFig (*pMake)(),
+			void (*pUnmade)(),
 			const dPlaChar* (*pGetName)(),
 			const cCommand* (*pGetCom)(cCommand::dUID),
 			const cPlugTag* (*pGetPlugTag)(cPlugTag::dUID),
@@ -83,9 +84,7 @@ namespace gt{
 		);
 
 	protected:
-
 		void (*mCleanup)();	//!< Cleans up the outline as well.
-
 
 	friend class cWorld;
 
@@ -93,7 +92,8 @@ namespace gt{
 		dNameHash mHash;
 		dNameHash mReplaces;
 		dNameHash mExtends;
-		ptrFig (*mFuncMake)();
+		ptrFig (*mMake)();
+		void (*mUnmade)();
 		const dPlaChar* (*mGetName)();
 		const cCommand* (*mGetCom)(cCommand::dUID);
 		const cPlugTag* (*mGetPlugTag)(cPlugTag::dUID);
@@ -105,21 +105,8 @@ namespace gt{
 		void iniFig(ptrFig &iniMe);
 	};
 
+
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-// Template functions
-namespace gt{
-
-	//!\brief	Generates a hash for this figment and remembers is, so it won't regenerate it every time.
-	template <typename T>
-	dNameHash
-	getHash(){
-		static dNameHash name = 0;
-		if(name == 0)
-			name = ::makeHash( PCStr2NStr(T::identify()) );
-		return name;
-	}
-}
 
 #endif

@@ -37,8 +37,8 @@ namespace gt{
 	public:
 		typedef void (T::*ptrPatFoo)(ptrLead alead);
 
-		static void draft();	//!< Adds your figment to the world library and increments the reference count.
-		static void remove(bool force=false);	//!< If this is the last request for removal, you'll need to reload an addon in order to regain commands. If you remove a core figment, you won't be able to get the commands back at runtime. Only do this when an addon closes or the main program ends
+		static void draft(const dStr &pAddon="");	//!< Adds your figment to the world library and increments the reference count. !\param pAddon (optional) name of the addon this blueprint is coming from.
+		static void remove();	//!< Only do this when an addon closes or the main program ends
 
 		//!\brief	Use a unique name and a pointer to a function, along with an optional, BUT ALWAYS NULL TERMINATED, list of plug tags to create a command.
 		//!\note	The string name provided here, and the one for the class, is used to create a unique identifier. So make these names unique for the class.
@@ -66,13 +66,14 @@ namespace gt{
 		static dExtensions xExtensions;	//!< This is the list of blueprints that this outline can use commands and tags from. If you replace a figment you automatically take that blueprint as an extension.
 		static dMapCom* xCommands;
 		static dMapPTag* xPlugTags;
-		static int xDraftCount;
+		static bool xDrafted;
+		static dStr xAddon;	//!< Addon this outline may have come from.
 
 		tOutline();
 		~tOutline();
 
 		static ptrFig makeFig();
-		static void removeForce();
+		static void unmakeFig();
 
 		friend class cBlueprint;
 
@@ -107,6 +108,7 @@ namespace gt{
 		ptrPatFoo myFoo;
 	};
 
+
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -128,7 +130,11 @@ namespace gt{
 	typename tOutline<T>::dMapPTag *tOutline<T>::xPlugTags;	//- Don't assign anything here.
 
 	template<typename T>
-	int tOutline<T>::xDraftCount = 0; //- Ok to assign here.
+	bool tOutline<T>::xDrafted=false;
+
+	template<typename T>
+	dStr tOutline<T>::xAddon;
+
 
 	template<typename T>
 	void
@@ -142,14 +148,14 @@ namespace gt{
 				xCommands = NULL;
 				setup=false;
 				DBUG_VERBOSE_LO("Deleting commands for " << T::identify());
-				DBUG_TRACK_START("commands");
+				DBUG_TRACK_END("commands");
 			}
 		}else{
 			if(!setup){
 				xCommands = new dMapCom();
 				setup = true;
 				DBUG_VERBOSE_LO("Made commands for " << T::identify());
-				DBUG_TRACK_END("commands");
+				DBUG_TRACK_START("commands");
 			}
 		}
 	}
@@ -164,14 +170,14 @@ namespace gt{
 				xPlugTags = NULL;
 				setup = false;
 				DBUG_VERBOSE_LO("Deleting tags for " << T::identify());
-				DBUG_TRACK_START("tags");
+				DBUG_TRACK_END("tags");
 			}
 		}else{
 			if(!setup){
 				xPlugTags = new dMapPTag();
 				setup = true;
 				DBUG_VERBOSE_LO("Made plug tags for " << T::identify());
-				DBUG_TRACK_END("tags");
+				DBUG_TRACK_START("tags");
 			}
 		}
 	}
@@ -186,68 +192,75 @@ namespace gt{
 
 	template<typename T>
 	void
-	tOutline<T>::draft(){
-		if(xDraftCount == 0){
-			readyCommands(); // You can't be sure a makeCommand has been run.
-			readyTags(); // just in case.
-			xBlueprint.setup(
-				getHash<T>(),
-				T::replaces(),
-				T::extends(),
-				&makeFig,
-				&(T::identify),
-				&getCommand,
-				&getPlugTag,
-				&getAllCommands,
-				&getAllTags,
-				&getExtensions,
-				&hasPlugTag,
-				&removeForce
-			);
+	tOutline<T>::draft(const dStr &pAddon){
+		if(xDrafted){
+			WARN_S(T::identify() << " already drafted.");
+			return;
+		}
 
-			cBlueprint const *tmpBlue = NULL;
+		xAddon = pAddon;
 
-			if(xBlueprint.replace() != uDoesntReplace)
-				tmpBlue = gWorld.get()->getBlueprint(xBlueprint.replace());
-			else if(xBlueprint.extend() != uDoesntExtend)
-				tmpBlue = gWorld.get()->getBlueprint(xBlueprint.extend());
+		readyCommands(); // You can't be sure a makeCommand has been run.
+		readyTags(); // just in case.
+		xBlueprint.install(
+			getHash<T>(),
+			T::replaces(),
+			T::extends(),
+			&makeFig,
+			&unmakeFig,
+			&(T::identify),
+			&getCommand,
+			&getPlugTag,
+			&getAllCommands,
+			&getAllTags,
+			&getExtensions,
+			&hasPlugTag,
+			&remove
+		);
 
-			if(tmpBlue != NULL){
-				for(dListComs cmds = tmpBlue->getAllComs(); !cmds.empty(); cmds.pop_front()){
-					xCommands->insert( dMapCom::value_type(
-						cmds.front()->mID,
-						cmds.front()->respawn(getHash<T>())
-					) );
+		cBlueprint const *tmpBlue = NULL;
 
-					DBUG_VERBOSE_LO(T::identify() << " respawned command " << cmds.front()->mName );
-				}
+		if(xBlueprint.replace() != uDoesntReplace)
+			tmpBlue = gWorld.get()->getBlueprint(xBlueprint.replace());
+		else if(xBlueprint.extend() != uDoesntExtend)
+			tmpBlue = gWorld.get()->getBlueprint(xBlueprint.extend());
 
-				xExtensions = tmpBlue->getExtensions();
-				xExtensions.push_back(tmpBlue);
+		if(tmpBlue != NULL){
+			for(dListComs cmds = tmpBlue->getAllComs(); !cmds.empty(); cmds.pop_front()){
+				(void)xCommands->insert( dMapCom::value_type(
+					cmds.front()->mID,
+					cmds.front()->respawn(getHash<T>())
+				) );
+
+				DBUG_VERBOSE_LO(T::identify() << " copied command " << cmds.front()->mName );
 			}
 
-			gWorld.get()->addBlueprint(&xBlueprint);
+			for(dListPTags tags = getAllTags(); !tags.empty(); tags.pop_front()){
+				xPlugTags->insert( dMapPTag::value_type(
+					tags.front()->mID,
+					*tags.front()
+				) );
+
+				DBUG_VERBOSE_LO(T::identify() << " copied tag " << tags.front()->mName );
+			}
+
+			xExtensions = tmpBlue->getExtensions();
+			xExtensions.push_back(tmpBlue);
 		}
-		++xDraftCount;
+
+		gWorld.get()->addBlueprint(&xBlueprint, pAddon);
+		xDrafted = true;
 	}
 
 	template<typename T>
 	void
-	tOutline<T>::remove(bool force){
-		if(xDraftCount==0){
-			WARN_S("Figment not drafted.");
+	tOutline<T>::remove(){
+		if(!xDrafted){
+			WARN_S(T::identify() << " can't be removed, as it's not drafted.");
 			return;
 		}
 
-		if(force)
-			xDraftCount =0;
-		else
-			--xDraftCount;
-
-		if(!force && xDraftCount>0)
-			return;
-
-		gWorld.get()->removeBlueprint(&xBlueprint);
+		gWorld.get()->removeBlueprint(&xBlueprint, xAddon);
 		readyCommands(false);
 		readyTags(false);
 	}
@@ -259,10 +272,9 @@ namespace gt{
 		return ptrFig(new T());
 	}
 
-	template <typename T>
+	template<typename T>
 	void
-	tOutline<T>::removeForce(){
-		remove(true);
+	tOutline<T>::unmakeFig(){
 	}
 
 	template <typename T>
