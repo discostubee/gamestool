@@ -42,6 +42,7 @@ namespace gt{
 
 		static const char * ADDON_POSTFIX;
 		static const char * ADDON_CACHE_FILE;
+		static const char * LOG_FILE;
 
 		static timeval tempTime;
 
