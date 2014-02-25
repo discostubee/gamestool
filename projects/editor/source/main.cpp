@@ -12,10 +12,7 @@
 #include "gt_base/textFig.hpp"
 #include "gt_base/thread.hpp"
 #include "gt_base/valve.hpp"
-
-#include "gt_graphics/stage.hpp"
-#include "gt_graphics/film.hpp"
-#include "gt_graphics/camera.hpp"
+#include "gt_base/chainLink.hpp"
 
 #include "gt_terminal/entryPoint.hpp"
 
@@ -58,21 +55,7 @@ void draftAll(){
 void cleanupAll(){
 
 	tOutline<cEmptyFig>::remove();
-	tOutline<cAnchor>::remove();
-	tOutline<cRunList>::remove();
-	tOutline<cBase_fileIO>::remove();
-	tOutline<cAlias>::remove();
-	tOutline<cFigFactory>::remove();
-	tOutline<cWorldShutoff>::remove();
-	tOutline<cTextFig>::remove();
-	tOutline<cThread>::remove();
-	tOutline<cValve>::remove();
-	tOutline<cChainLink>::remove();
-	tOutline<cFigment>::remove();
-}
-
-void openAddons(){
-	gWorld.get()->openAddon(dStr("X11GL"));
+	gt::gWorld.cleanup();	//- Done here so that we can log destruction faults.
 }
 
 ptrFig makeEditor(){
@@ -80,23 +63,32 @@ ptrFig makeEditor(){
 	cContext setupConx;
 	ptrFig rlTop = gWorld.get()->makeFig(getHash<cRunList>());
 
-	tPlug<ptrFig> stage = gWorld.get()->makeFig(getHash<cStage>());
-	tPlug<ptrFig> film = gWorld.get()->makeFig(getHash<cFilm>());
-	tPlug<ptrFig> cam = gWorld.get()->makeFig(getHash<c2DCamera>());
+	tPlug<ptrFig> stage = gWorld.get()->makeFig("stage");
+	tPlug<ptrFig> film = gWorld.get()->makeFig("film");
+	tPlug<ptrFig> cam = gWorld.get()->makeFig("camera 2d");
 	tPlug<ptrFig> close = gWorld.get()->makeFig(getHash<cWorldShutoff>());
 	tPlug<ptrFig> menu;
 
 	{	//- link components.
-		ptrLead linkFilm = gWorld.get()->makeLead(cStage::xSetLink);
-		linkFilm->linkPlug(&film, cStage::xPT_links);
+		ptrLead linkFilm = gWorld.get()->makeLead("chain link", "set link");
+		linkFilm->linkPlug(
+			&film,
+			gWorld.get()->getPlugTag("chain link", "links")
+		);
 		stage.get()->jack(linkFilm, &setupConx);
 
-		ptrLead linkClose = gWorld.get()->makeLead(cStage::xLinkCloser);
-		linkClose->linkPlug(&close, cStage::xPT_closer);
+		ptrLead linkClose = gWorld.get()->makeLead("stage", "link closer");
+		linkClose->linkPlug(
+			&close,
+			gWorld.get()->getPlugTag("chain link", "links")
+		);
 		stage.get()->jack(linkClose, &setupConx);
 
-		ptrLead linkCam = gWorld.get()->makeLead(cFilm::xSetLink);
-		linkCam->linkPlug(&cam, cFilm::xPT_links);
+		ptrLead linkCam = gWorld.get()->makeLead("chain link", "set link");
+		linkCam->linkPlug(
+			&cam,
+			gWorld.get()->getPlugTag("chain link", "links")
+		);
 		film.get()->jack(linkCam, &setupConx);
 
 		tPlugLinearContainer<ptrFig, std::vector> contain;
@@ -115,8 +107,8 @@ ENTRYPOINT
 	try{
 		gt::gWorld.take(new gt::cTerminalWorld());
 
+		gWorld.get()->checkAddons();
 		draftAll();
-		openAddons();
 
 		{
 			tPlug<ptrBuff> buff(ptrBuff(new cByteBuffer()));
@@ -150,15 +142,19 @@ ENTRYPOINT
 			}
 		}
 
+		excep::delayExcep::shake();
 		cleanupAll();
-		gt::gWorld.cleanup();	//- Done here so that we can log destruction faults.
-		excep::logExcep::shake();
 
 	}catch(std::exception &e){
-		std::cout << e.what() << std::endl;
+		try{ cleanupAll(); }catch(...){}
+		std::cout << e.what();
+
+
 	}catch(...){
-		std::cout << "Unknown error." << std::endl;
+		try{ cleanupAll(); }catch(...){}
+		std::cout << "Unknown error.";
 	}
+
 
 	return EXIT_SUCCESS;
 }

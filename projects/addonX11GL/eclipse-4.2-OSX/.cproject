@@ -199,6 +199,9 @@
 		<configuration configurationName="Release">
 			<resource resourceType="PROJECT" workspacePath="/addonX11GL"/>
 		</configuration>
+		<configuration configurationName="DebugThreading">
+			<resource resourceType="PROJECT" workspacePath="/addonX11GL"/>
+		</configuration>
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/addonX11GL"/>
 		</configuration>

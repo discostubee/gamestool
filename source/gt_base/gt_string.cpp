@@ -221,12 +221,76 @@ toNStr(const dText &pString){
 	return strRtn;
 }
 
+bool
+hasWildStr(const char *findIn, const char *wildStr){
+	if(findIn == NULL || wildStr == NULL)
+		return false;
 
+	const unsigned int lenA = strlen(findIn);
+	const unsigned int lenB = strlen(wildStr);
+	const unsigned int NOWILD = static_cast<unsigned int>(-1);
 
+	if(lenA == 0 || lenB == 0)
+		return false;
 
+	unsigned int idxBWildStart = NOWILD, idxBWildEnd = NOWILD;
+	unsigned int idxA=0, idxB=0;
 
+	while(idxA < lenA && idxB < lenB){
+		if(wildStr[idxB] == '*' && idxBWildStart == NOWILD){
+			if(idxB +1 == lenB)
+				return true;
 
+			++idxB;
 
+			if(wildStr[idxB] != '*')
+				idxBWildStart = idxB;
 
+		}else if(idxBWildStart != NOWILD && idxBWildEnd == NOWILD){
+			if(wildStr[idxB] == '*' || idxB +1 >= lenB)
+				idxBWildEnd = idxB;
+			else
+				++idxB;
 
+		}else if(idxBWildStart != NOWILD && idxBWildEnd != NOWILD){
+			unsigned int searchLen = idxBWildEnd +1 -idxBWildStart;
+			char *search = new char[searchLen +1];
+			memcpy(search, &wildStr[idxBWildStart], (searchLen) * sizeof(char));
+			search[searchLen] = '\0';
 
+			char * found = strstr(&findIn[idxA], search);
+			if(found == NULL)
+				return false;
+
+			idxA = (found - findIn) / sizeof(char);
+			idxA += searchLen;
+			idxBWildStart = idxBWildEnd = NOWILD;
+
+			idxB += searchLen;
+
+			delete [] search;
+
+		}else if(findIn[idxA] != wildStr[idxB]){
+			return false;
+
+		}else{
+			++idxA;
+			++idxB;
+		}
+	}
+
+	return true;	//- made it all the way.
+}
+
+#ifdef GTUT
+#include "unitTests.hpp"
+
+GTUT_START(test_string, wildStr){
+	const char * testA = "dogcat";
+	const char * wildA = "*cat";
+
+	GTUT_ASRT(hasWildStr(testA, wildA), "Failed to find wild");
+
+}GTUT_END;
+
+#endif

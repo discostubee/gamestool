@@ -1,6 +1,6 @@
 /**********************************************************************************************************
  * !\file	command.hpp
- * !\brief
+ * !\brief	Contains both the commands and tags.
  *
  **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
@@ -45,10 +45,11 @@ namespace gt{
 		const dUID	mID;
 
 		cPlugTag(const dPlaChar* pPlugName);
+		cPlugTag(const cPlugTag &pCopyMe);
 		~cPlugTag();
 
 	private:
-		cPlugTag& operator = (const cPlugTag&);
+		cPlugTag& operator = (const cPlugTag &pCopyMe);	//!< Banned.
 	};
 
 	//----------------------------------------------------------------------------

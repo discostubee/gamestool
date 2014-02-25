@@ -36,6 +36,7 @@
 #	ifdef DEBUG
 
 #		ifdef GTUT_GOOGLE
+#			include "exceptions.hpp"
 #			include <gtest/gtest.h>	// You'll need to point your linker to the location you downloaded gtest to.
 
 // These are the macros every framework needs to implement.

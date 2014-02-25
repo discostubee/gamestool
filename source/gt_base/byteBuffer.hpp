@@ -92,7 +92,7 @@ cByteBuffer::fill(TYPE *pCup, size_t pStart) const{
 	ASRT_NOTNULL(pCup);
 
 	size_t sizeUnpacked=0;
-	bpk::unpack(&mBuff[pStart], pCup, &sizeUnpacked, mBuffSize-pStart);
+	bpk::unpack(pCup, &mBuff[pStart], &sizeUnpacked, mBuffSize-pStart);
 	return sizeUnpacked;
 }
 

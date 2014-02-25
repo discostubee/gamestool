@@ -11,9 +11,11 @@
 
 namespace gt{
 
-	//!\brief	The bitmap abstraction uses streams for each colour channel. The implementation of this class can then take
-	//!			these streams and convert them into any native format they need.
-	class cBitmap : public cFigment{
+	//!\brief	Placed in the program flow to change the currently used texture.
+	//!			Bitmaps can not be saved or loaded, but must instead be recreated.
+	//!			Each bitmap is its own buffer of memory, even if it's a region
+	//!			of shared memory (IE sprite sheet).
+	class cBitmap : public cChainLink{
 	public:
 		enum eChan{
 			eChanRed, eChanGreen, eChanBlue, eChanAlpha, eChanMono
@@ -23,17 +25,11 @@ namespace gt{
 		typedef std::vector<dColRng> dStreamChannel;	//!<
 		typedef std::map<eChan, dStreamChannel> dChannels;
 
-		//!\brief When adding a bitmap, you can change how it's added, both in which channels to swap and how the levels are copied.
-		class cBase_ChanRelation{
-		public:
-			eChan inChan, outChan;
-			virtual void relate(dStreamChannel &in, size_t startInPos, dStreamChannel &out, size_t startOutPos) =0;	//!< copy one stream into another.
-		};
-
-		static const cPlugTag *xPT_bitmap;
-		static const cPlugTag *xPT_addSpot;	//!< Where to put the top left corner of the bitmap we are adding. Relative to the parent's top left corner.
-		static const cCommand::dUID xSetRelation;	//!< Sets channel relations which are used when adding. Adds them as a pile.
+		static const cPlugTag *xPT_pic;		//!< The bitmap.
+		static const cPlugTag *xPT_loc;		//!< Where to put the top left corner of the bitmap we are adding. Relative to the parent's top left corner.
+		static const cPlugTag *xPT_fig;
 		static const cCommand::dUID	xAdd;	//!< Adds another bitmap to this one. You can place this bitmap anywhere on the parent, relative to the parent's top left corner.
+		static const cCommand::dUID	xLinkRebuilder;	//!< Link a figment that is called when the bitmap must be rebuilt.
 
 		//-----------------------------
 		// Standard
@@ -41,6 +37,7 @@ namespace gt{
 		virtual ~cBitmap();
 
 		GT_IDENTIFY("bitmap");
+		GT_EXTENDS(cChainLink);
 		virtual dNameHash hash() const { return getHash<cBitmap>(); }
 
 	protected:
@@ -55,16 +52,15 @@ namespace gt{
 		};
 
 		typedef std::vector< sDirtyRect > dListDirty;
-		typedef tPMorphJar<cBase_ChanRelation> jarRelation;
-		typedef std::map< eChan, jarRelation > dRelations;
 
-		dListDirty mPendingAdds;		//!< List of dirty rectangles, ooo, that need to be copied into this bitmap.
-		dRelations channelRelation;		//!< How channels from each dirty rect are copied into this bitmap.
+		dListDirty mPendingAdds;	//!< List of dirty rectangles, ooo, that need to be copied into this bitmap.
 
-		void patSetRelation(ptrLead aLead);
 		void patAdd(ptrLead aLead);
+		void patLinkRebuilder(ptrLead aLead);
 
 		virtual ptrBitmap getBitmap(){ DONT_USE_THIS; return ptrBitmap(NULL); };	//!< The implementation converts its native format into the portable channel streams format and outputs it.
+		virtual void applyDirt(const dListDirty pDirt){ DONT_USE_THIS; }
+
 	};
 }
 

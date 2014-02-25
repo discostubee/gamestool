@@ -27,7 +27,8 @@ cBlueprint::cBlueprint():
 	mHash(0),
 	mReplaces(uDoesntReplace),
 	mExtends(uDoesntExtend),
-	mFuncMake(NULL),
+	mMake(NULL),
+	mUnmade(NULL),
 	mGetName(NULL),
 	mGetCom(NULL),
 	mGetPlugTag(NULL),
@@ -42,10 +43,18 @@ cBlueprint::~cBlueprint(){
 
 ptrFig
 cBlueprint::make(){
-	ASRT_NOTNULL(mFuncMake);
-	ptrFig rtn = mFuncMake();
+	ASRT_NOTNULL(mMake);
+	ptrFig rtn = mMake();
 	iniFig(rtn);
 	return rtn;
+}
+
+void
+cBlueprint::unmade(){
+	if(mUnmade == NULL)
+		return;
+
+	mUnmade();
 }
 
 dNameHash
@@ -104,36 +113,13 @@ cBlueprint::hasPlugTag(cPlugTag::dUID pPT) const{
 	return mHasPlugTag(pPT);
 }
 
-const cBlueprint*
-cBlueprint::operator = (const cBlueprint* pCopy){
-	PROFILE;
-
-	ASRT_NOTNULL(pCopy);
-
-	if(pCopy != this)
-	{
-		mHash = pCopy->mHash;
-		mReplaces = pCopy->mReplaces;
-		mExtends = pCopy->mExtends;
-		mFuncMake = pCopy->mFuncMake;
-		mGetName = pCopy->mGetName;
-		mGetCom = pCopy->mGetCom;
-		mGetPlugTag = pCopy->mGetPlugTag;
-		mGetAllComs = pCopy->mGetAllComs;
-		mGetAllTags = pCopy->mGetAllTags;
-		mGetExtensions = pCopy->mGetExtensions;
-		mHasPlugTag = pCopy->mHasPlugTag;
-		mCleanup = pCopy->mCleanup;
-	}
-	return this;
-}
-
 void
-cBlueprint::setup(
+cBlueprint::install(
 	dNameHash pHash,
 	dNameHash pReplaces,
 	dNameHash pExtends,
-	ptrFig (*pFuncMake)(),
+	ptrFig (*pMake)(),
+	void (*pUnmade)(),
 	const dPlaChar* (*pGetName)(),
 	const cCommand* (*pGetCom)(cCommand::dUID),
 	const cPlugTag* (*pGetPlugTag)(cPlugTag::dUID),
@@ -146,7 +132,8 @@ cBlueprint::setup(
 	mHash = pHash;
 	mReplaces = pReplaces;
 	mExtends = pExtends;
-	mFuncMake = pFuncMake;
+	mMake = pMake;
+	mUnmade = pUnmade;
 	mGetName = pGetName;
 	mGetCom = pGetCom;
 	mGetPlugTag = pGetPlugTag;
@@ -156,7 +143,7 @@ cBlueprint::setup(
 	mHasPlugTag = pHasPlugTag;
 	mCleanup = pCleanup;
 
-	DBUG_VERBOSE_LO("blueprint '" << mGetName() << "' setup.");
+	DBUG_VERBOSE_LO("blueprint '" << mGetName() << "' installed.");
 }
 
 
@@ -164,3 +151,6 @@ void
 cBlueprint::iniFig(ptrFig &iniMe){
 	iniMe->ini(this, iniMe.getDir());
 }
+
+
+////////////////////////////////////////////////////////////

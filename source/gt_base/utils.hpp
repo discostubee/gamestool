@@ -46,17 +46,6 @@
 #define SAFEDEL(P) {delete P; P=NULL;}
 #define SAFEDEL_ARR(P) {delete [] P; P=NULL;}
 
-//------------------------------------------------------------------------------------------
-// Useful for making addon functions easy to implement.
-#ifdef WIN32
-	//#define DYN_LIB_IMP_DEC(rnt) extern "C" __declspec(dllimport) rnt __stdcall
-#	define DYN_LIB_EXP_DEC(rnt) extern "C" __declspec(dllexport) rnt
-#	define DYN_LIB_DEF(rnt) __declspec(dllexport) rnt
-#else
-	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
-#	define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
-#	define DYN_LIB_DEF(rnt) rnt
-#endif
 
 //------------------------------------------------------------------------------------------
 #if defined(__APPLE__)
@@ -69,6 +58,8 @@
 typedef unsigned int	dHash;
 typedef unsigned int	dNameHash;
 typedef unsigned int	dMillisec;
+
+static const dNameHash HASH_INVALID = -1;
 
 #if CHAR_BIT == 8 || __CHAR_BIT__ == 8
 	typedef char		dByte;		//!< This is the gametool's most basic byte type. It is always 8 bits.

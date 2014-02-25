@@ -2,14 +2,13 @@
 
 using namespace gt;
 
-const cPlugTag*	cStage::xPT_closer = tOutline<cStage>::makePlugTag("closer");
 const cPlugTag*	cStage::xPT_layout = tOutline<cStage>::makePlugTag("layout");
 const cPlugTag*	cStage::xPT_fullscreen = tOutline<cStage>::makePlugTag("fullscreen");
 
-const cCommand::dUID cStage::xLinkCloser= tOutline<cStage>::makeCommand(
+const cCommand::dUID cStage::xLinkCloser = tOutline<cStage>::makeCommand(
 	"link closer",
 	&cStage::patLinkCloser,
-	cStage::xPT_closer,
+	cStage::xPT_links,
 	NULL
 );
 
@@ -65,7 +64,7 @@ cStage::getLinks(std::list<ptrFig>* pOutLinks){
 
 void
 cStage::patLinkCloser(ptrLead aLead){
-	aLead->copyPlug(&mCloser, xPT_closer);
+	aLead->copyPlug(&mCloser, xPT_links);
 }
 
 void

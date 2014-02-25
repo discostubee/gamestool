@@ -12,7 +12,7 @@
 namespace gt{
 
 	//!\brief	Printworks can take a text string and creates a bitmap from it.
-	class cPrintworks_freetype : public cPrintworks, public tAddonDependent<FreetypeAddon>{
+	class cPrintworks_freetype : public cPrintworks{
 	public:
 
 		//-----------------------------

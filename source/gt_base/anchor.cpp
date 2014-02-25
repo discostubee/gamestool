@@ -69,30 +69,6 @@ cAnchor::save(cByteBuffer* pAddHere){
 
 		DBUG_VERBOSE_LO("anchor saving " << figs.size() << " figments" );
 
-		{	//- First, we must list any required addons
-			std::list<dStr> addons;
-			std::list<dStr>::iterator itrA;
-			for(std::set<iFigment*>::iterator i = figs.begin(); i != figs.end(); ++i){
-				if(!(*i)->requiredAddon().empty()){
-					for(itrA = addons.begin(); itrA != addons.end(); ++itrA){	//- ensure it's unique.
-						if(itrA->compare( (*i)->requiredAddon() )==0)
-							break;
-					}
-
-					if(itrA==addons.end())
-						addons.push_back( (*i)->requiredAddon() );
-				}
-			}
-
-			size_t numAddons = addons.size();
-			pAddHere->add(&numAddons);
-
-			while(!addons.empty()){
-				pAddHere->add(&addons.front());
-				addons.pop_front();
-			}
-		}
-
 		chunkSig = reinterpret_cast<dFigSaveSig>(mLink.get().get());
 		pAddHere->add( &chunkSig ); // Save reference to the root.
 
@@ -153,19 +129,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 	try{	//- The process below must happen in exactly the same way in the save process.
 
-		//- first lets get all the addons we need to load these figments.
-		size_t numAddons = 0;
-		readSpot += pBuff->fill(&numAddons, readSpot);
-
-		DBUG_VERBOSE_LO("Number of addons: " << numAddons);
-
-		for(size_t i=0; i<numAddons; ++i){
-			dStr addonName;
-			readSpot += pBuff->fill(&addonName, readSpot);
-			gWorld.get()->openAddon(addonName);
-		}
-
-		//- now get the root sig.
+		//- the root sig.
 		readSpot += pBuff->fill(&rootSig, readSpot);
 
 		//- Now lets read in all the chunks.

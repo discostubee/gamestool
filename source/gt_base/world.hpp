@@ -82,6 +82,7 @@
 #include "profiler.hpp"
 
 #include <set>
+#include <stack>
 #include <stdarg.h>
 
 ////////////////////////////////////////////////////////////////////
@@ -91,7 +92,7 @@
 	gt::cWorld::primordial::warnError(x, __FILE__, __LINE__)
 
 #define WARN_S(x)\
-	{ std::stringstream ss; ss << x; gt::cWorld::primordial::warnError(ss.str().c_str(), __FILE__, __LINE__); }
+	{ std::stringstream ss; ss << "!: " << x; gt::cWorld::primordial::warnError(ss.str().c_str(), __FILE__, __LINE__); }
 
 // Handy for all those (...) catch blocks.
 extern const char *MSG_UNKNOWN_ERROR;
@@ -149,6 +150,7 @@ namespace gt{
 		// New types.
 		typedef std::list<dStr> dLines;
 		typedef tShortLookup<cContext*> dContextLookup;
+		typedef std::vector<const cBlueprint*> dBlueList;
 
 		//--------------------------------------------------------
 		// Members
@@ -163,17 +165,20 @@ namespace gt{
 
 		//--------------------------------------------------------
 		// Blueprint stuff
-		void addBlueprint(cBlueprint* pAddMe);	//!<	Adds a blueprint to the library. Will replace a blueprint if the new ones say to.
-		const cBlueprint* getBlueprint(dNameHash pNameHash);	//!< Returns a blueprint if one found. Or throws on fail.
+
+		void addBlueprint(cBlueprint* pAddMe, const dStr &pFromAddon="");	//!< Adds a blueprint to the library. Will replace a blueprint if the new ones say to, but only once.
+		const cBlueprint* getBlueprint(dNameHash pNameHash);	//!< Returns a blueprint using the hash of its name. Throws on fail.
+		dBlueList getAllBlueprints();	//!< Allows you to inspect all stored blueprints.
 
 		//!\brief	Removed, or un-draft, a blueprint from the world.
 		//!\note	Super slow.
 		//!\todo	Figure out a way to avoid traversing the program tree every time.
 		//!\todo	make pRemoveMe a pointer to a pointer, so that it can be turned into a NULL.
-		void removeBlueprint(const cBlueprint* pRemoveMe);
+		void removeBlueprint(const cBlueprint* pRemoveMe, const dStr &pFromAddon);
 
 		//--------------------------------------------------------
 		// Factory outlets
+
 		ptrFig makeFig(dNameHash pNameHash);	//!< Makes a new figment that is managed by a smart pointer.
 		ptrFig makeFig(const dPlaChar *pName);	//!< Handy function if you want to use literal strings in a demo.
 		ptrLead makeLead(unsigned int pComID);	//!< Makes a new lead that is managed by a smart pointer.
@@ -182,32 +187,21 @@ namespace gt{
 		//--------------------------------------------------------
 		// Register office
 
-		//!\brief	We need to keep track of the number of contexts so we can make a context lookup.
-		//!\note	Locks all contexts while the lookup table is changed.
-		dConSig regContext(cContext* pCon);
-
-		//!\brief	NEVER forget to do this. Locks all contexts while the table is updated. Previous context signatures
-		//!			(apart from the one being unregged) remain valid.
-		void unregContext(dConSig pSig);
-
+		dConSig regContext(cContext* pCon);	//!< We need to keep track of the number of contexts so we can make a context lookup. !\note	Locks all contexts while the lookup table is changed.
+		void unregContext(dConSig pSig);	//!< NEVER forget to do this. Locks all contexts while the table is updated. Previous context signatures (apart from the one being unregged) remain valid.
 		bool activeContext(dConSig pSig);	//!< Is this context still alive?
-
-		void lazyCloseAddon(const dPlaChar* pAddonName);	//!< This is called from addon dependent figments, so we can't directly call closeAddon.
+		void checkAddons();	//!< Check all the available addons.
 
 		//--------------------------------------------------------
 		// Get stuff
 		
 		//!\brief	Use this if you know the hash of the figment and the ID of the plug tag.
 		//!\note	Throws if not found.
-		const cPlugTag* getPlugTag(dNameHash pFigHash, unsigned int pPTHash);
+		const cPlugTag* getPlugTag(dNameHash pFigBlueprint, unsigned int pPTHash);
 
 		//!\note	Useful when writing demos where you are using addons and you don't want to include the headers
 		const cPlugTag* getPlugTag(const dPlaChar *figName, const dPlaChar *tagName);
 
-		//!\breif	Tries to find a plug tag in all the current blueprints it has.
-		//!\note	Throws if not found.
-		//!\todo	Make this more efficient by preventing a rescan of every blueprint.
-		const cPlugTag* getPlugTag(unsigned int aID);
 
 		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
 		//!			bicycle.
@@ -222,40 +216,40 @@ namespace gt{
 
 		virtual dMillisec getAppTime() =0;
 		virtual void loop() =0;	//!< Enter the main program loop. Continues looping until it is told to stop.
-		virtual void flushLines	() =0;		//!< Process the lines to be displayed on the console.
-		virtual void openAddon(const dStr &name) =0;		//!< Opens an addon with the given name
+		virtual void flushLines	() =0;	//!< Process the lines to be displayed on the console.
 
 		//---------------------------------------------------------------------------------------------------
 		//!\brief	primodial is used to manage services that are present before a world is available.
 		//!\note	Not a namespace so that data is hidden.
 		class primordial{
 		public:
-
-			//!\brief	Add a line to be displayed in the console.
-			//!\note	Threadsafe: Has a specific mutex lock to acquire and release.
-			static void lo(const dStr& pLine, bool cleanup=false);
-
-			//!\brief	logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
-			static void warnError(const char *msg, const char* pFile, const unsigned int pLine);
-
-			//!\brief	Allows you to pass the error type directly.
-			static void warnError(excep::base_error &pE, const char* pFile, const unsigned int pLine);
-
-#			ifdef GTUT
-				static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
-#			endif
+			static void lo(const dStr& pLine, bool cleanup=false);	//!< \brief Add a line to be displayed in the console. \note Threadsafe: Has a specific mutex lock to acquire and release.
+			static void warnError(const char *msg, const char* pFile, const unsigned int pLine);	//!< \brief logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
+			static void warnError(std::exception &pE, const char* pFile, const unsigned int pLine);	//!< \brief Allows you to pass the error type directly.
+			static void cleanup();	//!< Call this at the very end of your program or dynamic library.
 
 			//!\brief	Makes a profile token using the profiler stored in this world.
 			//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
 			//!\todo	Make the death report threadsafe
 			static cProfiler::cToken makeProfileToken(const char* pFile, unsigned int pLine, bool cleanup=false);
 
-			//!\todo	Make threadsafe.
-			static void makeProfileReport(std::ostream &log);
-
+			static void makeProfileReport(std::ostream &log);	//<! \todo Make threadsafe.
 			static void redirectWorld(gt::cWorld *directHere);	//!< copies the primordial static data into the given world, and redirects gWorld to point to the one given. If null, gWorld is cleaned up and set to null.
 
+#			ifdef GTUT
+				static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
+#			endif
+
 		protected:
+
+			//--------------------------------------------------------
+			// Data which must be redirected if this is an addon's heap.
+			// This stuff also needs specific setup
+			static gt::cWorld::dLines* xLines;
+			static cProfiler* xProfiler;
+
+			friend class gt::cWorld;
+
 #			ifdef GTUT
 				static bool mSuppressError;	//!<
 #			endif
@@ -265,87 +259,85 @@ namespace gt{
 				static boost::recursive_mutex *xLineGuard;
 #			endif
 
-			//--------------------------------------------------------
-			// Data which must be redirected if this is an addon's heap.
-			// This stuff also needs specific setup
-			static gt::cWorld::dLines* xLines;
-			static cProfiler* xProfiler;
-
-			static void cleanup();
-
-			//--------------------------------------------------------
-			virtual void closeAddon(const dStr &name) =0;	//!< Actually close the addon
-
-			friend class gt::cWorld;
-
 		private:
 			primordial();
 		};
 
 
 	protected:
+		typedef std::map<dNameHash, dStr> dAddons;
+		typedef std::set<dNameHash> dRefAddons;
+		typedef std::map<dNameHash, bool> dAddon2Fresh;
+		typedef std::map<dStr, dRefAddons> dBlue2Addons;
+
 
 		// references from primordial.
 		dLines* mLines;	//!< points to the static global that holds all the lines that need flushing.
 		cProfiler* mProfiler;	//!< points to the static global.
+
+		//
+		dAddons mAvailableAddons;
+		dRefAddons mOpenAddons;
+		ptrFig mRoot;
+
+		virtual tAutoPtr<cWorld> makeWorld() =0;	//!< Make a new world.
+		virtual void openAddon(const dStr &name) =0;	//!< Opens an addon with the given name
+		virtual void closeAddon(const dStr &name) =0;
+		virtual void getAddonList(dAddons &output) =0;
+		virtual void readAddonCache(const dAddons &addons, dBlue2Addons &outMap, dAddon2Fresh &outFresh) =0;	//!< Cache of what figments are contained in what addons, which prevents us having to open every addon every time.
+		virtual void writeAddonCache(const dBlue2Addons &info) =0;	//!< (re)write the addon cache.
+
+		void closeWorld();	//!< Perform final cleanup. Should be run by the implementations destructor.
+
+		friend class primordial;
+
 #		ifdef GT_THREADS
 			boost::recursive_mutex *mProfileGuard;
 			boost::recursive_mutex *mLineGuard;
 #		endif
 
-		ptrFig mRoot;
-		std::list<dStr> mAddonsToClose;	//!< List of addons to close next cycle.
-
-		friend class primordial;
-
 	private:
-		struct sBlueprintHeader;
+		//!\brief	Stores all the info about a type of blueprint.
+		struct sBlueBook{
+			cBlueprint * mUsing;
+			dNameHash mOpenedWith;
+			dRefAddons mInAddons;	//!< All the different addons this blueprint exists in.
+			cBlueprint * mArchived;	//!< When a blueprint is replaced, it goes here. Can't be relpaced twice.
+			dNameHash mArchiveOW;	//!< The hash for the addon the archived blueprint came from.
 
-		typedef std::map<dNameHash, sBlueprintHeader> dBlueprintMap;
+			sBlueBook() : mUsing(NULL), mOpenedWith(0), mArchived(NULL), mArchiveOW(0) {}
+		};
 
-		static bool thereCanBeOnlyOne;	//!< You can only create and destroy the world once (in the same heap).
+		typedef std::map<dNameHash, sBlueBook> dBlueprintMap;
 
-		dBlueprintMap mBlueprints; //!< Blueprint library is static because we only ever want 1 blueprint library.
-		dBlueprintMap mBlueArchive; //!< Archives a blueprint here when it is replaced.
-		std::vector<const cCommand*> mCommands;
-		dBlueprintMap::iterator mScrBMapItr;	//!< scratch variable for iterating over blueprint library.
+		dBlueprintMap mBlueprints; //!< These are all the available blueprints.
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
 		dContextLookup mContexts; //!< We keep track of all the contexts here in the world.
+
+		void closeUselessAddons();	//!< Search for addons that no longer have any active figments, and close them.
+		void findFigs(dNameHash pName, std::list<ptrFig> *output);	//!< Searches from the root node for figments with the given name.
 
 		cWorld& operator=(cWorld&) { return *this; };	//!< Banned.
 	};
 
 	extern tMrSafety<cWorld> gWorld;	//!< Gives you threadsafe access to the world.
 
-
-	//---------------------------------------------------------------------------------------------------
-	//!\brief	Any figments that come from an addon are dependent on that addon (so you inherit from it).
-	//!			When no more of these figments are open, the world closes the addon.
-	//!\note	Expects ADDON to be a class with member "static const dPlaChar* getAddonName()"
-	template<typename ADDON>
-	class tAddonDependent{
-	private:
-		static int instCount;
-
-	public:
-		tAddonDependent(){
-			++instCount;
-		}
-
-		virtual ~tAddonDependent(){
-			try{
-				--instCount;
-				if(instCount<=0)
-					gWorld.get()->lazyCloseAddon( ADDON::getAddonName() );
-			}catch(...){}
-		}
-
-   		virtual const dPlaChar* requiredAddon() const { return ADDON::getAddonName(); }	//!< Returns name of addon that this figment comes from. An empty string means that no addon is required.
-	};
-
-	template<typename ADDON> int tAddonDependent<ADDON>::instCount = 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////////
+// Template functions
+namespace gt{
+
+	//!\brief	Generates a hash for this figment and remembers is, so it won't regenerate it every time.
+	template <typename T>
+	dNameHash
+	getHash(){
+		static dNameHash name = 0;
+		if(name == 0)
+			name = ::makeHash( PCStr2NStr(T::identify()) );
+		return name;
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Typedefs
@@ -354,6 +346,7 @@ namespace gt{
 
 	typedef gt::tMrSafety<gt::cWorld>::dLemming dRefWorld;
 }
+
 
 
 #endif

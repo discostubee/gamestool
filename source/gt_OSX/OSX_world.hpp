@@ -27,17 +27,26 @@ namespace gt{
 		virtual dMillisec getAppTime();
 		virtual void loop();
 		virtual void flushLines();
-		virtual void openAddon(const dStr &name);
 
 	protected:
-		virtual void closeAddon(const dStr &name);
+		tAutoPtr<cWorld> makeWorld();
+		void openAddon(const dStr &name);
+		void closeAddon(const dStr &name);
+		void getAddonList(dAddons &output);
+		void readAddonCache(const dAddons &addons, dBlue2Addons &outMap, dAddon2Fresh &outFresh);
+		void writeAddonCache(const dBlue2Addons &info);
 
 	private:
 		typedef std::map<dNameHash, void*> mapNameToHandle;
 		typedef void (*draftFoo)(cWorld *pWorld);
 
+		static const char * ADDON_POSTFIX;
+		static const char * ADDON_CACHE_FILE;
+
 		static timeval tempTime;
+
 		static dMillisec getOSXTime();
+		static std::vector<dStr> getFiles(const dStr &search);
 
 		mapNameToHandle mLibHandles;
 	};

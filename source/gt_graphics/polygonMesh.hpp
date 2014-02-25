@@ -102,6 +102,15 @@ namespace gt{
 				bpk::pack(&itr->c, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
 			}
 
+			//-
+			tmpSize = get().mTMap.size();
+			bpk::pack(&tmpSize, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+
+			for(std::vector<sTexMap>::iterator itr = get().mTMap.begin(); itr != get().mTMap.end(); ++itr){
+				bpk::pack(itr->u, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				bpk::pack(itr->v, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				bpk::pack(&itr->idxBMap, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+			}
 		}
 
 		//!\todo
@@ -158,7 +167,7 @@ namespace gt{
 		static const cCommand::dUID xAddToMesh;	//!< Adds any polies or vertexes to the current mesh. It does NOT clear the old mesh.
 		static const cCommand::dUID xGetMesh;	//!< Expects the xPT_Mesh, which it changes to be the generic version of the current mesh.
 		static const cCommand::dUID	xMeasure;	//!< Attempts to set a bounding box first, as a measurement of the mesh, and a sphere second.
-		static const cCommand::dUID	xTexturize;	//!< Links bitmaps and gets
+		static const cCommand::dUID	xTexturize;	//!< Apply texture mapping.
 
 		GT_IDENTIFY("poly mesh");
 		GT_EXTENDS(cFigment);

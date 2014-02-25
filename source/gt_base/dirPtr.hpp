@@ -111,10 +111,10 @@ namespace gt{
 					mDir->unlink();
 			}
 		}catch(std::exception &e){
-			excep::logExcep::add(e.what());
+			excep::delayExcep::add(e.what());
 
 		}catch(...){
-			excep::logExcep::add("Unknown error destroying tDirPtr");
+			excep::delayExcep::add("Unknown error destroying tDirPtr");
 		}
 	}
 
@@ -149,7 +149,13 @@ namespace gt{
 	template<typename T>
 	bool
 	tDirPtr<T>::valid() const{
-		return mDir != NULL;
+		if(mDir == NULL)
+			return false;
+
+		if(mDir->mContent == NULL && mDir->mRedirect == NULL)
+			return false;
+
+		return true;
 	}
 
 	template<typename T>

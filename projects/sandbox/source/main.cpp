@@ -87,6 +87,7 @@ ENTRYPOINT
 		);
 
 		try{
+			gWorld.get()->checkAddons();
 			draftAll();
 
 			gWorld.get()->setRoot( getRootAnchor() );

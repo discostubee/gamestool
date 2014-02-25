@@ -11,9 +11,9 @@
 
 namespace gt{
 
-	class c3DCamera_X11GL: public c3DCamera, public tAddonDependent<X11GLAddon>{
+	class c3DCamera_X11GL: public c3DCamera{
 	public:
-		GT_IDENTIFY("3d camera gl");
+		GT_IDENTIFY("camera 3d gl");
 		GT_REPLACES(c3DCamera);
 		virtual dNameHash hash() const { return getHash<c3DCamera_X11GL>(); }
 
@@ -21,9 +21,9 @@ namespace gt{
 		virtual ~c3DCamera_X11GL();
 	};
 
-	class c2DCamera_X11GL: public c2DCamera, private tOutline<c2DCamera_X11GL>{
+	class c2DCamera_X11GL: public c2DCamera{
 	public:
-		GT_IDENTIFY("2d camera gl");
+		GT_IDENTIFY("camera 2d gl");
 		GT_REPLACES(c2DCamera);
 		virtual dNameHash hash() const { return getHash<c2DCamera_X11GL>(); }
 
