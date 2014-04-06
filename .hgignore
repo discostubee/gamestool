@@ -38,3 +38,4 @@ projects/addonWinGL/VS10e/Debug/vc100.idb
 projects/addonWinGL/VS10e/Debug/addonWinGL.unsuccessfulbuild
 projects/addonWinGL/VS10e/Debug/addonWinGL.log
 projects/addonWinGL/VS10e/Debug/addonWinGL.lastbuildstate
+bin/*

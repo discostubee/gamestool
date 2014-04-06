@@ -2,19 +2,22 @@
 //!\brief	Entry point for the gamestool.
 
 
-#include "gt_base/anchor.hpp"
-#include "gt_base/runList.hpp"
 #include "gt_base/alias.hpp"
+#include "gt_base/anchor.hpp"
+#include "gt_base/figment.hpp"
 #include "gt_base/figFactory.hpp"
+#include "gt_base/runList.hpp"
 #include "gt_base/textFig.hpp"
 #include "gt_base/thread.hpp"
 #include "gt_base/valve.hpp"
 
 #ifdef __APPLE__
 #	include "gt_OSX/entryPoint.hpp"
-
-#	elif defined(__linux)
-#	elif defined(WIN32)
+#	include "gt_OSX/OSX_fileIO.hpp"
+#elif defined(__linux)
+#	include "gt_linux/entryPoint.hpp"
+#	include "gt_linux/linux_fileIO.hpp"
+#elif defined(WIN32)
 #endif
 
 
@@ -23,24 +26,24 @@ void draftAll(){
 	using namespace gt;
 
 	//- This needs to be a complete list of everything in the gamestool lib.
+	tOutline<cAlias>::draft();
+	tOutline<cAnchor>::draft();
+	tOutline<cFigFactory>::draft();
 	tOutline<cFigment>::draft();
 	tOutline<cEmptyFig>::draft();
-	tOutline<cWorldShutoff>::draft();
 	tOutline<cChainLink>::draft();
-	tOutline<cAnchor>::draft();
 	tOutline<cRunList>::draft();
-	tOutline<cBase_fileIO>::draft();
-	tOutline<cAlias>::draft();
-	tOutline<cFigFactory>::draft();
-	tOutline<cTextFig>::draft();
-	tOutline<cThread>::draft();
 	tOutline<cValve>::draft();
 	tOutline<cBase_fileIO>::draft();
+	tOutline<cTextFig>::draft();
+	tOutline<cThread>::draft();
+	tOutline<cWorldShutoff>::draft();
 
 	//- Draft in stuff specific for platform.
 #	if defined(__APPLE__)
 		tOutline<cOSX_fileIO>::draft();
 #	elif defined(__linux)
+		tOutline<cLinux_fileIO>::draft();
 #	elif defined(WIN32)
 #	endif
 }
@@ -76,13 +79,43 @@ gt::ptrFig getRootAnchor(){
 	return root.get();
 }
 
+void cleanupAll(){
+	using namespace gt;
+
+	//- Draft in stuff specific for platform.
+#	if defined(__APPLE__)
+		tOutline<cOSX_fileIO>::remove();
+#	elif defined(__linux)
+		tOutline<cLinux_fileIO>::remove();
+#	elif defined(WIN32)
+#	endif
+
+	tOutline<cBase_fileIO>::remove();
+	tOutline<cAlias>::remove();
+	tOutline<cAnchor>::remove();
+	tOutline<cFigFactory>::remove();
+	tOutline<cEmptyFig>::remove();
+	tOutline<cRunList>::remove();
+	tOutline<cValve>::remove();
+	tOutline<cTextFig>::remove();
+	tOutline<cThread>::remove();
+	tOutline<cWorldShutoff>::remove();
+
+	tOutline<cChainLink>::remove();
+	tOutline<cFigment>::remove();
+}
+
 ENTRYPOINT
 {
 	using namespace gt;
+	int result = EXIT_FAILURE;
+
 	try{
 		gWorld.take(
 #			if defined(__APPLE__)
 				new cOSXWorld()
+#			elif defined(__linux)
+				new cLinuxWorld()
 #			endif
 		);
 
@@ -100,17 +133,17 @@ ENTRYPOINT
 		}
 
 		gWorld.cleanup();	//- Done here so that we can log destruction faults.
+		cleanupAll();
 		excep::delayExcep::shake();
+		result = EXIT_SUCCESS;
 
 	}catch(std::exception &e){
 		try{ cleanupAll(); }catch(...){}
-		return EXIT_FAILURE;
 	}catch(...){
 		try{ cleanupAll(); }catch(...){}
-		return EXIT_FAILURE;
 	}
 
-	return EXIT_SUCCESS;
+	return result;
 }
 
 

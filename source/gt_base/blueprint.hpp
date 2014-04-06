@@ -52,27 +52,26 @@ namespace gt{
 	class cBlueprint{
 	public:
 		cBlueprint();
-		virtual ~cBlueprint();
+		~cBlueprint();
 
-		virtual ptrFig make();
-		virtual void unmade();
-		virtual dNameHash hash() const;
-		virtual const dPlaChar* name() const;
-		virtual dNameHash replace() const;
-		virtual dNameHash extend() const;
-		virtual const cCommand* getCom(cCommand::dUID pHash) const;
-		virtual const cPlugTag* getPlugTag(cPlugTag::dUID pPT) const;
-		virtual dListComs getAllComs() const;
-		virtual dListPTags getAllTags() const;
-		virtual dExtensions getExtensions() const;
-		virtual bool hasPlugTag(cPlugTag::dUID pPT) const;
+		ptrFig make();
+		dNameHash hash() const;
+		const dPlaChar* name() const;
+		dNameHash replace() const;
+		dNameHash extend() const;
+		const cCommand* getCom(cCommand::dUID pHash) const;
+		const cPlugTag* getPlugTag(cPlugTag::dUID pPT) const;
+		dListComs getAllComs() const;
+		dListPTags getAllTags() const;
+		dExtensions getExtensions() const;
+		bool hasPlugTag(cPlugTag::dUID pPT) const;
+		void remove();	//!< Calls the outlines remove function.
 
-		void install(
+		void setup(
 			dNameHash pHash,
 			dNameHash pReplaces,
 			dNameHash pExtends,
 			ptrFig (*pMake)(),
-			void (*pUnmade)(),
 			const dPlaChar* (*pGetName)(),
 			const cCommand* (*pGetCom)(cCommand::dUID),
 			const cPlugTag* (*pGetPlugTag)(cPlugTag::dUID),
@@ -80,20 +79,14 @@ namespace gt{
 			dListPTags (*pGetAllTags)(),
 			dExtensions (*pGetExtensions)(),
 			bool (*pHasPlugTag)(cPlugTag::dUID),
-			void (*pCleanup)()
+			void (*pRemove)()
 		);
-
-	protected:
-		void (*mCleanup)();	//!< Cleans up the outline as well.
-
-	friend class cWorld;
 
 	private:
 		dNameHash mHash;
 		dNameHash mReplaces;
 		dNameHash mExtends;
 		ptrFig (*mMake)();
-		void (*mUnmade)();
 		const dPlaChar* (*mGetName)();
 		const cCommand* (*mGetCom)(cCommand::dUID);
 		const cPlugTag* (*mGetPlugTag)(cPlugTag::dUID);
@@ -101,6 +94,7 @@ namespace gt{
 		dListPTags (*mGetAllTags)();
 		dExtensions (*mGetExtensions)();
 		bool (*mHasPlugTag)(cPlugTag::dUID);
+		void (*mRemove)();
 
 		void iniFig(ptrFig &iniMe);
 	};

@@ -5,6 +5,7 @@
 	<projects>
 		<project>libgamestool</project>
 		<project>libgt_graphics</project>
+		<project>libgt_linux</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

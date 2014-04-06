@@ -1,56 +1,89 @@
 //!\file	main.cpp
-//!\brief	
+//!\brief	This is the end point of the editor, so all the info about this project goes here.
+//!			The editor should be the only program where all it does is build a gamestool app
+//!			and then saves it. Another way to look at this project, is that it's not the
+//!			actual editor, but rather a program that builds the editor.
 
 
-// Include the stuff we want to test.
-#include "gt_base/figment.hpp"
+#include "gt_base/anchor.hpp"
+#include "gt_base/runList.hpp"
+#include "gt_base/alias.hpp"
+#include "gt_base/figFactory.hpp"
+#include "gt_base/textFig.hpp"
+#include "gt_base/thread.hpp"
+#include "gt_base/valve.hpp"
+#include "gt_base/chainLink.hpp"
 
+#include "gt_terminal/entryPoint.hpp"
+
+//- Not done as part of the terminal entry.
 #if defined(__APPLE__)
-#	include "gt_OSX/OSX_world.hpp"
-#elif defined(__linux__)
-#	include "gt_linux/linux_world.hpp"
+#	include "gt_OSX/OSX_fileIO.hpp"
+#elif defined(__linux)
+#elif defined(WIN32)
 #endif
 
-int
-main(int argc, char **argv){
-	int result = EXIT_FAILURE;
+using namespace gt;
 
-	std::cout << "Running performance tests. Version 0.1" << std::endl;
 
-	#if defined(__APPLE__)
-		gt::gWorld.take( new gt::cOSXWorld() );
-	#elif defined(__linux__)
-		gt::gWorld.take( new gt::cLinuxWorld() );
-	#endif
+void draftAll(){
+	using namespace gt;
 
+	//- This needs to be a complete list of everything in the gamestool lib.
+	tOutline<cFigment>::draft();
+	tOutline<cEmptyFig>::draft();
+	tOutline<cChainLink>::draft();
+	tOutline<cAnchor>::draft();
+	tOutline<cRunList>::draft();
+	tOutline<cBase_fileIO>::draft();
+	tOutline<cAlias>::draft();
+	tOutline<cFigFactory>::draft();
+	tOutline<cWorldShutoff>::draft();
+	tOutline<cTextFig>::draft();
+	tOutline<cThread>::draft();
+	tOutline<cValve>::draft();
+
+	//- Draft in stuff specific for platform.
+#	if defined(__APPLE__)
+		tOutline<cOSX_fileIO>::draft();
+#	elif defined(__linux)
+#	elif defined(WIN32)
+#	endif
+}
+
+void cleanupAll(){
+
+	tOutline<cEmptyFig>::remove();
+	gt::gWorld.cleanup();	//- Done here so that we can log destruction faults.
+}
+
+
+
+ENTRYPOINT
+{
 	try{
-		using namespace gt;
+		gt::gWorld.take(new gt::cTerminalWorld());
 
-	#ifdef GTUT_GOOGLE
-		::testing::InitGoogleTest(&argc, argv);
-		result = RUN_ALL_TESTS();
-	#endif
+		gWorld.get()->checkAddons();
+		draftAll();
 
-		PROFILE;
 
-		cContext fakeConx;
-		for(int numTest=0; numTest<1000; ++numTest){
-			ptrFig fig = gWorld.get()->makeFig(getHash<cFigment>());
-			ptrLead lead = gWorld.get()->makeLead(cFigment::xSave);
-			tPlug<int> life = 42;
 
-			fig->jack(lead, &fakeConx);
-			fig->run(&fakeConx);
-		}
+		excep::delayExcep::shake();
+		cleanupAll();
 
-		gt::gWorld.get()->makeProfileReport(std::cout);
-		gt::gWorld.cleanup();
 	}catch(std::exception &e){
-		std::cout << "!Stuffed: " << e.what() << std::endl;
+		try{ cleanupAll(); }catch(...){}
+		std::cout << e.what();
+
+
+	}catch(...){
+		try{ cleanupAll(); }catch(...){}
+		std::cout << "Unknown error.";
 	}
 
-	cTracker::makeReport(std::cout);
 
-	return result;
+	return EXIT_SUCCESS;
 }
+
 

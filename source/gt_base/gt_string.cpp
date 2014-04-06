@@ -18,7 +18,7 @@
 
 #include "gt_string.hpp"
 
-//#define USE_LOCALE_GEN
+#define USE_LOCALE_GEN
 
 
 #if defined(USE_BOOST_LOCALE) || defined(USE_LOCALE_GEN)
@@ -86,13 +86,13 @@ PCStr2NStr(const dPlaChar *pString){
 	if(pString == NULL)
 		return strRtn;
 
-	#if defined(USE_LOCALE_GEN)
+#	if defined(USE_LOCALE_GEN)
 		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[PCStrLen(pString)], nativeEncoding, boost::locale::conv::skip);
-	#elif defined(USE_BOOST_LOCALE)
+#	elif defined(USE_BOOST_LOCALE)
 		strRtn = boost::locale::conv::to_utf<dNatChar>(pString, &pString[PCStrLen(pString)], nativeEncoding);
-	#else
+#	else
 		strRtn = pString;	//!!! temporary measure.
-	#endif
+#	endif
 
 
 	return strRtn;
@@ -105,13 +105,13 @@ PCStr2Text(const dPlaChar *pString){
 	if(pString == NULL)
 		return strRtn;
 
-	#if defined(USE_LOCALE_GEN)
+#	if defined(USE_LOCALE_GEN)
 		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[PCStrLen(pString)], getTextEncode());
-	#elif defined(USE_BOOST_LOCALE)
+#	elif defined(USE_BOOST_LOCALE)
 		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[PCStrLen(pString)], textEncoding);
-	#else
+#	else
 		strRtn.t = pString;	//!!! temporary measure.
-	#endif
+#	endif
 
 	return strRtn;
 }
@@ -132,13 +132,13 @@ NCStr2PStr(const dNatChar *pString){
 	if(pString == NULL)
 		return strRtn;
 
-	#if defined(USE_LOCALE_GEN)
+#	if defined(USE_LOCALE_GEN)
 		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[NCStrLen(pString)], getPlatformEncode());
-	#elif defined(USE_BOOST_LOCALE)
+#	elif defined(USE_BOOST_LOCALE)
 		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[NCStrLen(pString)], "UTF-8");
-	#else
+#	else
 		strRtn = pString;	//!!! temporary measure.
-	#endif
+#	endif
 
 	return strRtn;
 }
@@ -150,13 +150,13 @@ NCStr2Text(const dNatChar *pString){
 	if(pString == NULL)
 		return strRtn;
 
-	#if defined(USE_LOCALE_GEN)
+#	if defined(USE_LOCALE_GEN)
 		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[NCStrLen(pString)], getTextEncode());
-	#elif defined(USE_BOOST_LOCALE)
+#	elif defined(USE_BOOST_LOCALE)
 		strRtn = boost::locale::conv::to_utf<dPlaChar>(pString, &pString[NCStrLen(pString)], textEncoding);
-	#else
+#	else
 		strRtn = pString;	//!!! temporary measure.
-	#endif
+#	endif
 
 	return strRtn;
 }
@@ -210,13 +210,13 @@ toNStr(const dText &pString){
 	if(pString.t.empty())
 		return strRtn;
 
-	#if defined(USE_LOCALE_GEN)
+#	if defined(USE_LOCALE_GEN)
 		strRtn = boost::locale::conv::to_utf<dNatChar>(pString.t, getNativeEncode());
-	#elif defined(USE_BOOST_LOCALE)
+#	elif defined(USE_BOOST_LOCALE)
 		strRtn = boost::locale::conv::to_utf<dNatChar>(pString.t, nativeEncoding, boost::locale::conv::skip);
-	#else
+#	else
 		strRtn = pString.t;	//!!! temporary measure.
-	#endif
+#	endif
 
 	return strRtn;
 }
@@ -258,7 +258,7 @@ hasWildStr(const char *findIn, const char *wildStr){
 			memcpy(search, &wildStr[idxBWildStart], (searchLen) * sizeof(char));
 			search[searchLen] = '\0';
 
-			char * found = strstr(&findIn[idxA], search);
+			const char * found = strstr(&findIn[idxA], search);
 			if(found == NULL)
 				return false;
 

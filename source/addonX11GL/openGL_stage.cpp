@@ -96,21 +96,27 @@ cStage_X11GL::cStage_X11GL():
 }
 
 cStage_X11GL::~cStage_X11GL(){
-	// switch back to original desktop resolution if we were in fullscreen
-	if(mFullscreen){
+	try{
+		// switch back to original desktop resolution if we were in fullscreen
+		if(mFullscreen){
 
-	}
-
-	if(mContext){
-		if( !glXMakeCurrent(mDisplay, None, NULL)){
-			DBUG_LO("Could not release drawing context.");
 		}
 
-		glXDestroyContext(mDisplay, mContext);
-		mContext = NULL;
-	}
+		if(mContext){
+			if( !glXMakeCurrent(mDisplay, None, NULL)){
+				DBUG_LO("Could not release drawing context.");
+			}
 
-	XCloseDisplay(mDisplay);
+			glXDestroyContext(mDisplay, mContext);
+			mContext = NULL;
+		}
+
+		XCloseDisplay(mDisplay);
+	}catch(std::exception &e){
+
+	}catch(...){
+
+	}
 }
 
 void

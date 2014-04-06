@@ -20,6 +20,7 @@
 #if defined(__APPLE__)
 #	include "gt_OSX/OSX_fileIO.hpp"
 #elif defined(__linux)
+#	include "gt_linux/linux_fileIO.hpp"
 #elif defined(WIN32)
 #endif
 
@@ -48,6 +49,7 @@ void draftAll(){
 #	if defined(__APPLE__)
 		tOutline<cOSX_fileIO>::draft();
 #	elif defined(__linux)
+		tOutline<cLinux_fileIO>::draft();
 #	elif defined(WIN32)
 #	endif
 }
@@ -63,11 +65,11 @@ ptrFig makeEditor(){
 	cContext setupConx;
 	ptrFig rlTop = gWorld.get()->makeFig(getHash<cRunList>());
 
-	tPlug<ptrFig> stage = gWorld.get()->makeFig("stage");
+	tPlug<ptrFig> stage;// = gWorld.get()->makeFig("stage");
 	tPlug<ptrFig> film = gWorld.get()->makeFig("film");
 	tPlug<ptrFig> cam = gWorld.get()->makeFig("camera 2d");
+	tPlug<ptrFig> menu = gWorld.get()->makeFig("polymesh");
 	tPlug<ptrFig> close = gWorld.get()->makeFig(getHash<cWorldShutoff>());
-	tPlug<ptrFig> menu;
 
 	{	//- link components.
 		ptrLead linkFilm = gWorld.get()->makeLead("chain link", "set link");
@@ -154,7 +156,6 @@ ENTRYPOINT
 		try{ cleanupAll(); }catch(...){}
 		std::cout << "Unknown error.";
 	}
-
 
 	return EXIT_SUCCESS;
 }

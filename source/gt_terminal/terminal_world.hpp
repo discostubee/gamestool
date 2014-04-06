@@ -33,6 +33,9 @@ namespace gt{
 		virtual ~cTerminalWorld();
 
 		virtual void flushLines	();
+
+	protected:
+		tAutoPtr<cWorld> makeWorld();
 	};
 }
 

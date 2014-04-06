@@ -1,4 +1,4 @@
-Gamestool readme. April 2013
+Gamestool readme. April 2014
 ----------------------------------------------------
 Hi all, the software in this repository is presented as is and makes no 
 promises or guarantees. All stuff in here that is claimed to be my stuff

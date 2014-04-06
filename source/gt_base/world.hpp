@@ -110,7 +110,7 @@ extern const char *MSG_UNKNOWN_ERROR;
 
 #ifdef DEBUG
 #	define PROFILE\
-		cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
+//		cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
 #	define DBUG_LO(x)\
 		{ std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
 #else
@@ -132,6 +132,11 @@ namespace gt{
 	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
 }
 
+////////////////////////////////////////////////////////////////////
+// Config
+namespace gt{
+	const size_t MAX_SRTBUFF = 512;
+}
 
 ////////////////////////////////////////////////////////////////////
 // Classes
@@ -166,7 +171,7 @@ namespace gt{
 		//--------------------------------------------------------
 		// Blueprint stuff
 
-		void addBlueprint(cBlueprint* pAddMe, const dStr &pFromAddon="");	//!< Adds a blueprint to the library. Will replace a blueprint if the new ones say to, but only once.
+		void addBlueprint(cBlueprint* pAddMe);	//!< Adds a blueprint to the library. Will replace a blueprint if the new ones say to, but only once.
 		const cBlueprint* getBlueprint(dNameHash pNameHash);	//!< Returns a blueprint using the hash of its name. Throws on fail.
 		dBlueList getAllBlueprints();	//!< Allows you to inspect all stored blueprints.
 
@@ -174,7 +179,10 @@ namespace gt{
 		//!\note	Super slow.
 		//!\todo	Figure out a way to avoid traversing the program tree every time.
 		//!\todo	make pRemoveMe a pointer to a pointer, so that it can be turned into a NULL.
-		void removeBlueprint(const cBlueprint* pRemoveMe, const dStr &pFromAddon);
+		void removeBlueprint(const cBlueprint* pRemoveMe);
+
+		//!\brief	Removes all blueprints that are contained in the given addon.
+		void removeAddonBlueprints(const dStr &addonName);
 
 		//--------------------------------------------------------
 		// Factory outlets
@@ -220,13 +228,11 @@ namespace gt{
 
 		//---------------------------------------------------------------------------------------------------
 		//!\brief	primodial is used to manage services that are present before a world is available.
-		//!\note	Not a namespace so that data is hidden.
 		class primordial{
 		public:
 			static void lo(const dStr& pLine, bool cleanup=false);	//!< \brief Add a line to be displayed in the console. \note Threadsafe: Has a specific mutex lock to acquire and release.
 			static void warnError(const char *msg, const char* pFile, const unsigned int pLine);	//!< \brief logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
 			static void warnError(std::exception &pE, const char* pFile, const unsigned int pLine);	//!< \brief Allows you to pass the error type directly.
-			static void cleanup();	//!< Call this at the very end of your program or dynamic library.
 
 			//!\brief	Makes a profile token using the profiler stored in this world.
 			//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
@@ -235,6 +241,7 @@ namespace gt{
 
 			static void makeProfileReport(std::ostream &log);	//<! \todo Make threadsafe.
 			static void redirectWorld(gt::cWorld *directHere);	//!< copies the primordial static data into the given world, and redirects gWorld to point to the one given. If null, gWorld is cleaned up and set to null.
+			static void addonClosed(const dPlaChar *addonFilename);	//!< Called by a library when is closes. Expects the main addon filename, extensions and all.
 
 #			ifdef GTUT
 				static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
@@ -270,31 +277,23 @@ namespace gt{
 		typedef std::map<dNameHash, bool> dAddon2Fresh;
 		typedef std::map<dStr, dRefAddons> dBlue2Addons;
 
-
-		// references from primordial.
-		dLines* mLines;	//!< points to the static global that holds all the lines that need flushing.
-		cProfiler* mProfiler;	//!< points to the static global.
-
 		//
 		dAddons mAvailableAddons;
 		dRefAddons mOpenAddons;
 		ptrFig mRoot;
+		dNameHash mBluesFromAddon;	//!< Used so that any blueprints being drafted are considered to come from this addon.
 
 		virtual tAutoPtr<cWorld> makeWorld() =0;	//!< Make a new world.
-		virtual void openAddon(const dStr &name) =0;	//!< Opens an addon with the given name
-		virtual void closeAddon(const dStr &name) =0;
+		virtual void openAddon(const dStr &name) =0;	//!< Opens an addon with the given name. Can be called multiple times without reopening.
+		virtual void closeAddon(const dStr &name) =0;	//!< Closes the addon regardless of how many times openAddon was called (as it should have been actually opened only once).
 		virtual void getAddonList(dAddons &output) =0;
 		virtual void readAddonCache(const dAddons &addons, dBlue2Addons &outMap, dAddon2Fresh &outFresh) =0;	//!< Cache of what figments are contained in what addons, which prevents us having to open every addon every time.
-		virtual void writeAddonCache(const dBlue2Addons &info) =0;	//!< (re)write the addon cache.
+		virtual void writeAddonCache(const dBlue2Addons &info) =0;	//!< (re)write the addon cache.was
+		virtual void getAddonNameFromFilename(const dPlaChar *filename, dStr *output) =0;	//!< Given a full file path, return just the addon name.
 
 		void closeWorld();	//!< Perform final cleanup. Should be run by the implementations destructor.
 
 		friend class primordial;
-
-#		ifdef GT_THREADS
-			boost::recursive_mutex *mProfileGuard;
-			boost::recursive_mutex *mLineGuard;
-#		endif
 
 	private:
 		//!\brief	Stores all the info about a type of blueprint.

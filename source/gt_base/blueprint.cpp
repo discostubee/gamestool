@@ -23,19 +23,18 @@ using namespace gt;
 
 ////////////////////////////////////////////////////////////
 cBlueprint::cBlueprint():
-	mCleanup(NULL),
 	mHash(0),
 	mReplaces(uDoesntReplace),
 	mExtends(uDoesntExtend),
 	mMake(NULL),
-	mUnmade(NULL),
 	mGetName(NULL),
 	mGetCom(NULL),
 	mGetPlugTag(NULL),
 	mGetAllComs(NULL),
 	mGetAllTags(NULL),
 	mGetExtensions(NULL),
-	mHasPlugTag(NULL)
+	mHasPlugTag(NULL),
+	mRemove(NULL)
 {}
 
 cBlueprint::~cBlueprint(){
@@ -47,14 +46,6 @@ cBlueprint::make(){
 	ptrFig rtn = mMake();
 	iniFig(rtn);
 	return rtn;
-}
-
-void
-cBlueprint::unmade(){
-	if(mUnmade == NULL)
-		return;
-
-	mUnmade();
 }
 
 dNameHash
@@ -114,12 +105,17 @@ cBlueprint::hasPlugTag(cPlugTag::dUID pPT) const{
 }
 
 void
-cBlueprint::install(
+cBlueprint::remove(){
+	ASRT_NOTNULL(mRemove);
+	mRemove();
+}
+
+void
+cBlueprint::setup(
 	dNameHash pHash,
 	dNameHash pReplaces,
 	dNameHash pExtends,
 	ptrFig (*pMake)(),
-	void (*pUnmade)(),
 	const dPlaChar* (*pGetName)(),
 	const cCommand* (*pGetCom)(cCommand::dUID),
 	const cPlugTag* (*pGetPlugTag)(cPlugTag::dUID),
@@ -127,13 +123,12 @@ cBlueprint::install(
 	dListPTags (*pGetAllTags)(),
 	dExtensions (*pGetExtensions)(),
 	bool (*pHasPlugTag)(cPlugTag::dUID),
-	void (*pCleanup)()
+	void (*pRemove)()
 ){
 	mHash = pHash;
 	mReplaces = pReplaces;
 	mExtends = pExtends;
 	mMake = pMake;
-	mUnmade = pUnmade;
 	mGetName = pGetName;
 	mGetCom = pGetCom;
 	mGetPlugTag = pGetPlugTag;
@@ -141,9 +136,9 @@ cBlueprint::install(
 	mGetAllTags = pGetAllTags;
 	mGetExtensions = pGetExtensions;
 	mHasPlugTag = pHasPlugTag;
-	mCleanup = pCleanup;
+	mRemove = pRemove;
 
-	DBUG_VERBOSE_LO("blueprint '" << mGetName() << "' installed.");
+	DBUG_VERBOSE_LO("Blueprint '" << mGetName() << "' is setup.");
 }
 
 

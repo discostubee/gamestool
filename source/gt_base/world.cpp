@@ -33,22 +33,14 @@ gt::tMrSafety<gt::cWorld> gt::gWorld;
 using namespace gt;
 
 cWorld::cWorld():
-	mKeepLooping(true)
+	mKeepLooping(true), mBluesFromAddon(0)
 {
 	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
 	mRoot = ptrFig(new cWorldShutoff());
 
-	(void)primordial::makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
-	mProfiler = primordial::xProfiler;
+	primordial::lo("World created.");
 
-	primordial::lo("World created."); //- Ensure lines exists.
-	mLines = primordial::xLines;
-
-#	ifdef GT_THREADS
-		mProfileGuard = primordial::xProfileGuard;
-		mLineGuard = primordial::xLineGuard;
-#	endif
 }
 
 cWorld::~cWorld(){
@@ -58,8 +50,14 @@ void
 cWorld::closeWorld(){
 	mRoot.redirect(NULL);
 	mVillageBicycle.redirect(NULL);
-	dAddons::iterator found;
 
+	//- We remove all blueprints first so that there should be no dangling references keeping a library open.
+	for(dBlueprintMap::iterator bp = mBlueprints.begin(); bp != mBlueprints.end(); ++bp){
+		if(bp->second.mUsing != NULL)
+			bp->second.mUsing->remove();
+	}
+
+	dAddons::iterator found;
 	while(!mOpenAddons.empty()){
 		dAddons::iterator found = mAvailableAddons.find(*mOpenAddons.begin());
 		if(found == mAvailableAddons.end()){
@@ -71,26 +69,14 @@ cWorld::closeWorld(){
 		closeAddon(found->second);
 	}
 
-	for(dBlueprintMap::iterator bp = mBlueprints.begin(); bp != mBlueprints.end(); ++bp){
-		if(bp->second.mUsing != NULL)
-			bp->second.mUsing->mCleanup();
-	}
-
 	mBlueprints.clear();
 }
 
 void
-cWorld::addBlueprint(cBlueprint* pAddMe, const dStr &pFromAddon){
+cWorld::addBlueprint(cBlueprint* pAddMe){
 	ASRT_NOTNULL(pAddMe);
 
 	DBUG_LO("Adding blueprint " << pAddMe->name());
-
-	dNameHash addon = 0;
-	if(!pFromAddon.empty()){
-		addon = makeHash(pFromAddon.c_str());
-		if(mAvailableAddons.find(addon) == mAvailableAddons.end())
-			THROW_ERROR(pAddMe->name() << " required addon " << pFromAddon << " not supported.");
-	}
 
 	dBlueprintMap::iterator bp = mBlueprints.find(pAddMe->hash());
 
@@ -101,10 +87,7 @@ cWorld::addBlueprint(cBlueprint* pAddMe, const dStr &pFromAddon){
 		);
 	}
 
-	if(addon != 0){
-		bp->second.mOpenedWith = addon;
-		bp->second.mInAddons.insert(addon);
-	}
+	bp->second.mOpenedWith = mBluesFromAddon;
 
 	if(pAddMe->replace() != uDoesntReplace){
 		dBlueprintMap::iterator replace = mBlueprints.find(pAddMe->replace());
@@ -113,7 +96,7 @@ cWorld::addBlueprint(cBlueprint* pAddMe, const dStr &pFromAddon){
 				if(replace->second.mArchived == NULL){
 					replace->second.mArchived = replace->second.mUsing;
 					replace->second.mArchiveOW = replace->second.mOpenedWith;
-					replace->second.mOpenedWith = addon;
+					replace->second.mOpenedWith = bp->second.mOpenedWith;
 					replace->second.mUsing = pAddMe;
 					DBUG_VERBOSE_LO("	" << replace->second.mArchived->name() << " replaced by " << pAddMe->name());
 				}else{
@@ -158,29 +141,29 @@ cWorld::getAllBlueprints(){
 }
 
 void
-cWorld::removeBlueprint(const cBlueprint* pRemoveMe, const dStr &pFromAddon){
+cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	PROFILE;
 
 	DBUG_LO("Removing blueprint " << pRemoveMe->name());
 
 	dBlueprintMap::iterator found = mBlueprints.find(pRemoveMe->hash());
 	if(found == mBlueprints.end()){
-		WARN_S("	Tried to remove a blueprint '" << pRemoveMe->mGetName() << "' that didn't exist.");
+		WARN_S("	Tried to remove a blueprint '" << pRemoveMe->name() << "' that didn't exist.");
 		return;
 	}
 
 	if(found->second.mUsing == NULL){
-		WARN_S("	Tried to remove an inactive blueprint " << pRemoveMe->mGetName());
+		WARN_S("	Tried to remove an inactive blueprint " << pRemoveMe->name());
 		return;
 	}
 
-	//- Find and empty any objects using this blueprint.
-	std::list<ptrFig> figs;
-	findFigs(pRemoveMe->hash(), &figs);
-
-	for(std::list<ptrFig>::iterator itr = figs.begin(); itr != figs.end(); ++itr){
-		DBUG_VERBOSE_LO( "	Emptying figment " << (*itr)->name() );
-		itr->redirect(getEmptyFig());
+	{	//- Find and empty any objects using this blueprint.
+		std::list<ptrFig> figs;
+		findFigs(pRemoveMe->hash(), &figs);
+		for(std::list<ptrFig>::iterator itr = figs.begin(); itr != figs.end(); ++itr){
+			DBUG_VERBOSE_LO( "	Emptying figment " << (*itr)->name() );
+			itr->redirect(getEmptyFig());
+		}
 	}
 
 	//- Make blueprint inactive or restore from archive.
@@ -201,7 +184,29 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe, const dStr &pFromAddon){
 		found->second.mArchived = NULL;
 		found->second.mArchiveOW = 0;
 	}
+}
 
+void
+cWorld::removeAddonBlueprints(const dStr &addonName){
+	dNameHash hash = makeHash( toNStr(addonName.c_str()) );
+
+	std::list<cBlueprint*> remFirst, remArchive;
+
+
+	for(dBlueprintMap::iterator blue = mBlueprints.begin(); blue != mBlueprints.end(); ++blue){
+		if(blue->second.mOpenedWith == hash){
+			if(blue->second.mArchived != NULL)
+				remArchive.push_back(blue->second.mArchived);
+			else if(blue->second.mUsing != NULL)
+				remFirst.push_back(blue->second.mUsing);
+		}
+	}
+
+	for(std::list<cBlueprint*>::iterator i=remFirst.begin(); i!=remFirst.end(); ++i)
+		(*i)->remove();
+
+	for(std::list<cBlueprint*>::iterator i=remArchive.begin(); i!=remArchive.end(); ++i)
+		(*i)->remove();
 }
 
 ptrFig
@@ -220,7 +225,9 @@ cWorld::makeFig(dNameHash pNameHash){
 		if(addon == mAvailableAddons.end())
 			THROW_ERROR("bad addon hash");
 
+		mBluesFromAddon = addon->first;
 		openAddon(addon->second);
+		mBluesFromAddon = 0;
 
 		if(found->second.mUsing == NULL)
 			THROW_ERROR(pNameHash << " could not be made by addon " << addon->second);
@@ -322,17 +329,23 @@ cWorld::checkAddons(){
 			tAutoPtr<cWorld> underworld(makeWorld());
 			underworld->mAvailableAddons = addons;
 			underworld->openAddon(addName->second);
-			dBlueList blueprints = underworld->getAllBlueprints();
-			dBlue2Addons::iterator existing;
-			for(dBlueList::iterator b = blueprints.begin(); b != blueprints.end(); ++b){
-				existing = bluesInAddons.find((*b)->name());
-				if(existing == bluesInAddons.end())
-					existing = bluesInAddons.insert(
-						bluesInAddons.begin(),
-						dBlue2Addons::value_type((*b)->name(), dRefAddons())
-					);
+			try{
+				dBlueList blueprints = underworld->getAllBlueprints();
+				dBlue2Addons::iterator existing;
+				for(dBlueList::iterator b = blueprints.begin(); b != blueprints.end(); ++b){
+					existing = bluesInAddons.find((*b)->name());
+					if(existing == bluesInAddons.end())
+						existing = bluesInAddons.insert(
+							bluesInAddons.begin(),
+							dBlue2Addons::value_type((*b)->name(), dRefAddons())
+						);
 
-				existing->second.insert(addName->first);
+					existing->second.insert(addName->first);
+				}
+			}catch(std::exception &e){
+				WARN(e);
+			}catch(...){
+				WARN_S("Unknown error in addon " << addName->second);
 			}
 			underworld->closeAddon(addName->second);
 		}
@@ -417,100 +430,100 @@ cProfiler* gt::cWorld::primordial::xProfiler;
 
 void
 cWorld::primordial::lo(const dStr& pLine, bool cleanup){
-	static bool linesSetup = false;
-	if(!linesSetup){
-		if(cleanup)	//- nothing to do.
-			return;
-
-		linesSetup = true;
-		xLines = new dLines();
-#		ifdef GT_THREADS
-			xLineGuard = new boost::recursive_mutex();
-#		endif
-	}
-
-	if(cleanup){
-		if(!linesSetup)
-			return;
-
-		{
-#			ifdef GT_THREADS
-				boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
-#			endif
-			SAFEDEL(xLines);
-			linesSetup = false;
-		}
-#		ifdef GT_THREADS
-			SAFEDEL(xLineGuard);
-#		endif
-
-	}else if(!pLine.empty()){
-#		ifdef GT_THREADS
-			boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
-#		endif
-
-		xLines->push_back(pLine);
-	}
+//	static bool linesSetup = false;
+//	if(!linesSetup){
+//		if(cleanup)	//- nothing to do.
+//			return;
+//
+//		linesSetup = true;
+//		xLines = new dLines();
+//#		ifdef GT_THREADS
+//			xLineGuard = new boost::recursive_mutex();
+//#		endif
+//	}
+//
+//	if(cleanup){
+//		if(!linesSetup)
+//			return;
+//
+//		{
+//#			ifdef GT_THREADS
+//				boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+//#			endif
+//			SAFEDEL(xLines);
+//			linesSetup = false;
+//		}
+//#		ifdef GT_THREADS
+//			SAFEDEL(xLineGuard);
+//#		endif
+//
+//	}else if(!pLine.empty()){
+//#		ifdef GT_THREADS
+//			boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+//#		endif
+//
+//		xLines->push_back(pLine);
+//	}
 }
 
 void
 cWorld::primordial::warnError(const char *msg, const char* pFile, const unsigned int pLine){
-	std::stringstream ss;
-	ss << "Warning detected in file '" << pFile << "' on line " << pLine << std::endl << ". Info: " << msg;
-	lo(ss.str());
+//	std::stringstream ss;
+//	ss << "Warning detected in file '" << pFile << "' on line " << pLine << std::endl << ". Info: " << msg;
+//	lo(ss.str());
 }
 
 void
 cWorld::primordial::warnError(std::exception &pE, const char* pFile, const unsigned int pLine){
-	warnError(pE.what(), pFile, pLine);
+//	warnError(pE.what(), pFile, pLine);
 }
 
 cProfiler::cToken
 cWorld::primordial::makeProfileToken(const char* pFile, unsigned int pLine, bool cleanup){
-	static bool profileSetup = false;
-	if(!profileSetup){
-		if(!cleanup){	//- Nothing to do.
-			profileSetup = true;
-			xProfiler = new cProfiler();
-#			ifdef GT_THREADS
-				xProfileGuard = new boost::recursive_mutex();
-#			endif
-		}
-	}
-
-	if(cleanup){
-		if(profileSetup){
-			{
-#				ifdef GT_THREADS
-					boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-#				endif
-				SAFEDEL(xProfiler);
-				profileSetup = false;
-			}
-#			ifdef GT_THREADS
-				SAFEDEL(xProfileGuard);
-#			endif
-		}
-	}else if(pFile != NULL){
-#		ifdef GT_THREADS
-			boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-#		endif
-		return xProfiler->makeToken(pFile, pLine);
-	}
-
+//	static bool profileSetup = false;
+//	if(!profileSetup){
+//		if(!cleanup){	//- Nothing to do.
+//			profileSetup = true;
+//			xProfiler = new cProfiler();
+//#			ifdef GT_THREADS
+//				xProfileGuard = new boost::recursive_mutex();
+//#			endif
+//		}
+//	}
+//
+//	if(cleanup){
+//		if(profileSetup){
+//			{
+//#				ifdef GT_THREADS
+//					boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+//#				endif
+//				SAFEDEL(xProfiler);
+//				profileSetup = false;
+//			}
+//#			ifdef GT_THREADS
+//				SAFEDEL(xProfileGuard);
+//#			endif
+//		}
+//	}else if(pFile != NULL){
+//#		ifdef GT_THREADS
+//			boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+//#		endif
+//		return xProfiler->makeToken(pFile, pLine);
+//	}
+//
 	return cProfiler::cToken(NULL, 0, 0);
 }
 
 void
 cWorld::primordial::makeProfileReport(std::ostream &log){
-#	ifdef GT_THREADS
-		if(xProfileGuard==NULL)
-			return;
-
-		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-#	endif
-	(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
-	xProfiler->flushThatLog(log);
+//#	ifdef GT_THREADS
+//		if(xProfileGuard==NULL)
+//			return;
+//
+//		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+//#	endif
+//	(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
+//	xProfiler->flushThatLog(log);
 }
 
 #ifdef GTUT
@@ -524,45 +537,53 @@ cWorld::primordial::makeProfileReport(std::ostream &log){
 
 void
 cWorld::primordial::redirectWorld(cWorld* pWorldNew){
-	if(pWorldNew){
-		lo("");	//- This shouldn't add a line, but it ensures it's initialised.
-		(void)makeProfileToken(NULL, 0);	//- same.
-
-		{
-#			ifdef GT_THREADS
-				boost::lock_guard<boost::recursive_mutex> lockA(*xLineGuard);
-				boost::lock_guard<boost::recursive_mutex> lockB(*xProfileGuard);
-				boost::lock_guard<boost::recursive_mutex> lockC(*pWorldNew->mProfileGuard);
-				boost::lock_guard<boost::recursive_mutex> lockD(*pWorldNew->mLineGuard);
-#			endif
-
-			if(!xLines->empty())
-				pWorldNew->mLines->splice(pWorldNew->mLines->end(), *xLines);
-
-			*pWorldNew->mProfiler += *xProfiler;
-
-			delete xLines;
-			delete xProfiler;
-
-			xLines = pWorldNew->mLines;
-			xProfiler = pWorldNew->mProfiler;
-		}
-
-#		ifdef GT_THREADS
-			delete xProfileGuard;
-			delete xLineGuard;
-
-			xProfileGuard = pWorldNew->mProfileGuard;
-			xLineGuard = pWorldNew->mLineGuard;
-#		endif
-	}
+//	if(pWorldNew){
+//		lo("");	//- This shouldn't add a line, but it ensures it's initialised.
+//		(void)makeProfileToken(NULL, 0);	//- same.
+//
+//		{
+//#			ifdef GT_THREADS
+//				boost::lock_guard<boost::recursive_mutex> lockA(*xLineGuard);
+//				boost::lock_guard<boost::recursive_mutex> lockB(*xProfileGuard);
+//				boost::lock_guard<boost::recursive_mutex> lockC(*pWorldNew->mProfileGuard);
+//				boost::lock_guard<boost::recursive_mutex> lockD(*pWorldNew->mLineGuard);
+//#			endif
+//
+//			if(!xLines->empty())
+//				pWorldNew->mLines->splice(pWorldNew->mLines->end(), *xLines);
+//
+//			*pWorldNew->mProfiler += *xProfiler;
+//
+//			delete xLines;
+//			delete xProfiler;
+//
+//			xLines = pWorldNew->mLines;
+//			xProfiler = pWorldNew->mProfiler;
+//		}
+//
+//#		ifdef GT_THREADS
+//			delete xProfileGuard;
+//			delete xLineGuard;
+//
+//			xProfileGuard = pWorldNew->mProfileGuard;
+//			xLineGuard = pWorldNew->mLineGuard;
+//#		endif
+//	}
 }
 
-void
-cWorld::primordial::cleanup(){
-	//todo cleanup blueprints.
-	lo("", true);
-	(void)makeProfileToken(NULL, 0, true);
+
+void cWorld::primordial::addonClosed(const dPlaChar *addonFilename){
+	ASRT_NOTNULL(addonFilename);
+
+	gt::tMrSafety<gt::cWorld>::dLemming w = gWorld.get();
+
+	if(w.get() == NULL)
+		return;
+
+	dStr name;
+	w->getAddonNameFromFilename(addonFilename, &name);
+	w->removeAddonBlueprints(name);
+	gWorld.drop();
 }
 
 ////////////////////////////////////////////////////////////

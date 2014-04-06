@@ -36,7 +36,7 @@ ENTRYPOINT
 		gt::cWorld::primordial::cleanup();
 		gt::cWorld::primordial::makeProfileReport(std::cout);
 		cTracker::makeReport(std::cout);
-		excep::logExcep::shake();
+		excep::delayExcep::shake();
 		result = EXIT_SUCCESS;
 
 	}catch(std::exception &e){
