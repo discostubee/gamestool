@@ -16,12 +16,17 @@ cTerminalWorld::~cTerminalWorld(){
 
 void
 cTerminalWorld::flushLines(){
-#	ifdef GT_THREADS
-		boost::lock_guard<boost::recursive_mutex> lock(*mLineGuard);
-#	endif
+//#	ifdef GT_THREADS
+//		boost::lock_guard<boost::recursive_mutex> lock(*mLineGuard);
+//#	endif
+//
+//	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
+//		std::cout << (*i) << std::endl;
+//	}
+//	mLines->clear();
+}
 
-	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
-		std::cout << (*i) << std::endl;
-	}
-	mLines->clear();
+tAutoPtr<cWorld>
+cTerminalWorld::makeWorld(){
+	return tAutoPtr<cWorld>(new cTerminalWorld());
 }

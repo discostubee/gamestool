@@ -11,6 +11,18 @@
 
 #include "gt_base/world.hpp"
 
+	//#define DYN_LIB_IMP_DEC(rnt) extern "C" rnt __stdcall
+
+
+#define DYN_LIB_EXP_DEC(rnt) extern "C" rnt
+
+#define DYN_LIB_DEF(rnt) rnt
+
+//!\brief	Put this into your addon source so that when it closes, it drops automatic references to the main heap.
+#define DYN_LIB_ENDED class cLibDeath{ \
+	public: ~cLibDeath(){ gt::cWorld::primordial::addonClosed(__FILE__); }\
+}; cLibDeath die;
+
 namespace gt{
 
 	//--------------------------------------------------------
@@ -19,22 +31,36 @@ namespace gt{
 	class cLinuxWorld: public cWorld{
 	public:
 		cLinuxWorld();
-		~cLinuxWorld();
+		virtual ~cLinuxWorld();
 
 		virtual dMillisec getAppTime();
 		virtual void loop();
 		virtual void flushLines();
-		virtual void openAddon(const dStr &name);
-		virtual void closeAddon(const dStr &name);
+
+	protected:
+		tAutoPtr<cWorld> makeWorld();
+		void openAddon(const dStr &name);
+		void closeAddon(const dStr &name);
+		void getAddonList(dAddons &output);
+		void readAddonCache(const dAddons &addons, dBlue2Addons &outMap, dAddon2Fresh &outFresh);
+		void writeAddonCache(const dBlue2Addons &info);
+		void getAddonNameFromFilename(const dPlaChar *filename, dStr *output);
 
 	private:
 		typedef std::map<dNameHash, void*> mapNameToHandle;
 		typedef void (*draftFoo)(cWorld *pWorld);
 
+		static const dPlaChar * ADDON_CACHE_FILE;
+		static const dPlaChar * ADDON_PREFIX;
+		static const dPlaChar * ADDON_POSTFIX;
+		static const dPlaChar * LOG_FILE;
+
 		static timeval tempTime;
 		static dMillisec getLinuxTime();
 
 		mapNameToHandle mLibHandles;
+
+		void getDirContents(const dStr &dir, const dStr &search, bool dirsOnly, std::list<dStr> &output);
 	};
 }
 

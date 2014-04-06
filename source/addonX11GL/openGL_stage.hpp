@@ -7,7 +7,9 @@
 #ifndef OPENGL_STAGE_HPP
 #define OPENGL_STAGE_HPP
 
-#define GL_GLEXT_PROTOTYPES
+#ifndef GL_GLEXT_PROTOTYPES
+#	define GL_GLEXT_PROTOTYPES
+#endif
 
 #include "addonX11GL.hpp"
 #include "gt_graphics/stage.hpp"

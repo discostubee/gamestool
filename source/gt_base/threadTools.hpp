@@ -90,6 +90,8 @@ namespace gt{
 			boost::recursive_mutex muData;
 			typedef boost::lock_guard<boost::recursive_mutex> dMuLock;
 #		endif
+
+		const tMrSafety& operator=(const tMrSafety &nocopy){ return *this; }
 	};
 
 }

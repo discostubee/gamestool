@@ -69,7 +69,7 @@ cCommandContain::cCommandContain(const cCommandContain &copyMe):
 {}
 
 cCommandContain::cCommandContain(const cCommandInfo *copyMe):
-	mCom(mCom)
+	mCom(copyMe)
 {}
 
 cCommandContain& cCommandContain::operator=(const cCommandContain &copyMe){

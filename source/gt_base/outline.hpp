@@ -67,13 +67,11 @@ namespace gt{
 		static dMapCom* xCommands;
 		static dMapPTag* xPlugTags;
 		static bool xDrafted;
-		static dStr xAddon;	//!< Addon this outline may have come from.
 
 		tOutline();
 		~tOutline();
 
 		static ptrFig makeFig();
-		static void unmakeFig();
 
 		friend class cBlueprint;
 
@@ -131,10 +129,6 @@ namespace gt{
 
 	template<typename T>
 	bool tOutline<T>::xDrafted=false;
-
-	template<typename T>
-	dStr tOutline<T>::xAddon;
-
 
 	template<typename T>
 	void
@@ -198,32 +192,15 @@ namespace gt{
 			return;
 		}
 
-		xAddon = pAddon;
-
 		readyCommands(); // You can't be sure a makeCommand has been run.
 		readyTags(); // just in case.
-		xBlueprint.install(
-			getHash<T>(),
-			T::replaces(),
-			T::extends(),
-			&makeFig,
-			&unmakeFig,
-			&(T::identify),
-			&getCommand,
-			&getPlugTag,
-			&getAllCommands,
-			&getAllTags,
-			&getExtensions,
-			&hasPlugTag,
-			&remove
-		);
 
 		cBlueprint const *tmpBlue = NULL;
 
-		if(xBlueprint.replace() != uDoesntReplace)
-			tmpBlue = gWorld.get()->getBlueprint(xBlueprint.replace());
-		else if(xBlueprint.extend() != uDoesntExtend)
-			tmpBlue = gWorld.get()->getBlueprint(xBlueprint.extend());
+		if(T::replaces() != uDoesntReplace)
+			tmpBlue = gWorld.get()->getBlueprint(T::replaces());
+		else if(T::extends() != uDoesntExtend)
+			tmpBlue = gWorld.get()->getBlueprint(T::extends());
 
 		if(tmpBlue != NULL){
 			for(dListComs cmds = tmpBlue->getAllComs(); !cmds.empty(); cmds.pop_front()){
@@ -248,7 +225,22 @@ namespace gt{
 			xExtensions.push_back(tmpBlue);
 		}
 
-		gWorld.get()->addBlueprint(&xBlueprint, pAddon);
+		xBlueprint.setup(
+			getHash<T>(),
+			T::replaces(),
+			T::extends(),
+			&makeFig,
+			&(T::identify),
+			&getCommand,
+			&getPlugTag,
+			&getAllCommands,
+			&getAllTags,
+			&getExtensions,
+			&hasPlugTag,
+			&remove
+		);
+
+		gWorld.get()->addBlueprint(&xBlueprint);
 		xDrafted = true;
 	}
 
@@ -260,9 +252,8 @@ namespace gt{
 			return;
 		}
 
-		gWorld.get()->removeBlueprint(&xBlueprint, xAddon);
-		readyCommands(false);
-		readyTags(false);
+		gWorld.get()->removeBlueprint(&xBlueprint);
+		xDrafted = false;
 	}
 
 	template<typename T>
@@ -270,11 +261,6 @@ namespace gt{
 	tOutline<T>::makeFig(){
 		DBUG_VERBOSE_LO("making a " << T::identify());
 		return ptrFig(new T());
-	}
-
-	template<typename T>
-	void
-	tOutline<T>::unmakeFig(){
 	}
 
 	template <typename T>

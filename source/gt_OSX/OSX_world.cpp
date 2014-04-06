@@ -24,7 +24,7 @@ void OSXError(CFErrorRef ref){
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-const char * cOSXWorld::ADDON_POSTFIX =
+const dPlaChar * cOSXWorld::ADDON_POSTFIX =
 #if defined(DEBUG) && defined(GT_THREADS)
 	"_dt.dylib";
 #elif defined(DEBUG)
@@ -36,7 +36,6 @@ const char * cOSXWorld::ADDON_POSTFIX =
 #endif
 
 const char * cOSXWorld::ADDON_CACHE_FILE = "addoncache.txt";
-
 const char * cOSXWorld::LOG_FILE = "log.txt";
 
 timeval cOSXWorld::tempTime;
@@ -339,9 +338,10 @@ cOSXWorld::writeAddonCache(const dBlue2Addons &info){
 
 		f << blue->first << std::endl;
 		for(addon = blue->second.begin(); addon != blue->second.end(); ++addon){
+			CFErrorRef err = NULL;
+
 			addonName = mAvailableAddons.find(*addon);
 			dStr addonFile = "./addon" + addonName->second + ADDON_POSTFIX;
-			CFErrorRef err = NULL;
 
 			CFURLRef addonURL = CFURLCreateFromFileSystemRepresentation(
 				NULL,

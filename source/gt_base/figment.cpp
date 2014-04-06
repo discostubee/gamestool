@@ -79,8 +79,6 @@ cFigment::cFigment()
 
 cFigment::~cFigment(){
 	DBUG_TRACK_END("figment");
-	if(mBlueprint)
-		mBlueprint->unmade();
 }
 
 void

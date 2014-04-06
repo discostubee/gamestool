@@ -1,3 +1,5 @@
+//!\file	addonX11GL.hpp
+//!\brief	Should really be called the Fixed Function variant of open GL.
 
 #ifndef ADDONX11GL_HPP
 #define ADDONX11GL_HPP

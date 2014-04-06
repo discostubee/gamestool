@@ -82,16 +82,6 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>gt_base</name>
-			<type>2</type>
-			<locationURI>BaseSouceDir/gt_base</locationURI>
-		</link>
-		<link>
-			<name>gt_linux</name>
-			<type>2</type>
-			<locationURI>BaseSouceDir/gt_linux</locationURI>
-		</link>
-		<link>
 			<name>source</name>
 			<type>2</type>
 			<locationURI>ProjSourceDir</locationURI>
