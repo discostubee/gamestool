@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name[en_GB]=Gamestool
+Version=0.0.1
+Type=Application
+GenericName[en_GB]=Gamestool sandbox
+Icon=stool.png
+Exec=sandbox %U
+Terminal=false
+MimeType=application/gta
+Categories=Programming
+
