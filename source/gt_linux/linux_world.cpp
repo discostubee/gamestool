@@ -26,21 +26,14 @@ const dPlaChar * cLinuxWorld::ADDON_POSTFIX =
 const dPlaChar * cLinuxWorld::ADDON_CACHE_FILE = "addoncache.txt";
 const dPlaChar * cLinuxWorld::LOG_FILE = "log.txt";
 
-timeval cLinuxWorld::tempTime;
-
 cLinuxWorld::cLinuxWorld(){
-	//mProfiler->mGetTime = &getLinuxTime;
 }
 
 cLinuxWorld::~cLinuxWorld(){
 	try{
-		try{
-			closeWorld();
-		}catch(std::exception &e){
-			WARN(e);
-		}
-		flushLines();
-	}catch(...){
+		closeWorld();
+	}catch(std::exception &e){
+		excep::delayExcep::add(e.what());
 	}
 }
 
@@ -63,14 +56,15 @@ cLinuxWorld::loop(){
 
 void
 cLinuxWorld::flushLines(){
-//	if(mLines->empty())
-//		return;
-//
-//	std::fstream fs(LOG_FILE, std::ios::out);
-//	for(dLines::iterator l=mLines->begin(); l != mLines->end(); ++l)
-//		fs << *l << std::endl;
-//
-//	mLines->clear();
+	dLines lines;
+	primordial::gPrim.getLines(&lines, true);
+
+	if(lines.empty())
+		return;
+
+	std::fstream fs(LOG_FILE, std::ios::out);
+	for(dLines::iterator l=lines.begin(); l != lines.end(); ++l)
+		fs << *l << std::endl;
 }
 
 tAutoPtr<cWorld>

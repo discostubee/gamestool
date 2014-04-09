@@ -33,17 +33,18 @@ gt::tMrSafety<gt::cWorld> gt::gWorld;
 using namespace gt;
 
 cWorld::cWorld():
-	mKeepLooping(true), mBluesFromAddon(0)
+	mKeepLooping(true), mBluesFromAddon(0), mRefPrim(&primordial::gPrim)
 {
 	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
 	mRoot = ptrFig(new cWorldShutoff());
 
 	primordial::lo("World created.");
-
 }
 
 cWorld::~cWorld(){
+	if(!mBlueprints.empty())
+		excep::delayExcep::add("Blueprints not cleared. Did you forget to call 'closeWorld' in the child class?.");
 }
 
 void
@@ -70,6 +71,12 @@ cWorld::closeWorld(){
 	}
 
 	mBlueprints.clear();
+	flushLines();
+}
+
+cWorld::primordial*
+cWorld::getPrim(){
+	return mRefPrim;
 }
 
 void
@@ -234,7 +241,6 @@ cWorld::makeFig(dNameHash pNameHash){
 	}
 
 	return found->second.mUsing->make();
-	return ptrFig(NULL);
 }
 
 ptrFig
@@ -421,61 +427,80 @@ using namespace gt;
 //- Don't assign anything to the stuff below.
 cWorld::dLines* gt::cWorld::primordial::xLines;
 cProfiler* gt::cWorld::primordial::xProfiler;
+cWorld::primordial cWorld::primordial::gPrim;
 
 #ifdef GT_THREADS
 	boost::recursive_mutex *gt::cWorld::primordial::xProfileGuard;
 	boost::recursive_mutex *gt::cWorld::primordial::xLineGuard;
 #endif
 
+cWorld::primordial::primordial(){
+	mLines = xLines;
+	mProfiler = xProfiler;
+}
+
+cWorld::primordial::~primordial(){
+#ifdef GT_THREADS
+	boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+#endif
+	for(std::set<primordial*>::iterator o=mRefOtherPrims.begin();
+		o!=mRefOtherPrims.end();
+		++o
+	)
+		(*o)->someoneDied(this);
+
+	makeProfileToken(NULL, 0, true);
+	lo("", true);
+}
 
 void
 cWorld::primordial::lo(const dStr& pLine, bool cleanup){
-//	static bool linesSetup = false;
-//	if(!linesSetup){
-//		if(cleanup)	//- nothing to do.
-//			return;
-//
-//		linesSetup = true;
-//		xLines = new dLines();
-//#		ifdef GT_THREADS
-//			xLineGuard = new boost::recursive_mutex();
-//#		endif
-//	}
-//
-//	if(cleanup){
-//		if(!linesSetup)
-//			return;
-//
-//		{
-//#			ifdef GT_THREADS
-//				boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
-//#			endif
-//			SAFEDEL(xLines);
-//			linesSetup = false;
-//		}
-//#		ifdef GT_THREADS
-//			SAFEDEL(xLineGuard);
-//#		endif
-//
-//	}else if(!pLine.empty()){
-//#		ifdef GT_THREADS
-//			boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
-//#		endif
-//
-//		xLines->push_back(pLine);
-//	}
+	static bool linesSetup = false;
+	if(!linesSetup){
+		if(cleanup)	//- nothing to do.
+			return;
+
+		linesSetup = true;
+		xLines = new dLines();
+#		ifdef GT_THREADS
+			xLineGuard = new boost::recursive_mutex();
+#		endif
+	}
+
+	if(cleanup){
+		if(!linesSetup)
+			return;
+
+		{
+#			ifdef GT_THREADS
+				boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+#			endif
+			SAFEDEL(xLines);
+			linesSetup = false;
+		}
+#		ifdef GT_THREADS
+			SAFEDEL(xLineGuard);
+#		endif
+
+	}else if(!pLine.empty()){
+#		ifdef GT_THREADS
+			boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+#		endif
+
+		xLines->push_back(pLine);
+	}
 }
 
 void
 cWorld::primordial::warnError(const char *msg, const char* pFile, const unsigned int pLine){
-//	std::stringstream ss;
-//	ss << "Warning detected in file '" << pFile << "' on line " << pLine << std::endl << ". Info: " << msg;
-//	lo(ss.str());
+	std::stringstream ss;
+	ss << "Warning detected in file '" << pFile << "' on line " << pLine << std::endl << ". Info: " << msg;
+	lo(ss.str());
 }
 
 void
 cWorld::primordial::warnError(std::exception &pE, const char* pFile, const unsigned int pLine){
-//	warnError(pE.what(), pFile, pLine);
+	warnError(pE.what(), pFile, pLine);
 }
 
 cProfiler::cToken
@@ -536,43 +561,20 @@ cWorld::primordial::makeProfileReport(std::ostream &log){
 #endif
 
 void
-cWorld::primordial::redirectWorld(cWorld* pWorldNew){
-//	if(pWorldNew){
-//		lo("");	//- This shouldn't add a line, but it ensures it's initialised.
-//		(void)makeProfileToken(NULL, 0);	//- same.
-//
-//		{
-//#			ifdef GT_THREADS
-//				boost::lock_guard<boost::recursive_mutex> lockA(*xLineGuard);
-//				boost::lock_guard<boost::recursive_mutex> lockB(*xProfileGuard);
-//				boost::lock_guard<boost::recursive_mutex> lockC(*pWorldNew->mProfileGuard);
-//				boost::lock_guard<boost::recursive_mutex> lockD(*pWorldNew->mLineGuard);
-//#			endif
-//
-//			if(!xLines->empty())
-//				pWorldNew->mLines->splice(pWorldNew->mLines->end(), *xLines);
-//
-//			*pWorldNew->mProfiler += *xProfiler;
-//
-//			delete xLines;
-//			delete xProfiler;
-//
-//			xLines = pWorldNew->mLines;
-//			xProfiler = pWorldNew->mProfiler;
-//		}
-//
-//#		ifdef GT_THREADS
-//			delete xProfileGuard;
-//			delete xLineGuard;
-//
-//			xProfileGuard = pWorldNew->mProfileGuard;
-//			xLineGuard = pWorldNew->mLineGuard;
-//#		endif
-//	}
+cWorld::primordial::link(gt::cWorld *pLinkme){
+	//- It shouldn't matter if the worlds are already linked, as sets prevent us doubling up.
+#ifdef GT_THREADS
+	boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+#endif
+	if(&gPrim == pLinkme->getPrim())
+		return;
+
+	gPrim.mRefOtherPrims.insert(pLinkme->getPrim());
+	pLinkme->getPrim()->mRefOtherPrims.insert(&gPrim);
 }
 
-
-void cWorld::primordial::addonClosed(const dPlaChar *addonFilename){
+void
+cWorld::primordial::addonClosed(const dPlaChar *addonFilename){
 	ASRT_NOTNULL(addonFilename);
 
 	gt::tMrSafety<gt::cWorld>::dLemming w = gWorld.get();
@@ -584,6 +586,31 @@ void cWorld::primordial::addonClosed(const dPlaChar *addonFilename){
 	w->getAddonNameFromFilename(addonFilename, &name);
 	w->removeAddonBlueprints(name);
 	gWorld.drop();
+}
+
+void
+cWorld::primordial::getLines(dLines *output, bool recursive){
+#ifdef GT_THREADS
+	boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
+#endif
+	output->merge(*mLines);
+	mLines->clear();
+	if(recursive){
+		for(std::set<primordial*>::iterator i=mRefOtherPrims.begin();
+			i!=mRefOtherPrims.end();
+			++i
+		)
+			(*i)->getLines(output, false);
+	}
+}
+
+void
+cWorld::primordial::someoneDied(primordial *dead){
+	std::set<primordial*>::iterator f = mRefOtherPrims.find(dead);
+	if(f == mRefOtherPrims.end())
+		return;
+
+	mRefOtherPrims.erase(f);
 }
 
 ////////////////////////////////////////////////////////////

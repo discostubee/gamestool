@@ -162,7 +162,7 @@ GTUT_START(test_packer, intPacking){
 	delete [] buff;
 }GTUT_END;
 
-GTUT_START(test_packer, nativePackUnpack){
+GTUT_START(test_packer, nativeStringPackUnpack){
 	dNatStr packMe, unpackMe;
 	dByte *buff = NULL;
 	size_t sizeBuff = 0, unpackSize = 0;
@@ -174,7 +174,7 @@ GTUT_START(test_packer, nativePackUnpack){
 	delete [] buff;
 }GTUT_END;
 
-GTUT_START(test_packer, platformPackUnpack){
+GTUT_START(test_packer, platformStringPackUnpack){
 	dStr packMe = "てすと";
 	dStr unpackMe;
 	dByte *buff = NULL;
@@ -186,7 +186,7 @@ GTUT_START(test_packer, platformPackUnpack){
 	delete [] buff;
 }GTUT_END;
 
-GTUT_START(test_packer, textPackUnpack){
+GTUT_START(test_packer, textStringPackUnpack){
 	dText packMe, unpackMe;
 	dByte *buff = NULL;
 	size_t sizeBuff = 0, unpackSize = 0;

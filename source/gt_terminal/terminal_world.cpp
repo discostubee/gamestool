@@ -9,21 +9,22 @@ cTerminalWorld::cTerminalWorld(){
 
 cTerminalWorld::~cTerminalWorld(){
 	try{
-		flushLines();
-	}catch(...){
+		closeWorld();
+	}catch(std::exception &e){
+		excep::delayExcep::add(e.what());
 	}
 }
 
 void
 cTerminalWorld::flushLines(){
-//#	ifdef GT_THREADS
-//		boost::lock_guard<boost::recursive_mutex> lock(*mLineGuard);
-//#	endif
-//
-//	for(dLines::iterator i = mLines->begin(); i != mLines->end(); ++i){
-//		std::cout << (*i) << std::endl;
-//	}
-//	mLines->clear();
+	dLines lines;
+	primordial::gPrim.getLines(&lines, true);
+
+	if(lines.empty())
+		return;
+
+	for(dLines::iterator l=lines.begin(); l != lines.end(); ++l)
+		std::cout << *l << std::endl;
 }
 
 tAutoPtr<cWorld>

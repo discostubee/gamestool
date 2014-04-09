@@ -54,21 +54,15 @@ void draftAll(){
 #	endif
 }
 
-void cleanupAll(){
-
-	tOutline<cEmptyFig>::remove();
-	gt::gWorld.cleanup();	//- Done here so that we can log destruction faults.
-}
-
 ptrFig makeEditor(){
 
 	cContext setupConx;
 	ptrFig rlTop = gWorld.get()->makeFig(getHash<cRunList>());
 
-	tPlug<ptrFig> stage;// = gWorld.get()->makeFig("stage");
+	tPlug<ptrFig> stage = gWorld.get()->makeFig("stage");
 	tPlug<ptrFig> film = gWorld.get()->makeFig("film");
 	tPlug<ptrFig> cam = gWorld.get()->makeFig("camera 2d");
-	tPlug<ptrFig> menu = gWorld.get()->makeFig("polymesh");
+	tPlug<ptrFig> menu = gWorld.get()->makeFig("poly mesh");
 	tPlug<ptrFig> close = gWorld.get()->makeFig(getHash<cWorldShutoff>());
 
 	{	//- link components.
@@ -107,6 +101,7 @@ ptrFig makeEditor(){
 ENTRYPOINT
 {
 	try{
+		cWorld::primordial::lo("Making editor file.");
 		gt::gWorld.take(new gt::cTerminalWorld());
 
 		gWorld.get()->checkAddons();
@@ -144,17 +139,17 @@ ENTRYPOINT
 			}
 		}
 
+		gt::gWorld.cleanup();	//- Done here so that we can log destruction faults.
+		cWorld::primordial::lo("Ended.");
 		excep::delayExcep::shake();
-		cleanupAll();
+
 
 	}catch(std::exception &e){
-		try{ cleanupAll(); }catch(...){}
-		std::cout << e.what();
+		std::cout << e.what() << std::endl;
 
 
 	}catch(...){
-		try{ cleanupAll(); }catch(...){}
-		std::cout << "Unknown error.";
+		std::cout << "Unknown error." << std::endl;
 	}
 
 	return EXIT_SUCCESS;

@@ -73,9 +73,6 @@ public:
 		cToken& operator=(cToken& pToken){ DUMB_REF_PAR(pToken); return *this; }	//!< Banned.
 	};
 
-	std::set<cToken*> mActiveTokens;	//!< Allows you to inform a token when it's parent has been cleaned up.
-	dMillisec (*mGetTime)();
-
 	cProfiler();
 	~cProfiler();
 
@@ -83,6 +80,12 @@ public:
 	void tokenFinished(cProfiler::cToken *pToken);
 	void flushThatLog(std::ostream &log);
 	cProfiler& operator += (const cProfiler &pCopyIt);
+
+protected:
+	std::set<cToken*> mActiveTokens;	//!< Allows you to inform a token when it's parent has been cleaned up.
+	dMillisec (*mGetTime)();
+
+	friend class cToken;
 
 private:
 	class cEntry{

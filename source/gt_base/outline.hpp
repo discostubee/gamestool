@@ -188,7 +188,7 @@ namespace gt{
 	void
 	tOutline<T>::draft(const dStr &pAddon){
 		if(xDrafted){
-			WARN_S(T::identify() << " already drafted.");
+			DBUG_VERBOSE_LO(T::identify() << " already drafted.");
 			return;
 		}
 

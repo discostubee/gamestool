@@ -227,36 +227,29 @@ namespace gt{
 		virtual void flushLines	() =0;	//!< Process the lines to be displayed on the console.
 
 		//---------------------------------------------------------------------------------------------------
-		//!\brief	primodial is used to manage services that are present before a world is available.
+		//!\brief	primordial is used to manage services that are present before a world is available.
+		//!\note	Uses a global instance to cleanup once done.
 		class primordial{
 		public:
+			~primordial();
+
 			static void lo(const dStr& pLine, bool cleanup=false);	//!< \brief Add a line to be displayed in the console. \note Threadsafe: Has a specific mutex lock to acquire and release.
 			static void warnError(const char *msg, const char* pFile, const unsigned int pLine);	//!< \brief logs a warning. Note that fatal errors are caught by the catch at the top of the program; there's no need for a world function to handle it.
 			static void warnError(std::exception &pE, const char* pFile, const unsigned int pLine);	//!< \brief Allows you to pass the error type directly.
-
-			//!\brief	Makes a profile token using the profiler stored in this world.
-			//!\note	Using the world to manage the profiler so data can be copied from the worlds inside addons.
-			//!\todo	Make the death report threadsafe
-			static cProfiler::cToken makeProfileToken(const char* pFile, unsigned int pLine, bool cleanup=false);
-
-			static void makeProfileReport(std::ostream &log);	//<! \todo Make threadsafe.
-			static void redirectWorld(gt::cWorld *directHere);	//!< copies the primordial static data into the given world, and redirects gWorld to point to the one given. If null, gWorld is cleaned up and set to null.
+			static cProfiler::cToken makeProfileToken(const char* pFile, unsigned int pLine, bool cleanup=false);	//!\brief	Makes a profile token using the profiler stored in this world.
+			static void makeProfileReport(std::ostream &log);	//!<
+			static void link(gt::cWorld *pLinkme);	//!<
 			static void addonClosed(const dPlaChar *addonFilename);	//!< Called by a library when is closes. Expects the main addon filename, extensions and all.
 
 #			ifdef GTUT
 				static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
 #			endif
 
-		protected:
+			static primordial gPrim;	//!< Cleans up on death.
 
-			//--------------------------------------------------------
-			// Data which must be redirected if this is an addon's heap.
-			// This stuff also needs specific setup
-			static gt::cWorld::dLines* xLines;
-			static cProfiler* xProfiler;
+			void getLines(dLines *output, bool recursive);	//!< Gathers all the lines from all the
 
-			friend class gt::cWorld;
-
+		private:
 #			ifdef GTUT
 				static bool mSuppressError;	//!<
 #			endif
@@ -266,8 +259,15 @@ namespace gt{
 				static boost::recursive_mutex *xLineGuard;
 #			endif
 
-		private:
+			static dLines *xLines;	//!< A pointer so its memory is initialised correctly once used.
+			static cProfiler *xProfiler;
+
+			dLines *mLines;
+			cProfiler *mProfiler;
+			std::set<primordial*> mRefOtherPrims;	//!< These are other primordial worlds from the addon's heap.
+
 			primordial();
+			void someoneDied(primordial *dead);
 		};
 
 
@@ -292,6 +292,7 @@ namespace gt{
 		virtual void getAddonNameFromFilename(const dPlaChar *filename, dStr *output) =0;	//!< Given a full file path, return just the addon name.
 
 		void closeWorld();	//!< Perform final cleanup. Should be run by the implementations destructor.
+		primordial* getPrim();
 
 		friend class primordial;
 
@@ -312,6 +313,7 @@ namespace gt{
 		dBlueprintMap mBlueprints; //!< These are all the available blueprints.
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
 		dContextLookup mContexts; //!< We keep track of all the contexts here in the world.
+		primordial *mRefPrim;
 
 		void closeUselessAddons();	//!< Search for addons that no longer have any active figments, and close them.
 		void findFigs(dNameHash pName, std::list<ptrFig> *output);	//!< Searches from the root node for figments with the given name.

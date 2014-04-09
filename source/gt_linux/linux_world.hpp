@@ -55,8 +55,8 @@ namespace gt{
 		static const dPlaChar * ADDON_POSTFIX;
 		static const dPlaChar * LOG_FILE;
 
-		static timeval tempTime;
-		static dMillisec getLinuxTime();
+		timeval tempTime;
+		dMillisec getLinuxTime();
 
 		mapNameToHandle mLibHandles;
 

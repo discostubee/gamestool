@@ -14,7 +14,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.392946917" name="Debug" parent="cdt.managedbuild.config.gnu.exe.debug" postbuildStep="cp ${ProjDirPath}/Debug/${ProjName}_d ${ProjDirPath}/../../../bin">
+				<configuration artifactName="${ProjName}_d" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.exe.debug.392946917" name="Debug" parent="cdt.managedbuild.config.gnu.exe.debug" postbuildStep="cp ${ProjDirPath}/Debug/${ProjName}_d ${ProjDirPath}/../../../bin">
 					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.392946917." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.2007511955" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.2013724731" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
@@ -26,7 +26,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1475301815" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.536631545" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.536631545" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 `pkg-config --cflags glib-2.0`" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.989639491" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
 								</option>
@@ -40,7 +40,7 @@
 								<option id="gnu.c.compiler.option.include.paths.927016881" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
 								</option>
-								<option id="gnu.c.compiler.option.misc.other.332490598" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.other.332490598" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 `pkg-config --cflags glib-2.0`" valueType="string"/>
 								<option id="gnu.c.compiler.option.dialect.std.13139467" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.124564755" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -51,11 +51,11 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1645221328" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1776452653" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.1076497503" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="gt_linux_d"/>
+									<listOptionValue builtIn="false" value="gamestool_d"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
 									<listOptionValue builtIn="false" value="boost_locale"/>
 									<listOptionValue builtIn="false" value="dl"/>
-									<listOptionValue builtIn="false" value="glib-2.0"/>
-									<listOptionValue builtIn="false" value="gamestool_d"/>
-									<listOptionValue builtIn="false" value="gt_linux_d"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.976647546" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>
@@ -73,6 +73,19 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.392946917.1934281232" name="/" resourcePath="bin">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.224583874" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug" unusedChildren="">
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.471877576" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.742122370"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.799715276" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1927956824"/>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1880954104" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.993848941"/>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1512972584" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1645221328"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1406638026" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1776452653"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1003072628" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.1449713664"/>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="bin" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -96,4 +109,5 @@
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
