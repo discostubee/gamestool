@@ -17,7 +17,7 @@
 DYN_LIB_DEF(void)
 draftAll(gt::cWorld *pWorld){
 	try{
-		gt::cWorld::primordial::redirectWorld(pWorld);
+		gt::cWorld::primordial::link(pWorld);
 		gt::gWorld.take(pWorld);	//- Old world cleaned up by doing this.
 
 		gt::tOutline<gt::cStage>::draft();

@@ -32,8 +32,7 @@ ENTRYPOINT
 		result = RUN_ALL_TESTS();
 #	endif
 
-		gt::gWorld.cleanup();
-		gt::cWorld::primordial::cleanup();
+		gt::gWorld.cleanup();	//- Done so we get a full report below.
 		gt::cWorld::primordial::makeProfileReport(std::cout);
 		cTracker::makeReport(std::cout);
 		excep::delayExcep::shake();

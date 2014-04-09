@@ -18,6 +18,23 @@
 
 #include "profiler.hpp"
 
+#ifdef __linux
+#	include <sys/time.h> // for gettimeofday and timeval
+#endif
+
+////////////////////////////////////////////////////////////
+dMillisec
+timerDefault(){
+#	ifdef __linux
+		timeval tempTime;
+		gettimeofday(&tempTime, NULL);
+
+		return tempTime.tv_usec;
+#	else
+		return 0;
+#	endif
+}
+
 
 ////////////////////////////////////////////////////////////
 
@@ -32,9 +49,9 @@ cProfiler::cEntry::~cEntry(){
 }
 
 
-cProfiler::cProfiler():
-	mGetTime(NULL)
-{}
+cProfiler::cProfiler(){
+	mGetTime = &timerDefault;
+}
 
 cProfiler::~cProfiler(){
 	try{

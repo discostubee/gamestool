@@ -26,14 +26,14 @@ void draftAll(){
 	using namespace gt;
 
 	//- This needs to be a complete list of everything in the gamestool lib.
-	tOutline<cAlias>::draft();
-	tOutline<cAnchor>::draft();
-	tOutline<cFigFactory>::draft();
 	tOutline<cFigment>::draft();
-	tOutline<cEmptyFig>::draft();
 	tOutline<cChainLink>::draft();
 	tOutline<cRunList>::draft();
 	tOutline<cValve>::draft();
+	tOutline<cAlias>::draft();
+	tOutline<cAnchor>::draft();
+	tOutline<cEmptyFig>::draft();
+	tOutline<cFigFactory>::draft();
 	tOutline<cBase_fileIO>::draft();
 	tOutline<cTextFig>::draft();
 	tOutline<cThread>::draft();
@@ -62,17 +62,17 @@ gt::ptrFig getRootAnchor(){
 
 		//todo allow sandbox to load from another file.
 		path = "editor.gtf";
-		setPath->setPlug(&path, cBase_fileIO::xPT_filePath);
+		setPath->linkPlug(&path, cBase_fileIO::xPT_filePath);
 		file.get()->jack(setPath, &conxLoading);
 
 		ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad);
-		load->setPlug(&file, cAnchor::xPT_serialBuff);
+		load->linkPlug(&file, cAnchor::xPT_serialBuff);
 		ank->jack(load, &conxLoading);
 	}
 
 	{
 		ptrLead getRoot = gWorld.get()->makeLead(cAnchor::xGetLinks);
-		getRoot->setPlug(&root, cAnchor::xPT_links);
+		getRoot->linkPlug(&root, cAnchor::xPT_links);
 		ank->jack(getRoot, &conxLoading);
 	}
 
@@ -122,9 +122,9 @@ ENTRYPOINT
 		try{
 			gWorld.get()->checkAddons();
 			draftAll();
-
 			gWorld.get()->setRoot( getRootAnchor() );
 			gWorld.get()->loop();
+
 		}catch(std::exception &e){
 			excep::delayExcep::add(e.what());
 		}
@@ -133,7 +133,6 @@ ENTRYPOINT
 		}
 
 		gWorld.cleanup();	//- Done here so that we can log destruction faults.
-		cleanupAll();
 		excep::delayExcep::shake();
 		result = EXIT_SUCCESS;
 

@@ -127,7 +127,8 @@ cStage_X11GL::work(cContext* pCon){
 	for(int run=0; run < xEventsPerRun && XPending(mDisplay) > 0; ++run){
 		XNextEvent(mDisplay, &mEvent);
 		switch (mEvent.type){
-			//case Expose:
+			case Expose:
+				break;
 
 /*			case DestroyNotify:
 				DBUG_LO("destroy notify.");
@@ -141,7 +142,7 @@ cStage_X11GL::work(cContext* pCon){
 				mLayout.get().right = mLayout.get().left + static_cast<dUnitPix>(mEvent.xconfigure.width);
 				mLayout.get().bottom = mLayout.get().top + static_cast<dUnitPix>(mEvent.xconfigure.height);
 				refreshDim();
-				//DBUG_LO("configure notify"<<mWidth.mD<<","<<mHeight.mD);
+				//DBUG_LO("configure notify "<<mWidth.mD<<","<<mHeight.mD);
 				mInternalRefresh = true;
 				break;
 
@@ -220,6 +221,12 @@ void
 cStage_X11GL::refreshDim(){
 	GLdouble glW = static_cast<GLdouble>(mLayout.get().right - mLayout.get().left);
 	GLdouble glH = static_cast<GLdouble>(mLayout.get().bottom - mLayout.get().top);
+
+	if(glW == 0)
+		glW = 1;
+
+	if(glH == 0)
+		glH = 1;
 
 	glViewport(0, 0, glW, glH);
 
