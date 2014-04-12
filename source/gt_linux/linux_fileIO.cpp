@@ -8,10 +8,9 @@ cLinux_fileIO::cLinux_fileIO(){
 cLinux_fileIO::~cLinux_fileIO(){
 }
 
-cByteBuffer&
-cLinux_fileIO::read(const dFilePoint pStartPoint, const size_t pReadAmount ){
+void
+cLinux_fileIO::read(cByteBuffer* aOutput, const dFilePoint pStartPoint, const size_t pReadAmount){
 	std::fstream stream;
-	cByteBuffer* outBuff = new cByteBuffer();
 	unsigned int fileSize = 0;
 	char* readBuff = NULL;
 
@@ -23,33 +22,34 @@ cLinux_fileIO::read(const dFilePoint pStartPoint, const size_t pReadAmount ){
 		fileSize = stream.tellg();
 
 		if(fileSize == 0 || fileSize == static_cast<unsigned int>(-1) )
-			throw excep::base_error("file empty", __FILE__, __LINE__); //!\todo
+			THROW_ERROR("File empty");
 
 		if( pStartPoint + pReadAmount > fileSize )
-			throw std::exception();	//!\ todo
+			THROW_ERROR("File too small for read amount.");
 
 		stream.seekg(pStartPoint, std::ios_base::beg);
 
 		if(pReadAmount == 0){	// read up to the end of the file.
+			if(fileSize - pStartPoint < 1)
+				THROW_ERROR("File size is smaller than the start point.");
+
 			readBuff = new char[fileSize - pStartPoint];
 			stream.read(readBuff, fileSize - pStartPoint);
-			outBuff->take( static_cast<dByte*>(readBuff), fileSize - pStartPoint );
+			aOutput->take( static_cast<dByte*>(readBuff), fileSize - pStartPoint );
 		}else{
 			readBuff = new char[pReadAmount];
 			stream.read(readBuff, pReadAmount);
-			outBuff->take( static_cast<dByte*>(readBuff), pReadAmount );
+			aOutput->take( static_cast<dByte*>(readBuff), pReadAmount );
 		}
 
-		if( stream.bad() )
-			throw std::exception();	//!\ todo
+		if(stream.bad())
+			THROW_ERROR("Bad stream.");
 
 	}catch(std::exception &e){
-		outBuff->clear();
 		stream.close();
 		throw;	// rethrow e.
 	}
 	stream.close();
-	return *outBuff;
 }
 
 void

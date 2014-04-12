@@ -86,7 +86,9 @@ const cCommand::dUID cPolyMesh::xTexturize = tOutline<cPolyMesh>::makeCommand(
 
 cPolyMesh::cPolyMesh()
 : mUpdateLazy(false)
-{}
+{
+	addUpdRoster(&mLazyMesh);
+}
 
 cPolyMesh::~cPolyMesh(){
 	cleanLazy();

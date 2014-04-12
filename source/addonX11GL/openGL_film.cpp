@@ -10,7 +10,8 @@ cFilm_X11GL::~cFilm_X11GL(){
 
 void
 cFilm_X11GL::work(cContext* pCon){
-	mLink.get()->run(pCon);
+	if(mLink.get().valid())
+		mLink.get()->run(pCon);
 }
 
 void

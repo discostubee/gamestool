@@ -106,6 +106,7 @@ namespace gt{
 			UNIT top, left, bottom, right;
 
 			tRectangle() : top(0), left(0), bottom(0), right(0) {}
+			tRectangle(UNIT t, UNIT l, UNIT b, UNIT r) : top(t), left(l), bottom(b), right(r) {}
 
 			tRectangle<UNIT>& operator+= (const tRectangle &aCopyMe){
 				ASRT_NOTSELF(&aCopyMe);

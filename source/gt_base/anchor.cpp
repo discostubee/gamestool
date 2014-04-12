@@ -126,6 +126,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 	size_t			readSpot=0, chunkStart, chunkSize;
 
 	ASRT_NOTNULL(pBuff);
+	DBUG_VERBOSE_LO("Anchor loading");
 
 	try{	//- The process below must happen in exactly the same way in the save process.
 

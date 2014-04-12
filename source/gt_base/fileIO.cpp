@@ -99,8 +99,8 @@ cBase_fileIO::patRead(ptrLead aLead){
 	aLead->assignTo(&readSize, xPT_startSpot);
 
 	ptrBuff buff;
+	aLead->assignTo(&buff, xPT_buffer);
 	read(buff.get(), readSize, readStart);
-	aLead->assignFrom(buff, xPT_buffer);
 }
 
 void

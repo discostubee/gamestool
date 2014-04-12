@@ -16,10 +16,8 @@ cPolyMesh_X11GL::~cPolyMesh_X11GL(){
 }
 
 void
-cPolyMesh_X11GL::run(cContext *pCon){
+cPolyMesh_X11GL::work(cContext *pCon){
 	PROFILE;
-
-	start(pCon);
 
 	if(mUpdateLazy){
 		formatGLMesh();
@@ -43,8 +41,6 @@ cPolyMesh_X11GL::run(cContext *pCon){
 	glDrawElements(GL_TRIANGLES, polyCount*DIMENSIONS, GL_UNSIGNED_INT, 0);
 
 	glPopMatrix();
-
-	stop(pCon);
 }
 
 void
