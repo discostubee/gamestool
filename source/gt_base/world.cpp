@@ -38,8 +38,6 @@ cWorld::cWorld():
 	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
 	mRoot = ptrFig(new cWorldShutoff());
-
-	primordial::lo("World created.");
 }
 
 cWorld::~cWorld(){
@@ -593,7 +591,7 @@ cWorld::primordial::getLines(dLines *output, bool recursive){
 #ifdef GT_THREADS
 	boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
 #endif
-	output->merge(*mLines);
+	output->splice(output->end(), *mLines);
 	mLines->clear();
 	if(recursive){
 		for(std::set<primordial*>::iterator i=mRefOtherPrims.begin();

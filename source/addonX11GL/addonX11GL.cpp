@@ -11,6 +11,7 @@
 #include "openGL_film.hpp"
 #include "openGL_polyMesh.hpp"
 #include "openGL_camera.hpp"
+#include "openGL_screens.hpp"
 
 //DYN_LIB_ENDED;
 
@@ -30,6 +31,8 @@ draftAll(gt::cWorld *pWorld){
 		gt::tOutline<gt::c3DCamera_X11GL>::draft();
 		gt::tOutline<gt::c2DCamera>::draft();
 		gt::tOutline<gt::c2DCamera_X11GL>::draft();
+		gt::tOutline<gt::cScreen>::draft();
+		gt::tOutline<gt::cScreen_X11GL>::draft();
 
 		DBUG_LO("x11 addon open.");
 

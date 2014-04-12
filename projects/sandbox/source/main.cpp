@@ -53,20 +53,24 @@ gt::ptrFig getRootAnchor(){
 
 	cContext conxLoading;
 	tPlug<ptrFig> root;
-	tPlug<ptrFig> file = gWorld.get()->makeFig(getHash<cBase_fileIO>());
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 
 	{
-		tPlug<dStr> path;
-		ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath);
+		tPlug<dStr> path("editor.gtf");
+		tPlug<ptrBuff> buff(ptrBuff(new cByteBuffer()));
+		tPlug<ptrFig> file = gWorld.get()->makeFig(getHash<cBase_fileIO>());
 
-		//todo allow sandbox to load from another file.
-		path = "editor.gtf";
+		ptrLead setPath = gWorld.get()->makeLead(cBase_fileIO::xSetPath);
 		setPath->linkPlug(&path, cBase_fileIO::xPT_filePath);
+
 		file.get()->jack(setPath, &conxLoading);
 
+		ptrLead readFile = gWorld.get()->makeLead(cBase_fileIO::xRead);
+		readFile->linkPlug(&buff, cBase_fileIO::xPT_buffer);
+		file.get()->jack(readFile, &conxLoading);
+
 		ptrLead load = gWorld.get()->makeLead(cAnchor::xLoad);
-		load->linkPlug(&file, cAnchor::xPT_serialBuff);
+		load->linkPlug(&buff, cAnchor::xPT_serialBuff);
 		ank->jack(load, &conxLoading);
 	}
 
@@ -79,31 +83,6 @@ gt::ptrFig getRootAnchor(){
 	return root.get();
 }
 
-void cleanupAll(){
-	using namespace gt;
-
-	//- Draft in stuff specific for platform.
-#	if defined(__APPLE__)
-		tOutline<cOSX_fileIO>::remove();
-#	elif defined(__linux)
-		tOutline<cLinux_fileIO>::remove();
-#	elif defined(WIN32)
-#	endif
-
-	tOutline<cBase_fileIO>::remove();
-	tOutline<cAlias>::remove();
-	tOutline<cAnchor>::remove();
-	tOutline<cFigFactory>::remove();
-	tOutline<cEmptyFig>::remove();
-	tOutline<cRunList>::remove();
-	tOutline<cValve>::remove();
-	tOutline<cTextFig>::remove();
-	tOutline<cThread>::remove();
-	tOutline<cWorldShutoff>::remove();
-
-	tOutline<cChainLink>::remove();
-	tOutline<cFigment>::remove();
-}
 
 ENTRYPOINT
 {
@@ -111,6 +90,10 @@ ENTRYPOINT
 	int result = EXIT_FAILURE;
 
 	try{
+		std::stringstream ss;
+		ss << "~Welcome " << getPlatformInfo() << "~";
+		cWorld::primordial::lo(ss.str());
+
 		gWorld.take(
 #			if defined(__APPLE__)
 				new cOSXWorld()
@@ -137,9 +120,9 @@ ENTRYPOINT
 		result = EXIT_SUCCESS;
 
 	}catch(std::exception &e){
-		try{ cleanupAll(); }catch(...){}
+
 	}catch(...){
-		try{ cleanupAll(); }catch(...){}
+
 	}
 
 	return result;

@@ -209,7 +209,7 @@ namespace gt{
 					cmds.front()->respawn(getHash<T>())
 				) );
 
-				DBUG_VERBOSE_LO(T::identify() << " copied command " << cmds.front()->mName );
+				DBUG_VERBOSE_LO("	" << T::identify() << " copied command " << cmds.front()->mName );
 			}
 
 			for(dListPTags tags = getAllTags(); !tags.empty(); tags.pop_front()){
@@ -218,7 +218,7 @@ namespace gt{
 					*tags.front()
 				) );
 
-				DBUG_VERBOSE_LO(T::identify() << " copied tag " << tags.front()->mName );
+				DBUG_VERBOSE_LO("	" << T::identify() << " copied tag " << tags.front()->mName );
 			}
 
 			xExtensions = tmpBlue->getExtensions();
@@ -300,7 +300,7 @@ namespace gt{
 			}
 			va_end(params);
 
-			DBUG_VERBOSE_LO( "The outline of '" << T::identify() << "' made command '" << pName << "'");
+			DBUG_VERBOSE_LO( "	The outline of '" << T::identify() << "' made command '" << pName << "'");
 
 			return comUID;
 		}

@@ -19,7 +19,7 @@ namespace gt{
 		GT_REPLACES(cPolyMesh);
 		virtual dNameHash hash() const { return getHash<cPolyMesh_X11GL>(); }
 
-		virtual void run(cContext* pCon);	//!< Draw this mesh
+		virtual void work(cContext* pCon);	//!< Draw this mesh
 
 	protected:
 		typedef float dGLFloat;	//!< Ensure control over size of float.

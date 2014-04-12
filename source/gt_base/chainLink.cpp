@@ -37,7 +37,8 @@ cChainLink::~cChainLink(){
 
 void
 cChainLink::work(cContext* pCon){
-	mLink.get()->run(pCon);
+	if(mLink.get().valid())
+		mLink.get()->run(pCon);
 }
 
 cFigment::dMigrationPattern

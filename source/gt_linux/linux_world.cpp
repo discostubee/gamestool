@@ -44,10 +44,7 @@ cLinuxWorld::getAppTime(){
 
 void
 cLinuxWorld::loop(){
-	//!\todo get the main linux program loop going.
 	cContext worldContext;
-
-	DBUG_LO("linux world loop");
 	while(mKeepLooping){
 		mRoot->run(&worldContext);
 		flushLines();
@@ -62,7 +59,7 @@ cLinuxWorld::flushLines(){
 	if(lines.empty())
 		return;
 
-	std::fstream fs(LOG_FILE, std::ios::out);
+	std::fstream fs(LOG_FILE, std::fstream::out | std::fstream::app);
 	for(dLines::iterator l=lines.begin(); l != lines.end(); ++l)
 		fs << *l << std::endl;
 }
@@ -325,3 +322,13 @@ cLinuxWorld::getDirContents(const dStr &dir, const dStr &search, bool dirsOnly, 
 
 	g_dir_close(handDir);
 }
+
+dStr
+gt::getPlatformInfo(){
+	dStr out("Linux");
+#ifdef GT_THREADS
+	out += ", Threaded";
+#endif
+	return out;
+}
+
