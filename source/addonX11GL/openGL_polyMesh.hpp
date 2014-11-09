@@ -27,16 +27,19 @@ namespace gt{
 		typedef GLuint handIBO;	//!< ID handle to the index buffer object.
 		typedef ushort dIdxV;	//!< Index into vertex buffer, where arrays form index buffers.
 
+		void downloadLazy();
+
 	private:
 		static const short DIMENSIONS = 3;
 		static const short IOA_X = 0, IOA_Y = 1, IOA_Z = 2; //!< Index Offset for Axis.
 
-		dGLFloat *vbuff;
-		dIdxV *ibuff;
+		static dNameHash makeFridgeID(dGLFloat *buffVert, size_t lenVerts, dIdxV * buffPoly, size_t lenPolys);
+
 		handVBO mVBO;	//!< Handle to the vertex buffer object.
 		handIBO mIBO;
 		size_t polyCount;
 		size_t vertCount;
+		dNameHash mCache;
 
 		void formatGLMesh();	//!< Takes the lazy mesh and turns it into the best format for openGL.
 

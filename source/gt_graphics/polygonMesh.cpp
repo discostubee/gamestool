@@ -41,10 +41,11 @@ sPoly::operator+= (const sPoly &aCopyMe){
 sMesh&
 sMesh::operator+= (const sMesh &aCopyMe){
 	ASRT_NOTSELF(&aCopyMe);
-	//todo
+//	mVertexes.;
+//	mPolys.;
+//	mTMap.;
 	return *this;
 }
-
 
 
 ////////////////////////////////////////////////////////////
@@ -129,7 +130,8 @@ cPolyMesh::patGetMesh(ptrLead aLead){
 	aLead->appendFrom(mLazyMesh.get().mPolys, xPT_texMapping);
 }
 
-void cPolyMesh::patMeasure(ptrLead aLead){
+void
+cPolyMesh::patMeasure(ptrLead aLead){
 	PROFILE;
 	if(aLead->has(xPT_box)){
 		geometry::tCube<dUnitVDis> cube;
@@ -142,7 +144,8 @@ void cPolyMesh::patMeasure(ptrLead aLead){
 	}
 }
 
-void cPolyMesh::patTexturize(ptrLead aLead){
+void
+cPolyMesh::patTexturize(ptrLead aLead){
 	PROFILE;
 
 	aLead->appendTo(&mLazyMesh.get().mTMap, xPT_texMapping);

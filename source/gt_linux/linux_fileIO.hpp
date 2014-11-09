@@ -6,7 +6,6 @@
 #ifndef LINUX_FILEIO_HPP
 #define LINUX_FILEIO_HPP
 
-#include <fstream>
 #include <gt_base/fileIO.hpp>
 #include "linux_world.hpp"
 

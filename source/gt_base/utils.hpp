@@ -225,6 +225,15 @@ isPowerOf2(int i)
 	//	return false;
 }
 
+//-------------------------------------------------------
+namespace simpleSorts{
+	template<typename TYPE>
+	bool
+	AGreaterB(const TYPE & a, const TYPE & b){
+		return a > b;
+	}
+}
+
 //------------------------------------------------------------------------------------------
 typedef unsigned int dIDSLookup;	//!< index into a short lookup table. Not nested in class because it's a template.
 static const dIDSLookup SL_NO_ENTRY = static_cast<dIDSLookup>(-1);

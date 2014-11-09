@@ -78,50 +78,46 @@ namespace gt{
 
 		//!\todo
 		virtual void save(cByteBuffer* pSaveHere){
-			static const size_t LIMIT = sizeof(dUnitVDis);
-			size_t tmpSize, outSize;
-			dByte tmpBuff[LIMIT];
+			size_t num;
 
 			//-
-			tmpSize = get().mVertexes.size();
-			bpk::pack(&tmpSize, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+			num = get().mVertexes.size();
+			pSaveHere->add(&num);
 
 			for(std::vector<sVertex>::iterator itr = get().mVertexes.begin(); itr != get().mVertexes.end(); ++itr){
-				bpk::pack(&itr->x, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
-				bpk::pack(&itr->y, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
-				bpk::pack(&itr->z, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				pSaveHere->add(&itr->x);
+				pSaveHere->add(&itr->y);
+				pSaveHere->add(&itr->z);
 			}
 
 			//-
-			tmpSize = get().mPolys.size();
-			bpk::pack(&tmpSize, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+			num = get().mPolys.size();
+			pSaveHere->add(&num);
 
 			for(std::vector<sPoly>::iterator itr = get().mPolys.begin(); itr != get().mPolys.end(); ++itr){
-				bpk::pack(&itr->a, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
-				bpk::pack(&itr->b, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
-				bpk::pack(&itr->c, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				pSaveHere->add(&itr->a);
+				pSaveHere->add(&itr->b);
+				pSaveHere->add(&itr->c);
 			}
 
 			//-
-			tmpSize = get().mTMap.size();
-			bpk::pack(&tmpSize, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+			num = get().mTMap.size();
+			pSaveHere->add(&num);
 
 			for(std::vector<sTexMap>::iterator itr = get().mTMap.begin(); itr != get().mTMap.end(); ++itr){
-				bpk::pack(itr->u, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
-				bpk::pack(itr->v, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
-				bpk::pack(&itr->idxBMap, tmpBuff, &outSize, LIMIT); pSaveHere->add(tmpBuff, outSize);
+				pSaveHere->add(reinterpret_cast<dByte*>(itr->u), 4 * sizeof(dUnitVDis));
+				pSaveHere->add(reinterpret_cast<dByte*>(itr->v), 4 * sizeof(dUnitVDis));
+				pSaveHere->add(&itr->idxBMap);
 			}
 		}
 
 		//!\todo
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
 			size_t readPt=0;
+			size_t num=0;
 
-			{
-				size_t num=0;
-				readPt += pChewToy->fill(&num, readPt);
-				get().mVertexes.resize(readPt);
-			}
+			readPt += pChewToy->fill(&num, readPt);
+			get().mVertexes.resize(num);
 
 			for(std::vector<sVertex>::iterator itr = get().mVertexes.begin(); itr != get().mVertexes.end(); ++itr){
 				readPt += pChewToy->fill(&itr->x, readPt);
@@ -129,11 +125,8 @@ namespace gt{
 				readPt += pChewToy->fill(&itr->z, readPt);
 			}
 
-			{
-				size_t num=0;
-				readPt += pChewToy->fill(&num, readPt);
-				get().mPolys.reserve(readPt);
-			}
+			readPt += pChewToy->fill(&num, readPt);
+			get().mPolys.reserve(num);
 
 			for(std::vector<sPoly>::iterator itr = get().mPolys.begin(); itr != get().mPolys.end(); ++itr){
 				readPt += pChewToy->fill(&itr->a, readPt);
@@ -147,7 +140,7 @@ namespace gt{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-// template specializations
+// Class
 namespace gt{
 
 	//----------------------------------------------------------------------------------------------------------------
@@ -157,6 +150,9 @@ namespace gt{
 	//!\note	It's up to the implementation to detect new data in the lazy mesh and regenerate the native data.
 	class cPolyMesh: public cFigment{
 	public:
+		typedef tPlugLinearContainer< sVertex, std::vector > dPlugVerts;
+		typedef tPlugLinearContainer< sPoly, std::vector > dPlugPoly;
+
 		static const cPlugTag* xPT_vertexs;
 		static const cPlugTag* xPT_polies;
 		static const cPlugTag* xPT_bitmaps;

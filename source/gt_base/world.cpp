@@ -33,7 +33,7 @@ gt::tMrSafety<gt::cWorld> gt::gWorld;
 using namespace gt;
 
 cWorld::cWorld():
-	mKeepLooping(true), mBluesFromAddon(0), mRefPrim(&primordial::gPrim)
+	mKeepLooping(true), mBluesFromAddon(0), mFridge(NULL), mRefPrim(&primordial::gPrim)
 {
 	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
@@ -149,16 +149,16 @@ void
 cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 	PROFILE;
 
-	DBUG_LO("Removing blueprint " << pRemoveMe->name());
+	DBUG_LO("Deactivating blueprint " << pRemoveMe->name());
 
 	dBlueprintMap::iterator found = mBlueprints.find(pRemoveMe->hash());
 	if(found == mBlueprints.end()){
-		WARN_S("	Tried to remove a blueprint '" << pRemoveMe->name() << "' that didn't exist.");
+		WARN_S("	Tried to deactivate a blueprint '" << pRemoveMe->name() << "' that didn't exist.");
 		return;
 	}
 
 	if(found->second.mUsing == NULL){
-		WARN_S("	Tried to remove an inactive blueprint " << pRemoveMe->name());
+		WARN_S("	Tried to deactivate an inactive blueprint " << pRemoveMe->name());
 		return;
 	}
 
@@ -322,6 +322,7 @@ cWorld::checkAddons(){
 	dAddon2Fresh fresh;
 	bool writeCache=false;
 
+	DBUG_LO("Checking addons");
 	getAddonList(addons);
 	mAvailableAddons = addons;
 	readAddonCache(addons, bluesInAddons, fresh);
@@ -355,8 +356,10 @@ cWorld::checkAddons(){
 		}
 	}
 
-	if(writeCache)
+	if(writeCache){
+		DBUG_LO("Writing addon cache");
 		writeAddonCache(bluesInAddons);
+	}
 
 	{
 		dNameHash bname;
@@ -370,6 +373,29 @@ cWorld::checkAddons(){
 			found->second.mInAddons = b->second;
 		}
 	}
+}
+
+void
+cWorld::nameProgAndMakeFride(dNameHash pName){
+	mProgName = pName;
+	if(mFridge != NULL){
+		delete mFridge;
+	}
+
+	mFridge = new cFridge(pName, 2056);
+}
+
+dNameHash
+cWorld::getProgName(){
+	return mProgName;
+}
+
+cFridge*
+cWorld::getFridge(){
+	if(mFridge == NULL)
+		THROW_ERROR("Fridge not made.");
+
+	return mFridge;
 }
 
 void

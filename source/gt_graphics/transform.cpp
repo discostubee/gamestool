@@ -58,3 +58,4 @@ void cTransform::patSetTransforms(ptrLead aLead){
 	aLead->copyPlug(&mSca, xPT_sca);
 	setTransforms();
 }
+

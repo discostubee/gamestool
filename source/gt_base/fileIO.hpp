@@ -27,15 +27,13 @@
 namespace gt{
 
 	//--------------------------------------------------------
-	typedef unsigned int dFilePoint; //<!
-
-	//--------------------------------------------------------
 	//!\class	cBase_fileIO
 	//!\brief	Interface for file IO, be it a local file or one
 	//!			that's online.
 	class cBase_fileIO: public cFigment{
 
 	public:
+		typedef unsigned int dFilePoint; //<!
 
 		static const unsigned int ENDOF_FILE = static_cast<unsigned int>(-1);	//!< special identifier used mostly by insert function.
 
@@ -46,11 +44,11 @@ namespace gt{
 		static const cPlugTag*	xPT_filePath;
 
 		static const cCommand::dUID	xSetPath;	//!< Set the path to the file you want to manipulate.
-		static const cCommand::dUID	xRead;		//!< Write to the buffer
-		static const cCommand::dUID	xWrite;		//!< Write to the file specified with set path.
-		static const cCommand::dUID	xInsert;
-		static const cCommand::dUID	xDeleteFile;
-		static const cCommand::dUID	xGetSize;
+		static const cCommand::dUID	xRead;		//!< Write to the buffer from the file at the path. Reads the entire file if the xPT_readSize is 0 or not specified.
+		static const cCommand::dUID	xWrite;		//!< Write the buffer to the file specified with set path. Creates the file if it doesn't exist. Re-writes the file if it does.
+		static const cCommand::dUID	xInsert;	//!< Increases the file size as needed.
+		static const cCommand::dUID	xDeleteFile;//!< Deletes the file if it exists, or does nothing if it doesn't.
+		static const cCommand::dUID	xGetSize;	//!< Can be used to test if a file exists.
 
 		cBase_fileIO();
 		virtual ~cBase_fileIO();

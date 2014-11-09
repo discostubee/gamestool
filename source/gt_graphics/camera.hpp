@@ -10,24 +10,24 @@
 
 namespace gt{
 
-	class c3DCamera: public cChainLink{
+	class cCamera3D: public cChainLink{
 	public:
-		c3DCamera();
-		virtual ~c3DCamera();
+		cCamera3D();
+		virtual ~cCamera3D();
 
 		GT_IDENTIFY("camera 3d");
 		GT_EXTENDS(cChainLink);
-		virtual dNameHash hash() const { return getHash<c3DCamera>(); }
+		virtual dNameHash hash() const { return getHash<cCamera3D>(); }
 	};
 
-	class c2DCamera: public cChainLink{
+	class cCamera2D: public cChainLink{
 	public:
-		c2DCamera();
-		virtual ~c2DCamera();
+		cCamera2D();
+		virtual ~cCamera2D();
 
 		GT_IDENTIFY("camera 2d");
 		GT_EXTENDS(cChainLink);
-		virtual dNameHash hash() const { return getHash<c2DCamera>(); }
+		virtual dNameHash hash() const { return getHash<cCamera2D>(); }
 	};
 }
 

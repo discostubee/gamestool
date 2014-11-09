@@ -2,8 +2,8 @@
 
 using namespace gt;
 
-cPolyMesh_X11GL::cPolyMesh_X11GL():
-		vbuff(NULL), ibuff(NULL), mVBO(0), mIBO(0), polyCount(0), vertCount(0)
+cPolyMesh_X11GL::cPolyMesh_X11GL()
+: mVBO(0), mIBO(0), polyCount(0), vertCount(0), mCache(HASH_INVALID)
 {}
 
 cPolyMesh_X11GL::~cPolyMesh_X11GL(){
@@ -11,8 +11,6 @@ cPolyMesh_X11GL::~cPolyMesh_X11GL(){
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &mIBO);
 	glDeleteBuffers(1, &mVBO);
-	delete [] vbuff;
-	delete [] ibuff;
 }
 
 void
@@ -26,21 +24,59 @@ cPolyMesh_X11GL::work(cContext *pCon){
 
 	glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBO);
-
-	glPushMatrix();
-
-	//!!! test code.
-	static GLfloat rotate = 0.0f;
-	rotate += 1.0f;
-	glTranslatef(0.0f, 0.0f, -7.0f);
-	glRotatef(rotate, 1.0f, 0.5f, 0.25f);
-	glScalef(1.0f, 1.0f, 1.0f);
-	glColor3f(1.0f, 1.0f, 0.0f);
-	//!!!
-
 	glDrawElements(GL_TRIANGLES, polyCount*DIMENSIONS, GL_UNSIGNED_INT, 0);
+}
 
-	glPopMatrix();
+void
+cPolyMesh_X11GL::downloadLazy(){
+	if(!mUpdateLazy && mCache != HASH_INVALID){
+		cleanLazy();
+		dRefWorld w = gWorld.get();
+		sMesh &ref = mLazyMesh.get();
+		tAutoPtr<cArray> coldVerts = w->getFridge()->thaw(mCache);
+		mCache = mCache << 1;
+		tAutoPtr<cArray> coldPolys = w->getFridge()->thaw(mCache);
+		mCache = mCache >> 1;
+
+		if(!coldVerts.isValid() || !coldPolys.isValid())
+			THROW_ERROR("Couldn't thaw lazy mesh.");
+
+		for(size_t i=0; i <= (coldVerts->mLen / sizeof(dGLFloat)) + DIMENSIONS; i += DIMENSIONS){
+			ref.mVertexes.push_back(
+				sVertex(
+					static_cast<dGLFloat>(coldVerts->mData[ i]),
+					static_cast<dGLFloat>(coldVerts->mData[ i+sizeof(dGLFloat) ]),
+					static_cast<dGLFloat>(coldVerts->mData[ i+(2*sizeof(dGLFloat)) ])
+				)
+			);
+		}
+
+		for(size_t i=0; i < (coldPolys->mLen / sizeof(dIdxV)) + DIMENSIONS; i += DIMENSIONS){
+			ref.mPolys.push_back(
+				sPoly(
+					static_cast<dIdxVert>(coldPolys->mData[ i ]),
+					static_cast<dIdxVert>(coldPolys->mData[ i+sizeof(dIdxVert) ]),
+					static_cast<dIdxVert>(coldPolys->mData[ i+(2*sizeof(dIdxVert)) ])
+				)
+			);
+		}
+	}
+}
+
+dNameHash
+cPolyMesh_X11GL::makeFridgeID(dGLFloat *buffVert, size_t lenVerts, dIdxV * buffPoly, size_t lenPolys){
+	dNameHash rtn=0;
+	for(size_t i=0; i<lenVerts; ++i){
+		rtn = (rtn << sizeof(dGLFloat))
+			^ reinterpret_cast<dNameHash*>(&buffVert[i])[0]
+			^ reinterpret_cast<dNameHash*>(&buffVert[i])[1]
+		;
+	}
+
+	for(size_t i=0; i<lenPolys; ++i)
+		rtn = (rtn << sizeof(dIdxV)) ^ buffPoly[i];
+
+	return rtn;
 }
 
 void
@@ -61,16 +97,14 @@ cPolyMesh_X11GL::formatGLMesh(){
 	if(mIBO){
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glDeleteBuffers(1, &mIBO);
-		delete [] ibuff;
 	}
 	if(mVBO){
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glDeleteBuffers(1, &mVBO);
-		delete [] vbuff;
 	}
 
-	vbuff = new dGLFloat[vertCount * DIMENSIONS];
-	ibuff = new dIdxV[polyCount * DIMENSIONS];
+	dGLFloat *vbuff = new dGLFloat[vertCount * DIMENSIONS];
+	dIdxV *ibuff = new dIdxV[polyCount * DIMENSIONS];
 
 	try{
 		for(size_t iVert=0; iVert < vertCount; ++iVert){
@@ -125,8 +159,25 @@ cPolyMesh_X11GL::formatGLMesh(){
 		WARN(e);
 	}
 
-	SAFEDEL_ARR(ibuff);
-	SAFEDEL_ARR(vbuff);
+	cFridge * f = gWorld.get()->getFridge();
+	mCache = makeFridgeID(vbuff, vertCount * DIMENSIONS, ibuff, polyCount * DIMENSIONS);
+	f->chill(
+		mCache,
+		tAutoPtr<cArray>(
+			new cArray(reinterpret_cast<dByte*>(vbuff), vertCount * DIMENSIONS * sizeof(dGLFloat))
+		)
+	);
+	mCache = mCache << 1;
+	f->chill(
+		mCache,
+		tAutoPtr<cArray>(
+			new cArray(reinterpret_cast<dByte*>(ibuff), polyCount * DIMENSIONS * sizeof(dIdxV))
+		)
+	);
+	mCache = mCache >> 1;
+
+	delete [] vbuff;
+	delete [] ibuff;
 
 	cleanLazy();
 }

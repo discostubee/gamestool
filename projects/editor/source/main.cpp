@@ -24,6 +24,13 @@
 #elif defined(WIN32)
 #endif
 
+#include "gt_graphics/screens.hpp"
+#include "gt_graphics/stage.hpp"
+#include "gt_graphics/film.hpp"
+#include "gt_graphics/camera.hpp"
+#include "gt_graphics/polygonMesh.hpp"
+#include "gt_graphics/transform.hpp"
+
 using namespace gt;
 
 ptrFig makeEditor();
@@ -31,7 +38,6 @@ ptrFig makeEditor();
 void draftAll(){
 	using namespace gt;
 
-	//- This needs to be a complete list of everything in the gamestool lib.
 	tOutline<cFigment>::draft();
 	tOutline<cEmptyFig>::draft();
 	tOutline<cChainLink>::draft();
@@ -45,7 +51,6 @@ void draftAll(){
 	tOutline<cThread>::draft();
 	tOutline<cValve>::draft();
 
-	//- Draft in stuff specific for platform.
 #	if defined(__APPLE__)
 		tOutline<cOSX_fileIO>::draft();
 #	elif defined(__linux)
@@ -54,43 +59,70 @@ void draftAll(){
 #	endif
 }
 
-ptrFig makeEditor(){
-
+ptrFig makeMesh(){
+	dRefWorld world = gWorld.get();
 	cContext setupConx;
-	ptrFig rlTop = gWorld.get()->makeFig(getHash<cRunList>());
+	ptrFig rtn = world->makeFig(getHash<cTransform>());
 
-	tPlug<ptrFig> stage = gWorld.get()->makeFig("stage");
-	tPlug<ptrFig> film = gWorld.get()->makeFig("film");
-	tPlug<ptrFig> cam = gWorld.get()->makeFig("camera 2d");
-	tPlug<ptrFig> menu = gWorld.get()->makeFig("poly mesh");
-	tPlug<ptrFig> close = gWorld.get()->makeFig(getHash<cWorldShutoff>());
+	tPlug<ptrFig> list = world->makeFig(getHash<cRunList>());
+	ptrLead linkList = world->makeLead(cTransform::xSetLink);
+	linkList->linkPlug(&list, cTransform::xPT_links);
+	rtn->jack(linkList, &setupConx);
+
+	ptrLead addStuff = world->makeLead(cRunList::xAdd);
+	tPlug<ptrFig> mesh = world->makeFig(getHash<cPolyMesh>());
+	addStuff->linkPlug(&mesh, cRunList::xPT_links);
+	list.get()->jack(addStuff, &setupConx);
+
+	ptrLead setMesh = world->makeLead(cPolyMesh::xAddToMesh);
+
+	cPolyMesh::dPlugVerts verts;
+	verts += sVertex(0.5,  0.0, 0);
+	verts += sVertex(-0.5, 0.0, 0);
+	verts += sVertex(0,    0.5, 0);
+	setMesh->linkPlug(&verts, cPolyMesh::xPT_vertexs);
+
+	cPolyMesh::dPlugPoly polys;
+	polys += sPoly(0, 1, 2);
+	setMesh->linkPlug(&polys, cPolyMesh::xPT_polies);
+
+	mesh.get()->jack(setMesh, &setupConx);
+
+	return rtn;
+}
+
+ptrFig makeEditor(){
+	dRefWorld world = gWorld.get();
+	cContext setupConx;
+	ptrFig rlTop = world->makeFig(getHash<cRunList>());
+
+	tPlug<ptrFig> stage = world->makeFig(getHash<cStage>());
+	tPlug<ptrFig> film = world->makeFig(getHash<cFilm>());
+	tPlug<ptrFig> mesh = makeMesh();
+	tPlug<ptrFig> cam = world->makeFig(getHash<cCamera2D>());
+	tPlug<ptrFig> close = world->makeFig(getHash<cWorldShutoff>());
 
 	{	//- link components.
-		ptrLead linkFilm = gWorld.get()->makeLead("chain link", "set link");
-		linkFilm->linkPlug(
-			&film,
-			gWorld.get()->getPlugTag("chain link", "links")
-		);
+		ptrLead linkMesh = world->makeLead(cChainLink::xSetLink);
+		linkMesh->linkPlug(&mesh, cChainLink::xPT_links);
+		cam.get()->jack(linkMesh, &setupConx);
+
+		ptrLead linkFilm = world->makeLead(cChainLink::xSetLink);
+		linkFilm->linkPlug(&film, cChainLink::xPT_links);
 		stage.get()->jack(linkFilm, &setupConx);
 
-		ptrLead linkClose = gWorld.get()->makeLead("stage", "link closer");
-		linkClose->linkPlug(
-			&close,
-			gWorld.get()->getPlugTag("chain link", "links")
-		);
-		stage.get()->jack(linkClose, &setupConx);
-
-		ptrLead linkCam = gWorld.get()->makeLead("chain link", "set link");
-		linkCam->linkPlug(
-			&cam,
-			gWorld.get()->getPlugTag("chain link", "links")
-		);
+		ptrLead linkCam = world->makeLead(cChainLink::xSetLink);
+		linkCam->linkPlug(&cam, cChainLink::xPT_links);
 		film.get()->jack(linkCam, &setupConx);
+
+		ptrLead linkClose = world->makeLead(cStage::xLinkCloser);
+		linkClose->linkPlug(&close, cStage::xPT_links);
+		stage.get()->jack(linkClose, &setupConx);
 
 		tPlugLinearContainer<ptrFig, std::vector> contain;
 		contain.add(stage);
 
-		ptrLead topLinks = gWorld.get()->makeLead(cRunList::xAdd);
+		ptrLead topLinks = world->makeLead(cRunList::xAdd);
 		topLinks->linkPlug(&contain, cRunList::xPT_links);
 		rlTop->jack(topLinks, &setupConx);
 	}
@@ -100,12 +132,15 @@ ptrFig makeEditor(){
 
 ENTRYPOINT
 {
+	int rtn = EXIT_FAILURE;
+
 	try{
 		cWorld::primordial::lo("Making editor file.");
 		gt::gWorld.take(new gt::cTerminalWorld());
 
 		gWorld.get()->checkAddons();
 		draftAll();
+		gWorld.get()->nameProgAndMakeFride(makeHash("editor"));
 
 		{
 			tPlug<ptrBuff> buff(ptrBuff(new cByteBuffer()));
@@ -143,16 +178,18 @@ ENTRYPOINT
 		cWorld::primordial::lo("Ended.");
 		excep::delayExcep::shake();
 
+		rtn = EXIT_SUCCESS;
 
 	}catch(std::exception &e){
+		gt::gWorld.cleanup(); //- Ensure cleanup
 		std::cout << e.what() << std::endl;
 
-
 	}catch(...){
+		gt::gWorld.cleanup(); //- Ensure cleanup
 		std::cout << "Unknown error." << std::endl;
 	}
 
-	return EXIT_SUCCESS;
+	return rtn;
 }
 
 

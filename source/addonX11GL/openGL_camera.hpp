@@ -11,20 +11,20 @@
 
 namespace gt{
 
-	class c3DCamera_X11GL: public c3DCamera{
+	class c3DCamera_X11GL: public cCamera3D{
 	public:
 		GT_IDENTIFY("camera 3d gl");
-		GT_REPLACES(c3DCamera);
+		GT_REPLACES(cCamera3D);
 		virtual dNameHash hash() const { return getHash<c3DCamera_X11GL>(); }
 
 		c3DCamera_X11GL();
 		virtual ~c3DCamera_X11GL();
 	};
 
-	class c2DCamera_X11GL: public c2DCamera{
+	class c2DCamera_X11GL: public cCamera2D{
 	public:
 		GT_IDENTIFY("camera 2d gl");
-		GT_REPLACES(c2DCamera);
+		GT_REPLACES(cCamera2D);
 		virtual dNameHash hash() const { return getHash<c2DCamera_X11GL>(); }
 
 		c2DCamera_X11GL();

@@ -18,10 +18,6 @@
 
 #define DYN_LIB_DEF(rnt) rnt
 
-//!\brief	Put this into your addon source so that when it closes, it drops automatic references to the main heap.
-#define DYN_LIB_ENDED class cLibDeath{ \
-	public: ~cLibDeath(){ gt::cWorld::primordial::addonClosed(__FILE__); }\
-}; cLibDeath die;
 
 namespace gt{
 

@@ -48,7 +48,7 @@ void draftAll(){
 #	endif
 }
 
-gt::ptrFig getRootAnchor(){
+gt::ptrFig getRootAnchor(dNatStr & rootFile){
 	using namespace gt;
 
 	cContext conxLoading;
@@ -56,7 +56,7 @@ gt::ptrFig getRootAnchor(){
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
 
 	{
-		tPlug<dStr> path("editor.gtf");
+		tPlug<dStr> path(rootFile);
 		tPlug<ptrBuff> buff(ptrBuff(new cByteBuffer()));
 		tPlug<ptrFig> file = gWorld.get()->makeFig(getHash<cBase_fileIO>());
 
@@ -103,9 +103,11 @@ ENTRYPOINT
 		);
 
 		try{
+			dNatStr rootFile("editor.gtf") ;
 			gWorld.get()->checkAddons();
 			draftAll();
-			gWorld.get()->setRoot( getRootAnchor() );
+			gWorld.get()->nameProgAndMakeFride(makeHash(rootFile));
+			gWorld.get()->setRoot( getRootAnchor(rootFile) );
 			gWorld.get()->loop();
 
 		}catch(std::exception &e){

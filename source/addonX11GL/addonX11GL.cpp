@@ -12,8 +12,7 @@
 #include "openGL_polyMesh.hpp"
 #include "openGL_camera.hpp"
 #include "openGL_screens.hpp"
-
-//DYN_LIB_ENDED;
+#include "openGL_transform.hpp"
 
 DYN_LIB_DEF(void)
 draftAll(gt::cWorld *pWorld){
@@ -27,12 +26,14 @@ draftAll(gt::cWorld *pWorld){
 		gt::tOutline<gt::cFilm_X11GL>::draft();
 		gt::tOutline<gt::cPolyMesh>::draft();
 		gt::tOutline<gt::cPolyMesh_X11GL>::draft();
-		gt::tOutline<gt::c3DCamera>::draft();
+		gt::tOutline<gt::cCamera3D>::draft();
 		gt::tOutline<gt::c3DCamera_X11GL>::draft();
-		gt::tOutline<gt::c2DCamera>::draft();
+		gt::tOutline<gt::cCamera2D>::draft();
 		gt::tOutline<gt::c2DCamera_X11GL>::draft();
 		gt::tOutline<gt::cScreen>::draft();
 		gt::tOutline<gt::cScreen_X11GL>::draft();
+		gt::tOutline<gt::cTransform>::draft();
+		gt::tOutline<gt::cTransform_X11GL>::draft();
 
 		DBUG_LO("x11 addon open.");
 
@@ -47,6 +48,7 @@ draftAll(gt::cWorld *pWorld){
 DYN_LIB_DEF(void)
 closeLib(){
 	try{
+		DBUG_LO("Closing x11 addon.");
 		gt::cWorld::primordial::addonClosed(__FILE__);
 	}catch(...){
 
