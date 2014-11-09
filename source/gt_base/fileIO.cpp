@@ -94,13 +94,22 @@ void
 cBase_fileIO::patRead(ptrLead aLead){
 	size_t readSize = 0;
 	size_t readStart = 0;
+	size_t fileSize = getFileSize();
 
-	aLead->assignTo(&readStart, xPT_readSize);
-	aLead->assignTo(&readSize, xPT_startSpot);
+	(void)aLead->assignTo(&readSize, xPT_readSize);
+	(void)aLead->assignTo(&readStart, xPT_startSpot);
+
+	if(readStart >= fileSize)
+		throw excep::outOfRange(fileSize, readStart, __FILE__, __LINE__);
+
+	if(readSize == 0){
+		DBUG_VERBOSE_LO("Getting entire file.");
+		readSize = getFileSize() - readStart;
+	}
 
 	ptrBuff buff;
 	aLead->assignTo(&buff, xPT_buffer);
-	read(buff.get(), readSize, readStart);
+	read(buff.get(), readStart, readSize);
 }
 
 void

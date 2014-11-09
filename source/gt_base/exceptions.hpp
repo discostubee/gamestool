@@ -1,9 +1,7 @@
 /*
  * !\file	exceptions.hpp
  * !\brief	Contains different comment exception types as well as some assertions.
- * !\note	Normally, assertions should never be used for public interfaces, because as you're ensuring behaviour it needs to
- * !		always be checked. However we're doing something a little different, we're using assertions as a debug measure
- * !		and avoiding the checks during execution. As assertion should never be hit during execution.
+ * !\note	Assertions throw instead of core dumping so that unit tests can continue.
  *
  **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens

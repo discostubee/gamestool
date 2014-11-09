@@ -156,7 +156,7 @@ cStage_X11GL::work(cContext* pCon){
 
 			case ClientMessage:{
 				DBUG_LO("client message " << XGetAtomName( mDisplay, mEvent.xclient.message_type ));
-				if( isDestroyWindowAtom(mEvent.xclient.message_type) ){
+				if( isDestroyWindowAtom(mEvent.xclient.message_type) && mCloser.get().valid()){
 					DBUG_LO("destroy message. Calling " << mCloser.get()->name());
 					mCloser.get()->run(pCon);
 				}
@@ -167,8 +167,6 @@ cStage_X11GL::work(cContext* pCon){
 		}
 	}
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
 
     glEnable(GL_CULL_FACE);
 	glEnable(GL_TEXTURE_2D);
@@ -185,6 +183,9 @@ cStage_X11GL::work(cContext* pCon){
 	glDepthFunc(GL_LEQUAL);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -234,11 +235,11 @@ cStage_X11GL::refreshDim(){
 	glViewport(0, 0, glW, glH);
 
 	if(mInternalRefresh){
-	/*
+/*
 		if (mFullscreen){
 			//!\todo make this configurable.
 
-			DBUG_LO("resolution " << dpyWidth << ", " << dpyHeight);
+			DBUG_LO("resolution " << lgW << ", " << glH);
 
 			mWinAttr.override_redirect = True;
 
@@ -246,7 +247,7 @@ cStage_X11GL::refreshDim(){
 				mDisplay,
 				RootWindow(mDisplay, vi->screen),
 				0, 0,
-				dpyWidth, dpyHeight,
+				glW, glH,
 				0,
 				vi->depth,
 				InputOutput,
@@ -263,9 +264,8 @@ cStage_X11GL::refreshDim(){
 				mWindow,
 				0, 0, 0, 0, 0, 0
 			);
-
 		}
-    */
+*/
 
 		XMoveResizeWindow(
 			mDisplay, mWindow,
@@ -289,7 +289,7 @@ cStage_X11GL::testPattern(){
 	//- Shamelessly ripping off http://gpwiki.org/index.php/OpenGL:Tutorials:Setting_up_OpenGL_on_X11
 	static GLfloat rotate;
 	glPushMatrix();
-		glTranslatef(0.0f, 0.0f, -7.0f);
+		glTranslatef(0.0f, 0.0f, 0.0f);
 		glRotatef(rotate, 1.0f, 0.5f, 0.25f);
 		glScalef(0.5f, 0.5f, 0.5f);
 		glBegin(GL_QUADS);

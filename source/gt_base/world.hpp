@@ -80,6 +80,7 @@
 #include "blueprint.hpp"
 #include "threadTools.hpp"
 #include "profiler.hpp"
+#include "fridge.hpp"
 
 #include <set>
 #include <stack>
@@ -145,6 +146,8 @@ namespace gt{
 	//---------------------------------------------------------------------------------------------------
 	//!\brief	The world is both a factory and a service provider for pretty much every figment.
 	//!\note	Not threadsafe, so it must be accessed with a tMrSafety.
+	//!\note	Why so choc full of functions? Because the world handles the different heaps from different
+	//!			addons, as well as various services that need to be used in a thread-safe manner.
 	//!\todo	Prevent a collection of objects becoming an island which is separate from the root node, and
 	//!			thus will never be cleaned up. This will also be a huge problem when removing addons where
 	//!			the objects made in the addon need to be blanked.
@@ -198,7 +201,10 @@ namespace gt{
 		dConSig regContext(cContext* pCon);	//!< We need to keep track of the number of contexts so we can make a context lookup. !\note	Locks all contexts while the lookup table is changed.
 		void unregContext(dConSig pSig);	//!< NEVER forget to do this. Locks all contexts while the table is updated. Previous context signatures (apart from the one being unregged) remain valid.
 		bool activeContext(dConSig pSig);	//!< Is this context still alive?
-		void checkAddons();	//!< Check all the available addons.
+		void checkAddons();					//!< Check all the available addons.
+		void nameProgAndMakeFride(dNameHash pName); //!< Name program and (re)initialise the fridge.
+		dNameHash getProgName();			//!< Get the program's name.
+		cFridge* getFridge();				//!< Throws if the fridge is not yet made.
 
 		//--------------------------------------------------------
 		// Get stuff
@@ -282,6 +288,8 @@ namespace gt{
 		dRefAddons mOpenAddons;
 		ptrFig mRoot;
 		dNameHash mBluesFromAddon;	//!< Used so that any blueprints being drafted are considered to come from this addon.
+		cFridge *mFridge;
+		dNameHash mProgName;
 
 		virtual tAutoPtr<cWorld> makeWorld() =0;	//!< Make a new world.
 		virtual void openAddon(const dStr &name) =0;	//!< Opens an addon with the given name. Can be called multiple times without reopening.

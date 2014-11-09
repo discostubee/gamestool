@@ -2,14 +2,14 @@
 
 using namespace gt;
 
-c2DCamera::c2DCamera(){
+cCamera2D::cCamera2D(){
 }
 
-c2DCamera::~c2DCamera(){
+cCamera2D::~cCamera2D(){
 }
 
-c3DCamera::c3DCamera(){
+cCamera3D::cCamera3D(){
 }
 
-c3DCamera::~c3DCamera(){
+cCamera3D::~cCamera3D(){
 }

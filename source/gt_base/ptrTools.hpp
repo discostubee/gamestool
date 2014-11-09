@@ -45,25 +45,6 @@ namespace gt{
 		~cGlobalPtrMan(){ SAFEDEL(mPtr); }
 	};
 
-	//-------------------------------------------------------------------------------------
-	//!\brief	Used as a non-smart pointer wrapper
-	template <typename T>
-	class tPtrRef{
-	public:
-		tPtrRef();
-		tPtrRef(T& ref);
-		tPtrRef(T* ptr);
-		tPtrRef(const tPtrRef<T>& other);
-		~tPtrRef();
-
-		T* operator -> ();
-		tPtrRef<T>& operator = (const tPtrRef& other);
-
-	private:
-		T* myPtr;
-	};
-
-
 	//------------------------------------------------------------------------------------------
 	//!\brief
 	template<typename T>
@@ -236,45 +217,31 @@ namespace gt{
 			const_cast< tAutoPtr<TYPE> &>(pTransfer).mManage = NULL;
 		}
 
+		tAutoPtr() : mManage(NULL) {}
 		tAutoPtr(TYPE *pManageMe) : mManage(pManageMe) {}
 		~tAutoPtr() { delete mManage; }
 
 		TYPE* operator*() { return mManage; }
 		TYPE* operator->() { return mManage; }
 
+		bool isValid() { return mManage != NULL; }
 	private:
 		TYPE *mManage;
 	};
+
+	//------------------------------------------------------------------------------------------
+	//!\brief	Handles a constant sizes array.
+	class cArray{
+	public:
+		dByte * const mData;
+		const size_t mLen;
+
+		cArray(dByte * takeMe, size_t pLen);
+		cArray(const cArray & copyMe);
+		~cArray();
+	};
 }
 
-
-////////////////////////////////////////////////////////////
-namespace gt{
-	template<typename T>
-	tPtrRef<T>::tPtrRef() : myPtr(NULL) {}
-
-	template<typename T>
-	tPtrRef<T>::tPtrRef(T& ref) : myPtr(&ref) {}
-
-	template<typename T>
-	tPtrRef<T>::tPtrRef(T* ptr) : myPtr(ptr) {}
-
-	template<typename T>
-	tPtrRef<T>::tPtrRef(const tPtrRef<T>& other) : myPtr(other.myPtr) {}
-
-	template<typename T>
-	tPtrRef<T>::~tPtrRef() {}
-
-	template<typename T>
-	T*
-	tPtrRef<T>::operator -> () { return myPtr; }
-
-	template<typename T>
-	tPtrRef<T>&
-	tPtrRef<T>::operator = (const tPtrRef& other){
-		if(this != &other) myPtr = other.myPtr; return *this;
-	}
-}
 
 ////////////////////////////////////////////////////////////
 namespace gt{

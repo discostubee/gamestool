@@ -55,6 +55,7 @@
 								<option id="gnu.cpp.link.option.libs.1835278037" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="gamestool_d"/>
 									<listOptionValue builtIn="false" value="gt_linux_d"/>
+									<listOptionValue builtIn="false" value="gt_graphics_d"/>
 									<listOptionValue builtIn="false" value="glib-2.0"/>
 									<listOptionValue builtIn="false" value="boost_locale"/>
 									<listOptionValue builtIn="false" value="dl"/>

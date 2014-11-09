@@ -63,7 +63,7 @@ namespace gt{
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
-	//!\brief
+	//!\brief	Works with things like vectors and linked lists which don't have any special uses like a map does.
 	template<
 		typename PLUG_T,
 		template<typename, typename> class CONT_T

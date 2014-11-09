@@ -73,7 +73,7 @@ namespace gt{
 		~tMrSafety();
 		dLemming get();
 		void take(T *takeMe); 		//!< Cleans up the old data if it exists, and becomes the custodian of the data being past in. Waits to acquire lock.
-		void cleanup();				//!< Deletes data. Waits to acquire lock.
+		void cleanup() throw();		//!< Deletes data. Waits to acquire lock.
 		void drop(); 				//!< Don't manage this anymore. Doesn't cleanup. Waits to acquire lock.
 		void set(const T& data);	//!< Set containing data and deletes any old data. Requires lock.
 
@@ -137,12 +137,15 @@ tMrSafety<T>::take(T* takeMe) {
 
 template<typename T>
 void
-tMrSafety<T>::cleanup() {
-#	ifdef GT_THREADS
-		dMuLock lock(muData);
-#	endif
+tMrSafety<T>::cleanup() throw() {
+	try{
+#		ifdef GT_THREADS
+			dMuLock lock(muData);
+#		endif
 
-	SAFEDEL(mData);
+		SAFEDEL(mData);
+	}catch(...){
+	}
 }
 
 template<typename T>

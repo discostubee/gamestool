@@ -22,6 +22,20 @@
 // Tests
 using namespace gt;
 
+cArray::cArray(dByte * takeMe, size_t pLen)
+: mData(takeMe), mLen(pLen)
+{}
+
+cArray::cArray(const cArray & copyMe)
+: mData(new dByte[copyMe.mLen]), mLen(copyMe.mLen)
+{
+	memcpy(mData, copyMe.mData, sizeof(dByte) * copyMe.mLen);
+}
+
+cArray::~cArray(){
+	delete [] mData;
+}
+
 #ifdef GTUT
 
 //	class spitInts: public tSpitLemming<int>{

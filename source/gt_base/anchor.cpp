@@ -60,6 +60,9 @@ cAnchor::save(cByteBuffer* pAddHere){
 				i != prev->end();
 				++i
 			){
+				if(!i->valid())
+					continue;
+
 				if( figs.find( i->get() ) == figs.end() ){ // first time funny.
 					figs.insert( i->get() );
 					(*i)->getLinks( branches );	//add to the next series of branches.
