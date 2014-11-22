@@ -58,6 +58,7 @@ public:
 	const dByte* get(const size_t pStart=0) const;
 	
 	template<typename TYPE> int fill(TYPE *pCup, size_t pStart=0) const;	//!< Fill the target based upon its TYPE using memory at the head of the buffer offset by pStart. !\return The bytes used to fill (NOT ALWAYS the same as the byte size of the container) !\note DOES NOT call the TYPE's constructor, so be careful with. Returns the number of bytes used in filling (not always the number of bytes the object is).
+	template<typename TYPE> int arrFill(TYPE pArr[], size_t pLen, size_t pStart=0) const;	//!< Fills of a given TYPE similar to 'fill' function above.
 
 	void copy(const dByte* pBuffIn, size_t pInSize);	//!< This buffer will free its current contents (if the size is different), and copy what's being pointed too.
 	template<typename TYPE> void copy(const TYPE *pBuffIn);
@@ -94,6 +95,24 @@ cByteBuffer::fill(TYPE *pCup, size_t pStart) const{
 	size_t sizeUnpacked=0;
 	bpk::unpack(pCup, &mBuff[pStart], &sizeUnpacked, mBuffSize-pStart);
 	return sizeUnpacked;
+}
+
+template<typename TYPE>
+int
+cByteBuffer::arrFill(TYPE pArr[], size_t pLen, size_t pStart) const{
+	ASRT_TRUE(pLen > 0, "Length must not be zero.");
+
+	size_t sizeUnpacked=0;
+	for(size_t i=0; i < pLen; ++i){
+		bpk::unpack(
+			&pArr[i],
+			&mBuff[pStart + (i*sizeUnpacked)],
+			&sizeUnpacked,
+			mBuffSize -pStart -(i*sizeUnpacked)
+		);
+		ASRT_TRUE(sizeUnpacked > 0, "Unpacked 0.");
+	}
+	return sizeUnpacked * pLen;
 }
 
 template<typename TYPE>

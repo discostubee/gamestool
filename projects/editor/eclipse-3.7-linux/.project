@@ -4,8 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>addonX11GL</project>
-		<project>libgamestool</project>
-		<project>libgt_linux</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -90,6 +88,11 @@
 			<locationURI>BIN_LOC</locationURI>
 		</link>
 		<link>
+			<name>eclipse_share</name>
+			<type>2</type>
+			<locationURI>PROJECT_SHARE_LOC</locationURI>
+		</link>
+		<link>
 			<name>gt_terminal</name>
 			<type>2</type>
 			<locationURI>SOURCE_LOC/gt_terminal</locationURI>
@@ -104,6 +107,10 @@
 		<variable>
 			<name>BIN_LOC</name>
 			<value>$%7BPARENT-3-PROJECT_LOC%7D/bin</value>
+		</variable>
+		<variable>
+			<name>PROJECT_SHARE_LOC</name>
+			<value>$%7BPARENT-2-PROJECT_LOC%7D/shared/eclipse/linux-3.7</value>
 		</variable>
 		<variable>
 			<name>PROJECT_SOURCE_LOC</name>

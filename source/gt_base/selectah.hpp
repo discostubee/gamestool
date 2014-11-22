@@ -38,6 +38,8 @@ namespace gt{
 	public:
 		typedef unsigned int dModeID;
 
+		static const dModeID INVALID_MODE = static_cast<dModeID>(-1);
+
 		struct sMode{
 			dStr name;
 			dModeID ID;

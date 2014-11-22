@@ -38,12 +38,12 @@ gt::voidAssign::plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo){
 
 void
 gt::voidAssign::plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo){
-	*reinterpret_cast<dNatStr*>(pTo) = ::toNStr(*pFrom);
+	*reinterpret_cast<dNatStr*>(pTo) = ::PCStr2NStr(*pFrom);
 }
 
 void
 gt::voidAssign::plaCStrToText(const dPlaChar * const *pFrom, void *pTo){
-	*reinterpret_cast<dText*>(pTo) = ::toText(*pFrom);
+	*reinterpret_cast<dText*>(pTo) = ::PCStr2Text(*pFrom);
 }
 
 void
@@ -62,14 +62,14 @@ void
 gt::voidAppend::plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo){
 	reinterpret_cast<
 		std::basic_string<dNatChar, std::char_traits<dNatChar> >*
-	>(pTo)->append( ::toNStr(*pFrom) );
+	>(pTo)->append( ::PCStr2NStr(*pFrom) );
 }
 
 void
 gt::voidAppend::plaCStrToText(const dPlaChar * const *pFrom, void *pTo){
 	reinterpret_cast<
 		std::basic_string<dTextChar, std::char_traits<dTextChar> >*
-	>(pTo)->append( ::toText(*pFrom) );
+	>(pTo)->append( ::PCStr2Text(*pFrom) );
 }
 
 

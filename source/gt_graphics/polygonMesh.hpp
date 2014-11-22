@@ -36,9 +36,8 @@ namespace gt{
 
 	struct sTexMap{
 		dUnitVDis u[4], v[4];
-		unsigned int idxBMap;	//!< Index into the bitmap list.
 
-		sTexMap() : idxBMap(-1) { memset(u, 0, sizeof(u)); memset(v, 0, sizeof(u)); }
+		sTexMap() { memset(u, 0, sizeof(u)); memset(v, 0, sizeof(u)); }
 
 		sTexMap& operator+= (const sTexMap &aCopyMe);
 	};
@@ -56,6 +55,7 @@ namespace gt{
 
 	//!\brief	Used to pass a mesh in an abstract manner.
 	struct sMesh{
+		bool mFresh;
 		std::vector<sVertex> mVertexes;
 		std::vector<sPoly> mPolys;
 		std::vector<sTexMap> mTMap;
@@ -107,7 +107,6 @@ namespace gt{
 			for(std::vector<sTexMap>::iterator itr = get().mTMap.begin(); itr != get().mTMap.end(); ++itr){
 				pSaveHere->add(reinterpret_cast<dByte*>(itr->u), 4 * sizeof(dUnitVDis));
 				pSaveHere->add(reinterpret_cast<dByte*>(itr->v), 4 * sizeof(dUnitVDis));
-				pSaveHere->add(&itr->idxBMap);
 			}
 		}
 
@@ -126,7 +125,7 @@ namespace gt{
 			}
 
 			readPt += pChewToy->fill(&num, readPt);
-			get().mPolys.reserve(num);
+			get().mPolys.resize(num);
 
 			for(std::vector<sPoly>::iterator itr = get().mPolys.begin(); itr != get().mPolys.end(); ++itr){
 				readPt += pChewToy->fill(&itr->a, readPt);
@@ -134,7 +133,16 @@ namespace gt{
 				readPt += pChewToy->fill(&itr->c, readPt);
 			}
 
+			readPt += pChewToy->fill(&num, readPt);
+			get().mTMap.resize(num);
+
+			for(std::vector<sTexMap>::iterator itr = get().mTMap.begin(); itr != get().mTMap.end(); ++itr){
+				readPt += pChewToy->arrFill(itr->u, 4, readPt);
+				readPt += pChewToy->arrFill(itr->v, 4, readPt);
+			}
+
 			pChewToy->trimHead(readPt);
+			get().mFresh = true;
 		}
 	};
 }
@@ -178,7 +186,6 @@ namespace gt{
 
 		tPlug<sMesh> mLazyMesh;	//!< The lazy mesh isn't always a complete mesh. It's a way for the implemented version to upload and download bits and pieces of information.
 		dFigPlugList mBMaps;	//!< These are the bitmaps referenced by the lazy mesh. They are not the bitmaps used by the implementation, which is why they're not part of the lazy mesh.
-		bool mUpdateLazy;
 
 		void patAddToMesh(ptrLead aLead);
 		void patGetMesh(ptrLead aLead);

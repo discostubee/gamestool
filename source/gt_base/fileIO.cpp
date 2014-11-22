@@ -92,6 +92,8 @@ cBase_fileIO::patSetPath(ptrLead aLead){
 
 void
 cBase_fileIO::patRead(ptrLead aLead){
+	PROFILE;
+
 	size_t readSize = 0;
 	size_t readStart = 0;
 	size_t fileSize = getFileSize();
@@ -114,6 +116,8 @@ cBase_fileIO::patRead(ptrLead aLead){
 
 void
 cBase_fileIO::patWrite(ptrLead aLead){
+	PROFILE;
+
 	ptrBuff buffer;
 
 	aLead->assignTo(&buffer, xPT_buffer);
@@ -123,6 +127,8 @@ cBase_fileIO::patWrite(ptrLead aLead){
 
 void
 cBase_fileIO::patInsert(ptrLead aLead){
+	PROFILE;
+
 	size_t startSpot = 0;
 	ptrBuff current;
 
@@ -133,6 +139,7 @@ cBase_fileIO::patInsert(ptrLead aLead){
 
 void
 cBase_fileIO::patDelFile(ptrLead aLead){
+	PROFILE;
 	deleteFile();
 }
 

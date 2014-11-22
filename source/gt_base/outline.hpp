@@ -317,7 +317,7 @@ namespace gt{
 		dMapPTag::iterator itrTag = xPlugTags->end();
 
 		{
-			dNameHash tagUID = makeHash( toNStr(pName) );
+			dNameHash tagUID = makeHash( PCStr2NStr(pName) );
 
 			xPlugTags->insert( dMapPTag::value_type(tagUID,	cPlugTag(pName)) );
 

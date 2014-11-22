@@ -25,7 +25,6 @@ sTexMap::operator+= (const sTexMap &aCopyMe){
 	ASRT_NOTSELF(&aCopyMe);
 	memcpy(u, aCopyMe.u, sizeof(u));
 	memcpy(v, aCopyMe.v, sizeof(v));
-	idxBMap = aCopyMe.idxBMap;
 	return *this;
 }
 
@@ -44,6 +43,7 @@ sMesh::operator+= (const sMesh &aCopyMe){
 //	mVertexes.;
 //	mPolys.;
 //	mTMap.;
+	mFresh = true;
 	return *this;
 }
 
@@ -85,9 +85,8 @@ const cCommand::dUID cPolyMesh::xTexturize = tOutline<cPolyMesh>::makeCommand(
 );
 
 
-cPolyMesh::cPolyMesh()
-: mUpdateLazy(false)
-{
+cPolyMesh::cPolyMesh(){
+	mLazyMesh.get().mFresh = false;
 	addUpdRoster(&mLazyMesh);
 }
 
@@ -103,12 +102,13 @@ cPolyMesh::getLoadPattern(){
 	dVersionPlugs version1;
 
 	downloadLazy();
-	version1.push_back(mLazyMesh);
-	version1.push_back(mBMaps);
+	version1.push_back(&mLazyMesh);
+	version1.push_back(&mBMaps);
 
 	pattern.push_back(version1);
 	return pattern;
 }
+
 
 void
 cPolyMesh::patAddToMesh(ptrLead aLead){
@@ -116,8 +116,7 @@ cPolyMesh::patAddToMesh(ptrLead aLead){
 
 	aLead->appendTo(&mLazyMesh.get().mVertexes, xPT_vertexs);
 	aLead->appendTo(&mLazyMesh.get().mPolys, xPT_polies);
-
-	mUpdateLazy = true;
+	mLazyMesh.get().mFresh = true;
 }
 
 void
@@ -150,8 +149,7 @@ cPolyMesh::patTexturize(ptrLead aLead){
 
 	aLead->appendTo(&mLazyMesh.get().mTMap, xPT_texMapping);
 	aLead->plugAppends(&mBMaps, xPT_bitmaps);
-
-	mUpdateLazy = true;
+	mLazyMesh.get().mFresh = true;
 }
 
 void

@@ -140,7 +140,7 @@ ENTRYPOINT
 
 		gWorld.get()->checkAddons();
 		draftAll();
-		gWorld.get()->nameProgAndMakeFride(makeHash("editor"));
+		gWorld.get()->nameProgAndMakeFridge(makeHash("editor"));
 
 		{
 			tPlug<ptrBuff> buff(ptrBuff(new cByteBuffer()));

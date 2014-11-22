@@ -32,6 +32,7 @@
 #	define USE_BOOST_LOCALE
 #	include <boost/locale.hpp>
 #endif
+
 //--------------------------------------------------------
 
 typedef char dPlaChar;		//!< Raw buffer type most efficient (speed wise) for the target platform to use internally. Typically this is UTF-8. Note that the number of bytes isn't the number of characters.
@@ -39,11 +40,13 @@ typedef char dNatChar;		//!< char type native to gamestools, which is 8bit ascii
 typedef char dTextChar;		//!< Used for UTF-8 text which will be displayed to the user. Note: The buffer size isn't linked just to the number of characters.
 
 typedef std::basic_string<dPlaChar, std::char_traits<dPlaChar> > dStr;	//!< stl string wrapper of the platform string type. Calling it dStr and not dPlaStr because I'm lazy and this is the most common string type. Not using boost strong typedef here so that string streams and string literals work with it.
-typedef std::basic_string<dNatChar, std::char_traits<dNatChar> > dNatStr_def;	//!< stl string wrapper of the string type native to gamestool.
-typedef std::basic_string<dTextChar, std::char_traits<dTextChar> > dText_def;	//!< Text strings are used for displaying text.
 
-BOOST_STRONG_TYPEDEF(dNatStr_def, dNatStr)
-BOOST_STRONG_TYPEDEF(dText_def, dText)
+typedef std::basic_string<dNatChar, std::char_traits<dNatChar> > dNatStr_def;
+BOOST_STRONG_TYPEDEF(dNatStr_def, dNatStr);	//!< stl string wrapper of the string type native to gamestool.
+
+typedef std::basic_string<dTextChar, std::char_traits<dTextChar> > dText_def;
+BOOST_STRONG_TYPEDEF(dText_def, dText);		//!< Text strings are used for displaying text.
+
 
 //--------------------------------------------------------
 

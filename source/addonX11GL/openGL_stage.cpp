@@ -2,10 +2,9 @@
 
 using namespace gt;
 
-cStage_X11GL::cStage_X11GL():
-	mDepth(0), mInternalRefresh(true)
+cStage_X11GL::cStage_X11GL()
+: mDepth(0), mInternalRefresh(true)
 {
-
 	int attrListDoubleBuff[] = {
 	    GLX_RGBA, GLX_DOUBLEBUFFER,
 	    GLX_RED_SIZE, 4,
