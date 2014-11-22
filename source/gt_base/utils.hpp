@@ -61,10 +61,10 @@ typedef unsigned int	dMillisec;
 
 static const dNameHash HASH_INVALID = -1;
 
-#if CHAR_BIT == 8 || __CHAR_BIT__ == 8
+#if CHAR_BIT == 8
 	typedef char		dByte;		//!< This is the gametool's most basic byte type. It is always 8 bits.
 #else
-	#error "the byte buffer is not 8 bits, and I'm too lazy to write something for your environment to enforce 8 bit buffers."
+#	error "the byte buffer is not 8 bits, and I'm too lazy to write something for your environment to enforce 8 bit buffers."
 #endif
 
 //------------------------------------------------------------------------------------------

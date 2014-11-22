@@ -103,7 +103,7 @@ ENTRYPOINT
 		);
 
 		try{
-			dNatStr rootFile("editor.gtf") ;
+			dNatStr rootFile = toNStr("editor.gtf");
 			gWorld.get()->checkAddons();
 			draftAll();
 			gWorld.get()->nameProgAndMakeFride(makeHash(rootFile));

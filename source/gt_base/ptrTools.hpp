@@ -230,15 +230,35 @@ namespace gt{
 	};
 
 	//------------------------------------------------------------------------------------------
-	//!\brief	Handles a constant sizes array.
-	class cArray{
+	//!\brief	Lets you handle a constant size array both as a direct type, and as a buffer.
+	class iArray{
 	public:
-		dByte * const mData;
-		const size_t mLen;
+		virtual ~iArray() {}
+		virtual dByte * getBuff() = 0;
+		virtual size_t getSize() = 0; //!< Size always refers to byte size.
+	};
 
-		cArray(dByte * takeMe, size_t pLen);
-		cArray(const cArray & copyMe);
-		~cArray();
+	template<typename TYPE>
+	class tArray : public iArray{
+	public:
+		TYPE * const mData;
+		const size_t mLen; //!< The size of the array in number of TYPEs.
+
+		tArray(size_t pLen) //!< Creates memory.
+		: mData(new TYPE[pLen]), mLen(pLen)
+		{}
+
+		~tArray(){
+			delete [] mData;
+		}
+
+		dByte * getBuff(){
+			return reinterpret_cast<dByte*>(mData);
+		}
+
+		size_t getSize(){
+			return mLen * sizeof(TYPE);
+		}
 	};
 }
 

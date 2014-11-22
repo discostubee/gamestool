@@ -72,9 +72,8 @@ namespace gt{
 	//!			for more info such as thread safety.
 	class iFigment{
 	public:
-		typedef tPMorphJar<cBase_plug> dPlugHolder;
 		typedef unsigned short dNumVer;	//!< Version number.
-		typedef std::vector<dPlugHolder> dVersionPlugs;	//!< Vector of all the different plugs in a given version.
+		typedef std::vector<cBase_plug*> dVersionPlugs;	//!< Vector of all the different plugs in a given version.
 		typedef std::vector<dVersionPlugs> dMigrationPattern;	//!< This forms a pattern to save and load from, which hopefully will allow this version of a figment to load from old data.
 
 		virtual ~iFigment() {}

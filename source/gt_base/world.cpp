@@ -193,7 +193,7 @@ cWorld::removeBlueprint(const cBlueprint* pRemoveMe){
 
 void
 cWorld::removeAddonBlueprints(const dStr &addonName){
-	dNameHash hash = makeHash( toNStr(addonName.c_str()) );
+	dNameHash hash = makeHash( toNStr(addonName) );
 
 	std::list<cBlueprint*> remFirst, remArchive;
 
@@ -256,7 +256,7 @@ cWorld::makeLead(cCommand::dUID pComID){
 ptrLead
 cWorld::makeLead(const dPlaChar *aFigName, const dPlaChar *aComName){
 	dNatStr totalString = PCStr2NStr(aFigName);
-	totalString.t.append( PCStr2NStr(aComName).t );
+	totalString.t.append( PCStr2NStr(aComName) );
 	dNameHash hash = makeHash(totalString);
 	ptrLead rtnLead(new cLead(hash));
 	return rtnLead;
@@ -294,8 +294,8 @@ cWorld::getPlugTag(dNameHash pFigBlueprint, cPlugTag::dUID pPTHash){
 const cPlugTag*
 cWorld::getPlugTag(const dPlaChar *figName, const dPlaChar *tagName){
 	return getPlugTag(
-		makeHash(toNStr(figName)),
-		makeHash(toNStr(tagName))
+		makeHash(PCStr2NStr(figName)),
+		makeHash(PCStr2NStr(tagName))
 	);
 }
 
@@ -376,7 +376,7 @@ cWorld::checkAddons(){
 }
 
 void
-cWorld::nameProgAndMakeFride(dNameHash pName){
+cWorld::nameProgAndMakeFridge(dNameHash pName){
 	mProgName = pName;
 	if(mFridge != NULL){
 		delete mFridge;
@@ -464,9 +464,6 @@ cWorld::primordial::primordial(){
 }
 
 cWorld::primordial::~primordial(){
-#ifdef GT_THREADS
-	boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
-#endif
 	for(std::set<primordial*>::iterator o=mRefOtherPrims.begin();
 		o!=mRefOtherPrims.end();
 		++o
@@ -529,50 +526,50 @@ cWorld::primordial::warnError(std::exception &pE, const char* pFile, const unsig
 
 cProfiler::cToken
 cWorld::primordial::makeProfileToken(const char* pFile, unsigned int pLine, bool cleanup){
-//	static bool profileSetup = false;
-//	if(!profileSetup){
-//		if(!cleanup){	//- Nothing to do.
-//			profileSetup = true;
-//			xProfiler = new cProfiler();
-//#			ifdef GT_THREADS
-//				xProfileGuard = new boost::recursive_mutex();
-//#			endif
-//		}
-//	}
-//
-//	if(cleanup){
-//		if(profileSetup){
-//			{
-//#				ifdef GT_THREADS
-//					boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-//#				endif
-//				SAFEDEL(xProfiler);
-//				profileSetup = false;
-//			}
-//#			ifdef GT_THREADS
-//				SAFEDEL(xProfileGuard);
-//#			endif
-//		}
-//	}else if(pFile != NULL){
-//#		ifdef GT_THREADS
-//			boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-//#		endif
-//		return xProfiler->makeToken(pFile, pLine);
-//	}
-//
+	static bool profileSetup = false;
+	if(!profileSetup){
+		if(!cleanup){	//- Nothing to do.
+			profileSetup = true;
+			xProfiler = new cProfiler();
+#			ifdef GT_THREADS
+				xProfileGuard = new boost::recursive_mutex();
+#			endif
+		}
+	}
+
+	if(cleanup){
+		if(profileSetup){
+			{
+#				ifdef GT_THREADS
+					boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+#				endif
+				SAFEDEL(xProfiler);
+				profileSetup = false;
+			}
+#			ifdef GT_THREADS
+				SAFEDEL(xProfileGuard);
+#			endif
+		}
+	}else if(pFile != NULL){
+#		ifdef GT_THREADS
+			boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+#		endif
+		return xProfiler->makeToken(pFile, pLine);
+	}
+
 	return cProfiler::cToken(NULL, 0, 0);
 }
 
 void
 cWorld::primordial::makeProfileReport(std::ostream &log){
-//#	ifdef GT_THREADS
-//		if(xProfileGuard==NULL)
-//			return;
-//
-//		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
-//#	endif
-//	(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
-//	xProfiler->flushThatLog(log);
+#	ifdef GT_THREADS
+		if(xProfileGuard==NULL)
+			return;
+
+		boost::lock_guard<boost::recursive_mutex> lock(*xProfileGuard);
+#	endif
+	(void)makeProfileToken(__FILE__, __LINE__); //- Ensure it exists.
+	xProfiler->flushThatLog(log);
 }
 
 #ifdef GTUT

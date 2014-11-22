@@ -101,7 +101,7 @@ cFigment::save(cByteBuffer* pSaveHere){
 		pSaveHere->add(buffSize, sizePk);
 
 		for(dVersionPlugs::iterator itr = loadPattern.back().begin(); itr != loadPattern.back().end(); ++itr)
-			itr->get().save(pSaveHere);
+			(*itr)->save(pSaveHere);
 
 		size_t chunkSize = pSaveHere->size() - start;
 		bpk::pack(&chunkSize, &buffSize, &sizePk);
@@ -137,7 +137,7 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 			itrCur = loadPattern[idxVer].begin();
 			if(idxVer==0){
 				while(itrCur != loadPattern[0].end()){
-					itrCur->get().loadEat( pLoadFrom, aReloads );
+					(*itrCur)->loadEat( pLoadFrom, aReloads );
 					++itrCur;
 				}
 
@@ -146,7 +146,7 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 				itrPrevEnd = loadPattern[idxVer-1].end();
 				for(itrCur=loadPattern[idxVer].begin(); itrCur!=loadPattern[idxVer].end(); ++itrCur){
 					if(itrPrev != itrPrevEnd){
-						itrCur->get() = itrPrev->get();
+						(*itrCur) = (*itrPrev);
 						++itrPrev;
 					}else{
 						break;
@@ -181,7 +181,7 @@ cFigment::jack(ptrLead pLead, cContext* pCon){
 			mBlueprint->getCom(pLead->mCom)->use(this, pLead);
 #		endif
 
-	}catch(excep::base_error &e){
+	}catch(std::exception &e){
 		WARN_S(name() << e.what());
 
 	}catch(...){

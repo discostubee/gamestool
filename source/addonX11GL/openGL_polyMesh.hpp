@@ -31,6 +31,7 @@ namespace gt{
 
 	private:
 		static const short DIMENSIONS = 3;
+		static const short VERTS_PER_POLY = 3;
 		static const short IOA_X = 0, IOA_Y = 1, IOA_Z = 2; //!< Index Offset for Axis.
 
 		static dNameHash makeFridgeID(dGLFloat *buffVert, size_t lenVerts, dIdxV * buffPoly, size_t lenPolys);

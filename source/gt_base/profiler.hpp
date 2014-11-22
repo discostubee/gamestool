@@ -33,7 +33,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#ifdef GT_THREAD
+#ifdef GT_THREADS
 	#include <boost/thread/locks.hpp>
 	#include <boost/thread.hpp>
 
@@ -111,7 +111,7 @@ private:
 	dFileTo2ndMap::iterator scrLUp1stItr;
 	dLineToNameMap::iterator scrLUp2ndItr;
 
-#ifdef GT_THREAD
+#ifdef GT_THREADS
 	boost::mutex	mu;
 #endif
 };

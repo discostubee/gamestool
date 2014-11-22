@@ -37,6 +37,13 @@ cTransform::getLoadPattern(){
 	dMigrationPattern pattern;
 	dVersionPlugs version1;
 
+	dMigrationPattern chainPattern(cChainLink::getLoadPattern());
+
+	version1.insert(
+		version1.begin(),
+		chainPattern.at(0).begin(),
+		chainPattern.at(0).end()
+	);
 	version1.push_back(&mPos);
 	version1.push_back(&mRot);
 	version1.push_back(&mSca);

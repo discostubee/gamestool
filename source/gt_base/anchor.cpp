@@ -162,7 +162,7 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 		//- Now re-load all the figs we've made. It's done on a separate loop to the one above so that figment references can be re-created.
 		for(dReloadMap::iterator itr = reloads.begin(); itr != reloads.end(); ++itr){
-			DBUG_VERBOSE_LO("		loading " << itr->second->fig->name());
+			DBUG_LO("		loading " << itr->second->fig->name());
 			try{
 				itr->second->fig->loadEat( &itr->second->data, &reloads );
 			}catch(excep::base_error &e){

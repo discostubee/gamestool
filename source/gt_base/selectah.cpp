@@ -49,6 +49,8 @@ cSelectah::makeMode(dNameHash figOwner, const dStr &aName){
 
 void
 cSelectah::set(dModeID mode){
+	TEST_PARA(mode, == INVALID_MODE);
+
 	tmpItr = myModes.find(mode);
 	if(tmpItr == myModes.end())
 		throw excep::notFound("mode", __FILE__, __LINE__);
@@ -58,6 +60,9 @@ cSelectah::set(dModeID mode){
 
 cSelectah::dModeID
 cSelectah::current(){
+	if(currentMode == myModes.end())
+		return INVALID_MODE;
+
 	return currentMode->second->ID;
 }
 

@@ -22,61 +22,7 @@
 // Tests
 using namespace gt;
 
-cArray::cArray(dByte * takeMe, size_t pLen)
-: mData(takeMe), mLen(pLen)
-{}
-
-cArray::cArray(const cArray & copyMe)
-: mData(new dByte[copyMe.mLen]), mLen(copyMe.mLen)
-{
-	memcpy(mData, copyMe.mData, sizeof(dByte) * copyMe.mLen);
-}
-
-cArray::~cArray(){
-	delete [] mData;
-}
-
 #ifdef GTUT
-
-//	class spitInts: public tSpitLemming<int>{
-//	public:
-//		spitInts(){}
-//		virtual ~spitInts(){}
-//
-//		void setData(int in) { myData=in; }
-//
-//		virtual int* getData(const tLemming<int>* requester){
-//			return &myData;
-//		}
-//
-//	private:
-//		int myData;
-//
-//	};
-//
-//	GTUT_START(lemmingSpitter, dataHandling){
-//		spitInts testSpit;
-//		const int magicNum = 3;
-//
-//
-//	}GTUT_END;
-//
-//	GTUT_START(lemmingSpitter, inWild){
-//		tSpitLemming<int> spitTest;
-//		{
-//			tLemming<int> lemA = spitTest.get();
-//			GTUT_ASRT(spitTest.inWild()==1, "incorrect number of lemmings reported to be in the wild.");
-//		}
-//		GTUT_ASRT(spitTest.inWild()==0, "incorrect number of lemmings reported to be in the wild.");
-//
-//		{
-//			tLemming<int> lemA = spitTest.get();
-//			tLemming<int> lemB = lemA;
-//			GTUT_ASRT(spitTest.inWild()==1, "incorrect number of lemmings reported to be in the wild.");
-//		}
-//		GTUT_ASRT(spitTest.inWild()==0, "incorrect number of lemmings reported to be in the wild.");
-//	}GTUT_END;
-
 
 
 	class pmorphParent {

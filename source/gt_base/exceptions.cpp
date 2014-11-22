@@ -68,6 +68,7 @@ base_error::base_error(const char* pExtraInfo, const char* pFile, const unsigned
 }
 
 base_error::~base_error() throw(){
+
 }
 
 const char*
@@ -84,11 +85,146 @@ base_error::addInfo(const dStr &pInfo){
 	mInfo.append(pInfo);
 }
 
+template<typename T>
+dStr
+base_error::operator << (const T &pT) {
+	dStr out;
+	out + mInfo + pT;
+	return out;
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+unknownError::unknownError(const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	addInfo(dStr("Unknown error"));
+}
+
+unknownError::~unknownError() throw(){
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+notFound::notFound(const char* pDidntFind, const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	std::stringstream ss;
+	ss << "Didn't find " << pDidntFind;
+	addInfo(ss.str());
+}
+
+notFound::~notFound() throw(){
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+isNull::isNull(const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	addInfo("Is Null");
+}
+
+isNull::~isNull() throw(){
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+outOfRange::outOfRange(size_t maxRange, int index, const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	std::stringstream ss;
+	ss << "Out of range. Range " << maxRange << ", index " << index;
+	addInfo(ss.str());
+}
+
+outOfRange::~outOfRange() throw(){
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+dontUseThis::dontUseThis(const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	addInfo("What are you doing! Don't use this.");
+}
+
+dontUseThis::~dontUseThis() throw(){
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+underFlow::underFlow(const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	addInfo("buffer underflow");
+}
+
+underFlow::~underFlow() throw(){
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+overFlow::overFlow(const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	addInfo("buffer overflow");
+}
+
+overFlow::~overFlow() throw(){
+}
+
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+cantCopy::cantCopy(const dStr &copyer, const dStr &copyee, const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	std::stringstream ss;
+	ss << copyer << " can't copy " << copyee;
+	addInfo(ss.str());
+}
+
+cantCopy::cantCopy(const char* copyer, const char* copyee, const char* pFile, const unsigned int pLine) throw()
+:	base_error(pFile, pLine)
+{
+	std::stringstream ss;
+	ss << copyer << " can't copy " << copyee;
+	addInfo(ss.str());
+}
+
+cantCopy::~cantCopy() throw(){
+}
+
+///////////////////////////////////////////////////////////////////////
+using namespace excep;
+
+badParameter::badParameter(const dStr &pNamePar, const char * pFile, const unsigned int pLine) throw()
+: base_error(pFile, pLine)
+{
+	addInfo("Bad parameter");
+	addInfo(pNamePar);
+}
+
+badParameter::~badParameter() throw(){
+}
+
 ///////////////////////////////////////////////////////////////////////
 using namespace excep;
 
 char delayExcep::xBuff[512];
 size_t delayExcep::xPos;
+
+delayExcep::~delayExcep() throw(){
+}
 
 void delayExcep::add(const char *msg){
 	CRITSEC;
@@ -122,12 +258,10 @@ void delayExcep::shake(){
 	}
 }
 
+
 void delayExcep::clearAll(){
 	memset(xBuff, 0, sizeof(xBuff));
 	xPos = 0;
-}
-
-delayExcep::~delayExcep() throw(){
 }
 
 const char* delayExcep::what() const throw(){

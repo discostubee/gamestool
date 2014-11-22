@@ -111,7 +111,7 @@ extern const char *MSG_UNKNOWN_ERROR;
 
 #ifdef DEBUG
 #	define PROFILE\
-//		cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
+		cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
 #	define DBUG_LO(x)\
 		{ std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
 #else
@@ -202,7 +202,7 @@ namespace gt{
 		void unregContext(dConSig pSig);	//!< NEVER forget to do this. Locks all contexts while the table is updated. Previous context signatures (apart from the one being unregged) remain valid.
 		bool activeContext(dConSig pSig);	//!< Is this context still alive?
 		void checkAddons();					//!< Check all the available addons.
-		void nameProgAndMakeFride(dNameHash pName); //!< Name program and (re)initialise the fridge.
+		void nameProgAndMakeFridge(dNameHash pName); //!< Name program and (re)initialise the fridge.
 		dNameHash getProgName();			//!< Get the program's name.
 		cFridge* getFridge();				//!< Throws if the fridge is not yet made.
 

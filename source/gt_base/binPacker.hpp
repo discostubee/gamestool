@@ -22,6 +22,9 @@
 #include "utils.hpp"
 
 namespace bpk{
+	typedef unsigned short dStoreSize; //!< When storing the size of a packaged variable, use this type. Should not be storing something bigger than 65535 anyway.
+
+	extern const size_t MAX_STORESIZE;	//!< Maximum size of something we can pack.
 
 	//!\brief	Similar to the generic pack, but allows you to work with static-size arrays.
 	template<typename TYPE, size_t LEN>
@@ -112,7 +115,7 @@ namespace bpk{
 		*sizeOut = sizeof(TYPE);
 	}
 
-	//--- Specialties.
+	//--- Specialities.
 
 	//- Native ASCII packing
 	void pack(const dNatStr *packMe, dByte **output, size_t *sizeOut);
