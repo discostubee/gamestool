@@ -83,6 +83,7 @@ cFigment::~cFigment(){
 
 void
 cFigment::save(cByteBuffer* pSaveHere){
+	ASRT_NOTNULL(pSaveHere);
 	dMigrationPattern loadPattern = getLoadPattern();
 
 	if(loadPattern.empty())
@@ -116,6 +117,8 @@ cFigment::save(cByteBuffer* pSaveHere){
 
 void
 cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
+	ASRT_NOTNULL(pLoadFrom);
+	ASRT_NOTNULL(aReloads);
 	dMigrationPattern loadPattern = getLoadPattern();
 
 	if(loadPattern.empty())
@@ -298,14 +301,14 @@ cEmptyFig::~cEmptyFig(){
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-cWorldShutoff::cWorldShutoff(){
+cUnicron::cUnicron(){
 }
 
-cWorldShutoff::~cWorldShutoff(){
+cUnicron::~cUnicron(){
 }
 
 void
-cWorldShutoff::work(cContext* pCon){
+cUnicron::work(cContext* pCon){
 	gWorld.get()->mKeepLooping = false;
 }
 
@@ -319,14 +322,14 @@ GTUT_START(test_cfigment, test_suit){
 }GTUT_END;
 
 GTUT_START(test_cWorldShutoff, test_suit){
-	figmentTestSuit<cWorldShutoff>();
+	figmentTestSuit<cUnicron>();
 }GTUT_END;
 
 GTUT_START(test_figment, polymorphNames){
 
 	ptrFig stdFig = gWorld.get()->makeFig(getHash<cFigment>());
 	ptrFig emptyFig = gWorld.get()->makeFig(getHash<cEmptyFig>());
-	ptrFig shutoff = gWorld.get()->makeFig(getHash<cWorldShutoff>());
+	ptrFig shutoff = gWorld.get()->makeFig(getHash<cUnicron>());
 
 	GTUT_ASRT(
 		strncmp(stdFig->name(), cFigment::identify(), 20)==0,
@@ -339,7 +342,7 @@ GTUT_START(test_figment, polymorphNames){
 	);
 
 	GTUT_ASRT(
-		strncmp(shutoff->name(), cWorldShutoff::identify(), 20)==0,
+		strncmp(shutoff->name(), cUnicron::identify(), 20)==0,
 		"World shutoff names don't match."
 	);
 

@@ -27,6 +27,7 @@ const dPlaChar * cLinuxWorld::ADDON_CACHE_FILE = "addoncache.txt";
 const dPlaChar * cLinuxWorld::LOG_FILE = "log.txt";
 
 cLinuxWorld::cLinuxWorld(){
+	memset(&tempTime, 0, sizeof(tempTime));
 }
 
 cLinuxWorld::~cLinuxWorld(){
@@ -122,12 +123,6 @@ cLinuxWorld::closeAddon(const dStr &name){
 			(*fn)();
 		}else{
 			DBUG_LO("unable to close shared library '" << name << "' because " << dlerror() );
-		}
-
-		try{
-			excep::delayExcep::shake();
-		}catch(std::exception &e){
-			WARN(e);
 		}
 
 		if(dlclose(found->second) != 0)
@@ -258,12 +253,12 @@ cLinuxWorld::getLinuxTime(){
 void
 cLinuxWorld::getDirContents(const dStr &dir, const dStr &search, bool dirsOnly, std::list<dStr> &output){
 	GError *errors=NULL;
-	gchar const **encodingList=NULL; /** Do NOT free */
-	gchar const *nativeEncoding=NULL;	/** Do NOT free */
+	gchar const **encodingList=NULL; //- Do NOT free
+	gchar const *nativeEncoding=NULL;	//- Do NOT free
 	gsize charsConverted=0;
 	gsize lengthNative=0;
-	GDir *handDir=NULL;	/**use glib to free */
-	gchar *platformFName=NULL;	/** free me */
+	GDir *handDir=NULL;	//- use glib to free
+	gchar *platformFName=NULL;	//- free me
 	size_t lenPlatformFName=0;
 
 	g_get_filename_charsets(&encodingList);
@@ -288,7 +283,7 @@ cLinuxWorld::getDirContents(const dStr &dir, const dStr &search, bool dirsOnly, 
 	handDir = g_dir_open(platformFName, 0, &errors);
 
 	char *nativeFName;
-	gchar const *refName;	/** Do NOT free */
+	gchar const *refName;	//- Do NOT free
 	gchar *fullPath;
 	do{
 		refName = g_dir_read_name(handDir);
@@ -307,7 +302,7 @@ cLinuxWorld::getDirContents(const dStr &dir, const dStr &search, bool dirsOnly, 
 
 		lenPlatformFName = strlen(refName);
 
-		nativeFName = (char*)g_convert(	/** nativeFName should be freed by the output file list */
+		nativeFName = (char*)g_convert(	//- nativeFName should be freed by the output file list
 			refName, lenPlatformFName,
 			nativeEncoding, encodingList[0],
 			&charsConverted, &lengthNative, &errors

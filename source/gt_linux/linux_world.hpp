@@ -30,11 +30,11 @@ namespace gt{
 		virtual ~cLinuxWorld();
 
 		virtual dMillisec getAppTime();
-		virtual void loop();
 		virtual void flushLines();
 
 	protected:
 		tAutoPtr<cWorld> makeWorld();
+		void loop();
 		void openAddon(const dStr &name);
 		void closeAddon(const dStr &name);
 		void getAddonList(dAddons &output);
@@ -52,10 +52,9 @@ namespace gt{
 		static const dPlaChar * LOG_FILE;
 
 		timeval tempTime;
-		dMillisec getLinuxTime();
-
 		mapNameToHandle mLibHandles;
 
+		dMillisec getLinuxTime();
 		void getDirContents(const dStr &dir, const dStr &search, bool dirsOnly, std::list<dStr> &output);
 	};
 }

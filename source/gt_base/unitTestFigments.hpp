@@ -3,6 +3,7 @@
 
 #if defined(DEBUG) && defined(GTUT)
 #	include "figment.hpp"
+#	include "plugContainer.hpp"
 
 namespace gt{
 	//- Some helpful 'fake' figments.
@@ -58,12 +59,30 @@ namespace gt{
 		void patGetData(ptrLead aLead);
 	};
 
-
 	//!\brief	Used to run a series of standard tests.
 	template<typename FIGTYPE>
 	void figmentTestSuit(){
+		dRefWorld w = gWorld.get();
+		cContext conx;
 		tOutline<FIGTYPE>::draft();
 		tPlug<ptrFig> me = gWorld.get()->makeFig(getHash<FIGTYPE>());
+		tPlugLinearContainer<cCommandContain, std::list> cmds;
+		ptrLead getCmds = w->makeLead(cFigment::xGetCommands);
+		getCmds->linkPlug(&cmds, cFigment::xPT_commands);
+		me.get()->jack(getCmds, &conx);
+		for(size_t iPlug = 0; iPlug < cmds.getCount(); ++iPlug){
+			try{
+				tPlug<cCommandContain> plugCmd;
+				ASRT_NOTNULL(cmds.getPlug(iPlug));
+				plugCmd = *cmds.getPlug(iPlug);
+				ASRT_TRUE(plugCmd.get().mCom != cCommandContain::DUMMY, "Command didn't copy");
+				ASRT_NOTNULL(plugCmd.get().mCom);
+				ptrLead testCmd = w->makeLead(plugCmd.get().mCom->mID);
+				me.get()->jack(testCmd, &conx);
+			}catch(std::exception &e){
+				DBUG_LO(e.what());
+			}
+		}
 	}
 }
 

@@ -4,15 +4,15 @@
 //!			and then saves it. Another way to look at this project, is that it's not the
 //!			actual editor, but rather a program that builds the editor.
 
-
 #include "gt_base/anchor.hpp"
-#include "gt_base/runList.hpp"
-#include "gt_base/alias.hpp"
 #include "gt_base/figFactory.hpp"
 #include "gt_base/textFig.hpp"
 #include "gt_base/thread.hpp"
-#include "gt_base/valve.hpp"
 #include "gt_base/chainLink.hpp"
+
+#include "addonPointyEars/runList.hpp"
+#include "addonPointyEars/alias.hpp"
+#include "addonPointyEars/valve.hpp"
 
 #include "gt_terminal/entryPoint.hpp"
 
@@ -42,14 +42,11 @@ void draftAll(){
 	tOutline<cEmptyFig>::draft();
 	tOutline<cChainLink>::draft();
 	tOutline<cAnchor>::draft();
-	tOutline<cRunList>::draft();
 	tOutline<cBase_fileIO>::draft();
-	tOutline<cAlias>::draft();
 	tOutline<cFigFactory>::draft();
-	tOutline<cWorldShutoff>::draft();
+	tOutline<cUnicron>::draft();
 	tOutline<cTextFig>::draft();
 	tOutline<cThread>::draft();
-	tOutline<cValve>::draft();
 
 #	if defined(__APPLE__)
 		tOutline<cOSX_fileIO>::draft();
@@ -64,12 +61,12 @@ ptrFig makeMesh(){
 	cContext setupConx;
 	ptrFig rtn = world->makeFig(getHash<cTransform>());
 
-	tPlug<ptrFig> list = world->makeFig(getHash<cRunList>());
+	tPlug<ptrFig> list = world->makeFig("run list");
 	ptrLead linkList = world->makeLead(cTransform::xSetLink);
 	linkList->linkPlug(&list, cTransform::xPT_links);
 	rtn->jack(linkList, &setupConx);
 
-	ptrLead addStuff = world->makeLead(cRunList::xAdd);
+	ptrLead addStuff = world->makeLead("run list", "add");
 	tPlug<ptrFig> mesh = world->makeFig(getHash<cPolyMesh>());
 	addStuff->linkPlug(&mesh, cRunList::xPT_links);
 	list.get()->jack(addStuff, &setupConx);
@@ -94,13 +91,30 @@ ptrFig makeMesh(){
 ptrFig makeEditor(){
 	dRefWorld world = gWorld.get();
 	cContext setupConx;
-	ptrFig rlTop = world->makeFig(getHash<cRunList>());
+	ptrFig rlTop = world->makeFig("run list");
 
 	tPlug<ptrFig> stage = world->makeFig(getHash<cStage>());
 	tPlug<ptrFig> film = world->makeFig(getHash<cFilm>());
 	tPlug<ptrFig> mesh = makeMesh();
 	tPlug<ptrFig> cam = world->makeFig(getHash<cCamera2D>());
-	tPlug<ptrFig> close = world->makeFig(getHash<cWorldShutoff>());
+	tPlug<ptrFig> close = world->makeFig(getHash<cUnicron>());
+
+	{	//- Setup stage
+		tPlug<ptrFig> screen = world->makeFig(getHash<cScreen>());
+		tPlug< shape::tRectangle<dUnitPix> > shapeScreen;
+		ptrLead getScreen = world->makeLead(cScreen::xGetShape);
+		getScreen->linkPlug(&shapeScreen, cScreen::xPT_rect);
+		screen.get()->jack(getScreen, &setupConx);
+
+		shapeScreen.get().bottom *= 0.5;
+		shapeScreen.get().top *= 0.5;
+		shapeScreen.get().left *= 0.5;
+		shapeScreen.get().right *= 0.5;
+
+		ptrLead setLayout  = world->makeLead(cStage::xGetLayout);
+		setLayout->linkPlug(&shapeScreen, cStage::xPT_layout);
+		stage.get()->jack(setLayout, &setupConx);
+	}
 
 	{	//- link components.
 		ptrLead linkMesh = world->makeLead(cChainLink::xSetLink);
@@ -122,7 +136,7 @@ ptrFig makeEditor(){
 		tPlugLinearContainer<ptrFig, std::vector> contain;
 		contain.add(stage);
 
-		ptrLead topLinks = world->makeLead(cRunList::xAdd);
+		ptrLead topLinks = world->makeLead("run list", "add");
 		topLinks->linkPlug(&contain, cRunList::xPT_links);
 		rlTop->jack(topLinks, &setupConx);
 	}
@@ -142,7 +156,7 @@ ENTRYPOINT
 		draftAll();
 		gWorld.get()->nameProgAndMakeFridge(makeHash("editor"));
 
-		{
+		try{
 			tPlug<ptrBuff> buff(ptrBuff(new cByteBuffer()));
 			cContext conxSetup;
 
@@ -172,20 +186,23 @@ ENTRYPOINT
 				write->linkPlug(&buff, cBase_fileIO::xPT_buffer);
 				writer.get()->jack(write, &conxSetup);
 			}
+		}catch(std::exception &e){
+			excep::delayExcep::add(e.what());
+		}
+		catch(...){
+			excep::delayExcep::add("Boom! Didn't see that coming.");
 		}
 
-		gt::gWorld.cleanup();	//- Done here so that we can log destruction faults.
+		gt::gWorld.cleanup();	//- Because we can't be certain of the order globals are destroyed, you need to call this explicitly or risk loosing logs.
 		cWorld::primordial::lo("Ended.");
 		excep::delayExcep::shake();
 
 		rtn = EXIT_SUCCESS;
 
 	}catch(std::exception &e){
-		gt::gWorld.cleanup(); //- Ensure cleanup
 		std::cout << e.what() << std::endl;
 
 	}catch(...){
-		gt::gWorld.cleanup(); //- Ensure cleanup
 		std::cout << "Unknown error." << std::endl;
 	}
 

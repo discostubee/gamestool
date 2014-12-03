@@ -71,7 +71,7 @@ cRunList::patAdd(ptrLead aLead){
 
 
 #ifdef GTUT
-#	include "unitTestFigments.hpp"
+#	include "gt_base/unitTestFigments.hpp"
 
 GTUT_START(test_cRunList, test_suit){
 	figmentTestSuit<cRunList>();

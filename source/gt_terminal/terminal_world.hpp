@@ -32,7 +32,7 @@ namespace gt{
 		cTerminalWorld();
 		virtual ~cTerminalWorld();
 
-		virtual void flushLines	();
+		void flushLines	();
 
 	protected:
 		tAutoPtr<cWorld> makeWorld();

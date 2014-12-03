@@ -1,13 +1,14 @@
 #include "screens.hpp"
+#include "gt_base/plugContainer.hpp"
 
 using namespace gt;
 
 const cPlugTag*	cScreen::xPT_rect = tOutline<cScreen>::makePlugTag("rectangle");
 const cPlugTag*	cScreen::xPT_ID = tOutline<cScreen>::makePlugTag("ID");
 
-const cCommand::dUID cScreen::xGetInfo = tOutline<cScreen>::makeCommand(
-	"get info",
-	&cScreen::patGetInfo,
+const cCommand::dUID cScreen::xGetShape = tOutline<cScreen>::makeCommand(
+	"get shape",
+	&cScreen::patGetShape,
 	cScreen::xPT_rect,
 	cScreen::xPT_ID,
 	NULL
@@ -20,15 +21,41 @@ const cCommand::dUID cScreen::xSetID = tOutline<cScreen>::makeCommand(
 	NULL
 );
 
+const cCommand::dUID cScreen::xGetAttachedIDs = tOutline<cScreen>::makeCommand(
+	"get attached",
+	&cScreen::patGetAttached,
+	cScreen::xPT_ID,
+	NULL
+);
 
-void cScreen::patGetInfo(ptrLead pLead){
+
+void
+cScreen::patGetShape(ptrLead pLead){
 	pLead->linkPlug(&mID, xPT_ID);
 	tPlug< shape::tRectangle<dUnitPix> > tmp( getDims() );
 	(void)pLead->setPlug(&tmp, xPT_rect);
 }
 
-void cScreen::patSetID(ptrLead pLead){
+void
+cScreen::patSetID(ptrLead pLead){
 	(void)pLead->copyPlug(&mID, xPT_ID);
+}
+
+void
+cScreen::patGetAttached(ptrLead pLead){
+	tPlugLinearContainer<dID, std::vector> IDs;
+	IDs = getIDs();
+	(void)pLead->setPlug(&IDs, xPT_ID);
+}
+
+shape::tRectangle<dUnitPix>
+cScreen::getDims(){
+	return shape::tRectangle<dUnitPix>();
+}
+
+std::vector<cScreen::dID>
+cScreen::getIDs(){
+	return std::vector<dID>();
 }
 
 cScreen::cScreen(){

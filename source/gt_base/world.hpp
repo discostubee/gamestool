@@ -229,7 +229,6 @@ namespace gt{
 		// Polymorphs
 
 		virtual dMillisec getAppTime() =0;
-		virtual void loop() =0;	//!< Enter the main program loop. Continues looping until it is told to stop.
 		virtual void flushLines	() =0;	//!< Process the lines to be displayed on the console.
 
 		//---------------------------------------------------------------------------------------------------
@@ -292,6 +291,7 @@ namespace gt{
 		dNameHash mProgName;
 
 		virtual tAutoPtr<cWorld> makeWorld() =0;	//!< Make a new world.
+		virtual void loop() =0;	//!< Enter the main program loop. Continues looping until it is told to stop.
 		virtual void openAddon(const dStr &name) =0;	//!< Opens an addon with the given name. Can be called multiple times without reopening.
 		virtual void closeAddon(const dStr &name) =0;	//!< Closes the addon regardless of how many times openAddon was called (as it should have been actually opened only once).
 		virtual void getAddonList(dAddons &output) =0;
@@ -303,6 +303,7 @@ namespace gt{
 		primordial* getPrim();
 
 		friend class primordial;
+		friend void gt::loop();
 
 	private:
 		//!\brief	Stores all the info about a type of blueprint.
@@ -337,6 +338,7 @@ namespace gt{
 //
 namespace gt{
 	dStr getPlatformInfo();
+	void loop(); //!< You can't call the worlds loop function directly because you would lockup the gWorld mutex. Throws if there are any active locks still on the world.
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

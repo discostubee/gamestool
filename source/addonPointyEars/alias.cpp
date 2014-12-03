@@ -102,6 +102,10 @@ cAlias::patSetAlias(ptrLead aLead){
 
 #ifdef GTUT
 
-#	include "unitTestFigments.hpp"
+#	include "gt_base/unitTestFigments.hpp"
+
+GTUT_START(testAlias, test_suit){
+	figmentTestSuit<cAlias>();
+}GTUT_END;
 
 #endif

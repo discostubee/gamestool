@@ -81,7 +81,7 @@ cPlugHound::patGoGetit(ptrLead aLead){
 
 #ifdef GTUT
 
-#include "unitTestFigments.hpp"
+#include "gt_base/unitTestFigments.hpp"
 
 GTUT_START(test_cPlugHound, test_suit){
 	figmentTestSuit<cPlugHound>();

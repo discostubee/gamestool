@@ -42,15 +42,17 @@ cFigFactory::~cFigFactory(){
 }
 
 
-void cFigFactory::patMakeFig(ptrLead aLead){
-	dNameHash hash;
+void
+cFigFactory::patMakeFig(ptrLead aLead){
+	dNameHash hash=0;
 	aLead->assignTo(&hash, xPT_figHash);
 
 	ptrFig made = gWorld.get()->makeFig(hash);
-	aLead->assignFrom(made, xPT_figHash);
+	aLead->assignFrom(made, xPT_newFig);
 }
 
-void cFigFactory::patGetFigCatalog(ptrLead aLead){
+void
+cFigFactory::patGetFigCatalog(ptrLead aLead){
 
 }
 

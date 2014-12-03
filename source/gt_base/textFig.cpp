@@ -68,6 +68,11 @@ cTextFig::getLoadPattern(){
 
 #ifdef GTUT
 
+#include "unitTestFigments.hpp"
+GTUT_START(test_textFig, test_suit){
+	figmentTestSuit<cTextFig>();
+}GTUT_END;
+
 GTUT_START(test_string, textToNative){
 	const char *sampleA = "i'm ASCII, this isn't:";
 	const char *sampleB = "てすと";

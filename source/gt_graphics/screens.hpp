@@ -5,15 +5,16 @@
 
 namespace gt{
 
-	//!\brief	Provides information about the screens.
+	//!\brief	Provides information about a screen.
 	class cScreen: public cFigment{
 	public:
 		typedef unsigned short dID;
 
-		static const cPlugTag* xPT_rect;	//!< The screen's rectum, in relation to screen 1.
-		static const cPlugTag* xPT_ID;		//!< The ID of the screen.
-		static const cCommand::dUID xSetID;
-		static const cCommand::dUID xGetInfo;	//!< Get the dimensions of the screen and its ID that the dimensions represent.
+		static const cPlugTag* xPT_rect;	//!< The screen's rectum... ha... in relation to screen 1.
+		static const cPlugTag* xPT_ID;	//!< The ID of the screen, starting from 1.
+		static const cCommand::dUID xSetID;	//!< Screens default to ID 1. Set this to get info about other screens.
+		static const cCommand::dUID xGetShape;	//!< Get the dimensions and ID of this screen. All 0 if this screen is not attached.
+		static const cCommand::dUID xGetAttachedIDs;	//!< Returns a list of IDs for attached screens.
 
 		cScreen();
 		virtual ~cScreen();
@@ -26,10 +27,13 @@ namespace gt{
 	protected:
 		tPlug<dID> mID;
 
-		void patGetInfo(ptrLead pLead);
+		void patGetShape(ptrLead pLead);
 		void patSetID(ptrLead pLead);
+		void patGetAttached(ptrLead pLead);
 
-		virtual shape::tRectangle<dUnitPix> getDims(){ return shape::tRectangle<dUnitPix>(); };	//!< Get dimensions of the screen for the given ID.
+		//!< Get dimensions of the screen for the current ID.
+		virtual shape::tRectangle<dUnitPix> getDims();
+		virtual std::vector<dID> getIDs();
 	};
 
 }

@@ -190,11 +190,15 @@ cAnchor::loadEat(cByteBuffer* pBuff, dReloadMap* pReloads){
 
 #ifdef GTUT
 
-#include "runList.hpp"
+#include "chainLink.hpp"
 #include "unitTestFigments.hpp"
 
 tPlug<ptrBuff> plugBuff;
 const dPlaChar *testStr = "proper job";
+
+GTUT_START(testAnchor, test_suit){
+	figmentTestSuit<cAnchor>();
+}GTUT_END;
 
 GTUT_START(testAnchor, basicSave){
 	tOutline<cSaveTester>::draft();
@@ -246,8 +250,8 @@ GTUT_START(testAnchor, basicLoad){
 
 	PLUG_REFRESH(myStr);
 	PLUG_REFRESH(myNum);
-	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
 	GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
+	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
 
 	plugBuff.get().reset();
 
@@ -256,16 +260,16 @@ GTUT_START(testAnchor, basicLoad){
 GTUT_START(testAnchor, chainSave){
 	cContext fakeCon;
 	ptrFig ank = gWorld.get()->makeFig(getHash<cAnchor>());
-	tPlug<ptrFig> rlist = gWorld.get()->makeFig(getHash<cRunList>());
+	tPlug<ptrFig> chain = gWorld.get()->makeFig(getHash<cChainLink>());
 
 	ptrLead linkRoot = gWorld.get()->makeLead(cAnchor::xSetLink);
-	linkRoot->linkPlug(&rlist, cAnchor::xPT_links);
+	linkRoot->linkPlug(&chain, cAnchor::xPT_links);
 	ank->jack(linkRoot, &fakeCon);
 
 	tPlug<ptrFig> tester = gWorld.get()->makeFig(getHash<cSaveTester>());
-	ptrLead add = gWorld.get()->makeLead(cRunList::xAdd);
-	add->linkPlug(&tester, cRunList::xPT_links);
-	rlist.get()->jack(add, &fakeCon);
+	ptrLead add = gWorld.get()->makeLead(cChainLink::xSetLink);
+	add->linkPlug(&tester, cChainLink::xPT_links);
+	chain.get()->jack(add, &fakeCon);
 
 	ptrLead save = gWorld.get()->makeLead(cAnchor::xSave);
 	plugBuff = ptrBuff(new cByteBuffer());
@@ -283,7 +287,7 @@ GTUT_START(testAnchor, chainLoad){
 
 	std::list<ptrFig> ankLinks;
 	ank->getLinks(&ankLinks);
-	if(ankLinks.empty() || strcmp( ankLinks.front()->name(), cRunList::identify() )!=0 )
+	if(ankLinks.empty() || strcmp( ankLinks.front()->name(), cChainLink::identify() )!=0 )
 		GTUT_ASRT(false, "run list wasn't the root of anchor");
 
 	std::list<ptrFig> runLinks;

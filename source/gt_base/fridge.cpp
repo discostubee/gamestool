@@ -8,40 +8,16 @@ static const unsigned int MAX_ITEMS = 1000;
 
 const dPlaChar * cFridge::FILE_PATH = "fridge.cache";
 
-std::istream&
-operator >> (std::istream & stream, cFridge::sSlice & slice){
-	stream >> slice.mSpot >> slice.mSize;
-	return stream;
+template<typename STREAM_T, typename T>
+void
+handyWrite(STREAM_T &stream, const T &data){
+	stream.write(reinterpret_cast<const char*>(&data), sizeof(data));
 }
 
-std::ostream&
-operator << (std::ostream & stream, const cFridge::sSlice & slice){
-	stream << slice.mSpot << slice.mSize;
-	return stream;
-}
-
-std::istream&
-operator >> (std::istream & stream, cFridge::sItemLoad & item){
-	stream >> item.idProg >> item.idItem >> item.slice;
-	return stream;
-}
-
-std::ostream&
-operator << (std::ostream & stream, const cFridge::sItemLoad & item){
-	stream << item.idProg << item.idItem << item.slice;
-	return stream;
-}
-
-std::istream&
-operator >> (std::istream & stream, cFridge::sLedger & ledge){
-	stream >> ledge.idx >> ledge.slice;
-	return stream;
-}
-
-std::ostream&
-operator << (std::ostream & stream, const cFridge::sLedger & ledge){
-	stream << ledge.idx << ledge.slice;
-	return stream;
+template<typename STREAM_T, typename T>
+void
+handyRead(STREAM_T &stream, T * out){
+	stream.read(reinterpret_cast<char*>(out), sizeof(T));
 }
 
 cFridge::cFridge(dNameHash pProgName, size_t pMaxBytes)
@@ -50,12 +26,12 @@ cFridge::cFridge(dNameHash pProgName, size_t pMaxBytes)
 	PROFILE;
 	DBUG_VERBOSE_LO("Opening fridge.");
 	try{
-		std::fstream file(FILE_PATH, std::fstream::in | std::fstream::binary);
-		if(file.bad())
+		std::ifstream file(FILE_PATH, std::fstream::in | std::fstream::binary);
+		if(file.bad() || file.eof())
 			throw std::exception();
 
 		unsigned int ledgerHeader=0;
-		file >> ledgerHeader;
+		handyRead(file, &ledgerHeader);
 		if(ledgerHeader!=MAX_ITEMS)
 			throw std::exception();
 
@@ -64,7 +40,7 @@ cFridge::cFridge(dNameHash pProgName, size_t pMaxBytes)
 		std::vector<unsigned int> ends;
 		ends.push_back(0); //- makes the hole loop below easier.
 		for(unsigned int i=0; i < MAX_ITEMS; ++i){
-			file >> item;
+			handyRead(file, &item);
 			if(item.idProg == HASH_INVALID){
 				mIdxLedgerIdle.push_back(i);
 			}
@@ -105,14 +81,12 @@ cFridge::cFridge(dNameHash pProgName, size_t pMaxBytes)
 
 		mHoles.sort(holeSort);
 
-	}catch(std::exception &e){
-		DBUG_LO("   Writing new file.");
-
-		std::fstream file(FILE_PATH, std::fstream::out | std::fstream::binary);
+	}catch(...){
+		DBUG_LO("Writing new fridge.");
 
 		::remove(FILE_PATH);
-
-		file << MAX_ITEMS;
+		std::ofstream file(FILE_PATH, std::ofstream::out | std::ofstream::binary);
+		handyWrite(file, MAX_ITEMS);
 
 		sItemLoad empty;
 		empty.idProg = HASH_INVALID;
@@ -121,12 +95,13 @@ cFridge::cFridge(dNameHash pProgName, size_t pMaxBytes)
 		empty.slice.mSpot = 0;
 
 		for(unsigned int i=0; i < MAX_ITEMS; ++i){
-			file << empty;
+			handyWrite(file, empty);
 			mIdxLedgerIdle.push_back(i);
 		}
 
+		long fill=0;
 		for(size_t l = 0; l < maxAlloc / sizeof(long); ++l)
-			file << static_cast<long>(0);
+			handyWrite(file, fill);
 
 		sSlice bighole;
 		bighole.mSize = maxAlloc;
@@ -145,6 +120,7 @@ cFridge::chill(dNameHash pItemID, tAutoPtr<iArray> pData){
 	dItems::iterator found = mItems.find(pItemID);
 	if(found == mItems.end()){
 		sLedger add;
+		add.idx = pItemID;
 		if(!mIdxLedgerIdle.empty()){	//- assumed holes already defragged.
 			std::list<sSlice>::iterator hole = mHoles.begin();
 			while(hole != mHoles.end()){
@@ -157,7 +133,6 @@ cFridge::chill(dNameHash pItemID, tAutoPtr<iArray> pData){
 			if(hole == mHoles.end())
 				return false;
 
-			add.idx = mIdxLedgerIdle.front();
 			add.slice.mSpot=hole->mSpot;
 			add.slice.mSize=pData->getSize();
 			if(hole->mSize == pData->getSize()){
@@ -175,7 +150,6 @@ cFridge::chill(dNameHash pItemID, tAutoPtr<iArray> pData){
 			std::list<sLedger>::iterator itr=mIdxLedgerOther.begin();
 			while(itr != mIdxLedgerOther.end()){
 				if(pData->getSize() <= itr->slice.mSize){
-					add.idx = itr->idx;
 					add.slice.mSpot = itr->slice.mSpot;
 					add.slice.mSize = pData->getSize();
 
@@ -206,20 +180,23 @@ cFridge::chill(dNameHash pItemID, tAutoPtr<iArray> pData){
 		update.idItem = add.idx;
 		update.idProg = mName;
 		update.slice = add.slice;
-		std::fstream file(FILE_PATH, std::fstream::out | std::fstream::binary);
-		file.seekg(
+		std::fstream file(FILE_PATH, std::fstream::out | std::fstream::in | std::fstream::binary);
+		file.seekp(
 			sizeof(unsigned int) + (add.idx * sizeof(sItemLoad)),
 			std::fstream::beg
 		);
-		file << update;
+		if(file.bad() || file.eof())
+			THROW_ERROR("Bad fridge file.");
+
+		handyWrite(file, update);
 
 		found = mItems.insert(mItems.end(), dItems::value_type(pItemID, add));
 	}
 
 	ASRT_TRUE(found->second.slice.mSize >= pData->getSize(), "Slice must be big enough.");
 
-	std::fstream file(FILE_PATH, std::fstream::out | std::fstream::binary);
-	file.seekg(
+	std::fstream file(FILE_PATH, std::fstream::out | std::fstream::in | std::fstream::binary);
+	file.seekp(
 		found->second.slice.mSpot,
 		std::fstream::beg
 	);
@@ -230,7 +207,6 @@ cFridge::chill(dNameHash pItemID, tAutoPtr<iArray> pData){
 
 tAutoPtr<iArray>
 cFridge::thaw(dNameHash pItemID){
-
 	PROFILE;
 
 	dItems::iterator found = mItems.find(pItemID);
@@ -241,8 +217,11 @@ cFridge::thaw(dNameHash pItemID){
 		new tArray<dByte>(found->second.slice.mSize)
 	);
 
-	std::fstream file(FILE_PATH, std::fstream::in | std::fstream::binary);
+	std::ifstream file(FILE_PATH, std::fstream::in | std::fstream::binary);
 	file.seekg(found->second.slice.mSpot, std::fstream::beg);
+	if(file.bad() || file.eof())
+		THROW_ERROR("Bad fridge file.");
+
 	file.read(rtn->getBuff(), rtn->getSize());
 	return rtn;
 }
@@ -267,12 +246,12 @@ cFridge::turf(dNameHash pItemID){
 	empty.slice.mSpot = 0;
 	empty.slice.mSize = 0;
 
-	std::fstream file(FILE_PATH, std::fstream::out | std::fstream::binary);
-	file.seekg(
+	std::fstream file(FILE_PATH, std::fstream::out | std::fstream::in | std::fstream::binary);
+	file.seekp(
 		sizeof(unsigned int) + (found->second.idx * sizeof(sItemLoad)),
 		std::fstream::beg
 	);
-	file << empty;
+	handyWrite(file, empty);
 
 	mHoles.push_back(found->second.slice);
 	mItems.erase(found);
@@ -288,4 +267,25 @@ cFridge::defrag(){
 
 }
 
+#ifdef GTUT
 
+GTUT_START(test_fridge, chill){
+	cFridge f(makeHash("testing"), 1000);
+	tAutoPtr<iArray> buff(new tArray<int>(10));
+	int *arr = reinterpret_cast<int*>(buff->getBuff());
+	for(int i=0; i<10; ++i)
+		arr[i] = i;
+
+	f.chill(makeHash("a"), buff);
+}GTUT_END;
+
+GTUT_START(test_fridge, thaw){
+	cFridge f(makeHash("testing"), 1000);
+	tAutoPtr<iArray> buff = f.thaw(makeHash("a"));
+	int *arr = reinterpret_cast<int*>(buff->getBuff());
+	for(size_t i=0; i<buff->getSize() / sizeof(int); ++i){
+		GTUT_ASRT(arr[i] == static_cast<int>(i), "Didn't chill.");
+	}
+}GTUT_END;
+
+#endif

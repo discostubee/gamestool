@@ -88,6 +88,11 @@
 			<locationURI>BIN_LOC</locationURI>
 		</link>
 		<link>
+			<name>addonPointyEars</name>
+			<type>2</type>
+			<locationURI>SOURCE_LOC/addonPointyEars</locationURI>
+		</link>
+		<link>
 			<name>eclipse_share</name>
 			<type>2</type>
 			<locationURI>SHARED_LOC</locationURI>

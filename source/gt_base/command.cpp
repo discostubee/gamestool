@@ -114,22 +114,23 @@ cCommand::~cCommand(){
 
 ////////////////////////////////////////////////////////////
 // Tests
-#ifdef GTUT
 
-class cComTestFig: public cFigment{
-public:
-	static const cPlugTag* xPT_testTag;
-
-	static const dPlaChar* identify(){ return "command test figment"; }
-
-	cComTestFig(){}
-	~cComTestFig(){}
-};
-
-const cPlugTag* cComTestFig::xPT_testTag = tOutline<cComTestFig>::makePlugTag("test tag");
-
-GTUT_START(command, nothing){
-
-}GTUT_END;
-
-#endif
+//#ifdef GTUT
+//
+//class cComTestFig: public cFigment{
+//public:
+//	static const cPlugTag* xPT_testTag;
+//
+//	static const dPlaChar* identify(){ return "command test figment"; }
+//
+//	cComTestFig(){}
+//	~cComTestFig(){}
+//};
+//
+//const cPlugTag* cComTestFig::xPT_testTag = tOutline<cComTestFig>::makePlugTag("test tag");
+//
+//GTUT_START(command, nothing){
+//
+//}GTUT_END;
+//
+//#endif

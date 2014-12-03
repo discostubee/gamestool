@@ -24,11 +24,8 @@
 #include "figment.hpp"
 #include "chainLink.hpp"
 #include "anchor.hpp"
-#include "runList.hpp"
-#include "alias.hpp"
 #include "figFactory.hpp"
 #include "textFig.hpp"
-#include "valve.hpp"
 #include "fileIO.hpp"
 #ifdef GT_THREADS
 #	include "thread.hpp"
@@ -39,14 +36,11 @@ namespace gt{
 	void draftAll(){
 		tOutline<cFigment>::draft();
 		tOutline<cEmptyFig>::draft();
-		tOutline<cWorldShutoff>::draft();
+		tOutline<cUnicron>::draft();
 		tOutline<cChainLink>::draft();
 		tOutline<cAnchor>::draft();
-		tOutline<cRunList>::draft();
-		tOutline<cAlias>::draft();
 		tOutline<cFigFactory>::draft();
 		tOutline<cTextFig>::draft();
-		tOutline<cValve>::draft();
 		tOutline<cBase_fileIO>::draft();
 #		ifdef GT_THREADS
 			tOutline<cThread>::draft();
@@ -56,14 +50,11 @@ namespace gt{
 	void undraftAll(){
 		tOutline<cFigment>::remove();
 		tOutline<cEmptyFig>::remove();
-		tOutline<cWorldShutoff>::remove();
+		tOutline<cUnicron>::remove();
 		tOutline<cChainLink>::remove();
 		tOutline<cAnchor>::remove();
-		tOutline<cRunList>::remove();
-		tOutline<cAlias>::remove();
 		tOutline<cFigFactory>::remove();
 		tOutline<cTextFig>::remove();
-		tOutline<cValve>::remove();
 		tOutline<cBase_fileIO>::remove();
 #		ifdef GT_THREADS
 			tOutline<cThread>::remove();

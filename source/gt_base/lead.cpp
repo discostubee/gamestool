@@ -337,42 +337,10 @@ GTUT_START(testLead, tagging){
 }GTUT_END;
 
 
+#ifdef GT_THREADS
 GTUT_START(testLead, shadowUpdate){
-	#ifdef GT_TREADS
-		cContext conxA, conxB;
-		tPlug<int> numA, numB;
-		tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
-		cPlugTag tag("some tag");
-		cLead leadA(fakeCom.mID, conxA.getSig()), leadB(fakeCom.mID, conxB.getSig());
-		const int magic = 3;
-		const int magicSquare = magic*magic;
-
-		GTUT_ASRT(conxA.getSig() != conxB.getSig(), "contexts have same signature");
-
-		numA.get() = 0;
-
-		startLead(leadA, conxA.getSig());
-		leadA.linkPlug(&numA, &tag);
-		leadA.setPlug(&numB, &tag);
-		stopLead(leadA);
-
-		startLead(leadB, conxB.getSig());
-		leadB.linkPlug(&numA, &tag);
-		stopLead(leadB);
-
-		numB.get() = magic;
-		numB.updateStart();
-		numB.updateFinish();
-
-		numA.get() *= numA.get();
-		numA.updateStart();
-		numA.updateFinish();
-
-		GTUT_ASRT(numA.get() == magicSquare, "A didn't get B's number");
-		numB = leadB.getPlug(&tag);
-		GTUT_ASRT(numB.get() == numA.get(), "something went wrong using multiple shadows");
-	#endif
 }GTUT_END;
+#endif
 
 GTUT_START(testLead, appending){
 	cContext fakeConx;
