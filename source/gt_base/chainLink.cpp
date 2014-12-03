@@ -80,11 +80,10 @@ cChainLink::postLink(){
 
 
 #ifdef GTUT
-
-GTUT_START(test_cChainLink, test_suit){
-
+#include "unitTestFigments.hpp"
+GTUT_START(test_chainLink, test_suit){
+	figmentTestSuit<cChainLink>();
 }GTUT_END;
-
 
 #endif
 

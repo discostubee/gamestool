@@ -26,6 +26,18 @@ const char *MSG_UNKNOWN_ERROR = "unknown error";
 
 gt::tMrSafety<gt::cWorld> gt::gWorld;
 
+void
+gt::loop(){
+	cWorld * noLockRef = NULL;
+	{
+		noLockRef = gWorld.get().get();
+	}
+	if(gWorld.count() != 0)
+		throw excep::base_error("World still locked", __FILE__, __LINE__);
+
+	ASRT_NOTNULL(noLockRef);
+	noLockRef->loop();
+}
 
 ////////////////////////////////////////////////////////////
 // World
@@ -37,7 +49,7 @@ cWorld::cWorld():
 {
 	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
-	mRoot = ptrFig(new cWorldShutoff());
+	mRoot = ptrFig(new cUnicron());
 }
 
 cWorld::~cWorld(){
@@ -438,10 +450,6 @@ cWorld::findFigs(dNameHash pName, std::list<ptrFig> *output){
 	}while(branches->size() > 0);
 }
 
-void closeUselessAddons(){
-
-}
-
 
 ////////////////////////////////////////////////////////////
 // primordial
@@ -459,7 +467,9 @@ cWorld::primordial cWorld::primordial::gPrim;
 #endif
 
 cWorld::primordial::primordial(){
+	lo(""); //- ensure the xLines has been setup before assigning.
 	mLines = xLines;
+	makeProfileToken(NULL, 0); //- same as for xLines.
 	mProfiler = xProfiler;
 }
 
@@ -472,6 +482,8 @@ cWorld::primordial::~primordial(){
 
 	makeProfileToken(NULL, 0, true);
 	lo("", true);
+	mLines = NULL;
+	mProfiler = NULL;
 }
 
 void
@@ -598,19 +610,25 @@ void
 cWorld::primordial::addonClosed(const dPlaChar *addonFilename){
 	ASRT_NOTNULL(addonFilename);
 
-	gt::tMrSafety<gt::cWorld>::dLemming w = gWorld.get();
+	{
+		gt::tMrSafety<gt::cWorld>::dLemming w = gWorld.get();
 
-	if(w.get() == NULL)
-		return;
+		if(w.get() == NULL)
+			return;
 
-	dStr name;
-	w->getAddonNameFromFilename(addonFilename, &name);
-	w->removeAddonBlueprints(name);
+		dStr name;
+		w->getAddonNameFromFilename(addonFilename, &name);
+		w->removeAddonBlueprints(name);
+		w->flushLines();
+	}
 	gWorld.drop();
 }
 
 void
 cWorld::primordial::getLines(dLines *output, bool recursive){
+	if(mLines == NULL)
+		return;
+
 #ifdef GT_THREADS
 	boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
 #endif

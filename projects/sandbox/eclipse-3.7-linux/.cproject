@@ -51,10 +51,11 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1645221328" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1776452653" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.1076497503" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" value="boost_locale"/>
-									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="gamestool_d"/>
 									<listOptionValue builtIn="false" value="gt_linux_d"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="glib-2.0"/>
+									<listOptionValue builtIn="false" value="dl"/>
+									<listOptionValue builtIn="false" value="boost_locale"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.976647546" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../includes&quot;"/>

@@ -182,17 +182,16 @@ namespace gt{
 	};
 
 	//-------------------------------------------------------------------------------------
-	//!\brief	Use this object to cause the program to no longer loop, and so exit. However,
-	//!			this is not an instant shutdown because the program must still finish the loop
-	//!			it is on. Simply run it to shutoff the loop.
-	//!\note	Should be called Unicron.
-	class cWorldShutoff: public cFigment{
+	//!\brief	You've get the touch. Use this object to cause the program to no longer
+	//!			loop, and so exit. However, this is not an instant shutdown because the
+	//!			program must still finish the loop it is on.
+	class cUnicron: public cFigment{
 	public:
-		cWorldShutoff();
-		virtual ~cWorldShutoff();
+		cUnicron();
+		virtual ~cUnicron();
 
-		GT_IDENTIFY("world shutoff");
-		virtual dNameHash hash() const{ return getHash<cWorldShutoff>(); }
+		GT_IDENTIFY("unicron");
+		virtual dNameHash hash() const{ return getHash<cUnicron>(); }
 
 		virtual void work(cContext* pCon);
 	};

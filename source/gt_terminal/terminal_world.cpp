@@ -8,11 +8,6 @@ cTerminalWorld::cTerminalWorld(){
 }
 
 cTerminalWorld::~cTerminalWorld(){
-	try{
-		closeWorld();
-	}catch(std::exception &e){
-		excep::delayExcep::add(e.what());
-	}
 }
 
 void

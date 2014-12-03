@@ -2,14 +2,11 @@
 //!\brief	Entry point for the gamestool.
 
 
-#include "gt_base/alias.hpp"
 #include "gt_base/anchor.hpp"
 #include "gt_base/figment.hpp"
 #include "gt_base/figFactory.hpp"
-#include "gt_base/runList.hpp"
 #include "gt_base/textFig.hpp"
 #include "gt_base/thread.hpp"
-#include "gt_base/valve.hpp"
 
 #ifdef __APPLE__
 #	include "gt_OSX/entryPoint.hpp"
@@ -28,16 +25,13 @@ void draftAll(){
 	//- This needs to be a complete list of everything in the gamestool lib.
 	tOutline<cFigment>::draft();
 	tOutline<cChainLink>::draft();
-	tOutline<cRunList>::draft();
-	tOutline<cValve>::draft();
-	tOutline<cAlias>::draft();
 	tOutline<cAnchor>::draft();
 	tOutline<cEmptyFig>::draft();
 	tOutline<cFigFactory>::draft();
 	tOutline<cBase_fileIO>::draft();
 	tOutline<cTextFig>::draft();
 	tOutline<cThread>::draft();
-	tOutline<cWorldShutoff>::draft();
+	tOutline<cUnicron>::draft();
 
 	//- Draft in stuff specific for platform.
 #	if defined(__APPLE__)
@@ -78,6 +72,7 @@ gt::ptrFig getRootAnchor(dNatStr & rootFile){
 		ptrLead getRoot = gWorld.get()->makeLead(cAnchor::xGetLinks);
 		getRoot->linkPlug(&root, cAnchor::xPT_links);
 		ank->jack(getRoot, &conxLoading);
+		PLUG_REFRESH(root);
 	}
 
 	return root.get();
@@ -103,12 +98,15 @@ ENTRYPOINT
 		);
 
 		try{
-			dNatStr rootFile = toNStr("editor.gtf");
-			gWorld.get()->checkAddons();
-			draftAll();
-			gWorld.get()->nameProgAndMakeFride(makeHash(rootFile));
-			gWorld.get()->setRoot( getRootAnchor(rootFile) );
-			gWorld.get()->loop();
+			{
+				dRefWorld w = gWorld.get();
+				dNatStr rootFile = toNStr("editor.gtf");
+				w->checkAddons();
+				draftAll();
+				w->nameProgAndMakeFridge(makeHash(rootFile));
+				w->setRoot( getRootAnchor(rootFile) );
+			}
+			loop();
 
 		}catch(std::exception &e){
 			excep::delayExcep::add(e.what());

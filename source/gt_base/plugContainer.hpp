@@ -156,7 +156,7 @@ namespace gt{
 	//-----------------------------------------------------------------------------------------------
 #	ifdef GT_THREADS
 		template< typename PLUG_T, template<typename, typename> class CONT_T >
-		const size_t tPlugLinearContainer<PLUG_T, CONT_T>::NO_CLEAR = static_cast<size_t>(-1);
+		const size_t tPlugLinearContainer<PLUG_T, CONT_T>::NO_CLEAR = 0;
 #	endif
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
@@ -240,9 +240,10 @@ namespace gt{
 #		ifdef GT_THREADS
 			dLock lock(mGuard);
 			mClearTo = mContainer.size();
+#		else
+			mContainer.clear();
 #		endif
 
-		mContainer.clear();
 		mContainer.push_back(tPlug<PLUG_T>(pCopyMe));
 		return *this;
 	}
@@ -428,15 +429,17 @@ namespace gt{
 				tmp->clear();
 
 #			ifdef GT_THREADS
-				size_t stop =0;
+				size_t begin =0;
 #			endif
 
 			for(typename dContainer::const_iterator itr = mContainer.begin(); itr != mContainer.end(); ++itr){
-				tmp->add(*itr);
 #				ifdef GT_THREADS
-					if(mClearTo != NO_CLEAR && stop == mClearTo +1)
-						break;
+					if(mClearTo != NO_CLEAR && begin < mClearTo)
+						continue;
+					else
+						++begin;
 #				endif
+				tmp->add(*itr);
 			}
 
 		}else{

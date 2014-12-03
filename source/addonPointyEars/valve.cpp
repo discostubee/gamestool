@@ -88,7 +88,7 @@ cValve::getLoadPattern(){
 ////////////////////////////////////////////////////////////
 
 #ifdef GTUT
-#include "unitTestFigments.hpp"
+#include "gt_base/unitTestFigments.hpp"
 
 GTUT_START(test_cValve, test_suit){
 	figmentTestSuit<cValve>();

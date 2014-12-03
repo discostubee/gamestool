@@ -5,8 +5,7 @@
  *      Author: stuandlou
  */
 
-#include "addonFreetype.hpp"
-#include "printFreetype.hpp"
+#include "addonMaths.hpp"
 
 
 DYN_LIB_DEF(void)
@@ -15,9 +14,8 @@ draftAll(gt::cWorld *pWorld){
 		gt::cWorld::primordial::link(pWorld);
 		gt::gWorld.take(pWorld);	//- Old world cleaned up by doing this.
 
-		gt::tOutline<gt::cPrintworks_freetype>::draft();
 
-		DBUG_LO("Freetype addon open.");
+		DBUG_LO("Math addon open.");
 
 	}catch(std::exception &e){
 		excep::delayExcep::add(e.what());

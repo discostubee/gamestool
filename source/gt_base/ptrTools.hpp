@@ -74,9 +74,11 @@ namespace gt{
 
 		tSpitLemming();
 		virtual ~tSpitLemming();
+		unsigned int count() const; //!< The number of lemmings in the wild.
 
 		virtual tLemming get();
 		virtual tSpitLemming<T>& operator= (const tSpitLemming<T>& spitter);
+
 
 	protected:
 		unsigned int inTheWild;
@@ -213,8 +215,9 @@ namespace gt{
 	class tAutoPtr{
 	public:
 		tAutoPtr(const tAutoPtr<TYPE> &pTransfer) {
-			mManage = const_cast< tAutoPtr<TYPE> &>(pTransfer).mManage;
-			const_cast< tAutoPtr<TYPE> &>(pTransfer).mManage = NULL;
+			tAutoPtr<TYPE> &ref = const_cast< tAutoPtr<TYPE> &>(pTransfer);
+			mManage = ref.mManage;
+			ref.mManage = NULL;
 		}
 
 		tAutoPtr() : mManage(NULL) {}
@@ -325,6 +328,12 @@ namespace gt{
 	tSpitLemming<T>::~tSpitLemming() {
 		if(inTheWild != 0)
 			SHITPANTS;
+	}
+
+	template<typename T>
+	unsigned int
+	tSpitLemming<T>::count() const{
+		return inTheWild;
 	}
 
 	template<typename T>

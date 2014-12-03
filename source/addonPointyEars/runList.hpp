@@ -1,4 +1,7 @@
 /*
+ * !\file	runList.hpp
+ * !\brief	contains the runlist declaration.
+ *
 **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
  *
@@ -16,44 +19,39 @@
  *********************************************************************************************************
  */
 
-#ifndef VALVE_HPP
-#define VALVE_HPP
+#ifndef RUNLIST_HPP
+#define RUNLIST_HPP
 
-#include "figment.hpp"
+#include <list>
+#include "gt_base/figment.hpp"
+#include "gt_base/plugContainer.hpp"
 
-namespace gt{
+namespace gt{ //gamestool
 
-	//!\brief	Runs the linked figment, but only if its valve is open.
-	//!\note	Valve is open when made.
-	class cValve: public cFigment, private tOutline<cValve>{
+	//-----------------------------------------------------------------------------------------------
+	//!\brief	When you run this figment, you also run every figment in its list.
+	class cRunList: public cFigment{
 	public:
-		static const cPlugTag* xPT_link;
-		static const cPlugTag* xPT_state;
-		static const cCommand::dUID xSetLink;
-		static const cCommand::dUID xSetState;
-		static const cCommand::dUID xGetState;
+		static const cCommand::dUID	xAdd;
 
-		cValve();
-		virtual ~cValve();
+		cRunList();
+		virtual ~cRunList();
 
-		GT_IDENTIFY("valve");
+		GT_IDENTIFY("run list");
 		GT_EXTENDS(cFigment);
 		GT_VERSION(1);
-		virtual dNameHash hash() const{ return getHash<cValve>(); }
+		virtual dNameHash hash() const{ return getHash<cRunList>(); }
 
+		virtual void work(cContext* pCon);	//!< runs every element in the list
 		virtual void getLinks(std::list<ptrFig>* pOutLinks);
 
 	protected:
-		void patSetLink(ptrLead aLead);
-		void patSetState(ptrLead aLead);
-		void patGetState(ptrLead aLead);
+		typedef tPlugLinearContainer<ptrFig, std::vector> dList;
 
-	private:
-		tPlug<ptrFig> mLink;
-		tPlug<bool> mState;
+		dList mList;
+
+		void patAdd(ptrLead aLead);
 	};
-
 }
-
 
 #endif

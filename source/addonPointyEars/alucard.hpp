@@ -21,11 +21,11 @@
  *
  */
 
-#ifndef REFLECTION_HPP
-#define REFLECTION_HPP
+#ifndef ALUCARD_HPP
+#define ALUCARD_HPP
 
-#include "figment.hpp"
-#include "plugContainer.hpp"
+#include "gt_base/figment.hpp"
+#include "gt_base/plugContainer.hpp"
 
 namespace gt{
 /*

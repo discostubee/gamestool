@@ -48,10 +48,8 @@ draftAll(gt::cWorld *pWorld){
 DYN_LIB_DEF(void)
 closeLib(){
 	try{
-		DBUG_LO("Closing x11 addon.");
 		gt::cWorld::primordial::addonClosed(__FILE__);
 	}catch(...){
-
 	}
 }
 

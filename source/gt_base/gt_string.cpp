@@ -265,21 +265,24 @@ hasWildStr(const char *findIn, const char *wildStr){
 
 		}else if(idxBWildStart != NOWILD && idxBWildEnd != NOWILD){
 			unsigned int searchLen = idxBWildEnd +1 -idxBWildStart;
-			char *search = new char[searchLen +1];
-			memcpy(search, &wildStr[idxBWildStart], (searchLen) * sizeof(char));
-			search[searchLen] = '\0';
+			unsigned int idxWild, idxFind;
 
-			const char * found = strstr(&findIn[idxA], search);
-			if(found == NULL)
+			for(idxFind = idxA; idxFind < lenA + searchLen; ++idxFind){
+				for(idxWild = 0; idxWild < searchLen; ++idxWild){
+					if(findIn[idxFind + idxWild] != wildStr[idxBWildStart + idxWild])
+						break;
+				}
+
+				if(idxWild == searchLen)
+					break;
+			}
+
+			if(idxFind == lenA + searchLen)
 				return false;
 
-			idxA = (found - findIn) / sizeof(char);
 			idxA += searchLen;
-			idxBWildStart = idxBWildEnd = NOWILD;
-
 			idxB += searchLen;
-
-			delete [] search;
+			idxBWildStart = idxBWildEnd = NOWILD;
 
 		}else if(findIn[idxA] != wildStr[idxB]){
 			return false;
@@ -299,8 +302,22 @@ hasWildStr(const char *findIn, const char *wildStr){
 GTUT_START(test_string, wildStr){
 	const char * testA = "dogcat";
 	const char * wildA = "*cat";
+	const char * wildB = "dog*";
+	const char * wildC = "*gc*";
+	const char * wildD = "d*t";
+	const char * notwildA = "not*";
+	const char * notwildB = "*not";
+	const char * notwildC = "*not*";
+	const char * notwildD = "n*t";
 
-	GTUT_ASRT(hasWildStr(testA, wildA), "Failed to find wild");
+	GTUT_ASRT(hasWildStr(testA, wildA), "Failed to find wild A");
+	GTUT_ASRT(hasWildStr(testA, wildB), "Failed to find wild B");
+	GTUT_ASRT(hasWildStr(testA, wildC), "Failed to find wild C");
+	GTUT_ASRT(hasWildStr(testA, wildD), "Failed to find wild D");
+	GTUT_ASRT(!hasWildStr(testA, notwildA), "false positive A");
+	GTUT_ASRT(!hasWildStr(testA, notwildB), "false positive B");
+	GTUT_ASRT(!hasWildStr(testA, notwildC), "false positive C");
+	GTUT_ASRT(!hasWildStr(testA, notwildD), "false positive D");
 
 }GTUT_END;
 

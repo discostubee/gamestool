@@ -24,7 +24,7 @@
 #ifndef REFLECTION_HPP
 #define REFLECTION_HPP
 
-#include "figment.hpp"
+#include "gt_base/figment.hpp"
 
 namespace gt{
 
