@@ -20,16 +20,16 @@
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
-cBasePlugContainer::cBasePlugContainer(){
+cBase_plugContainer::cBase_plugContainer(){
 
 }
 
-cBasePlugContainer::~cBasePlugContainer(){
+cBase_plugContainer::~cBase_plugContainer(){
 }
 
-cBase_plug::dPlugType
-cBasePlugContainer::getType() const{
-	return cBase_plug::genPlugType<cBasePlugContainer>();
+dPlugType
+cBase_plugContainer::getType() const{
+	return genPlugType<cBase_plugContainer>();
 }
 
 ////////////////////////////////////////////////////////////

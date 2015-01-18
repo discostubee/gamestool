@@ -1,7 +1,7 @@
 #ifndef FRIDGE_HPP
 #define FRIDGE_HPP
 
-#include "iFigment.hpp"
+#include "baseFigment.hpp"
 #include <iostream>
 
 namespace gt{

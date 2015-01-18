@@ -32,7 +32,7 @@
 	#define TRACK_BUFF
 #endif
 
-
+///////////////////////////////////////////////////////////////////////////////////
 //!\brief	8Bit buffer used for consistency across platforms and not for performance. If you give it a memory location to a type, it will store
 //!			it as a cross platform binary stream.
 //!\note	The gamestool byte buffer is always 8bits even if it is not effective for the system to process 8 bit buffers. This ensures that data files
@@ -86,6 +86,7 @@ protected:
 	size_t	mBuffSize;
 };
 
+///////////////////////////////////////////////////////////////////////////////////
 
 template<typename TYPE>
 int

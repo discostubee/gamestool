@@ -23,45 +23,12 @@
 #ifndef	BASEPLUG_HPP
 #define BASEPLUG_HPP
 
-///////////////////////////////////////////////////////////////////////////////////
-// Config
-//!\brief	Enable or disable typeID as the method used to identify plug types.
-#define USE_TYPEINFO
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Includes
 
 #include "context.hpp"
 
-#ifdef USE_TYPEINFO
-#	include <typeinfo>
-#endif
-
-
-///////////////////////////////////////////////////////////////////////////////////
-namespace gt{
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Void assigns let us map different copying techniques to each type, for each type. If the target wasn't void, we wouldn't be
-	//!			able to map them as function pointers.
-	namespace voidAssign{
-
-		//!\brief Try a static cast conversion.
-		template<typename A> void basic(const A *pFrom, void *pTo){
-			*static_cast<A*>(pTo) = *pFrom;
-		}
-	}
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief
-	namespace voidAppend{
-
-		//!\brief Try a static cast conversion.
-		template<typename A> void basic(const A *pFrom, void *pTo){
-			*static_cast<A*>(pTo) += *pFrom;
-		}
-	}
-}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Classes
@@ -78,14 +45,10 @@ namespace gt{
 	//!			access should only happen through leads.
 	class cBase_plug{
 	public:
-		//--- types
-		typedef dNameHash dPlugType;
 
 		//--- implemented
 		cBase_plug();
 		virtual ~cBase_plug();
-
-		template<typename PLUG_TYPE> static dPlugType genPlugType();	//!<
 
 		virtual void linkLead(cLead* pLead); //!< Add a new link, or increase the number of times this lead is linked to this plug.	!\note	Made threadsafe in implementation.
 		virtual void unlinkLead(cLead* pLead); //!< Decrements the number of links, only disconnecting when there is 0 links to this lead. !\note	Made threadsafe in implementation.
@@ -128,10 +91,10 @@ namespace gt{
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Used by containers to appear the same no matter what the underlying container type is.
-	class cBasePlugContainer : public cBase_plug {
+	class cBase_plugContainer : public cBase_plug {
 	public:
-		cBasePlugContainer();
-		virtual ~cBasePlugContainer();
+		cBase_plugContainer();
+		virtual ~cBase_plugContainer();
 
 		virtual dPlugType getType() const;	//!< Any type of linear container should see any other linear
 		virtual bool operator== (const cBase_plug &pD) const =0;
@@ -145,24 +108,19 @@ namespace gt{
 		virtual void add(const cBase_plug &addMe) =0;
 		virtual void clear() =0;
 
-		virtual cBasePlugContainer& operator= (const cBasePlugContainer &pCopyMe) =0;
-		virtual cBasePlugContainer& operator+= (const cBasePlugContainer &pCopyMe) =0;
+		virtual cBase_plugContainer& operator= (const cBase_plugContainer &pCopyMe) =0;
+		virtual cBase_plugContainer& operator+= (const cBase_plugContainer &pCopyMe) =0;
 	};
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Another step towards a full plug, designed just to manage assignments and appends.
-	//!\note	Putting the assignments and append maps in here so that it's easier to specialise
+	//!\note	Putting the assignments and append maps in here so that it's easier to specialise the tOpOnAny.
 	template<typename A>
 	class tDataPlug: public cBase_plug{
 	public:
-		//--- types
-		typedef void (*fuAssign)(const A *copyFrom, void *copyTo);
-		typedef void (*fuAppend)(const A *copyFrom, void *copyTo);
-		typedef std::map<dPlugType, fuAssign> dMapAssigns;
-		typedef std::map<dPlugType, fuAppend> dMapAppends;
 
 		//--- implemented
-		virtual cBase_plug::dPlugType getType() const;
+		virtual dPlugType getType() const;
 		virtual void assignTo(void *pTo, dPlugType pType) const;
 		virtual void appendTo(void *pTo, dPlugType pType) const;
 
@@ -179,42 +137,7 @@ namespace gt{
 		tDataPlug<A>& operator+= (const tDataPlug<A> &dontcare){ return *this; }
 	};
 
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Specialise the class for each type you want to have more than just a basic copy for.
-	template<typename A>
-	class tOpOnAny{
-	public:
 
-		//!\brief
-		static typename tDataPlug<A>::dMapAssigns* assign(){
-			static bool setup = false;
-			static typename tDataPlug<A>::dMapAssigns ass;
-
-			if(!setup){
-				ass[ cBase_plug::genPlugType<A>() ] = voidAssign::basic<A>;
-				setup=true;
-			}
-
-			return &ass;
-		}
-
-		//!\brief
-		static typename tDataPlug<A>::dMapAppends* append(){
-			static bool setup = false;
-			static typename tDataPlug<A>::dMapAppends app;
-
-			if(!setup){
-				app[ cBase_plug::genPlugType<A>() ] = voidAppend::basic<A>;
-				setup=true;
-			}
-
-			return &app;
-		}
-
-	private:
-		tOpOnAny(){}
-		~tOpOnAny(){}
-	};
 
 }
 
@@ -222,77 +145,38 @@ namespace gt{
 // Template implementation
 namespace gt{
 
-	//----------------------------------------------------------------------------------------------------------------
-	template<typename PLUG_TYPE>
-	cBase_plug::dPlugType
-	cBase_plug::genPlugType(){
-
-		static const dPlugType typeID
-#			ifdef USE_TYPEINFO
-				= makeHash(typeid(PLUG_TYPE).name());
-#			else
-				//- error for now
-#			endif
-
-		return typeID;
-	}
-
-	//----------------------------------------------------------------------------------------------------------------
+	//-----------------------------------------------------------------------------
 	template<typename A>
-	cBase_plug::dPlugType
+	dPlugType
 	tDataPlug<A>::getType() const {
-		return cBase_plug::genPlugType<A>();
+		return genPlugType<A>();
 	}
 
 	template<typename A>
 	void
-	tDataPlug<A>::assignTo(void *pTo, cBase_plug::dPlugType pType) const{
+	tDataPlug<A>::assignTo(void *pTo, dPlugType pType) const{
 		PROFILE;
-
-		tCoolFind<cBase_plug::dPlugType, fuAssign> op(
-			*tOpOnAny<A>::assign(),
-			pType
-		);
-
-		if(!op.found())
-			throw excep::cantCopy(typeid(A).name(), "unknown type", __FILE__, __LINE__);
-
-		op.get()(
-			&getConst(),
-			pTo
-		);
+		cAnyOp::assign(getConst(), pTo, pType);
 	}
 
 	template<typename A>
 	void
-	tDataPlug<A>::appendTo(void *pTo, cBase_plug::dPlugType pType) const{
+	tDataPlug<A>::appendTo(void *pTo, dPlugType pType) const{
 		PROFILE;
-
-		tCoolFind<cBase_plug::dPlugType, fuAssign> op(
-			*tOpOnAny<A>::append(),
-			pType
-		);
-
-		if(!op.found())
-			throw excep::cantCopy(typeid(A).name(), "unknown type", __FILE__, __LINE__);
-
-		op.get()(
-			&getConst(),
-			pTo
-		);
+		cAnyOp::append(getConst(), pTo, pType);
 	}
 
 	template<typename A>
 	bool
 	tDataPlug<A>::operator== (const cBase_plug &pD) const {
-		return (cBase_plug::genPlugType<A>() == pD.getType());
+		return (genPlugType<A>() == pD.getType());
 	}
 
 	template<typename A>
 	cBase_plug&
 	tDataPlug<A>::operator= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.assignTo(&get(), cBase_plug::genPlugType<A>());
+		pD.assignTo(&get(), genPlugType<A>());
 		return *this;
 	}
 
@@ -300,7 +184,7 @@ namespace gt{
 	cBase_plug&
 	tDataPlug<A>::operator+= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.appendTo(&get(), cBase_plug::genPlugType<A>());
+		pD.appendTo(&get(), genPlugType<A>());
 		return *this;
 	}
 

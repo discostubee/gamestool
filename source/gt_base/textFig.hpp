@@ -21,6 +21,7 @@
 
 #include "figment.hpp"
 
+///////////////////////////////////////////////////////////////////////////////////
 namespace gt{
 
 	//!\brief	Simple gamestool container for UTF-8 text.
@@ -47,6 +48,113 @@ namespace gt{
 	};
 
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////
+//
+namespace gt{
+
+	template<>
+	class cAnyOp::tOps<dText>{
+	private:
+		static void assignText(const dText & pFrom, void *pTo){
+			reinterpret_cast<dText*>(pTo)->t.assign(pFrom);
+		}
+
+		static void appendText(const dText & pFrom, void *pTo){
+			reinterpret_cast<dText*>(pTo)->t.append(pFrom);
+		}
+
+		static void assignNStr(const dText & pFrom, void *pTo){
+			reinterpret_cast<dNatStr*>(pTo)->t.assign( toNStr(pFrom) );
+		}
+
+		static void appendNStr(const dText & pFrom, void *pTo){
+			reinterpret_cast<dNatStr*>(pTo)->t.append( toNStr(pFrom) );
+		}
+
+		static void assignDStr(const dText & pFrom, void *pTo){
+		}
+
+		static void appendDStr(const dText & pFrom, void *pTo){
+		}
+
+	public:
+		static void setup(tKat<dText> * pK, cAnyOp * pUsing){
+			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
+			pK->addApp(&getRef(), genPlugType<dText>(), appendText);
+			pK->addAss(&getRef(), genPlugType<dNatStr>(), assignNStr);
+			pK->addApp(&getRef(), genPlugType<dNatStr>(), appendNStr);
+			pK->addAss(&getRef(), genPlugType<dStr>(), assignDStr);
+			pK->addApp(&getRef(), genPlugType<dStr>(), appendDStr);
+		}
+	};
+
+	template<>
+	class cAnyOp::tOps<dNatStr>{
+	private:
+		static void assignText(const dNatStr & pFrom, void *pTo){
+		}
+
+		static void appendText(const dNatStr & pFrom, void *pTo){
+		}
+
+		static void assignNStr(const dNatStr & pFrom, void *pTo){
+		}
+
+		static void appendNStr(const dNatStr & pFrom, void *pTo){
+		}
+
+		static void assignDStr(const dNatStr & pFrom, void *pTo){
+		}
+
+		static void appendDStr(const dNatStr & pFrom, void *pTo){
+		}
+
+	public:
+		static void setup(tKat<dNatStr> * pK, cAnyOp * pUsing){
+			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
+			pK->addApp(&getRef(), genPlugType<dText>(), appendText);
+			pK->addAss(&getRef(), genPlugType<dNatStr>(), assignNStr);
+			pK->addApp(&getRef(), genPlugType<dNatStr>(), appendNStr);
+			pK->addAss(&getRef(), genPlugType<dStr>(), assignDStr);
+			pK->addApp(&getRef(), genPlugType<dStr>(), appendDStr);
+		}
+	};
+
+	template<>
+	class cAnyOp::tOps<dStr>{
+	private:
+		static void assignText(const dStr & pFrom, void *pTo){
+		}
+
+		static void appendText(const dStr & pFrom, void *pTo){
+		}
+
+		static void assignNStr(const dStr & pFrom, void *pTo){
+		}
+
+		static void appendNStr(const dStr & pFrom, void *pTo){
+		}
+
+		static void assignDStr(const dStr & pFrom, void *pTo){
+		}
+
+		static void appendDStr(const dStr & pFrom, void *pTo){
+		}
+
+	public:
+		static void setup(tKat<dStr> * pK, cAnyOp * pUsing){
+			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
+			pK->addApp(&getRef(), genPlugType<dText>(), appendText);
+			pK->addAss(&getRef(), genPlugType<dNatStr>(), assignNStr);
+			pK->addApp(&getRef(), genPlugType<dNatStr>(), appendNStr);
+			pK->addAss(&getRef(), genPlugType<dStr>(), assignDStr);
+			pK->addApp(&getRef(), genPlugType<dStr>(), appendDStr);
+		}
+	};
+}
+
 
 
 #endif

@@ -128,7 +128,7 @@ namespace gt{
 		typename ELEM_T,
 		template<typename, typename> class CONT_T
 	>
-	class tLitePlugLinearContainer : public cBasePlugContainer{
+	class tLitePlugLinearContainer : public cBase_plugContainer{
 	public:
 		//--- types
 		typedef CONT_T< ELEM_T, std::allocator<ELEM_T> > dContainer;
@@ -150,8 +150,8 @@ namespace gt{
 		bool operator== (const cBase_plug &pD) const;
 		cBase_plug& operator= (const cBase_plug &pD);
 		cBase_plug& operator+= (const cBase_plug &pD);
-		cBasePlugContainer& operator= (const cBasePlugContainer &pCopyMe);
-		cBasePlugContainer& operator+= (const cBasePlugContainer &pCopyMe);
+		cBase_plugContainer& operator= (const cBase_plugContainer &pCopyMe);
+		cBase_plugContainer& operator+= (const cBase_plugContainer &pCopyMe);
 
 
 		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
@@ -275,8 +275,8 @@ namespace gt{
 	}
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	cBasePlugContainer&
-	tLitePlugLinearContainer<ELEM_T, CONT_T>::operator= (const cBasePlugContainer &pCopyMe){
+	cBase_plugContainer&
+	tLitePlugLinearContainer<ELEM_T, CONT_T>::operator= (const cBase_plugContainer &pCopyMe){
 		NOTSELF(&pCopyMe);
 		internalFrom(
 			const_cast<cBase_plug&>(
@@ -288,8 +288,8 @@ namespace gt{
 	}
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	cBasePlugContainer&
-	tLitePlugLinearContainer<ELEM_T, CONT_T>::operator+= (const cBasePlugContainer &pCopyMe){
+	cBase_plugContainer&
+	tLitePlugLinearContainer<ELEM_T, CONT_T>::operator+= (const cBase_plugContainer &pCopyMe){
 		NOTSELF(&pCopyMe);
 		internalFrom(
 			const_cast<cBase_plug&>(
@@ -309,11 +309,11 @@ namespace gt{
 		if(pClear)
 			mContainer->clear();
 
-		dPlugType elemType = cBase_plug::genPlugType<ELEM_T>();
+		dPlugType elemType = genPlugType<ELEM_T>();
 		ELEM_T elemTmp;
 
 		if(pD.getType() == getType()){
-			cBasePlugContainer &tmp = dynamic_cast<cBasePlugContainer&>(pD);
+			cBase_plugContainer &tmp = dynamic_cast<cBase_plugContainer&>(pD);
 
 			for(size_t i=0; i < tmp.getCount(); ++i){
 				tmp.getPlug(i)->assignTo(&elemTmp, elemType);
@@ -335,7 +335,7 @@ namespace gt{
 			return;
 
 		if(pType == getType()){
-			cBasePlugContainer *tmp = static_cast<cBasePlugContainer*>(pTo);
+			cBase_plugContainer *tmp = static_cast<cBase_plugContainer*>(pTo);
 
 			if(pClear)
 				tmp->clear();

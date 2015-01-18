@@ -1,8 +1,6 @@
 /*
  * !\file	context.hpp
- * !\brief	The context and multithreaded figment provide mechanisms for figments to handle multi threading. In this regard,
- * !		the design of the context drives the strategy for multithreading figments.
- * !		The exact objectives are:
+ * !\brief	The exact objectives are:
  * !		- Prevent circular flow, as soon as a run command encounters itself in the context it throws.
  * !		- Do the same for running as we do for jacking. Jacking uses a different context to running.
  * !		- Cause a thread to wait if it tries to run or jack into a figment that is currently working with another thread.

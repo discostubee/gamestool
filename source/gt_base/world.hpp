@@ -81,6 +81,7 @@
 #include "threadTools.hpp"
 #include "profiler.hpp"
 #include "fridge.hpp"
+#include "opOnAny.hpp"
 
 #include <set>
 #include <stack>
@@ -144,7 +145,7 @@ namespace gt{
 namespace gt{
 
 	//---------------------------------------------------------------------------------------------------
-	//!\brief	The world is both a factory and a service provider for pretty much every figment.
+	//!\brief	The world is both a factory and a service provider that is available to any figment.
 	//!\note	Not threadsafe, so it must be accessed with a tMrSafety.
 	//!\note	Why so choc full of functions? Because the world handles the different heaps from different
 	//!			addons, as well as various services that need to be used in a thread-safe manner.
@@ -209,21 +210,10 @@ namespace gt{
 		//--------------------------------------------------------
 		// Get stuff
 		
-		//!\brief	Use this if you know the hash of the figment and the ID of the plug tag.
-		//!\note	Throws if not found.
-		const cPlugTag* getPlugTag(dNameHash pFigBlueprint, unsigned int pPTHash);
-
-		//!\note	Useful when writing demos where you are using addons and you don't want to include the headers
-		const cPlugTag* getPlugTag(const dPlaChar *figName, const dPlaChar *tagName);
-
-
-		//!\brief	Instead of making a new empty figment every time, we might as well share the same village
-		//!			bicycle.
-		ptrFig getEmptyFig();
-
-		//!\brief	Intended to be used by plugs so they can have quick access to the context lookup.
-		//!\note	This lookup table should not change unless all the contexts have first been locked.
-		const dContextLookup& getContextLookup();
+		const cPlugTag* getPlugTag(dNameHash pFigBlueprint, unsigned int pPTHash);		//!< Use this if you know the hash of the figment and the ID of the plug tag. !\note	Throws if not found.
+		const cPlugTag* getPlugTag(const dPlaChar *figName, const dPlaChar *tagName);	//!< !\note	Useful when writing demos where you are using addons and you don't want to include the headers
+		const dContextLookup& getContextLookup();	//!< Intended to be used by plugs so they can have quick access to the context lookup. !\note	This lookup table should not change unless all the contexts have first been locked.
+		ptrFig getEmptyFig();	//!< Instead of making a new empty figment every time, we might as well share the same village bicycle.
 
 		//--------------------------------------------------------
 		// Polymorphs
@@ -269,7 +259,8 @@ namespace gt{
 
 			dLines *mLines;
 			cProfiler *mProfiler;
-			std::set<primordial*> mRefOtherPrims;	//!< These are other primordial worlds from the addon's heap.
+			cAnyOp *mOps;
+			std::set<primordial*> mRefOtherPrims;	//!< These are references of the world inside each addon.
 
 			primordial();
 			void someoneDied(primordial *dead);
@@ -282,7 +273,8 @@ namespace gt{
 		typedef std::map<dNameHash, bool> dAddon2Fresh;
 		typedef std::map<dStr, dRefAddons> dBlue2Addons;
 
-		//
+		//--------------------------------------------------------
+
 		dAddons mAvailableAddons;
 		dRefAddons mOpenAddons;
 		ptrFig mRoot;
@@ -290,22 +282,30 @@ namespace gt{
 		cFridge *mFridge;
 		dNameHash mProgName;
 
+		//--------------------------------------------------------
+		// Polymorphs
+
 		virtual tAutoPtr<cWorld> makeWorld() =0;	//!< Make a new world.
 		virtual void loop() =0;	//!< Enter the main program loop. Continues looping until it is told to stop.
-		virtual void openAddon(const dStr &name) =0;	//!< Opens an addon with the given name. Can be called multiple times without reopening.
-		virtual void closeAddon(const dStr &name) =0;	//!< Closes the addon regardless of how many times openAddon was called (as it should have been actually opened only once).
+		virtual void openAddon(const dStr &name) =0;	//!< Opens an addon with the given name. Can be called multiple times without reopening. Suspends all threads to perform this.
+		virtual void closeAddon(const dStr &name) =0;	//!< Closes the addon regardless of how many times openAddon was called (as it should have been actually opened only once).	Suspends all threads to perform this.
 		virtual void getAddonList(dAddons &output) =0;
 		virtual void readAddonCache(const dAddons &addons, dBlue2Addons &outMap, dAddon2Fresh &outFresh) =0;	//!< Cache of what figments are contained in what addons, which prevents us having to open every addon every time.
 		virtual void writeAddonCache(const dBlue2Addons &info) =0;	//!< (re)write the addon cache.was
 		virtual void getAddonNameFromFilename(const dPlaChar *filename, dStr *output) =0;	//!< Given a full file path, return just the addon name.
 
+		//--------------------------------------------------------
+
 		void closeWorld();	//!< Perform final cleanup. Should be run by the implementations destructor.
 		primordial* getPrim();
+
+		//--------------------------------------------------------
 
 		friend class primordial;
 		friend void gt::loop();
 
 	private:
+
 		//!\brief	Stores all the info about a type of blueprint.
 		struct sBlueBook{
 			cBlueprint * mUsing;

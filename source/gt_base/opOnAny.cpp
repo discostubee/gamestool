@@ -16,60 +16,51 @@
  *********************************************************************************************************
 */
 
+
 #include "opOnAny.hpp"
+
+
 
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
-void
-gt::voidAssign::textToNStr(const dText *pFrom, void *pTo){
-	*reinterpret_cast<dNatStr*>(pTo) = ::toNStr(*pFrom);
+cAnyOp::cAnyOp(){
+
+}
+
+cAnyOp::~cAnyOp(){
+	try{
+		demerge();
+
+	//- Don't do this. There's no reason for it because it's a singleton, and it's dangerous.
+	//		for(dKats::iterator itrK = mKats.begin(); itrK != mKats.end(); ++itrK){
+	//			itrK->second->unlink(this);
+	//		}
+	}catch(...){
+
+	}
 }
 
 void
-gt::voidAssign::textToPStr(const dText *pFrom, void *pTo){
-	*reinterpret_cast<dStr*>(pTo) = ::toPStr(*pFrom);
+cAnyOp::merge(cAnyOp * pOther){
+
 }
 
 void
-gt::voidAssign::plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo){
-	*reinterpret_cast<dStr*>(pTo) = *pFrom;
+cAnyOp::demerge(){
+	for(std::list<cAnyOp*>::iterator itrL = mLinks.begin(); itrL != mLinks.end(); ++itrL){
+		for(dKats::iterator itrK = (*itrL)->mKats.begin(); itrK != (*itrL)->mKats.end(); ++itrK){
+			itrK->second->unlink(this);
+		}
+	}
+	mLinks.clear();
 }
 
-void
-gt::voidAssign::plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo){
-	*reinterpret_cast<dNatStr*>(pTo) = ::PCStr2NStr(*pFrom);
+cAnyOp&
+cAnyOp::getRef(){
+	static cAnyOp xOps;
+	return xOps;
 }
 
-void
-gt::voidAssign::plaCStrToText(const dPlaChar * const *pFrom, void *pTo){
-	*reinterpret_cast<dText*>(pTo) = ::PCStr2Text(*pFrom);
-}
-
-void
-gt::voidAppend::textToText(const dText *pFrom, void *pTo){
-	reinterpret_cast<
-		std::basic_string<dTextChar, std::char_traits<dTextChar> >*
-	>(pTo)->append(*pFrom);
-}
-
-void
-gt::voidAppend::plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo){
-	reinterpret_cast<dStr*>(pTo)->append(*pFrom);
-}
-
-void
-gt::voidAppend::plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo){
-	reinterpret_cast<
-		std::basic_string<dNatChar, std::char_traits<dNatChar> >*
-	>(pTo)->append( ::PCStr2NStr(*pFrom) );
-}
-
-void
-gt::voidAppend::plaCStrToText(const dPlaChar * const *pFrom, void *pTo){
-	reinterpret_cast<
-		std::basic_string<dTextChar, std::char_traits<dTextChar> >*
-	>(pTo)->append( ::PCStr2Text(*pFrom) );
-}
 
 
