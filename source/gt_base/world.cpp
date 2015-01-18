@@ -28,14 +28,12 @@ gt::tMrSafety<gt::cWorld> gt::gWorld;
 
 void
 gt::loop(){
-	cWorld * noLockRef = NULL;
-	{
-		noLockRef = gWorld.get().get();
-	}
-	if(gWorld.count() != 0)
-		throw excep::base_error("World still locked", __FILE__, __LINE__);
-
+	cWorld * noLockRef = gWorld.get().get();	//- the lemming should be dead before the check below.
 	ASRT_NOTNULL(noLockRef);
+
+	if(gWorld.count() != 0)
+		THROW_ERROR("World still locked");
+
 	noLockRef->loop();
 }
 

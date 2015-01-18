@@ -31,9 +31,8 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Object types
+//
 namespace gt{
-
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Provides serialization as a healthy breakfast. Get it, cereal, haha haha, uuuuhhh.
@@ -298,7 +297,7 @@ namespace gt{
 
 			pReadFrom->assignTo(
 				&shadow->mData,
-				cBase_plug::genPlugType<A>()
+				genPlugType<A>()
 			);
 
 			shadow->mMode = eSM_write;
@@ -319,7 +318,7 @@ namespace gt{
 
 			pReadFrom->appendTo(
 				&shadow->mData,
-				cBase_plug::genPlugType<A>()
+				genPlugType<A>()
 			);
 
 			shadow->mMode = eSM_write;
@@ -418,7 +417,7 @@ namespace gt{
 	tPlug<A>::tPlug(const cBase_plug &other){
 		other.assignTo(
 			&mD,
-			cBase_plug::genPlugType<A>()
+			genPlugType<A>()
 		);
 	}
 
@@ -436,7 +435,7 @@ namespace gt{
 	tPlug<A>::tPlug(const cBase_plug *other){
 		other->assignTo(
 			&mD,
-			cBase_plug::genPlugType<A>()
+			genPlugType<A>()
 		);
 	}
 
@@ -448,7 +447,7 @@ namespace gt{
 	cBase_plug&
 	tPlug<A>::operator= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.assignTo(&mD, cBase_plug::genPlugType<A>());
+		pD.assignTo(&mD, genPlugType<A>());
 		return *this;
 	}
 
@@ -456,7 +455,7 @@ namespace gt{
 	cBase_plug&
 	tPlug<A>::operator+= (const cBase_plug &pD){
 		NOTSELF(&pD);
-		pD.appendTo(&mD, cBase_plug::genPlugType<A>());
+		pD.appendTo(&mD, genPlugType<A>());
 		return *this;
 	}
 

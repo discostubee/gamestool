@@ -68,7 +68,7 @@ namespace gt{
 		typename PLUG_T,
 		template<typename, typename> class CONT_T
 	>
-	class tPlugLinearContainer : public cBasePlugContainer{
+	class tPlugLinearContainer : public cBase_plugContainer{
 	public:
 
 		//--- override container
@@ -78,8 +78,8 @@ namespace gt{
 		void add(const cBase_plug &addMe);
 		void clear();
 
-		cBasePlugContainer& operator= (const cBasePlugContainer &pCopyMe);
-		cBasePlugContainer& operator+= (const cBasePlugContainer &pCopyMe);
+		cBase_plugContainer& operator= (const cBase_plugContainer &pCopyMe);
+		cBase_plugContainer& operator+= (const cBase_plugContainer &pCopyMe);
 
 		//--- override base plug
 		void assignTo(void *pTo, dPlugType pType) const;
@@ -378,16 +378,16 @@ namespace gt{
 	}
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	cBasePlugContainer&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const cBasePlugContainer &pCopyMe){
+	cBase_plugContainer&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const cBase_plugContainer &pCopyMe){
 		NOTSELF(&pCopyMe);
 		internalAssign(pCopyMe, true);
 		return *this;
 	}
 
 	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	cBasePlugContainer&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const cBasePlugContainer &pCopyMe){
+	cBase_plugContainer&
+	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const cBase_plugContainer &pCopyMe){
 		NOTSELF(&pCopyMe);
 		internalAssign(pCopyMe, false);
 		return *this;
@@ -405,7 +405,7 @@ namespace gt{
 			clear();
 
 		if(pD.getType() == getType()){
-			const cBasePlugContainer *tmp = dynamic_cast<const cBasePlugContainer*>(&pD);
+			const cBase_plugContainer *tmp = dynamic_cast<const cBase_plugContainer*>(&pD);
 			for(size_t i=0; i < tmp->getCount(); ++i)
 				mContainer.push_back(*tmp->getPlugConst(i));
 
@@ -423,7 +423,7 @@ namespace gt{
 			return;
 
 		if(pType == getType()){
-			cBasePlugContainer *tmp = static_cast<cBasePlugContainer*>(pTo);
+			cBase_plugContainer *tmp = static_cast<cBase_plugContainer*>(pTo);
 
 			if(pClear)
 				tmp->clear();

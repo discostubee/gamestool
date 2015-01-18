@@ -1,6 +1,6 @@
 /*
  * !\file	opOnAny.hpp
- * !\brief	This contains a bunch of implementations for ordinary data type for the opOnAny class.
+ * !\brief
  *
  **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens
@@ -23,141 +23,328 @@
 #ifndef	OPONANY_HPP
 #define OPONANY_HPP
 
-#include "basePlug.hpp"
-#include "binPacker.hpp"
-#include <boost/shared_ptr.hpp>
+///////////////////////////////////////////////////////////////////////////////////
+// Config
+//!\brief	Enable or disable typeID as the method used to identify plug types.
+#define USE_TYPEINFO
+
+
+///////////////////////////////////////////////////////////////////////////////////
+#include "utils.hpp"
 #include <vector>
+#include <list>
 #include <map>
 
-///////////////////////////////////////////////////////////////////////////////////
-namespace gt{
-	typedef boost::shared_ptr<cByteBuffer> ptrBuff;
-}
+#ifdef USE_TYPEINFO
+#	include <typeinfo>
+#endif
 
-///////////////////////////////////////////////////////////////////////////////////
 namespace gt{
 
-	//----------------------------------------------------------------------------------------------------------------
-	namespace voidAssign{
-		void textToNStr(const dText *pFrom, void *pTo);
-		void textToPStr(const dText *pFrom, void *pTo);
-		void plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo);
-		void plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo);
-		void plaCStrToText(const dPlaChar * const *pFrom, void *pTo);
-	}
 
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief
-	namespace voidAppend{
-		void textToText(const dText *pFrom, void *pTo);
-		void plaCStrToPStr(const dPlaChar * const *pFrom, void *pTo);
-		void plaCStrToNStr(const dPlaChar * const *pFrom, void *pTo);
-		void plaCStrToText(const dPlaChar * const *pFrom, void *pTo);
-	}
-}
+	///////////////////////////////////////////////////////////////////////////////////
+	typedef dNameHash dPlugType;
 
-///////////////////////////////////////////////////////////////////////////////////
-// Template specializations
-namespace gt{
+	///////////////////////////////////////////////////////////////////////////////////
+	template<typename PLUG_TYPE> dPlugType genPlugType();	//!<
 
+	///////////////////////////////////////////////////////////////////////////////////
 
 	//-------------------------------------------------------------------------------------
-	template<>
-	class tOpOnAny< const dPlaChar* >{
+	//!\breif	Any-op allows you to expand, at runtime, the ways in which a data type can
+	//!			be assigned or appended. This is perfect for dynamic libraries which can
+	//!			contain new types.
+	class cAnyOp{
 	public:
-		static tDataPlug< const dPlaChar* >::dMapAssigns * assign(){
-			static bool setup = false;
-			static tDataPlug<const dPlaChar*>::dMapAssigns copiers;
 
-			if(!setup){
-				copiers[ cBase_plug::genPlugType<dText>() ] = voidAssign::plaCStrToText;
-				copiers[ cBase_plug::genPlugType<dNatStr>() ] = voidAssign::plaCStrToNStr;
-				copiers[ cBase_plug::genPlugType<dStr>() ] = voidAssign::plaCStrToPStr;
-				setup=true;
-			}
+		//--------------------------------------------------------------------------------
+		//!\brief	The catalogue of operations for a given type. Finish him! But serious,
+		//!			the K is to help differentiate it from the typical shorthand for
+		//!			concatenate.
+		//!			The catalogue interface is here to let any-op add and remove them as
+		//!			different dynamic libraries open and close.
+		//!\note	Function pointers ARE NOT the same as pointers to data and must be
+		//!			treated that way (even thought at the end of the day, both are memory
+		//!			addresses). You can cast function pointers which is about as smelly
+		//!			as casting void*. Everyone does either/or (win32, glib), so let's not
+		//!			whine too hard. Here we're going with a hybrid to try and keep as
+		//!			information about the parameters as possible.
+		class iKat{
+		public:
+			virtual ~iKat(){}
 
-			return &copiers;
-		}
+			virtual dPlugType getType() =0;
+			virtual void unlink(cAnyOp * pFrom) =0;	//!< Remove any functions that came from this any-op.
+		};
 
-		static tDataPlug< const dPlaChar* >::dMapAssigns * append(){
-			static bool setup = false;
-			static tDataPlug< const dPlaChar* >::dMapAppends app;
+		//--------------------------------------------------------------------------------
+		//!\brief	By using this template class and calling these functions statically,
+		//!			we ensure a kat exists for every type we use.
+		//!\note	Public type because the seupKat function below must be pubic.
+		template<typename A>
+		class tKat : public iKat{
+		public:
 
-			if(!setup){
-				app[ cBase_plug::genPlugType<dText>() ] = voidAppend::plaCStrToText;
-				app[ cBase_plug::genPlugType<dNatStr>() ] = voidAppend::plaCStrToNStr;
-				app[ cBase_plug::genPlugType<dStr>() ] = voidAppend::plaCStrToPStr;
-				setup=true;
-			}
+			//--- types
+			typedef void (*fuAssign)(const A & pFrom, void * pTo);
+			typedef void (*fuAppend)(const A & pFrom, void * pTo);
+			typedef std::map<dPlugType, fuAssign> dMapAssigns;
+			typedef std::map<dPlugType, fuAppend> dMapAppends;
 
-			return &app;
-		}
-	};
+			//---
+			void addAss(cAnyOp * pFrom, dPlugType pFor, fuAssign pFu);
+			void addApp(cAnyOp * pFrom, dPlugType pFor, fuAppend pFu);
 
-	//-------------------------------------------------------------------------------------
-	template<>
-	class tOpOnAny<dText>{
-	public:
-		static tDataPlug<dText>::dMapAssigns * assign(){
-			static bool setup = false;
-			static tDataPlug<dText>::dMapAssigns copiers;
+			//---
+			dPlugType getType();
+			void unlink(cAnyOp * pFrom);
 
-			if(!setup){
-				copiers[ cBase_plug::genPlugType<dText>() ] = voidAssign::basic<dText>;
-				copiers[ cBase_plug::genPlugType<dNatStr>() ] = voidAssign::textToNStr;
-				copiers[ cBase_plug::genPlugType<dStr>() ] = voidAssign::textToPStr;
-				setup=true;
-			}
+			//---
+			static dMapAssigns & assign();
+			static dMapAppends & append();
 
-			return &copiers;
-		}
+		protected:
+			~tKat();	//!<
 
-		static tDataPlug<dText>::dMapAssigns * append(){
-			static bool setup = false;
-			static tDataPlug<dText>::dMapAppends app;
+		private:
+			typedef std::list<typename dMapAssigns::iterator> dListAssItr;
+			typedef std::list<typename dMapAppends::iterator> dListAppItr;
 
-			if(!setup){
-				app[ cBase_plug::genPlugType<dText>() ] = voidAppend::textToText;
-				setup=true;
-			}
+			struct sLinkOp{
+				dListAssItr mAsss;
+				dListAppItr mApps;
+			};
 
-			return &app;
-		}
-	};
+			typedef std::map<cAnyOp*, sLinkOp> dOp2Link;
 
-	//-------------------------------------------------------------------------------------
-	template<>
-	class tOpOnAny< ptrBuff >{
+			dMapAssigns mAsss;
+			dMapAppends mApps;
+			dOp2Link mLinks;	//!< What any-ops are linked and where those functions came from them.
+
+			tKat();	//!< Only the static should be created per heap.
+
+			static tKat xKat;	//!< If your code uses any of the public functions, this should cause the compiler to create an instance of a catalogue for this type.
+		};
+
+		//--------------------------------------------------------------------------------
+		//!\breif	It's much easier to specialise a class than a function which would
+		//!			need a declaration in the header and a definition in the source. It
+		//!			also encourages modularity for the functions you will want to add.
+		//!\note	http://www.gotw.ca/publications/mill17.htm
+		template<typename A>
+		class tOps{
+		public:
+			static void setup(tKat<A> * pK, cAnyOp * pUsing);
+		};
+
+		//---
+		template<typename A>
+		static void setupKat(tKat<A> * pK);	//!< Public so that tKat can make use of it.
+
+		template<typename A>
+		static void assign(const A & pFrom, void * pTo, dPlugType pType);
+
+		template<typename A>
+		static void append(const A & pFrom, void * pTo, dPlugType pType);
+
+		template<typename A>
+		static void fuAssignDefault(const A & pFrom, void * pTo);
+
+		template<typename A>
+		static void fuAppendDefault(const A & pFrom, void * pTo);
+
+	protected:
+
+		//---
+		void merge(cAnyOp * pOther);	//!< Mutual merge. Remembers the other any-op, so when you call clear the 2 can be unlinked again.
+		void demerge();	//!<
+
+		//---
+		static cAnyOp& getRef();
+
+		friend class cWorld;
+
 	private:
-		static void appendPtr2Ptr(const ptrBuff *pFrom, void *pTo){
-			reinterpret_cast<ptrBuff*>(pTo)->get()->add(pFrom->get());
-		}
-	public:
 
-		static tDataPlug< ptrBuff >::dMapAssigns * assign(){
-			static bool setup = false;
-			static tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAssigns ass;
+		typedef std::map<dPlugType, iKat*> dKats;
 
-			if(!setup){
-				ass[ cBase_plug::genPlugType<ptrBuff>() ] = voidAssign::basic<ptrBuff>;
-				setup=true;
-			}
+		//---
+		dKats mKats;	//!< Only storing a kat for each type.
+		std::list<cAnyOp*> mLinks;	//!< Ensure Kats inside other any-ops know their links from here are no longer good.
 
-			return &ass;
-		}
+		//---
+		cAnyOp();	//!<
+		~cAnyOp();	//!< Lets any remaining linked any-ops know it died.
 
-		static tDataPlug< ptrBuff >::dMapAppends * append(){
-			static bool setup = false;
-			static tDataPlug< boost::shared_ptr<cByteBuffer> >::dMapAppends app;
+		//---
 
-			if(!setup){
-				app[ cBase_plug::genPlugType<ptrBuff>() ] = appendPtr2Ptr;
-				setup=true;
-			}
-
-			return &app;
-		}
 	};
+
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+namespace gt{
+
+	//--------------------------------------------------------------------------------
+	template<typename A>
+	cAnyOp::tKat<A> cAnyOp::tKat<A>::xKat;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+namespace gt{
+
+	//----------------------------------------------------------------------------------------------------------------
+	template<typename PLUG_TYPE>
+	dPlugType
+	genPlugType(){
+		static const dPlugType typeID
+#			ifdef USE_TYPEINFO
+				= makeHash(typeid(PLUG_TYPE).name());
+#			else
+				//- error for now
+#			endif
+
+		return typeID;
+	}
+
+	template<typename A>
+	cAnyOp::tKat<A>::tKat()
+	{
+		cAnyOp::setupKat<A>(this);
+	}
+
+	template<typename A>
+	cAnyOp::tKat<A>::~tKat(){
+	}
+
+	template<typename A>
+	typename cAnyOp::tKat<A>::dMapAssigns &
+	cAnyOp::tKat<A>::assign(){
+		return xKat.mAsss;
+	}
+
+	template<typename A>
+	typename cAnyOp::tKat<A>::dMapAppends &
+	cAnyOp::tKat<A>::append(){
+		return xKat.mApps;
+	}
+
+	template<typename A>
+	dPlugType
+	cAnyOp::tKat<A>::getType(){
+		return genPlugType<A>();
+	}
+
+	template<typename A>
+	void
+	cAnyOp::tKat<A>::unlink(cAnyOp * pFrom){
+		typename dOp2Link::iterator found = mLinks.find(pFrom);
+		if(found == mLinks.end())
+			return;
+
+		dListAssItr & listAss = found->second.mAsss;
+		typename dListAssItr::iterator itrAss;
+		for(itrAss = listAss.begin(); itrAss != listAss.end(); ++itrAss)
+			mAsss.erase(*itrAss);
+
+		dListAppItr & listApp = found->second.mApps;
+		typename dListAppItr::iterator itrApp;
+		for(itrApp = listApp.begin(); itrApp != listApp.end(); ++itrApp)
+			mApps.erase(*itrApp);
+	}
+
+	template<typename A>
+	void
+	cAnyOp::tKat<A>::addAss(cAnyOp * pFrom, dPlugType pFor, fuAssign pFu){
+		std::pair<typename dMapAssigns::iterator, bool> result = mAsss.insert(
+			typename dMapAssigns::value_type(pFor, pFu)
+		);
+
+		if(!result.second)
+			return;
+
+		typename dOp2Link::iterator link = mLinks.insert(
+			mLinks.end(),
+			typename dOp2Link::value_type(pFrom, sLinkOp())
+		);
+		link->second.mAsss.push_back(result.first);
+	}
+
+	template<typename A>
+	void
+	cAnyOp::tKat<A>::addApp(cAnyOp * pFrom, dPlugType pFor, fuAppend pFu){
+		std::pair<typename dMapAppends::iterator, bool> result = mAsss.insert(
+			typename dMapAppends::value_type(pFor, pFu)
+		);
+
+		if(!result.second)
+			return;
+
+		typename dOp2Link::iterator link = mLinks.insert(
+			mLinks.end(),
+			typename dOp2Link::value_type(pFrom, sLinkOp())
+		);
+		link->second.mApps.push_back(result.first);
+	}
+
+	//-------------------------------------------------------------------------------
+	template<typename A>
+	void cAnyOp::tOps<A>::setup(tKat<A> * pK, cAnyOp * pUsing){
+		pK->addAss(&getRef(), genPlugType<A>(), fuAssignDefault<A>);
+		pK->addApp(&getRef(), genPlugType<A>(), fuAppendDefault<A>);
+	}
+
+	//-------------------------------------------------------------------------------
+
+	//- This is the default setup that can only operate between the same types
+	template<typename A>
+	void
+	cAnyOp::setupKat(tKat<A> * pK){
+		tOps<A>::setup(pK, &getRef());
+		(void)getRef().mKats.insert( dKats::value_type(pK->getType(), pK) );
+	}
+
+	template<typename A>
+	void
+	cAnyOp::assign(const A & pFrom, void * pTo, dPlugType pType){
+		tCoolFind<dPlugType, typename cAnyOp::tKat<A>::fuAssign> op(
+			cAnyOp::tKat<A>::assign(),
+			pType
+		);
+
+		if(!op.found())
+			THROW_ERROR(genPlugType<A>() << " can't assign to type " << pType);
+
+		op.get()(pFrom, pTo);
+	}
+
+	template<typename A>
+	void
+	cAnyOp::append(const A & pFrom, void * pTo, dPlugType pType){
+		tCoolFind<dPlugType, typename cAnyOp::tKat<A>::fuAssign> op(
+			cAnyOp::tKat<A>::append(),
+			pType
+		);
+
+		if(!op.found())
+			THROW_ERROR(genPlugType<A>() << " can't append to type " << pType);
+
+		op.get()(pFrom, pTo);
+	}
+
+	template<typename A>
+	void
+	cAnyOp::fuAssignDefault(const A & pFrom, void *pTo){
+		*static_cast<A*>(pTo) = pFrom;
+	}
+
+	template<typename A>
+	void
+	cAnyOp::fuAppendDefault(const A & pFrom, void *pTo){
+		*static_cast<A*>(pTo) += pFrom;
+	}
+}
+
+
 
 #endif

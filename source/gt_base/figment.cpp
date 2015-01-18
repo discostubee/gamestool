@@ -19,6 +19,7 @@
 #include "figment.hpp"
 #include "plugContainer.hpp"
 
+
 ////////////////////////////////////////////////////////////
 using namespace gt;
 
@@ -500,9 +501,6 @@ GTUT_START(test_context, preventDoubleJackStack){
 
 	GTUT_ASRT(A.timesJacked == 1, "A not stacked right.");
 	GTUT_ASRT(B.timesJacked == 1, "B not stacked right.");
-
-	gt::gWorld.get()->flushLines();	//- So we clear out warnings.
-
 }GTUT_END;
 
 #endif

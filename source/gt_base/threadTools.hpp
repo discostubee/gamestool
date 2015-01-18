@@ -26,7 +26,7 @@
 //!			boost library if you do.
 //#define GT_THREADS
 
-#include "ptrTools.hpp"
+#include "memTools.hpp"
 #include "utils.hpp"
 
 #ifdef GT_THREADS

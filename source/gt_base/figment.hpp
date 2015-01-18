@@ -74,6 +74,10 @@ namespace excep{
 		virtual dMigrationPattern getLoadPattern()
 
 
+///////////////////////////////////////////////////////////////////////////////////
+// types
+typedef boost::shared_ptr<cByteBuffer> ptrBuff;
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 // classes
@@ -85,8 +89,7 @@ namespace gt{
 	class cFigment: public cFigContext{
 	public:
 
-		//-----------------------------
-		// Commands and plug tags
+		//--- Commands and plug tags
 		static const cPlugTag* xPT_serialBuff;	//!< A smart pointer to the buffer where we load from, and save to.
 		static const cPlugTag* xPT_loadingParty;	//!< This is a special group of figments relevant to loading.
 		static const cPlugTag* xPT_name;
@@ -101,8 +104,7 @@ namespace gt{
 		static const cCommand::dUID	xGetCommands;	//!< Gets a list of all the commands used by this figment.
 		static const cCommand::dUID	xGetLinks;		//!< Fills a provided container with the list of links found using getLinks
 
-		//-----------------------------
-		// Implemented
+		//--- Implemented
 		cFigment();
 		virtual ~cFigment();
 
@@ -112,8 +114,7 @@ namespace gt{
 		void run(cContext* pCon);	//!< Performs all the normal stuff needed before doing work, such as using the context to ensure it doesn't run into itself or other threads.
 		ptrFig getSmart();
 
-		//-----------------------------
-		// These things are REQUIRED for any figment class.
+		//--- These things are REQUIRED for any figment class.
 
 		//!\brief	Used to define the string name of this object. It is also hashed to give the unique number
 		//!			used to quickly compare objects.
@@ -123,8 +124,7 @@ namespace gt{
 		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return getHash<cFigment>(); }
 
-		//-----------------------------
-		// standard interface. These are all optional in later classes.
+		//--- standard interface. These are all optional in later classes.
 
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
@@ -203,37 +203,6 @@ namespace gt{
 namespace gt{
 
 
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Specialise the class for each type you want to have more than just a basic copy for.
-	template<>
-	class tOpOnAny<ptrFig>{
-	public:
-
-		//!\brief
-		static tDataPlug<ptrFig>::dMapAssigns* assign(){
-			static bool setup = false;
-			static tDataPlug<ptrFig>::dMapAssigns ass;
-
-			if(!setup){
-				ass[ cBase_plug::genPlugType<ptrFig>() ] = voidAssign::basic<ptrFig>;
-				setup=true;
-			}
-
-			return &ass;
-		}
-
-		//!\brief
-		static tDataPlug<ptrFig>::dMapAppends* append(){
-			static tDataPlug<ptrFig>::dMapAppends app;
-			return &app;
-		}
-
-	private:
-		tOpOnAny(){}
-		~tOpOnAny(){}
-	};
-
 	//-----------------------------------------------------------------------------------
 	//!\brief	This thing is slightly odd. I say odd as opposed to dangerous because
 	//!			a figment pointer plug is only threadsafe because the interface to
@@ -279,7 +248,24 @@ namespace gt{
 		}
 
 		virtual bool operator== (const cBase_plug &pD) const {
-			return (pD.getType() == cBase_plug::genPlugType<ptrFig>());
+			return (pD.getType() == genPlugType<ptrFig>());
+		}
+	};
+
+	//-----------------------------------------------------------------------------------
+	template<>
+	class cAnyOp::tOps<ptrBuff>{
+	private:
+		static void assign(const ptrBuff & pFrom, void *pTo){
+		}
+
+		static void append(const ptrBuff & pFrom, void *pTo){
+		}
+
+	public:
+		static void setup(tKat<ptrBuff> * pK, cAnyOp * pUsing){
+			pK->addAss(&getRef(), genPlugType<ptrBuff>(), assign);
+			pK->addApp(&getRef(), genPlugType<ptrBuff>(), append);
 		}
 	};
 
