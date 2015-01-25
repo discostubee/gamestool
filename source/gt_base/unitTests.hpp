@@ -41,23 +41,35 @@
 
 // These are the macros every framework needs to implement.
 
+namespace unitTest{
+	namespace msg{
+		extern const char * PROBLEM;
+
+		namespace err{
+			extern const char * UNKNOWN;
+		}
+	}
+}
+
 			//!\brief	If this statment is false, then it fails and displays a message as to why.
 #			define GTUT_ASRT(statement, failMsg)\
-				ASSERT_TRUE(statement) << std::endl << "Problem: " << failMsg
+				ASSERT_TRUE(statement) << std::endl << unitTest::msg::PROBLEM << failMsg
 
 			//!\brief	Try calling a function, reports if anything is thrown out of it.
 #			define TRYME(f)\
 				try{ f; }\
-				catch(std::exception &e){ ASSERT_TRUE(false) << std::endl << "Problem: " << e.what(); }\
-				catch(...){ ASSERT_TRUE(false) << "Unknown exception"; }
+				catch(std::exception &e){\
+					ASSERT_TRUE(false) << std::endl << unitTest::msg::PROBLEM << e.what(); }\
+				}catch(...){ ASSERT_TRUE(false) << unitTest::msg::err::UNKNOWN; }
 
 #			define GTUT_START(name, args)\
 				TEST(name, args){\
 					try
 
 #			define GTUT_END\
-					catch(excep::base_error &e){ ASSERT_TRUE(false) << std::endl << "Problem: " << e.what(); }\
-					catch(...){ ASSERT_TRUE(false) << "Unknown exception"; }\
+					catch(excep::base_error &e){\
+						ASSERT_TRUE(false) << std::endl << unitTest::msg::PROBLEM << e.what();\
+					}catch(...){ ASSERT_TRUE(false) << unitTest::msg::err::UNKNOWN; }\
 				}
 
 #		endif

@@ -100,16 +100,6 @@
 extern const char *MSG_UNKNOWN_ERROR;
 #define UNKNOWN_ERROR	WARN_S(MSG_UNKNOWN_ERROR);
 
-#ifdef GTUT
-	//- Adds line flushing per test. Sadly, if a test fails the lines are not flushed until the next test. At this point I can't see a way to fix this.
-#	undef GTUT_END
-#	define GTUT_END\
-		catch(excep::base_error &e){ GTUT_ASRT(false, e.what()); }\
-		catch(std::exception &e){ GTUT_ASRT(false, e.what()); }\
-		catch(...){ GTUT_ASRT(false, "Unknown error"); }\
-		gt::gWorld.get()->flushLines(); }
-#endif
-
 #ifdef DEBUG
 #	define PROFILE\
 		cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
