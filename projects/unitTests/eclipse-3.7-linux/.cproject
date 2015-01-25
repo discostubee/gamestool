@@ -30,6 +30,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1637689833" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse/linux-3.7/includes/gtest&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.1126635452" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 `pkg-config --cflags glib-2.0`" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.other.pic.819304973" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
@@ -45,6 +46,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.1976726498" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse/linux-3.7/includes/gtest&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.pic.2042740086" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1108430889" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -70,6 +72,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.331753597" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
 								<option id="gnu.both.asm.option.include.paths.329084740" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse/linux-3.7/includes/gtest&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1106705864" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -112,6 +115,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.215042235" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse/linux-3.7/includes/gtest&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.604713163" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 `pkg-config --cflags glib-2.0`" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.other.pic.601476346" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
@@ -128,6 +132,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.542348233" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse/linux-3.7/includes/gtest&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.pic.1802365004" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1474369501" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -156,6 +161,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.2058634240" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
 								<option id="gnu.both.asm.option.include.paths.1684649484" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../shared/eclipse/linux-3.7/includes/gtest&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.877539891" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>

@@ -234,12 +234,13 @@ toNStr(const dText &pString){
 
 bool
 hasWildStr(const char *findIn, const char *wildStr){
+	static const unsigned int NOWILD = static_cast<unsigned int>(-1);
+
 	if(findIn == NULL || wildStr == NULL)
 		return false;
 
 	const unsigned int lenA = strlen(findIn);
 	const unsigned int lenB = strlen(wildStr);
-	const unsigned int NOWILD = static_cast<unsigned int>(-1);
 
 	if(lenA == 0 || lenB == 0)
 		return false;
@@ -258,18 +259,20 @@ hasWildStr(const char *findIn, const char *wildStr){
 				idxBWildStart = idxB;
 
 		}else if(idxBWildStart != NOWILD && idxBWildEnd == NOWILD){
-			if(wildStr[idxB] == '*' || idxB +1 >= lenB)
+			if(wildStr[idxB] == '*')
 				idxBWildEnd = idxB;
+			else if(idxB +1 >= lenB)
+				idxBWildEnd = idxB +1;
 			else
 				++idxB;
 
 		}else if(idxBWildStart != NOWILD && idxBWildEnd != NOWILD){
-			unsigned int searchLen = idxBWildEnd +1 -idxBWildStart;
-			unsigned int idxWild, idxFind;
+			const unsigned int searchLen = idxBWildEnd -idxBWildStart;
 
-			for(idxFind = idxA; idxFind < lenA + searchLen; ++idxFind){
+			unsigned int idxWild, idxFind;
+			for(idxFind = idxA; idxFind < lenA -searchLen +1; ++idxFind){
 				for(idxWild = 0; idxWild < searchLen; ++idxWild){
-					if(findIn[idxFind + idxWild] != wildStr[idxBWildStart + idxWild])
+					if(findIn[idxFind +idxWild] != wildStr[idxBWildStart +idxWild])
 						break;
 				}
 
@@ -277,7 +280,7 @@ hasWildStr(const char *findIn, const char *wildStr){
 					break;
 			}
 
-			if(idxFind == lenA + searchLen)
+			if(idxFind == lenA -searchLen +1)
 				return false;
 
 			idxA += searchLen;
@@ -308,7 +311,7 @@ GTUT_START(test_string, wildStr){
 	const char * notwildA = "not*";
 	const char * notwildB = "*not";
 	const char * notwildC = "*not*";
-	const char * notwildD = "n*t";
+	const char * notwildD = "d*not";
 
 	GTUT_ASRT(hasWildStr(testA, wildA), "Failed to find wild A");
 	GTUT_ASRT(hasWildStr(testA, wildB), "Failed to find wild B");
