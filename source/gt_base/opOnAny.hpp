@@ -67,20 +67,21 @@ namespace gt{
 		//!			treated that way (even thought at the end of the day, both are memory
 		//!			addresses). You can cast function pointers which is about as smelly
 		//!			as casting void*. Everyone does either/or (win32, glib), so let's not
-		//!			whine too hard. Here we're going with a hybrid to try and keep as
+		//!			whine too hard. Here we're going with a hybrid to try and keep as much
 		//!			information about the parameters as possible.
 		class iKat{
 		public:
 			virtual ~iKat(){}
 
 			virtual dPlugType getType() =0;
-			virtual void unlink(cAnyOp * pFrom) =0;	//!< Remove any functions that came from this any-op.
+			virtual void link(cAnyOp * pFrom, iKat * pOps) =0;
+			virtual void unlink(cAnyOp * pFrom) =0;	//!< Remove any operations that came from this Any-op collection.
 		};
 
 		//--------------------------------------------------------------------------------
 		//!\brief	By using this template class and calling these functions statically,
 		//!			we ensure a kat exists for every type we use.
-		//!\note	Public type because the seupKat function below must be pubic.
+		//!\note	Public type because the setupKat function below must be pubic.
 		template<typename A>
 		class tKat : public iKat{
 		public:
@@ -92,19 +93,20 @@ namespace gt{
 			typedef std::map<dPlugType, fuAppend> dMapAppends;
 
 			//---
-			void addAss(cAnyOp * pFrom, dPlugType pFor, fuAssign pFu);
-			void addApp(cAnyOp * pFrom, dPlugType pFor, fuAppend pFu);
+			bool addAss(cAnyOp * pFrom, dPlugType pFor, fuAssign pFu);	//!< True if this assignment operation was added. False if it already that that operation.
+			bool addApp(cAnyOp * pFrom, dPlugType pFor, fuAppend pFu);	//!< True if this append operation was added. False if it already that that operation.
 
 			//---
 			dPlugType getType();
-			void unlink(cAnyOp * pFrom);
+			void link(cAnyOp * pFrom, iKat * pOps);
+			void unlink(cAnyOp * pFrom);	//!< Not an error if it doesn't have that Any-op linked.
 
 			//---
 			static dMapAssigns & assign();
 			static dMapAppends & append();
 
 		protected:
-			~tKat();	//!<
+			~tKat();
 
 		private:
 			typedef std::list<typename dMapAssigns::iterator> dListAssItr;
@@ -119,7 +121,7 @@ namespace gt{
 
 			dMapAssigns mAsss;
 			dMapAppends mApps;
-			dOp2Link mLinks;	//!< What any-ops are linked and where those functions came from them.
+			dOp2Link mLinks;	//!< What Any-ops are linked and where those functions came from them.
 
 			tKat();	//!< Only the static should be created per heap.
 
@@ -156,8 +158,8 @@ namespace gt{
 	protected:
 
 		//---
-		void merge(cAnyOp * pOther);	//!< Mutual merge. Remembers the other any-op, so when you call clear the 2 can be unlinked again.
-		void demerge();	//!<
+		void merge(cAnyOp * pOther);	//!< Mutual merge. Remembers the other Any-op, so when you call clear the 2 can be unlinked again.
+		void demerge();	//!< Unlinks all other Any-ops.
 
 		//---
 		static cAnyOp& getRef();
@@ -165,19 +167,27 @@ namespace gt{
 		friend class cWorld;
 
 	private:
+		struct sKatOrig{
+			iKat * const mKat;
+			cAnyOp * const mOrig; //!< Can by NULL
 
-		typedef std::map<dPlugType, iKat*> dKats;
+			sKatOrig(iKat *pKat) : mKat(pKat), mOrig(NULL) {}
+			sKatOrig(iKat *pKat, cAnyOp *pOrig) : mKat(pKat), mOrig(pOrig) {}
+		};
+
+		typedef std::map<dPlugType, sKatOrig> dMapKatTypes;
+		typedef std::set<cAnyOp*> dSetOrig;
 
 		//---
-		dKats mKats;	//!< Only storing a kat for each type.
-		std::list<cAnyOp*> mLinks;	//!< Ensure Kats inside other any-ops know their links from here are no longer good.
+		dMapKatTypes mKats;
+		dSetOrig mOrig;
 
 		//---
 		cAnyOp();	//!<
 		~cAnyOp();	//!< Lets any remaining linked any-ops know it died.
 
 		//---
-
+		static void merge(dMapKatTypes *myKats, dMapKatTypes *yourKats, cAnyOp *me);
 	};
 
 }
@@ -237,54 +247,89 @@ namespace gt{
 
 	template<typename A>
 	void
+	cAnyOp::tKat<A>::link(cAnyOp * pFrom, iKat * pOps){
+		ASRT_TRUE(pOps->getType() == getType(), "Not the same types");
+		tKat<A> * tmp = dynamic_cast< tKat<A>* >(pOps);
+	}
+
+	template<typename A>
+	void
 	cAnyOp::tKat<A>::unlink(cAnyOp * pFrom){
 		typename dOp2Link::iterator found = mLinks.find(pFrom);
 		if(found == mLinks.end())
 			return;
 
 		dListAssItr & listAss = found->second.mAsss;
-		typename dListAssItr::iterator itrAss;
-		for(itrAss = listAss.begin(); itrAss != listAss.end(); ++itrAss)
-			mAsss.erase(*itrAss);
+		for(
+			typename dListAssItr::iterator itrAss = listAss.begin();
+			itrAss != listAss.end();
+			++itrAss
+		){
+			mAsss.erase((*itrAss));
+		}
 
 		dListAppItr & listApp = found->second.mApps;
-		typename dListAppItr::iterator itrApp;
-		for(itrApp = listApp.begin(); itrApp != listApp.end(); ++itrApp)
-			mApps.erase(*itrApp);
+		for(
+			typename dListAppItr::iterator itrApp = listApp.begin();
+			itrApp != listApp.end();
+			++itrApp
+		){
+			mApps.erase((*itrApp));
+		}
+		mLinks.erase(found);
 	}
 
 	template<typename A>
-	void
+	bool
 	cAnyOp::tKat<A>::addAss(cAnyOp * pFrom, dPlugType pFor, fuAssign pFu){
 		std::pair<typename dMapAssigns::iterator, bool> result = mAsss.insert(
 			typename dMapAssigns::value_type(pFor, pFu)
 		);
 
-		if(!result.second)
-			return;
+		if(!result.second){
+//			DBUG_VERBOSE_LO(std::hex << reinterpret_cast<size_t>(this) << " already has assignment op "
+//				<< std::dec << pFor << " = " << pFu
+//			);
+			return false;
+		}
 
 		typename dOp2Link::iterator link = mLinks.insert(
 			mLinks.end(),
 			typename dOp2Link::value_type(pFrom, sLinkOp())
 		);
 		link->second.mAsss.push_back(result.first);
+
+//		DBUG_VERBOSE_LO(std::hex << reinterpret_cast<size_t>(this) << " linked to " << pFrom
+//			<< " for op " << std::dec << pFor << " = " << pFu
+//		);
+
+		return true;
 	}
 
 	template<typename A>
-	void
+	bool
 	cAnyOp::tKat<A>::addApp(cAnyOp * pFrom, dPlugType pFor, fuAppend pFu){
-		std::pair<typename dMapAppends::iterator, bool> result = mAsss.insert(
+		std::pair<typename dMapAppends::iterator, bool> result = mApps.insert(
 			typename dMapAppends::value_type(pFor, pFu)
 		);
 
-		if(!result.second)
-			return;
+		if(!result.second){
+//			DBUG_VERBOSE_LO(std::hex << reinterpret_cast<size_t>(this) << " already has assignment op "
+//				<< std::dec << pFor << " + " << pFu
+//			);
+			return false;
+		}
 
 		typename dOp2Link::iterator link = mLinks.insert(
 			mLinks.end(),
 			typename dOp2Link::value_type(pFrom, sLinkOp())
 		);
 		link->second.mApps.push_back(result.first);
+
+//		DBUG_VERBOSE_LO(std::hex << reinterpret_cast<size_t>(this) << " linked to " << pFrom
+//			<< " for op " << std::dec << pFor << " + " << pFu
+//		);
+		return true;
 	}
 
 	//-------------------------------------------------------------------------------
@@ -296,12 +341,13 @@ namespace gt{
 
 	//-------------------------------------------------------------------------------
 
-	//- This is the default setup that can only operate between the same types
 	template<typename A>
 	void
 	cAnyOp::setupKat(tKat<A> * pK){
 		tOps<A>::setup(pK, &getRef());
-		(void)getRef().mKats.insert( dKats::value_type(pK->getType(), pK) );
+		(void)getRef().mKats.insert(
+			dMapKatTypes::value_type(pK->getType(), sKatOrig(pK))
+		);
 	}
 
 	template<typename A>
@@ -321,7 +367,7 @@ namespace gt{
 	template<typename A>
 	void
 	cAnyOp::append(const A & pFrom, void * pTo, dPlugType pType){
-		tCoolFind<dPlugType, typename cAnyOp::tKat<A>::fuAssign> op(
+		tCoolFind<dPlugType, typename cAnyOp::tKat<A>::fuAppend> op(
 			cAnyOp::tKat<A>::append(),
 			pType
 		);

@@ -36,25 +36,25 @@
 
 //!\brief	Makes it easier to spot checks typical in operator functions.
 #define NOTSELF(p)\
-	if(p == this) return *this
+	{ if(p == this) return *this; }
 
 #define TEST_PARA(p, test)\
-	if(p test) throw excep::badParameter(#p, __FILE__, __LINE__);
+	{ if(p test) throw excep::badParameter(#p, __FILE__, __LINE__); }
 
 
 
 #ifdef DEBUG
 #	define ASRT_TRUE(p, s)\
-		if(!(p)) throw ::excep::base_error(s, __FILE__, __LINE__)
+		{ if(!(p)) throw ::excep::base_error(s, __FILE__, __LINE__); }
 
 #	define ASRT_NOTNULL(p)\
-		if(p == NULL) throw ::excep::isNull( __FILE__, __LINE__)
+		{ if(p == NULL) throw ::excep::isNull( __FILE__, __LINE__); }
 
 #	define ASRT_INRANGE(vec, idx)\
-		if( idx < 0 || idx >= vec.size() ) throw ::excep::outOfRange(vec.size(), idx, __FILE__, __LINE__)
+		{ if( idx < 0 || idx >= vec.size() ) throw ::excep::outOfRange(vec.size(), idx, __FILE__, __LINE__); }
 
 #	define ASRT_NOTSELF(p)\
-		if(static_cast<const void*>(p) == this) throw ::excep::base_error("Pointer is self", __FILE__, __LINE__)
+		{ if(static_cast<const void*>(p) == this) throw ::excep::base_error("Pointer is self", __FILE__, __LINE__); }
 
 #else
 	#define ASRT_TRUE(p, s)
