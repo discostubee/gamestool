@@ -249,7 +249,6 @@ namespace gt{
 
 			dLines *mLines;
 			cProfiler *mProfiler;
-			cAnyOp *mOps;
 			std::set<primordial*> mRefOtherPrims;	//!< These are references of the world inside each addon.
 
 			primordial();
@@ -271,6 +270,7 @@ namespace gt{
 		dNameHash mBluesFromAddon;	//!< Used so that any blueprints being drafted are considered to come from this addon.
 		cFridge *mFridge;
 		dNameHash mProgName;
+		cAnyOp &mOps;
 
 		//--------------------------------------------------------
 		// Polymorphs
@@ -312,7 +312,7 @@ namespace gt{
 		dBlueprintMap mBlueprints; //!< These are all the available blueprints.
 		ptrFig mVillageBicycle;	//!< Used for empty figment.
 		dContextLookup mContexts; //!< We keep track of all the contexts here in the world.
-		primordial *mRefPrim;
+		primordial * const mRefPrim;
 
 		void closeUselessAddons();	//!< Search for addons that no longer have any active figments, and close them.
 		void findFigs(dNameHash pName, std::list<ptrFig> *output);	//!< Searches from the root node for figments with the given name.

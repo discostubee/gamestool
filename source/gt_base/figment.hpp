@@ -256,15 +256,14 @@ namespace gt{
 	template<>
 	class cAnyOp::tOps<ptrBuff>{
 	private:
-		static void assign(const ptrBuff & pFrom, void *pTo){
-		}
 
 		static void append(const ptrBuff & pFrom, void *pTo){
+			reinterpret_cast<ptrBuff*>(pTo)->get()->add(*pFrom.get());
 		}
 
 	public:
 		static void setup(tKat<ptrBuff> * pK, cAnyOp * pUsing){
-			pK->addAss(&getRef(), genPlugType<ptrBuff>(), assign);
+			pK->addAss(&getRef(), genPlugType<ptrBuff>(), fuAssignDefault<ptrBuff>);
 			pK->addApp(&getRef(), genPlugType<ptrBuff>(), append);
 		}
 	};

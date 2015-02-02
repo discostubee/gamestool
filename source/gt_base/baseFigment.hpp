@@ -171,14 +171,9 @@ namespace gt{
 
 	template<>
 	class cAnyOp::tOps<ptrFig>{
-	private:
-		static void assign(const ptrFig & pFrom, void * pTo){
-			*reinterpret_cast<ptrFig*>(pTo) = pFrom;
-		}
-
 	public:
 		static void setup(tKat<ptrFig> * pK, cAnyOp * pUsing){
-			pK->addAss(&getRef(), genPlugType<ptrFig>(), assign);
+			pK->addAss(&getRef(), genPlugType<ptrFig>(), fuAssignDefault);
 		}
 	};
 }

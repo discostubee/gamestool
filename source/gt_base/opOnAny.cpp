@@ -43,17 +43,55 @@ cAnyOp::~cAnyOp(){
 
 void
 cAnyOp::merge(cAnyOp * pOther){
+	mOrig.insert(pOther);
+	merge(&mKats, &pOther->mKats, this);
+	merge(&pOther->mKats, &mKats, pOther);
+}
 
+void
+cAnyOp::merge(dMapKatTypes *myKats, dMapKatTypes *yourKats, cAnyOp *me){
+	dMapKatTypes::iterator itrK;
+	dMapKatTypes::iterator found;
+
+	for(itrK = myKats->begin(); itrK != myKats->end(); ++itrK){
+		found = yourKats->find(itrK->first);
+		if(found == yourKats->end()){
+			found = yourKats->insert(
+				yourKats->end(),
+				dMapKatTypes::value_type(
+					itrK->first,
+					sKatOrig(
+						itrK->second.mKat,
+						me
+					)
+				)
+			);
+		}
+
+		found->second.mKat->link(me, itrK->second.mKat);
+	}
 }
 
 void
 cAnyOp::demerge(){
-	for(std::list<cAnyOp*>::iterator itrL = mLinks.begin(); itrL != mLinks.end(); ++itrL){
-		for(dKats::iterator itrK = (*itrL)->mKats.begin(); itrK != (*itrL)->mKats.end(); ++itrK){
-			itrK->second->unlink(this);
+	dMapKatTypes::iterator itrK;
+	for(
+		dSetOrig::iterator itrO = mOrig.begin();
+		itrO != mOrig.end();
+		++itrO
+	){
+		dMapKatTypes::iterator itrK = (*itrO)->mKats.begin();
+		while(itrK != (*itrO)->mKats.end()){
+			if(itrK->second.mOrig == this){
+				dMapKatTypes::iterator eraseMe = itrK;
+				++itrK;
+				(*itrO)->mKats.erase(eraseMe);
+			}else{
+				itrK->second.mKat->unlink(this);
+				++itrK;
+			}
 		}
 	}
-	mLinks.clear();
 }
 
 cAnyOp&
@@ -61,6 +99,4 @@ cAnyOp::getRef(){
 	static cAnyOp xOps;
 	return xOps;
 }
-
-
 

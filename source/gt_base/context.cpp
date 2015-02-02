@@ -89,8 +89,6 @@ cContext::add(cFigContext *pFig){
 
 	ASRT_NOTNULL(pFig);
 
-	mStack.push_back(pFig);
-
 	itrInfo = mStackInfo.find(pFig);
 	if(itrInfo == mStackInfo.end()){
 		mStackInfo.insert(
@@ -110,6 +108,8 @@ cContext::add(cFigContext *pFig){
 	}else{
 		throw excep::stackFault(mStack, "Tried to restack a figment in run mode.", __FILE__, __LINE__);
 	}
+
+	mStack.push_back(pFig);
 }
 
 void

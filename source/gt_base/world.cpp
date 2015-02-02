@@ -43,7 +43,7 @@ gt::loop(){
 using namespace gt;
 
 cWorld::cWorld():
-	mKeepLooping(true), mBluesFromAddon(0), mFridge(NULL), mRefPrim(&primordial::gPrim)
+	mKeepLooping(true), mBluesFromAddon(0), mFridge(NULL), mOps(cAnyOp::getRef()), mRefPrim(&primordial::gPrim)
 {
 	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
@@ -602,6 +602,7 @@ cWorld::primordial::link(gt::cWorld *pLinkme){
 
 	gPrim.mRefOtherPrims.insert(pLinkme->getPrim());
 	pLinkme->getPrim()->mRefOtherPrims.insert(&gPrim);
+	cAnyOp::getRef().merge(&pLinkme->mOps);
 }
 
 void
@@ -617,6 +618,7 @@ cWorld::primordial::addonClosed(const dPlaChar *addonFilename){
 		dStr name;
 		w->getAddonNameFromFilename(addonFilename, &name);
 		w->removeAddonBlueprints(name);
+		w->mOps.demerge();
 		w->flushLines();
 	}
 	gWorld.drop();
