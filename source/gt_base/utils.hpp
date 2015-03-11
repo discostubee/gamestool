@@ -97,7 +97,56 @@ public:
 		return false;
 	}
 
-	typename T::value_type& get(){
+	typename T::value_type& get() const {
+		return *mCurrentSpot;
+	}
+
+	void reset(){
+		mCurrentSpot = mContainerRef->begin();
+	}
+
+	void operator ++ () {
+		if(stillGood())
+			++mCurrentSpot;
+	}
+
+	typename T::value_type& operator* (){
+		return get();
+	}
+
+	typename T::value_type& operator-> (){
+		return get();
+	}
+
+private:
+	T* mContainerRef;	//!< Don't delete
+	typename T::iterator mCurrentSpot;
+};
+
+template <typename T>
+class tCoolItr_const{
+public:
+
+	tCoolItr_const(const T* pContainer, typename T::iterator pStartHere)
+	: mContainerRef(pContainer), mCurrentSpot(pStartHere)
+	{}
+
+	tCoolItr_const(const T* pContainer)
+	: mContainerRef(pContainer), mCurrentSpot(mContainerRef->begin())
+	{}
+
+	tCoolItr_const(const tCoolItr_const &copyMe)
+	: mContainerRef( copyMe.mContainerRef )
+	{}
+
+	bool stillGood() const {
+		if(mCurrentSpot != mContainerRef->end())
+			return true;
+
+		return false;
+	}
+
+	const typename T::value_type& get(){
 		return *mCurrentSpot;
 	}
 
@@ -115,8 +164,8 @@ public:
 	}
 
 private:
-	T* mContainerRef;	//!< Don't delete
-	typename T::iterator mCurrentSpot;
+	const T* mContainerRef;	//!< Don't delete
+	typename T::const_iterator mCurrentSpot;
 };
 
 //------------------------------------------------------------------------------------------

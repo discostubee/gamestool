@@ -109,12 +109,11 @@ cPolyMesh::getLoadPattern(){
 	return pattern;
 }
 
-
 void
 cPolyMesh::patAddToMesh(ptrLead aLead){
 	PROFILE;
 
-	aLead->appendTo(&mLazyMesh.get().mVertexes, xPT_vertexs);
+	aLead->appendTo<sVertex, std::vector>(&mLazyMesh.get().mVertexes, xPT_vertexs);
 	aLead->appendTo(&mLazyMesh.get().mPolys, xPT_polies);
 	mLazyMesh.get().mFresh = true;
 }
@@ -126,7 +125,6 @@ cPolyMesh::patGetMesh(ptrLead aLead){
 	downloadLazy();
 	aLead->appendFrom(mLazyMesh.get().mVertexes, xPT_vertexs);
 	aLead->appendFrom(mLazyMesh.get().mPolys, xPT_polies);
-	aLead->appendFrom(mLazyMesh.get().mPolys, xPT_texMapping);
 }
 
 void
@@ -160,10 +158,3 @@ cPolyMesh::cleanLazy(){
 }
 
 
-#ifdef GTUT
-
-GTUT_START(testPolyMesh, tagging){
-
-}GTUT_END;
-
-#endif

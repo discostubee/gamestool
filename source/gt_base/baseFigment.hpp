@@ -27,6 +27,7 @@
 #include "byteBuffer.hpp"
 #include "memTools.hpp"
 #include "opOnAny.hpp"
+#include "opsOrdinaryData.hpp"
 
 #include <list>
 #include <boost/shared_ptr.hpp>
@@ -158,22 +159,66 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 //
 namespace gt{
+
 	template<>
 	class cAnyOp::tOps<const dPlaChar *>{
 	private:
-		static void assign(const dPlaChar * const& pFrom, void * pTo){
+		static void assignStr(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dStr*>(pTo)->assign( pFrom );
+		}
+
+		static void appendStr(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dStr*>(pTo)->append( pFrom );
+		}
+
+		static void assignNatStr(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dNatStr*>(pTo)->t = toNStr(pFrom);
+		}
+
+		static void appendNatStr(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dNatStr*>(pTo)->t.append( toNStr(pFrom) );
+		}
+
+		static void assignText(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dText*>(pTo)->t = toText(pFrom);
+		}
+
+		static void appendText(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dText*>(pTo)->t.append( toText(pFrom) );
 		}
 
 	public:
 		static void setup(tKat<const dPlaChar *> * pK, cAnyOp * pUsing){
+			pK->addAss(&getRef(), genPlugType<dStr>(), assignStr);
+			pK->addApp(&getRef(), genPlugType<dStr>(), appendStr);
+			pK->addAss(&getRef(), genPlugType<dNatStr>(), assignNatStr);
+			pK->addApp(&getRef(), genPlugType<dNatStr>(), appendNatStr);
+			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
+			pK->addApp(&getRef(), genPlugType<dText>(), appendText);
 		}
 	};
 
 	template<>
 	class cAnyOp::tOps<ptrFig>{
+	private:
+		static void assignPlaStr(const ptrFig & pFrom, void * pTo){
+			reinterpret_cast<dStr*>(pTo)->assign( pFrom.getConst()->name() );
+		}
+
+		static void assignNatStr(const ptrFig & pFrom, void * pTo){
+			reinterpret_cast<dNatStr*>(pTo)->t.assign( pFrom.getConst()->name() );
+		}
+
+		static void assignText(const ptrFig & pFrom, void * pTo){
+			reinterpret_cast<dText*>(pTo)->t.assign( pFrom.getConst()->name() );
+		}
+
 	public:
 		static void setup(tKat<ptrFig> * pK, cAnyOp * pUsing){
 			pK->addAss(&getRef(), genPlugType<ptrFig>(), fuAssignDefault);
+			pK->addAss(&getRef(), genPlugType<dStr>(), assignPlaStr);
+			pK->addAss(&getRef(), genPlugType<dNatStr>(), assignNatStr);
+			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
 		}
 	};
 }

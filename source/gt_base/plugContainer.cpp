@@ -21,16 +21,11 @@
 ////////////////////////////////////////////////////////////
 using namespace gt;
 cBase_plugContainer::cBase_plugContainer(){
-
 }
 
 cBase_plugContainer::~cBase_plugContainer(){
 }
 
-dPlugType
-cBase_plugContainer::getType() const{
-	return genPlugType<cBase_plugContainer>();
-}
 
 ////////////////////////////////////////////////////////////
 // Tests
@@ -41,8 +36,6 @@ GTUT_START(testPlugLinier, assignAppend){
 	tPlugLinearContainer<int, std::list> testList;
 	std::vector<int> a;
 	std::list<int> b;
-	cBase_plug &refArray = testArray;
-	cBase_plug &refList = testList;
 
 	a.push_back(1);
 	a.push_back(2);
@@ -53,16 +46,20 @@ GTUT_START(testPlugLinier, assignAppend){
 	b.push_back(6);
 
 	testArray = a;
-	refArray += refList;
-
-	refList = refArray;
-	testList += b;
+	testList = b;
+	cBase_plug &refPlug = testList;
+	testArray += refPlug;
 
 	int num=1;
 	for(tPlugLinearContainer<int, std::vector>::dItr itr = testArray.getItr(); itr.stillGood(); ++itr){
 		GTUT_ASRT(itr.get().get() == num, "Not the right number");
 		++num;
 	}
+
+	testArray = a;
+	refPlug = testArray;
+	testList = refPlug;
+	testList += b;
 
 	num=1;
 	for(tPlugLinearContainer<int, std::list>::dItr itr = testList.getItr(); itr.stillGood(); ++itr){
@@ -103,50 +100,78 @@ GTUT_START(testPlugLinier, saveLoad){
 
 }GTUT_END;
 
-GTUT_START(testPlugLinier, toSinglePlug){
+GTUT_START(testPlugLinier, single2list){
 	tPlug<int> A(0), magic(3), prime(7);
-	tPlugLinearContainer<int, std::vector> contain;
+	tPlugLinearContainer<int, std::list> contain;
 
+	contain += A;
 	contain += magic;
 	contain += prime;
-	A = contain;
-	GTUT_ASRT(A == magic, "Container didn't assign the right plug.");
-}GTUT_END;
-
-#include "figment.hpp"
-GTUT_START(testLead, appendingLead){
-	cContext fakeConx;
-	cPlugTag tag("some tag");
-	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
-	ptrLead testMe = gWorld.get()->makeLead(fakeCom.mID);
-	tPlugLinearContainer<int, std::vector> plug;
-
-	testMe->linkPlug(&plug, &tag);
-
-	std::vector<int> a;
-	std::list<int> b;
-	for(int i=1; i <= 10; ++i){
-		if(i < 6)
-			a.push_back(i);
-		else
-			b.push_back(i);
-	}
-
-	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
-
-	std::vector<int> c;
-	startLead(testMe, fakeConx.getSig());
-		GTUT_ASRT(testMe->appendFrom(a, &tag), "Can't append with 'a'");
-		GTUT_ASRT(testMe->appendFrom(b, &tag), "Can't append with 'b'");
-		GTUT_ASRT(testMe->appendTo(&c, &tag), "Can't append to 'c'");
-	stopLead(testMe);
-
-	for(int i=0; i < 10; ++i){
-		GTUT_ASRT(c.at(i)==i+1, "Didn't get the right return.");
-	}
+	tPlugLinearContainer<int, std::list>::dItr itr = contain.getItr();
+	GTUT_ASRT(itr.stillGood(), "List underflow");
+	GTUT_ASRT(itr.get() == A, "Didn't get A");
+	++itr;
+	GTUT_ASRT(itr.stillGood(), "List underflow");
+	GTUT_ASRT(itr.get() == magic, "Didn't get magic");
+	++itr;
+	GTUT_ASRT(itr.stillGood(), "List underflow");
+	GTUT_ASRT(itr.get() == prime, "Didn't get prime");
 
 }GTUT_END;
 
+//#include "figment.hpp"
+//GTUT_START(testLead, appendingLead){
+//	cContext fakeConx;
+//	cPlugTag tag("some tag");
+//	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
+//	ptrLead testMe = gWorld.get()->makeLead(fakeCom.mID);
+//	tPlugLinearContainer<int, std::vector> plug;
+//
+//	testMe->linkPlug(&plug, &tag);
+//
+//	std::vector<int> a;
+//	std::list<int> b;
+//	for(int i=1; i <= 10; ++i){
+//		if(i < 6)
+//			a.push_back(i);
+//		else
+//			b.push_back(i);
+//	}
+//
+//	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
+//
+//	std::vector<int> c;
+//	startLead(testMe, fakeConx.getSig());
+//		GTUT_ASRT(testMe->appendFrom(a, &tag), "Can't append with 'a'");
+//		GTUT_ASRT(testMe->appendFrom(b, &tag), "Can't append with 'b'");
+//		GTUT_ASRT(testMe->assignTo(&c, &tag), "Can't append to 'c'");
+//	stopLead(testMe);
+//
+//	for(int i=0; i < 10; ++i){
+//		GTUT_ASRT(c.at(i)==i+1, "Didn't get the right return.");
+//	}
+//
+//}GTUT_END;
 
+//GTUT_START(testPlugLinier, dllAddedAnyOp){
+//	std::cout << "hello A" << std::endl;
+//
+//	cContext dontcare;
+//	dRefWorld w = gWorld.get();
+//	tPlug<ptrFig> mesh = w->makeFig(makeHash("polymesh"));	//- Make sure it's drafted.
+//	tPlug<dText> text;
+//	tPlug<dText> result;
+//
+//	ptrLead makeMesh = w->makeLead("polymesh", "add to mesh");
+//	text.get().t = "1,1,1;2,2,2;3,3,3";
+//	makeMesh->linkPlug(&text, w->getPlugTag("polymesh", "vertexes"));
+//	mesh.get()->jack(makeMesh, &dontcare);
+//
+//	ptrLead getMesh = w->makeLead("polymesh", "get mesh");
+//	getMesh->linkPlug(&result, w->getPlugTag("polymesh", "vertexes"));
+//	mesh.get()->jack(getMesh, &dontcare);
+//	DBUG_LO(result.get().t);
+//
+//}GTUT_END;
 
 #endif

@@ -96,7 +96,7 @@ namespace gt{
 		cBase_plugContainer();
 		virtual ~cBase_plugContainer();
 
-		virtual dPlugType getType() const;	//!< Any type of linear container should see any other linear
+		virtual dPlugType getType() const =0;
 		virtual bool operator== (const cBase_plug &pD) const =0;
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, should not copy any linked lead info.
 		virtual cBase_plug& operator+= (const cBase_plug &pD) =0;
@@ -108,8 +108,6 @@ namespace gt{
 		virtual void add(const cBase_plug &addMe) =0;
 		virtual void clear() =0;
 
-		virtual cBase_plugContainer& operator= (const cBase_plugContainer &pCopyMe) =0;
-		virtual cBase_plugContainer& operator+= (const cBase_plugContainer &pCopyMe) =0;
 	};
 
 	//----------------------------------------------------------------------------------------------------------------

@@ -72,6 +72,7 @@ namespace gt{
 		void redirect(tDirPtr<T> const &pFig);	//!< Also changes reference count used by smart pointers.
 		void redirect(T* pNewContent);		//!< Allows you to redirect to a totally new memory location.
 		T* get() const;				//!< Return pointer to the content. Please don't delete it.
+		const T* getConst() const;
 		bool unique() const;		//!< Is this the last pointer?
 		bool valid() const;			//!< not null?
 
@@ -135,6 +136,13 @@ namespace gt{
 	template<typename T>
 	T*
 	tDirPtr<T>::get() const{
+		ASRT_NOTNULL(mDir);
+		return mDir->get();
+	}
+
+	template<typename T>
+	const T*
+	tDirPtr<T>::getConst() const{
 		ASRT_NOTNULL(mDir);
 		return mDir->get();
 	}

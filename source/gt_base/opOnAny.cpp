@@ -25,7 +25,6 @@
 using namespace gt;
 
 cAnyOp::cAnyOp(){
-
 }
 
 cAnyOp::~cAnyOp(){
@@ -38,6 +37,24 @@ cAnyOp::~cAnyOp(){
 	//		}
 	}catch(...){
 
+	}
+}
+
+void
+cAnyOp::addKat(iKat * pK){
+	(void)getRef().mKats.insert(
+		dMapKatTypes::value_type(pK->getType(), sKatOrig(pK))
+	);
+}
+
+void
+cAnyOp::setupAll(){
+	static bool beenSetup=false;
+	if(!beenSetup){
+		for(dMapKatTypes::iterator itrKat = getRef().mKats.begin(); itrKat != getRef().mKats.end(); ++itrKat)
+			itrKat->second.mKat->setup(this);
+
+		beenSetup=true;
 	}
 }
 
@@ -92,6 +109,7 @@ cAnyOp::demerge(){
 			}
 		}
 	}
+	mOrig.clear();
 }
 
 cAnyOp&
@@ -100,3 +118,37 @@ cAnyOp::getRef(){
 	return xOps;
 }
 
+//////////////////////////////////////////////////////////////
+#ifdef GTUT
+#include "figment.hpp"
+
+using namespace gt;
+
+GTUT_START(test_anyOp, basic){
+	tPlug<dStr> A("test");
+	tPlug<dText> B;
+	B = A;
+}GTUT_END;
+
+GTUT_START(test_anyOp, dllAdded){
+	cContext dontcare;
+
+	dRefWorld w = gWorld.get();
+
+	tPlug<ptrFig> mesh = w->makeFig(makeHash("polymesh"));	//- Make sure it's drafted.
+	tPlug<dText> text;
+	tPlug<dText> result;
+
+	ptrLead makeMesh = w->makeLead("polymesh", "add to mesh");
+	text.get().t = "1,1,1;2,2,2;3,3,3";
+	makeMesh->linkPlug(&text, w->getPlugTag("polymesh", "vertexes"));
+	mesh.get()->jack(makeMesh, &dontcare);
+
+	ptrLead getMesh = w->makeLead("polymesh", "get mesh");
+	getMesh->linkPlug(&result, w->getPlugTag("polymesh", "vertexes"));
+	mesh.get()->jack(getMesh, &dontcare);
+	DBUG_LO(result.get().t);
+
+}GTUT_END;
+
+#endif
