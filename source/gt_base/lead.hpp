@@ -27,6 +27,7 @@
 // Includes
 
 #include "litePlugs.hpp"
+#include "litePlugContainers.hpp"
 
 #ifdef GT_THREADS
 #	include "threadTools.hpp"
@@ -174,7 +175,7 @@ namespace gt{
 		const cPlugTag *tag
 	){
 		PROFILE;
-		tLitePlugLinearContainer<ELEM_T, CONT_T> tmp(output);
+		tLitePlugLinerContainer<ELEM_T, CONT_T> tmp(output);
 		return appendPlug(&tmp, tag);
 	}
 
@@ -186,7 +187,7 @@ namespace gt{
 		const cPlugTag *tag
 	){
 		PROFILE;
-		tLitePlugLinearContainer<ELEM_T, CONT_T> tmp(&input);
+		tLitePlugLinerContainer<ELEM_T, CONT_T> tmp(&input);
 		return plugAppends(&tmp, tag);
 	}
 

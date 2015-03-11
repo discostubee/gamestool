@@ -45,6 +45,8 @@ using namespace gt;
 cWorld::cWorld():
 	mKeepLooping(true), mBluesFromAddon(0), mFridge(NULL), mOps(cAnyOp::getRef()), mRefPrim(&primordial::gPrim)
 {
+	cAnyOp::getRef().setupAll();
+
 	//- Assume these figments will have their blueprints managed properly later.
 	mVillageBicycle = ptrFig(new cEmptyFig());
 	mRoot = ptrFig(new cUnicron());

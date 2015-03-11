@@ -28,58 +28,31 @@
 #define PLUGCONTAINER_HPP
 
 #include "plug.hpp"
+
 #include <vector>
 #include <list>
 #include <map>
 
 ///////////////////////////////////////////////////////////////////////////////////
-// class
+// Objects.
 namespace gt{
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Allows for easy specialisation.
-	template<
-		typename PLUG_T,
-		template<typename, typename> class CONT_T
-	>
-	class tGetterPlug{
-	public:
-		typedef CONT_T<
-			tPlug<PLUG_T>,
-			std::allocator<PLUG_T>
-		> dContainer;
-
-		static
-		cBase_plug*
-		get(dContainer &from, size_t idx) {DONT_USE_THIS; return NULL;}
-
-		static
-		const cBase_plug*
-		getConst(const dContainer &from, size_t idx) {DONT_USE_THIS; return NULL;}
-
-		static
-		tPlug<PLUG_T>&
-		getActual(dContainer &from, size_t idx) {DONT_USE_THIS; return tPlug<PLUG_T>(); }
-	};
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Works with things like vectors and linked lists which don't have any special uses like a map does.
 	template<
-		typename PLUG_T,
+		typename ELEM_T,
 		template<typename, typename> class CONT_T
 	>
 	class tPlugLinearContainer : public cBase_plugContainer{
 	public:
 
 		//--- override container
+		dPlugType getType() const;
 		size_t getCount() const;
 		cBase_plug* getPlug(size_t idx);
 		const cBase_plug* getPlugConst(size_t idx) const;
 		void add(const cBase_plug &addMe);
 		void clear();
-
-		cBase_plugContainer& operator= (const cBase_plugContainer &pCopyMe);
-		cBase_plugContainer& operator+= (const cBase_plugContainer &pCopyMe);
 
 		//--- override base plug
 		void assignTo(void *pTo, dPlugType pType) const;
@@ -87,9 +60,9 @@ namespace gt{
 		void save(cByteBuffer* pSaveHere);
 		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL);
 
-		bool operator== (const cBase_plug &pD) const;
-		cBase_plug& operator= (const cBase_plug &pD);
-		cBase_plug& operator+= (const cBase_plug &pD);
+		bool operator== (const cBase_plug &pCompare) const;
+		cBase_plug& operator= (const cBase_plug &pCopyMe);
+		cBase_plug& operator+= (const cBase_plug &pCopyMe);
 
 #		ifdef GT_THREADS
 			virtual void updateStart();
@@ -98,29 +71,30 @@ namespace gt{
 
 		//--- new
 		typedef CONT_T<
-			tPlug<PLUG_T>,
-			std::allocator<PLUG_T>
+			tPlug<ELEM_T>,
+			std::allocator< tPlug<ELEM_T> >
 		> dContainer;	//!< The default template parameter doesn't appear to work when using it for template-template parameters.
 
 		typedef CONT_T<
-			PLUG_T,
-			std::allocator<PLUG_T>
+			ELEM_T,
+			std::allocator<ELEM_T>
 		> dBaseContainer;
 
 		typedef tCoolItr< dContainer > dItr;
+		typedef tCoolItr_const< dContainer > dConstItr;
 
 		tPlugLinearContainer();
 		virtual ~tPlugLinearContainer();
 
-		tPlug<PLUG_T>& getActual(size_t idx);
 		dItr getItr();
+		dConstItr getConstItr() const;
 
-									tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const tPlugLinearContainer<PLUG_T, CONT_T> &pCopyMe);
-									tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const tPlugLinearContainer<PLUG_T, CONT_T> &pCopyMe);
-									tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const dBaseContainer &pCopyMe);
-									tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const dBaseContainer &pCopyMe);
-		template<typename OTHER>	tPlugLinearContainer<PLUG_T, CONT_T>& operator= (const OTHER &pCopyMe);
-		template<typename OTHER>	tPlugLinearContainer<PLUG_T, CONT_T>& operator+= (const OTHER &pCopyMe);
+									tPlugLinearContainer<ELEM_T, CONT_T>& operator= (const tPlugLinearContainer<ELEM_T, CONT_T> &pCopyMe);
+									tPlugLinearContainer<ELEM_T, CONT_T>& operator+= (const tPlugLinearContainer<ELEM_T, CONT_T> &pCopyMe);
+									tPlugLinearContainer<ELEM_T, CONT_T>& operator= (const dBaseContainer &pCopyMe);
+									tPlugLinearContainer<ELEM_T, CONT_T>& operator+= (const dBaseContainer &pCopyMe);
+		template<typename OTHER>	tPlugLinearContainer<ELEM_T, CONT_T>& operator= (const OTHER &pCopyMe);
+		template<typename OTHER>	tPlugLinearContainer<ELEM_T, CONT_T>& operator+= (const OTHER &pCopyMe);
 
 	protected:
 
@@ -141,141 +115,210 @@ namespace gt{
 	private:
 		dContainer mContainer;	//!<
 
-		void internalAssign(const cBase_plug &pD, bool pClear, dConSig aCon = SL_NO_ENTRY);
-		void internalAssignTo(void *pTo, dPlugType pType, bool pClear, dConSig aCon = SL_NO_ENTRY) const;
+	};
+
+	template<
+		typename ELEM_T,
+		template<typename, typename> class CONT_T
+	>
+	class tCommonContainerOps{
+	public:
+		typedef typename tPlugLinearContainer<ELEM_T, CONT_T>::dContainer dMyType;
+
+		static void ass(const dMyType & pFrom, void *pTo){
+			reinterpret_cast< dMyType* >(pTo)->assign(pFrom.begin(), pFrom.end());
+		}
+
+		static void app(const dMyType & pFrom, void *pTo){
+			reinterpret_cast< dMyType* >(pTo)->assign(pFrom.begin(), pFrom.end());
+		}
+
+		static void appSingleElem(const ELEM_T & pFrom, void *pTo){
+			reinterpret_cast<dMyType*>(pTo)->push_back( tLitePlugConst<ELEM_T>(&pFrom) );
+		}
+
+		static void appSinglePlug(const tPlug<ELEM_T> & pFrom, void *pTo){
+			reinterpret_cast<dMyType*>(pTo)->push_back(pFrom);
+		}
+
+		template< template<typename, typename> class OTHER_T >
+		class tOtherContainer{
+		public:
+			typedef typename tPlugLinearContainer<ELEM_T, OTHER_T>::dContainer dOtherType;
+
+			static void ass(const dMyType & pFrom, void *pTo){
+				reinterpret_cast< dOtherType* >(pTo)->assign(pFrom.begin(), pFrom.end());
+			}
+
+			static void app(const dMyType & pFrom, void *pTo){
+				dOtherType * ref =reinterpret_cast< dOtherType* >(pTo);
+				ref->insert(ref->end(), pFrom.begin(), pFrom.end());
+			}
+		};
 	};
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Templates
+// Template specialisations.
+namespace gt{
+
+	template< typename ELEM_T >
+	class cAnyOp::tOps< std::vector< tPlug<ELEM_T> > >{
+	public:
+		static void setup(tKat< typename tCommonContainerOps<ELEM_T, std::vector>::dMyType > * pK, cAnyOp * pUsing){
+			typedef tCommonContainerOps<ELEM_T, std::vector> myOps;
+			typedef typename tCommonContainerOps<ELEM_T, std::vector>::template tOtherContainer<std::list> listOps;
+
+			pK->addAss(&getRef(), genPlugType< typename myOps::dMyType >(), myOps::ass);
+			pK->addApp(&getRef(), genPlugType< typename myOps::dMyType >(), myOps::app);
+			pK->addAss(&getRef(), genPlugType< typename listOps::dOtherType >(), listOps::ass);
+			pK->addApp(&getRef(), genPlugType< typename listOps::dOtherType >(), listOps::app);
+
+			cAnyOp::tKat<ELEM_T>::xKat.addApp(
+				&getRef(),
+				genPlugType< typename myOps::dMyType >(),
+				myOps::appSingleElem
+			);
+			cAnyOp::tKat< tPlug<ELEM_T> >::xKat.addApp(
+				&getRef(),
+				genPlugType< std::vector< tPlug<ELEM_T> > >(),
+				myOps::appSinglePlug
+			);
+		}
+	};
+
+	template< typename ELEM_T >
+	class cAnyOp::tOps< std::list< tPlug<ELEM_T> > >{
+	public:
+		static void setup(tKat< typename tCommonContainerOps<ELEM_T, std::list>::dMyType > * pK, cAnyOp * pUsing){
+			typedef tCommonContainerOps<ELEM_T, std::list> myOps;
+			typedef typename tCommonContainerOps<ELEM_T, std::list>::template tOtherContainer<std::vector> vecOps;
+
+			pK->addAss(&getRef(), genPlugType< typename myOps::dMyType >(), myOps::ass);
+			pK->addApp(&getRef(), genPlugType< typename myOps::dMyType >(), myOps::app);
+			pK->addAss(&getRef(), genPlugType< typename vecOps::dOtherType >(), vecOps::ass);
+			pK->addApp(&getRef(), genPlugType< typename vecOps::dOtherType >(), vecOps::app);
+
+			cAnyOp::tKat<ELEM_T>::xKat.addApp(
+				&getRef(),
+				genPlugType< typename myOps::dMyType >(),
+				myOps::appSingleElem
+			);
+			cAnyOp::tKat< tPlug<ELEM_T> >::xKat.addApp(
+				&getRef(),
+				genPlugType< std::list< tPlug<ELEM_T> > >(),
+				myOps::appSinglePlug
+			);
+		}
+	};
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// Template definitions.
 namespace gt{
 
 
 	//-----------------------------------------------------------------------------------------------
 #	ifdef GT_THREADS
-		template< typename PLUG_T, template<typename, typename> class CONT_T >
-		const size_t tPlugLinearContainer<PLUG_T, CONT_T>::NO_CLEAR = 0;
+		template< typename ELEM_T, template<typename, typename> class CONT_T >
+		const size_t tPlugLinearContainer<ELEM_T, CONT_T>::NO_CLEAR = 0;
 #	endif
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlugLinearContainer<PLUG_T, CONT_T>::tPlugLinearContainer(){
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<ELEM_T, CONT_T>::tPlugLinearContainer(){
 #		ifdef GT_THREADS
 			mClearTo = NO_CLEAR;
 #		endif
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlugLinearContainer<PLUG_T, CONT_T>::~tPlugLinearContainer(){
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<ELEM_T, CONT_T>::~tPlugLinearContainer(){
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlug<PLUG_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::getActual(size_t idx){
-		return tGetterPlug<PLUG_T, CONT_T>::getActual(mContainer, idx);
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	typename tPlugLinearContainer<PLUG_T, CONT_T>::dItr
-	tPlugLinearContainer<PLUG_T, CONT_T>::getItr(){
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	typename tPlugLinearContainer<ELEM_T, CONT_T>::dItr
+	tPlugLinearContainer<ELEM_T, CONT_T>::getItr(){
 		return dItr(&mContainer);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const tPlugLinearContainer<PLUG_T, CONT_T> &pCopyMe){
-		ASRT_NOTSELF(&pCopyMe);
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	typename tPlugLinearContainer<ELEM_T, CONT_T>::dConstItr
+	tPlugLinearContainer<ELEM_T, CONT_T>::getConstItr() const{
+		return dConstItr(&mContainer);
+	}
 
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<ELEM_T, CONT_T>&
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator= (const tPlugLinearContainer<ELEM_T, CONT_T> &pCopyMe){
+		if(&pCopyMe != this)
+			cAnyOp::assign(pCopyMe.mContainer, &mContainer, getType());
+		return *this;
+	}
+
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<ELEM_T, CONT_T>&
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator+= (
+		const tPlugLinearContainer<ELEM_T, CONT_T> &pCopyMe
+	){
+		if(&pCopyMe != this)
+			cAnyOp::append(pCopyMe.mContainer, &mContainer, getType());
+		return *this;
+	}
+
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<ELEM_T, CONT_T>&
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator= (
+		const tPlugLinearContainer<ELEM_T, CONT_T>::dBaseContainer &pCopyMe
+	){
 		mContainer.clear();
 		return operator+=(pCopyMe);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const tPlugLinearContainer<PLUG_T, CONT_T> &pCopyMe){
-		ASRT_NOTSELF(&pCopyMe);
-
-		for(typename dContainer::const_iterator itr = pCopyMe.mContainer.begin(); itr != pCopyMe.mContainer.end();  ++itr)
-			mContainer.push_back(*itr);
-
-		return *this;
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (
-		const tPlugLinearContainer<PLUG_T, CONT_T>::dBaseContainer &pCopyMe
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<ELEM_T, CONT_T>&
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator+= (
+		const tPlugLinearContainer<ELEM_T, CONT_T>::dBaseContainer &pCopyMe
 	){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
-		mContainer.clear();
-		return tPlugLinearContainer<PLUG_T, CONT_T>::operator+=(pCopyMe);
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (
-		const tPlugLinearContainer<PLUG_T, CONT_T>::dBaseContainer &pCopyMe
-	){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
-		for(typename dBaseContainer::const_iterator itr = pCopyMe.begin(); itr != pCopyMe.end();  ++itr)
-			mContainer.push_back(tPlug<PLUG_T>(*itr));
+		for(typename dBaseContainer::const_iterator itr = pCopyMe.begin(); itr != pCopyMe.end(); ++itr)
+			mContainer.push_back( tPlug<ELEM_T>(*itr) );
 
 		return *this;
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	template<typename OTHER>
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const OTHER &pCopyMe){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-			mClearTo = mContainer.size();
-#		else
-			mContainer.clear();
-#		endif
-
-		mContainer.push_back(tPlug<PLUG_T>(pCopyMe));
+	tPlugLinearContainer<ELEM_T, CONT_T>&
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator= (const OTHER &pCopyMe){
+		cAnyOp::assign(pCopyMe, &mContainer, getType());
 		return *this;
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	template<typename OTHER>
-	tPlugLinearContainer<PLUG_T, CONT_T>&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const OTHER &pCopyMe){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
-		mContainer.push_back(tPlug<PLUG_T>(pCopyMe));
+	tPlugLinearContainer<ELEM_T, CONT_T>&
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator+= (const OTHER &pCopyMe){
+		cAnyOp::append(pCopyMe, &mContainer, getType());
 		return *this;
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::assignTo(void *aTo, dPlugType aType) const{
-		internalAssignTo(aTo, aType, true);
+	tPlugLinearContainer<ELEM_T, CONT_T>::assignTo(void *pTo, dPlugType pType) const{
+		cAnyOp::assign(mContainer, pTo, pType);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::appendTo(void *aTo, dPlugType aType) const{
-		internalAssignTo(aTo, aType, false);
+	tPlugLinearContainer<ELEM_T, CONT_T>::appendTo(void *pTo, dPlugType pType) const{
+		cAnyOp::append(mContainer, pTo, pType);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::save(cByteBuffer* pSaveHere){
+	tPlugLinearContainer<ELEM_T, CONT_T>::save(cByteBuffer* pSaveHere){
 		PROFILE;
 #		ifdef GT_THREADS
 			dLock lock(mGuard);
@@ -287,9 +330,9 @@ namespace gt{
 			itr->save(pSaveHere);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
+	tPlugLinearContainer<ELEM_T, CONT_T>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
 		PROFILE;
 #		ifdef GT_THREADS
 			dLock lock(mGuard);
@@ -308,31 +351,37 @@ namespace gt{
 		}
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	bool
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator== (const cBase_plug &pD) const{
-		return (getType() == pD.getType());
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator== (const cBase_plug &pCompare) const{
+		return (getType() == pCompare.getType());
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	cBase_plug&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const cBase_plug &pD){
-		NOTSELF(&pD);
-		internalAssign(pD, true);
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator= (const cBase_plug &pCopyMe){
+		if(&pCopyMe != this)
+			pCopyMe.assignTo(&mContainer, getType());
 		return *this;
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	cBase_plug&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const cBase_plug &pD){
-		NOTSELF(&pD);
-		internalAssign(pD, false);
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator+= (const cBase_plug &pCopyMe){
+		if(&pCopyMe != this)
+			pCopyMe.appendTo(&mContainer, getType());
 		return *this;
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	dPlugType
+	tPlugLinearContainer<ELEM_T, CONT_T>::getType() const{
+		return genPlugType< dContainer >();
+	}
+
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	size_t
-	tPlugLinearContainer<PLUG_T, CONT_T>::getCount() const{
+	tPlugLinearContainer<ELEM_T, CONT_T>::getCount() const{
 #		ifdef GT_THREADS
 			if(mClearTo != NO_CLEAR)
 				return mContainer.size() - mClearTo;
@@ -341,35 +390,35 @@ namespace gt{
 		return mContainer.size();
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	cBase_plug*
-	tPlugLinearContainer<PLUG_T, CONT_T>::getPlug(size_t idx){
+	tPlugLinearContainer<ELEM_T, CONT_T>::getPlug(size_t idx){
 #		ifdef GT_THREADS
 			if(mClearTo != NO_CLEAR)
 				idx += mClearTo;
 #		endif
-		return tGetterPlug<PLUG_T, CONT_T>::get(mContainer, idx);
+		return tGetterPlug< tPlug<ELEM_T>, CONT_T>::get(mContainer, idx);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	const cBase_plug*
-	tPlugLinearContainer<PLUG_T, CONT_T>::getPlugConst(size_t idx) const{
+	tPlugLinearContainer<ELEM_T, CONT_T>::getPlugConst(size_t idx) const{
 #		ifdef GT_THREADS
 			if(mClearTo != NO_CLEAR)
 				idx += mClearTo;
 #		endif
-		return tGetterPlug<PLUG_T, CONT_T>::getConst(mContainer, idx);
+		return tGetterPlug< tPlug<ELEM_T>, CONT_T>::getConst(mContainer, idx);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::add(const cBase_plug &addMe){
-		mContainer.push_back(tPlug<PLUG_T>(addMe));
+	tPlugLinearContainer<ELEM_T, CONT_T>::add(const cBase_plug &addMe){
+		mContainer.push_back(tPlug<ELEM_T>(addMe));
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::clear(){
+	tPlugLinearContainer<ELEM_T, CONT_T>::clear(){
 #		ifdef GT_THREADS
 			mClearTo = mContainer.size();
 #		else
@@ -377,81 +426,12 @@ namespace gt{
 #		endif
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	cBase_plugContainer&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator= (const cBase_plugContainer &pCopyMe){
-		NOTSELF(&pCopyMe);
-		internalAssign(pCopyMe, true);
-		return *this;
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	cBase_plugContainer&
-	tPlugLinearContainer<PLUG_T, CONT_T>::operator+= (const cBase_plugContainer &pCopyMe){
-		NOTSELF(&pCopyMe);
-		internalAssign(pCopyMe, false);
-		return *this;
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::internalAssign(const cBase_plug &pD, bool pClear, dConSig aCon){
-		PROFILE;
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
-		if(pClear)
-			clear();
-
-		if(pD.getType() == getType()){
-			const cBase_plugContainer *tmp = dynamic_cast<const cBase_plugContainer*>(&pD);
-			for(size_t i=0; i < tmp->getCount(); ++i)
-				mContainer.push_back(*tmp->getPlugConst(i));
-
-		}else{
-			mContainer.push_back(pD);
-		}
-	}
-
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
-	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::internalAssignTo(void *pTo, dPlugType pType, bool pClear, dConSig aCon) const{
-		PROFILE;
-
-		if(mContainer.empty())
-			return;
-
-		if(pType == getType()){
-			cBase_plugContainer *tmp = static_cast<cBase_plugContainer*>(pTo);
-
-			if(pClear)
-				tmp->clear();
-
-#			ifdef GT_THREADS
-				size_t begin =0;
-#			endif
-
-			for(typename dContainer::const_iterator itr = mContainer.begin(); itr != mContainer.end(); ++itr){
-#				ifdef GT_THREADS
-					if(mClearTo != NO_CLEAR && begin < mClearTo)
-						continue;
-					else
-						++begin;
-#				endif
-				tmp->add(*itr);
-			}
-
-		}else{
-			mContainer.front().assignTo(pTo, pType);
-		}
-	}
 
 #ifdef GT_THREADS
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::updateStart(){
+	tPlugLinearContainer<ELEM_T, CONT_T>::updateStart(){
 		PROFILE;
 		dLock lock(mGuard);
 		if(mClearTo != NO_CLEAR){
@@ -469,118 +449,44 @@ namespace gt{
 			itr->updateStart();
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::updateFinish(){
+	tPlugLinearContainer<ELEM_T, CONT_T>::updateFinish(){
 		PROFILE;
 		dLock lock(mGuard);
 		for(typename dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
 			itr->updateFinish();
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
-		internalAssignTo(pWriteTo, pWriteTo->getType(), true, aCon);
+	tPlugLinearContainer<ELEM_T, CONT_T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
+		internalAssignTo(pWriteTo, pWriteTo->getType(), aCon);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
-		internalAssign(*pReadFrom, true, aCon);
+	tPlugLinearContainer<ELEM_T, CONT_T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
+		internalAssign(*pReadFrom, aCon);
 	}
 
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
-		internalAssignTo(pWriteTo, pWriteTo->getType(), false, pSig);
+	tPlugLinearContainer<ELEM_T, CONT_T>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
+		internalAssignTo(pWriteTo, pWriteTo->getType(), pSig);
 	}
 
-	template< typename PLUG_T, template<typename, typename> class CONT_T >
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
-	tPlugLinearContainer<PLUG_T, CONT_T>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
-		internalAssign(*pReadFrom, false, pSig);
+	tPlugLinearContainer<ELEM_T, CONT_T>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
+		internalAssign(*pReadFrom, pSig);
 	}
 
 #endif
 
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-// specialisations.
-namespace gt{
-
-	template<typename PLUG_T>
-	class tGetterPlug<PLUG_T, std::vector>{
-	public:
-		typedef std::vector<
-			tPlug<PLUG_T>,
-			std::allocator<PLUG_T>
-		> dContainer;
-
-		static
-		cBase_plug*
-		get(dContainer &from, size_t idx){
-			ASRT_INRANGE(from, idx);
-			return &from[idx];
-		}
-
-		static
-		const cBase_plug*
-		getConst(const dContainer &from, size_t idx){
-			ASRT_INRANGE(from, idx);
-			return &from[idx];
-		}
-
-		static
-		tPlug<PLUG_T>&
-		getActual(dContainer &from, size_t idx){
-			ASRT_INRANGE(from, idx);
-			return from[idx];
-		}
-	};
-
-	template<typename PLUG_T>
-	class tGetterPlug<PLUG_T, std::list>{
-	public:
-		typedef std::list<
-			tPlug<PLUG_T>,
-			std::allocator<PLUG_T>
-		> dContainer;
-
-		static
-		cBase_plug*
-		get(dContainer &from, size_t idx){
-			ASRT_INRANGE(from, idx);
-			typename dContainer::iterator itr( from.begin() );
-			for(size_t i=0; i < idx; ++i)
-				++itr;
-			return &(*itr);
-		}
-
-		static
-		const cBase_plug*
-		getConst(const dContainer &from, size_t idx){
-			ASRT_INRANGE(from, idx);
-			typename dContainer::const_iterator itr( from.begin() );
-			for(size_t i=0; i < idx; ++i)
-				++itr;
-			return &(*itr);
-		}
-
-		static
-		tPlug<PLUG_T>&
-		getActual(dContainer &from, size_t idx){
-			ASRT_INRANGE(from, idx);
-			typename dContainer::iterator itr( from.begin() );
-			for(size_t i=0; i < idx; ++i)
-				++itr;
-			return (*itr);
-		}
-	};
-
-}
 
 
 #endif

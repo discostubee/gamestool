@@ -15,6 +15,8 @@ namespace gt{
 
 	//----------------------------------------------------------------------------------------------------------------
 	struct sVertex{
+		enum eVert { eX, eY, eZ, eNone };
+
 		dUnitVDis x, y, z;
 
 		sVertex() : x(0.0), y(0.0), z(0.0) {}
@@ -62,6 +64,7 @@ namespace gt{
 
 		sMesh& operator+= (const sMesh &aCopyMe);
 	};
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -145,6 +148,97 @@ namespace gt{
 			get().mFresh = true;
 		}
 	};
+
+	template<>
+	class cAnyOp::tOps< tPlugLinearContainer<sVertex, std::vector>::dContainer >{
+	public:
+		typedef tPlugLinearContainer<sVertex, std::vector>::dContainer dVertPlugs;
+
+	private:
+
+		static void assignText(const dVertPlugs & pFrom, void * pTo){
+			reinterpret_cast<dText*>(pTo)->t.clear();
+			appendText(pFrom, pTo);
+		}
+
+		static void appendText(const dVertPlugs & pFrom, void * pTo){
+			std::stringstream ss;
+			for(dVertPlugs::const_iterator vert = pFrom.begin(); vert != pFrom.end(); ++vert){
+				ss << vert->getConst().x
+					<< ", " << vert->getConst().y
+					<< ", " << vert->getConst().z
+					<< ";" << std::endl;
+			}
+
+			reinterpret_cast<dText*>(pTo)->t += ss.str();
+		}
+
+		static void appendFromText(const dText & pFrom, void * pTo){
+			std::string token;
+			std::istringstream streamAll(pFrom.t);
+			dVertPlugs* verts = reinterpret_cast< dVertPlugs* >(pTo);
+			sVertex tmpV;
+			sVertex::eVert e;
+
+			while(std::getline(streamAll, token, ';')){
+				e = sVertex::eX;
+				std::istringstream streamV(token);
+				while(e != sVertex::eNone){
+					if(std::getline(
+						streamV,
+						token,
+						','
+					)){
+						switch(e){
+						case sVertex::eX:
+							tmpV.x = ::atof(token.c_str());
+							e = sVertex::eY;
+							break;
+						case sVertex::eY:
+							tmpV.y = ::atof(token.c_str());
+							e = sVertex::eZ;
+							break;
+						case sVertex::eZ:
+							tmpV.z = ::atof(token.c_str());
+							e = sVertex::eNone;
+							break;
+						default:
+							break;
+						}
+					}else{
+						break;
+					}
+				}
+				verts->push_back(tmpV);
+			}
+		}
+
+		static void assignFromText(const dText & pFrom, void * pTo){
+			dVertPlugs* verts = reinterpret_cast< dVertPlugs* >(pTo);
+			verts->clear();
+			appendFromText(pFrom, pTo);
+		}
+
+	public:
+
+		static void setup(tKat< dVertPlugs > * pK, cAnyOp * pUsing){
+			std::cout << "hello" << std::endl; //!!!
+			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
+			pK->addApp(&getRef(), genPlugType<dText>(), appendText);
+			cAnyOp::tKat<dText>::xKat.addApp(
+				&getRef(),
+				genPlugType<dVertPlugs>(),
+				appendFromText
+			);
+			cAnyOp::tKat<dText>::xKat.addAss(
+				&getRef(),
+				genPlugType<dVertPlugs>(),
+				assignFromText
+			);
+		}
+	};
+
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +267,7 @@ namespace gt{
 		static const cCommand::dUID	xMeasure;	//!< Attempts to set a bounding box first, as a measurement of the mesh, and a sphere second.
 		static const cCommand::dUID	xTexturize;	//!< Apply texture mapping.
 
-		GT_IDENTIFY("poly mesh");
+		GT_IDENTIFY("polymesh");
 		GT_EXTENDS(cFigment);
 		GT_VERSION(1);
 		virtual dNameHash hash() const { return getHash<cPolyMesh>(); }

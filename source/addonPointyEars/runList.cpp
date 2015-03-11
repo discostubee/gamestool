@@ -38,8 +38,11 @@ void
 cRunList::work(cContext* pCon){
 	PROFILE;
 	ASRT_NOTNULL(pCon);
-	for(size_t i=0; i < mList.getCount(); ++i)
-		mList.getActual(i).get()->run(pCon);
+	dList::dContainer::value_type vt;
+	for(dList::dItr itr = mList.getItr(); itr.stillGood(); ++itr){
+		vt = *itr;
+		vt.get()->run(pCon);
+	}
 }
 
 cFigment::dMigrationPattern
@@ -59,8 +62,11 @@ void
 cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 	PROFILE;
 	ASRT_NOTNULL(pOutLinks);
-	for(size_t i=0; i < mList.getCount(); ++i)
-		pOutLinks->push_back(mList.getActual(i).get());
+	ptrFig value;
+	for(dList::dItr itr = mList.getItr(); itr.stillGood(); ++itr){
+		value = *itr;
+		pOutLinks->push_back(value);
+	}
 }
 
 void

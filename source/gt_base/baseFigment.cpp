@@ -91,3 +91,18 @@ tDirector<iFigment> *ptrFig::getDir(){
 	return mDir;
 }
 
+////////////////////////////////////////////////////////////
+
+#ifdef GTUT
+#	include "unitTestFigments.hpp"
+
+GTUT_START(test_plugFig, test_name){
+	tPlug<ptrFig> testMe = gWorld.get()->makeFig("figment");
+	tPlug<dText> printMe;
+
+	printMe = testMe;
+	GTUT_ASRT( strcmp(testMe.get()->name(), printMe.get().t.c_str()) == 0, "Didn't copy figment name." );
+
+}GTUT_END;
+
+#endif

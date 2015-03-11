@@ -154,6 +154,23 @@ namespace gt{
 			}
 		};
 	}
+
+
+	template<typename A>
+	class cAnyOp::tOps< t2DVec<A> >{
+	private:
+		static void assignText(const t2DVec< A > & pFrom, void * pTo){
+			std::stringstream ss;
+			ss << pFrom.scaler << ":" << pFrom.rot;
+			reinterpret_cast<dText*>(pTo)->t = ss.str();
+		}
+
+	public:
+		static void setup(tKat< t2DVec<A> > * pK, cAnyOp * pUsing){
+			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
+		}
+	};
+
 }
 
 #endif

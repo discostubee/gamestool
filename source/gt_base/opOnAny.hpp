@@ -11,10 +11,10 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR ELEM_T PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  You should have received ELEM_T copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *********************************************************************************************************
  *
@@ -51,14 +51,14 @@ namespace gt{
 	///////////////////////////////////////////////////////////////////////////////////
 
 	//-------------------------------------------------------------------------------------
-	//!\breif	Any-op allows you to expand, at runtime, the ways in which a data type can
+	//!\breif	Any-op allows you to expand, at runtime, the ways in which ELEM_T data type can
 	//!			be assigned or appended. This is perfect for dynamic libraries which can
 	//!			contain new types.
 	class cAnyOp{
 	public:
 
 		//--------------------------------------------------------------------------------
-		//!\brief	The catalogue of operations for a given type. Finish him! But serious,
+		//!\brief	The catalogue of operations for ELEM_T given type. Finish him! But serious,
 		//!			the K is to help differentiate it from the typical shorthand for
 		//!			concatenate.
 		//!			The catalogue interface is here to let any-op add and remove them as
@@ -67,12 +67,13 @@ namespace gt{
 		//!			treated that way (even thought at the end of the day, both are memory
 		//!			addresses). You can cast function pointers which is about as smelly
 		//!			as casting void*. Everyone does either/or (win32, glib), so let's not
-		//!			whine too hard. Here we're going with a hybrid to try and keep as much
+		//!			whine too hard. Here we're going with ELEM_T hybrid to try and keep as much
 		//!			information about the parameters as possible.
 		class iKat{
 		public:
 			virtual ~iKat(){}
 
+			virtual void setup(cAnyOp * ops) =0;
 			virtual dPlugType getType() =0;
 			virtual void link(cAnyOp * pFrom, iKat * pOps) =0;
 			virtual void unlink(cAnyOp * pFrom) =0;	//!< Remove any operations that came from this Any-op collection.
@@ -80,15 +81,15 @@ namespace gt{
 
 		//--------------------------------------------------------------------------------
 		//!\brief	By using this template class and calling these functions statically,
-		//!			we ensure a kat exists for every type we use.
+		//!			we ensure ELEM_T kat exists for every type we use.
 		//!\note	Public type because the setupKat function below must be pubic.
-		template<typename A>
+		template<typename ELEM_T>
 		class tKat : public iKat{
 		public:
 
 			//--- types
-			typedef void (*fuAssign)(const A & pFrom, void * pTo);
-			typedef void (*fuAppend)(const A & pFrom, void * pTo);
+			typedef void (*fuAssign)(const ELEM_T & pFrom, void * pTo);
+			typedef void (*fuAppend)(const ELEM_T & pFrom, void * pTo);
 			typedef std::map<dPlugType, fuAssign> dMapAssigns;
 			typedef std::map<dPlugType, fuAppend> dMapAppends;
 
@@ -97,6 +98,7 @@ namespace gt{
 			bool addApp(cAnyOp * pFrom, dPlugType pFor, fuAppend pFu);	//!< True if this append operation was added. False if it already that that operation.
 
 			//---
+			void setup(cAnyOp * ops);
 			dPlugType getType();
 			void link(cAnyOp * pFrom, iKat * pOps);
 			void unlink(cAnyOp * pFrom);	//!< Not an error if it doesn't have that Any-op linked.
@@ -104,6 +106,9 @@ namespace gt{
 			//---
 			static dMapAssigns & assign();
 			static dMapAppends & append();
+
+			//---
+			static tKat xKat;	//!< If you create ELEM_T specialisation of tOps, this should cause the compiler to create an instance of ELEM_T catalogue for this type. Public, so that other types can access it.
 
 		protected:
 			~tKat();
@@ -124,40 +129,38 @@ namespace gt{
 			dOp2Link mLinks;	//!< What Any-ops are linked and where those functions came from them.
 
 			tKat();	//!< Only the static should be created per heap.
-
-			static tKat xKat;	//!< If your code uses any of the public functions, this should cause the compiler to create an instance of a catalogue for this type.
 		};
 
 		//--------------------------------------------------------------------------------
-		//!\breif	It's much easier to specialise a class than a function which would
-		//!			need a declaration in the header and a definition in the source. It
+		//!\breif	It's much easier to specialise ELEM_T class than ELEM_T function which would
+		//!			need ELEM_T declaration in the header and ELEM_T definition in the source. It
 		//!			also encourages modularity for the functions you will want to add.
 		//!\note	http://www.gotw.ca/publications/mill17.htm
-		template<typename A>
+		template<typename ELEM_T>
 		class tOps{
 		public:
-			static void setup(tKat<A> * pK, cAnyOp * pUsing);
+			static void setup(tKat<ELEM_T> * pK, cAnyOp * pUsing);
 		};
 
 		//---
-		template<typename A>
-		static void setupKat(tKat<A> * pK);	//!< Public so that tKat can make use of it.
+		static void addKat(iKat * pK);	//!< Makes it easy to modularise the kats.
 
-		template<typename A>
-		static void assign(const A & pFrom, void * pTo, dPlugType pType);
+		template<typename ELEM_T>
+		static void assign(const ELEM_T & pFrom, void * pTo, dPlugType pType);
 
-		template<typename A>
-		static void append(const A & pFrom, void * pTo, dPlugType pType);
+		template<typename ELEM_T>
+		static void append(const ELEM_T & pFrom, void * pTo, dPlugType pType);
 
-		template<typename A>
-		static void fuAssignDefault(const A & pFrom, void * pTo);
+		template<typename ELEM_T>
+		static void fuAssignDefault(const ELEM_T & pFrom, void * pTo);
 
-		template<typename A>
-		static void fuAppendDefault(const A & pFrom, void * pTo);
+		template<typename ELEM_T>
+		static void fuAppendDefault(const ELEM_T & pFrom, void * pTo);
 
 	protected:
 
 		//---
+		void setupAll();
 		void merge(cAnyOp * pOther);	//!< Mutual merge. Remembers the other Any-op, so when you call clear the 2 can be unlinked again.
 		void demerge();	//!< Unlinks all other Any-ops.
 
@@ -196,12 +199,13 @@ namespace gt{
 namespace gt{
 
 	//--------------------------------------------------------------------------------
-	template<typename A>
-	cAnyOp::tKat<A> cAnyOp::tKat<A>::xKat;
+	template<typename ELEM_T>
+	cAnyOp::tKat<ELEM_T> cAnyOp::tKat<ELEM_T>::xKat;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 namespace gt{
+
 
 	//----------------------------------------------------------------------------------------------------------------
 	template<typename PLUG_TYPE>
@@ -217,44 +221,71 @@ namespace gt{
 		return typeID;
 	}
 
-	template<typename A>
-	cAnyOp::tKat<A>::tKat()
-	{
-		cAnyOp::setupKat<A>(this);
+	//----------------------------------------------------------------------------------------------------------------
+	template<typename ELEM_T>
+	cAnyOp::tKat<ELEM_T>::tKat(){
+		cAnyOp::addKat(this);
 	}
 
-	template<typename A>
-	cAnyOp::tKat<A>::~tKat(){
+	template<typename ELEM_T>
+	cAnyOp::tKat<ELEM_T>::~tKat(){
 	}
 
-	template<typename A>
-	typename cAnyOp::tKat<A>::dMapAssigns &
-	cAnyOp::tKat<A>::assign(){
+	template<typename ELEM_T>
+	typename cAnyOp::tKat<ELEM_T>::dMapAssigns &
+	cAnyOp::tKat<ELEM_T>::assign(){
 		return xKat.mAsss;
 	}
 
-	template<typename A>
-	typename cAnyOp::tKat<A>::dMapAppends &
-	cAnyOp::tKat<A>::append(){
+	template<typename ELEM_T>
+	typename cAnyOp::tKat<ELEM_T>::dMapAppends &
+	cAnyOp::tKat<ELEM_T>::append(){
 		return xKat.mApps;
 	}
 
-	template<typename A>
+	template<typename ELEM_T>
+	void
+	cAnyOp::tKat<ELEM_T>::setup(cAnyOp * ops){
+		tOps<ELEM_T>::setup(this, ops);
+	}
+
+	template<typename ELEM_T>
 	dPlugType
-	cAnyOp::tKat<A>::getType(){
-		return genPlugType<A>();
+	cAnyOp::tKat<ELEM_T>::getType(){
+		return genPlugType<ELEM_T>();
 	}
 
-	template<typename A>
+	template<typename ELEM_T>
 	void
-	cAnyOp::tKat<A>::link(cAnyOp * pFrom, iKat * pOps){
+	cAnyOp::tKat<ELEM_T>::link(cAnyOp * pFrom, iKat * pOps){
 		ASRT_TRUE(pOps->getType() == getType(), "Not the same types");
-		tKat<A> * tmp = dynamic_cast< tKat<A>* >(pOps);
+		tKat<ELEM_T> * you = dynamic_cast< tKat<ELEM_T>* >(pOps);
+		ASRT_NOTNULL(you);
+		typename dOp2Link::iterator found = mLinks.find(pFrom);
+		if(found == mLinks.end())
+			found = mLinks.insert(mLinks.end(), typename dOp2Link::value_type(pFrom, sLinkOp()));
+
+		std::set<dPlugType> plusMyAss;
+		std::set<dPlugType> hasYourAss;
+		typename dMapAssigns::iterator itrMyAss;
+		typename dMapAssigns::iterator itrYourAss;
+		for(itrMyAss = mAsss.begin(); itrMyAss != mAsss.end(); ++itrMyAss){
+			for(itrYourAss = you->mAsss.begin(); itrYourAss != you->mAsss.end(); ++itrYourAss){
+				if(itrMyAss->first == itrYourAss->first){
+					hasYourAss.insert(itrYourAss->first);
+					break;
+				}
+			}
+
+			if(itrYourAss == mAsss.end())
+				plusMyAss.insert(itrMyAss->first);
+		}
+
 	}
 
-	template<typename A>
+	template<typename ELEM_T>
 	void
-	cAnyOp::tKat<A>::unlink(cAnyOp * pFrom){
+	cAnyOp::tKat<ELEM_T>::unlink(cAnyOp * pFrom){
 		typename dOp2Link::iterator found = mLinks.find(pFrom);
 		if(found == mLinks.end())
 			return;
@@ -279,17 +310,14 @@ namespace gt{
 		mLinks.erase(found);
 	}
 
-	template<typename A>
+	template<typename ELEM_T>
 	bool
-	cAnyOp::tKat<A>::addAss(cAnyOp * pFrom, dPlugType pFor, fuAssign pFu){
+	cAnyOp::tKat<ELEM_T>::addAss(cAnyOp * pFrom, dPlugType pFor, fuAssign pFu){
 		std::pair<typename dMapAssigns::iterator, bool> result = mAsss.insert(
 			typename dMapAssigns::value_type(pFor, pFu)
 		);
 
 		if(!result.second){
-//			DBUG_VERBOSE_LO(std::hex << reinterpret_cast<size_t>(this) << " already has assignment op "
-//				<< std::dec << pFor << " = " << pFu
-//			);
 			return false;
 		}
 
@@ -299,24 +327,17 @@ namespace gt{
 		);
 		link->second.mAsss.push_back(result.first);
 
-//		DBUG_VERBOSE_LO(std::hex << reinterpret_cast<size_t>(this) << " linked to " << pFrom
-//			<< " for op " << std::dec << pFor << " = " << pFu
-//		);
-
 		return true;
 	}
 
-	template<typename A>
+	template<typename ELEM_T>
 	bool
-	cAnyOp::tKat<A>::addApp(cAnyOp * pFrom, dPlugType pFor, fuAppend pFu){
+	cAnyOp::tKat<ELEM_T>::addApp(cAnyOp * pFrom, dPlugType pFor, fuAppend pFu){
 		std::pair<typename dMapAppends::iterator, bool> result = mApps.insert(
 			typename dMapAppends::value_type(pFor, pFu)
 		);
 
 		if(!result.second){
-//			DBUG_VERBOSE_LO(std::hex << reinterpret_cast<size_t>(this) << " already has assignment op "
-//				<< std::dec << pFor << " + " << pFu
-//			);
 			return false;
 		}
 
@@ -326,68 +347,56 @@ namespace gt{
 		);
 		link->second.mApps.push_back(result.first);
 
-//		DBUG_VERBOSE_LO(std::hex << reinterpret_cast<size_t>(this) << " linked to " << pFrom
-//			<< " for op " << std::dec << pFor << " + " << pFu
-//		);
 		return true;
 	}
 
 	//-------------------------------------------------------------------------------
-	template<typename A>
-	void cAnyOp::tOps<A>::setup(tKat<A> * pK, cAnyOp * pUsing){
-		pK->addAss(&getRef(), genPlugType<A>(), fuAssignDefault<A>);
-		pK->addApp(&getRef(), genPlugType<A>(), fuAppendDefault<A>);
+	template<typename ELEM_T>
+	void cAnyOp::tOps<ELEM_T>::setup(tKat<ELEM_T> * pK, cAnyOp * pUsing){
+		pK->addAss(&getRef(), genPlugType<ELEM_T>(), fuAssignDefault<ELEM_T>);
+		pK->addApp(&getRef(), genPlugType<ELEM_T>(), fuAppendDefault<ELEM_T>);
 	}
 
 	//-------------------------------------------------------------------------------
 
-	template<typename A>
+	template<typename ELEM_T>
 	void
-	cAnyOp::setupKat(tKat<A> * pK){
-		tOps<A>::setup(pK, &getRef());
-		(void)getRef().mKats.insert(
-			dMapKatTypes::value_type(pK->getType(), sKatOrig(pK))
-		);
-	}
-
-	template<typename A>
-	void
-	cAnyOp::assign(const A & pFrom, void * pTo, dPlugType pType){
-		tCoolFind<dPlugType, typename cAnyOp::tKat<A>::fuAssign> op(
-			cAnyOp::tKat<A>::assign(),
+	cAnyOp::assign(const ELEM_T & pFrom, void * pTo, dPlugType pType){
+		tCoolFind<dPlugType, typename cAnyOp::tKat<ELEM_T>::fuAssign> op(
+			cAnyOp::tKat<ELEM_T>::assign(),
 			pType
 		);
 
 		if(!op.found())
-			THROW_ERROR(genPlugType<A>() << " can't assign to type " << pType);
+			THROW_ERROR(genPlugType<ELEM_T>() << " can't assign to type " << pType);
 
 		op.get()(pFrom, pTo);
 	}
 
-	template<typename A>
+	template<typename ELEM_T>
 	void
-	cAnyOp::append(const A & pFrom, void * pTo, dPlugType pType){
-		tCoolFind<dPlugType, typename cAnyOp::tKat<A>::fuAppend> op(
-			cAnyOp::tKat<A>::append(),
+	cAnyOp::append(const ELEM_T & pFrom, void * pTo, dPlugType pType){
+		tCoolFind<dPlugType, typename cAnyOp::tKat<ELEM_T>::fuAppend> op(
+			cAnyOp::tKat<ELEM_T>::append(),
 			pType
 		);
 
 		if(!op.found())
-			THROW_ERROR(genPlugType<A>() << " can't append to type " << pType);
+			THROW_ERROR(genPlugType<ELEM_T>() << " can't append to type " << pType);
 
 		op.get()(pFrom, pTo);
 	}
 
-	template<typename A>
+	template<typename ELEM_T>
 	void
-	cAnyOp::fuAssignDefault(const A & pFrom, void *pTo){
-		*static_cast<A*>(pTo) = pFrom;
+	cAnyOp::fuAssignDefault(const ELEM_T & pFrom, void *pTo){
+		*static_cast<ELEM_T*>(pTo) = pFrom;
 	}
 
-	template<typename A>
+	template<typename ELEM_T>
 	void
-	cAnyOp::fuAppendDefault(const A & pFrom, void *pTo){
-		*static_cast<A*>(pTo) += pFrom;
+	cAnyOp::fuAppendDefault(const ELEM_T & pFrom, void *pTo){
+		*static_cast<ELEM_T*>(pTo) += pFrom;
 	}
 }
 
