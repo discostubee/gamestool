@@ -27,6 +27,7 @@
 #ifndef PLUGCONTAINER_HPP
 #define PLUGCONTAINER_HPP
 
+#include "plugContainerGetter.hpp"
 #include "plug.hpp"
 
 #include <vector>
