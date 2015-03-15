@@ -17,7 +17,7 @@
 */
 
 #include "figment.hpp"
-#include "plugContainer.hpp"
+#include "plugContainerOps.hpp"
 
 
 ////////////////////////////////////////////////////////////
@@ -240,32 +240,28 @@ cFigment::getLinks(std::list<ptrFig>* pOutLinks){
 
 void
 cFigment::patSave(ptrLead aLead){
-	ptrBuff buffer;
-
-	aLead->assignTo(&buffer, xPT_serialBuff);
-
-	save(buffer.get());
+	tPlug<ptrBuff> buffer;
+	aLead->copyPlug(&buffer, xPT_serialBuff);
+	save(buffer.get().get());
 }
 
 void
 cFigment::patLoad(ptrLead aLead){
-	ptrBuff buffer;
-
-	aLead->assignTo(&buffer, xPT_serialBuff);
-
-	loadEat(buffer.get());
+	tPlug<ptrBuff> buffer;
+	aLead->copyPlug(&buffer, xPT_serialBuff);
+	loadEat(buffer.get().get());
 }
 
 void
 cFigment::patGetName(ptrLead aLead){
-	const dPlaChar *tmp = name();
-	aLead->assignFrom(tmp, xPT_name);
+	tPlug<dStr> plugName( name() );
+	aLead->setPlug(&plugName, xPT_name);
 }
 
 void
 cFigment::patGetHash(ptrLead aLead){
-	dNameHash tmp = hash();
-	aLead->assignFrom(tmp, xPT_hash);
+	tPlug<dNameHash> plugHash(hash());
+	aLead->setPlug(&plugHash, xPT_hash);
 }
 
 void

@@ -86,7 +86,7 @@ cStage::patGetLayout(ptrLead aLead){
 
 void
 cStage::patSetFullscreen(ptrLead aLead){
-	bool fullscreen=false;
-	aLead->assignTo(&fullscreen, xPT_fullscreen);
-	setFullscreen(fullscreen);
+	tPlug<bool> fullscreen(false);
+	aLead->copyPlug(&fullscreen, xPT_fullscreen);
+	setFullscreen(fullscreen.get());
 }

@@ -317,22 +317,21 @@ GTUT_START(testLead, tagging){
 	ptrLead tmpLead = gWorld.get()->makeLead(fakeCom.mID);
 
 	tPlug<int> numA, numB;
-	const int magic = 3;
+	tPlug<int> magic = 3;
 	tmpLead->linkPlug(&numA, &tag);
 
-	numA.get() = magic;
+	numA = magic;
 
 	{
-		int testA=0;
+		tPlug<int> testA=0;
 
 		startLead(tmpLead, fakeConx.getSig());
-			tmpLead->assignTo(&testA, &tag);
+			tmpLead->copyPlug(&testA, &tag);
 			GTUT_ASRT(testA == magic, "Lead didn't store A");
-
 			tmpLead->copyPlug(&numB, &tag);
 		stopLead(tmpLead);
 
-		GTUT_ASRT(numB.get() == magic, "B didn't get A's number");
+		GTUT_ASRT(numB == magic, "B didn't get A's number");
 	}
 }GTUT_END;
 
@@ -348,21 +347,16 @@ GTUT_START(testLead, appending){
 	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
 	ptrLead testMe = gWorld.get()->makeLead(fakeCom.mID);
 	tPlug<int> a(6);
-	int b=3;
+	tPlug<int> b(3);
 
 	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
 
 	startLead(testMe, fakeConx.getSig());
-		testMe->linkPlug(&a, &tag);
-		GTUT_ASRT(testMe->appendFrom(b, &tag), "append failed");
+		testMe->linkPlug(&b, &tag);
+		GTUT_ASRT(testMe->appendPlug(&a, &tag), "append failed");
 	stopLead(testMe);
 	PLUG_REFRESH(a);
 	GTUT_ASRT(a.get() == 9, "Didn't append");
-
-	startLead(testMe, fakeConx.getSig());
-		GTUT_ASRT(testMe->appendTo(&b, &tag), "append failed");
-	stopLead(testMe);
-	GTUT_ASRT(b==12, "Didn't append");
 
 }GTUT_END;
 

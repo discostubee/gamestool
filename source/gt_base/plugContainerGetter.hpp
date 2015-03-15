@@ -1,11 +1,5 @@
 /*
- * !\file	plugContainer.hpp
- * !\brief	If you need to serialize or pass about a container, you need a plug container.
- * !		Plug containers are plugs that use STL containers to hold other plugs. There's no
- * !		reason (that I can think of) to have a plug that uses an STL container for normal
- * !		data types.
- * !\note	Plug containers do NOT provide thread safety. That's up to the individual plugs they
- * !		contain.
+ * !\file	plugContainerGetter.hpp
  *
 **********************************************************************************************************
  *  Copyright (C) 2010  Stuart Bridgens

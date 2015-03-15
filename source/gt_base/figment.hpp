@@ -25,6 +25,7 @@
 #include "outline.hpp"
 #include "context.hpp"
 #include "plug.hpp"
+#include "lead.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // exceptions

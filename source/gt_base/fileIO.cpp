@@ -94,47 +94,45 @@ void
 cBase_fileIO::patRead(ptrLead aLead){
 	PROFILE;
 
-	size_t readSize = 0;
-	size_t readStart = 0;
-	size_t fileSize = getFileSize();
+	tPlug<size_t> readSize;
+	tPlug<size_t> readStart;
+	tPlug<size_t> fileSize(getFileSize());
 
-	(void)aLead->assignTo(&readSize, xPT_readSize);
-	(void)aLead->assignTo(&readStart, xPT_startSpot);
+	(void)aLead->copyPlug(&readSize, xPT_readSize);
+	(void)aLead->copyPlug(&readStart, xPT_startSpot);
 
-	if(readStart >= fileSize)
-		throw excep::outOfRange(fileSize, readStart, __FILE__, __LINE__);
+	if(readStart.get() >= fileSize.get())
+		throw excep::outOfRange(fileSize.get(), readStart.get(), __FILE__, __LINE__);
 
-	if(readSize == 0){
+	if(readSize.get() == 0){
 		DBUG_VERBOSE_LO("Getting entire file.");
-		readSize = getFileSize() - readStart;
+		readSize = getFileSize() - readStart.get();
 	}
 
-	ptrBuff buff;
-	aLead->assignTo(&buff, xPT_buffer);
-	read(buff.get(), readStart, readSize);
+	tPlug<ptrBuff> buff;
+	aLead->copyPlug(&buff, xPT_buffer);
+	read(buff.get().get(), readStart.get(), readSize.get());
 }
 
 void
 cBase_fileIO::patWrite(ptrLead aLead){
 	PROFILE;
 
-	ptrBuff buffer;
-
-	aLead->assignTo(&buffer, xPT_buffer);
-
-	write(buffer.get());
+	tPlug<ptrBuff> buffer;
+	aLead->copyPlug(&buffer, xPT_buffer);
+	write(buffer.get().get());
 }
 
 void
 cBase_fileIO::patInsert(ptrLead aLead){
 	PROFILE;
 
-	size_t startSpot = 0;
-	ptrBuff current;
+	tPlug<size_t> startSpot;
+	tPlug<ptrBuff> current;
 
-	aLead->assignTo(&startSpot, xPT_startSpot);
-	aLead->assignTo(&current, xPT_buffer);
-	insert(current.get(), startSpot);
+	aLead->copyPlug(&startSpot, xPT_startSpot);
+	aLead->copyPlug(&current, xPT_buffer);
+	insert(current.get().get(), startSpot.get());
 }
 
 void
