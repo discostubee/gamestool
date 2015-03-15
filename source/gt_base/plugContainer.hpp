@@ -27,8 +27,8 @@
 #ifndef PLUGCONTAINER_HPP
 #define PLUGCONTAINER_HPP
 
-#include "plugContainerGetter.hpp"
 #include "plug.hpp"
+#include "plugContainerGetter.hpp"
 
 #include <vector>
 #include <list>
@@ -74,7 +74,7 @@ namespace gt{
 		typedef CONT_T<
 			tPlug<ELEM_T>,
 			std::allocator< tPlug<ELEM_T> >
-		> dContainer;	//!< The default template parameter doesn't appear to work when using it for template-template parameters.
+		> dContainer;	//!<
 
 		typedef CONT_T<
 			ELEM_T,
@@ -85,6 +85,7 @@ namespace gt{
 		typedef tCoolItr_const< dContainer > dConstItr;
 
 		tPlugLinearContainer();
+		tPlugLinearContainer(const dBaseContainer &pCopyMe);
 		virtual ~tPlugLinearContainer();
 
 		dItr getItr();
@@ -94,6 +95,7 @@ namespace gt{
 									tPlugLinearContainer<ELEM_T, CONT_T>& operator+= (const tPlugLinearContainer<ELEM_T, CONT_T> &pCopyMe);
 									tPlugLinearContainer<ELEM_T, CONT_T>& operator= (const dBaseContainer &pCopyMe);
 									tPlugLinearContainer<ELEM_T, CONT_T>& operator+= (const dBaseContainer &pCopyMe);
+									tPlugLinearContainer<ELEM_T, CONT_T>& operator+= (const ELEM_T &pCopyMe);
 		template<typename OTHER>	tPlugLinearContainer<ELEM_T, CONT_T>& operator= (const OTHER &pCopyMe);
 		template<typename OTHER>	tPlugLinearContainer<ELEM_T, CONT_T>& operator+= (const OTHER &pCopyMe);
 
@@ -118,103 +120,9 @@ namespace gt{
 
 	};
 
-	template<
-		typename ELEM_T,
-		template<typename, typename> class CONT_T
-	>
-	class tCommonContainerOps{
-	public:
-		typedef typename tPlugLinearContainer<ELEM_T, CONT_T>::dContainer dMyType;
-
-		static void ass(const dMyType & pFrom, void *pTo){
-			reinterpret_cast< dMyType* >(pTo)->assign(pFrom.begin(), pFrom.end());
-		}
-
-		static void app(const dMyType & pFrom, void *pTo){
-			reinterpret_cast< dMyType* >(pTo)->assign(pFrom.begin(), pFrom.end());
-		}
-
-		static void appSingleElem(const ELEM_T & pFrom, void *pTo){
-			reinterpret_cast<dMyType*>(pTo)->push_back( tLitePlugConst<ELEM_T>(&pFrom) );
-		}
-
-		static void appSinglePlug(const tPlug<ELEM_T> & pFrom, void *pTo){
-			reinterpret_cast<dMyType*>(pTo)->push_back(pFrom);
-		}
-
-		template< template<typename, typename> class OTHER_T >
-		class tOtherContainer{
-		public:
-			typedef typename tPlugLinearContainer<ELEM_T, OTHER_T>::dContainer dOtherType;
-
-			static void ass(const dMyType & pFrom, void *pTo){
-				reinterpret_cast< dOtherType* >(pTo)->assign(pFrom.begin(), pFrom.end());
-			}
-
-			static void app(const dMyType & pFrom, void *pTo){
-				dOtherType * ref =reinterpret_cast< dOtherType* >(pTo);
-				ref->insert(ref->end(), pFrom.begin(), pFrom.end());
-			}
-		};
-	};
 
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////
-// Template specialisations.
-namespace gt{
-
-	template< typename ELEM_T >
-	class cAnyOp::tOps< std::vector< tPlug<ELEM_T> > >{
-	public:
-		static void setup(tKat< typename tCommonContainerOps<ELEM_T, std::vector>::dMyType > * pK, cAnyOp * pUsing){
-			typedef tCommonContainerOps<ELEM_T, std::vector> myOps;
-			typedef typename tCommonContainerOps<ELEM_T, std::vector>::template tOtherContainer<std::list> listOps;
-
-			pK->addAss(&getRef(), genPlugType< typename myOps::dMyType >(), myOps::ass);
-			pK->addApp(&getRef(), genPlugType< typename myOps::dMyType >(), myOps::app);
-			pK->addAss(&getRef(), genPlugType< typename listOps::dOtherType >(), listOps::ass);
-			pK->addApp(&getRef(), genPlugType< typename listOps::dOtherType >(), listOps::app);
-
-			cAnyOp::tKat<ELEM_T>::xKat.addApp(
-				&getRef(),
-				genPlugType< typename myOps::dMyType >(),
-				myOps::appSingleElem
-			);
-			cAnyOp::tKat< tPlug<ELEM_T> >::xKat.addApp(
-				&getRef(),
-				genPlugType< std::vector< tPlug<ELEM_T> > >(),
-				myOps::appSinglePlug
-			);
-		}
-	};
-
-	template< typename ELEM_T >
-	class cAnyOp::tOps< std::list< tPlug<ELEM_T> > >{
-	public:
-		static void setup(tKat< typename tCommonContainerOps<ELEM_T, std::list>::dMyType > * pK, cAnyOp * pUsing){
-			typedef tCommonContainerOps<ELEM_T, std::list> myOps;
-			typedef typename tCommonContainerOps<ELEM_T, std::list>::template tOtherContainer<std::vector> vecOps;
-
-			pK->addAss(&getRef(), genPlugType< typename myOps::dMyType >(), myOps::ass);
-			pK->addApp(&getRef(), genPlugType< typename myOps::dMyType >(), myOps::app);
-			pK->addAss(&getRef(), genPlugType< typename vecOps::dOtherType >(), vecOps::ass);
-			pK->addApp(&getRef(), genPlugType< typename vecOps::dOtherType >(), vecOps::app);
-
-			cAnyOp::tKat<ELEM_T>::xKat.addApp(
-				&getRef(),
-				genPlugType< typename myOps::dMyType >(),
-				myOps::appSingleElem
-			);
-			cAnyOp::tKat< tPlug<ELEM_T> >::xKat.addApp(
-				&getRef(),
-				genPlugType< std::list< tPlug<ELEM_T> > >(),
-				myOps::appSinglePlug
-			);
-		}
-	};
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -233,6 +141,12 @@ namespace gt{
 #		ifdef GT_THREADS
 			mClearTo = NO_CLEAR;
 #		endif
+	}
+
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<ELEM_T, CONT_T>::tPlugLinearContainer(const dBaseContainer &pCopyMe){
+		for(typename dBaseContainer::const_iterator itr = pCopyMe.begin(); itr != pCopyMe.end(); ++itr)
+			mContainer.push_back( tPlug<ELEM_T>(*itr) );
 	}
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
@@ -286,6 +200,15 @@ namespace gt{
 		for(typename dBaseContainer::const_iterator itr = pCopyMe.begin(); itr != pCopyMe.end(); ++itr)
 			mContainer.push_back( tPlug<ELEM_T>(*itr) );
 
+		return *this;
+	}
+
+	template< typename ELEM_T, template<typename, typename> class CONT_T >
+	tPlugLinearContainer<ELEM_T, CONT_T>&
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator+= (
+		const ELEM_T &pCopyMe
+	){
+		mContainer.push_back( tPlug<ELEM_T>(pCopyMe) );
 		return *this;
 	}
 

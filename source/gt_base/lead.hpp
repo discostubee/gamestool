@@ -26,8 +26,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Includes
 
-#include "litePlugs.hpp"
-#include "litePlugContainers.hpp"
+#include "basePlug.hpp"
 
 #ifdef GT_THREADS
 #	include "threadTools.hpp"
@@ -95,34 +94,6 @@ namespace gt{
 		//!\return	false if the plug wasn't found using the get tag.
 		bool passPlug(cLead *passTo, const cPlugTag *pGetTag, const cPlugTag *pPutTag = NULL);
 
-		//!\brief	If it has the plug, it uses the += operator on the output.
-		template<typename ELEM_T, template<typename, typename> class CONT_T>
-		bool appendTo(
-			CONT_T< ELEM_T, std::allocator<ELEM_T> > *output,
-			const cPlugTag *tag
-		);
-
-		//!\brief	If it has the plug it appends to that plug from the input.
-		template<typename ELEM_T, template<typename, typename> class CONT_T>
-		bool appendFrom(
-			CONT_T< ELEM_T, std::allocator<ELEM_T> > &input,
-			const cPlugTag *tag
-		);
-
-		//!\brief	Assigns into the provided memory location.
-		//!\param	output	Pointer to where you want to copy the value.
-		//!\param	tag		tag for the plug you wish to copy a value from.
-		template<typename CONTAIN> bool assignTo(CONTAIN *output, const cPlugTag *tag);
-
-		//!\brief	Uses a tagged plug's assignment operator.
-		template<typename CONTAIN> bool assignFrom(CONTAIN &input, const cPlugTag *tag);
-
-		//!\brief	If it has the plug, it uses the += operator on the output.
-		template<typename CONTAIN> bool appendTo(CONTAIN *output, const cPlugTag *tag);
-
-		//!\brief	If it has the plug it appends to that plug from the input.
-		template<typename CONTAIN> bool appendFrom(CONTAIN &input, const cPlugTag *tag);
-
 		//!\brief	If you don't want to re-create a lead without this plug, or you don't want to over-ride it, you
 		//!			can remove it with this.
 		void remPlug(const cPlugTag *pGetTag);
@@ -164,66 +135,6 @@ namespace gt{
 	};
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-// Templates
-namespace gt{
-
-	template<typename ELEM_T, template<typename, typename> class CONT_T>
-	bool
-	cLead::appendTo(
-		CONT_T< ELEM_T, std::allocator<ELEM_T> > *output,
-		const cPlugTag *tag
-	){
-		PROFILE;
-		tLitePlugLinerContainer<ELEM_T, CONT_T> tmp(output);
-		return appendPlug(&tmp, tag);
-	}
-
-	//!\brief	If it has the plug it appends to that plug from the input.
-	template<typename ELEM_T, template<typename, typename> class CONT_T>
-	bool
-	cLead::appendFrom(
-		CONT_T< ELEM_T, std::allocator<ELEM_T> > &input,
-		const cPlugTag *tag
-	){
-		PROFILE;
-		tLitePlugLinerContainer<ELEM_T, CONT_T> tmp(&input);
-		return plugAppends(&tmp, tag);
-	}
-
-	template<typename CONTAIN>
-	bool
-	cLead::assignTo(CONTAIN *output, const cPlugTag *tag){
-		PROFILE;
-		tLitePlug<CONTAIN> tmp(output);
-		return copyPlug(&tmp, tag);
-	}
-
-	template<typename CONTAIN>
-	bool
-	cLead::assignFrom(CONTAIN &input, const cPlugTag *tag){
-		PROFILE;
-		tLitePlug<CONTAIN> tmp(&input);
-		return setPlug(&tmp, tag);
-	}
-
-	template<typename CONTAIN>
-	bool
-	cLead::appendTo(CONTAIN *output, const cPlugTag *tag){
-		PROFILE;
-		tLitePlug<CONTAIN> tmp(output);
-		return appendPlug(&tmp, tag);
-	}
-
-	template<typename CONTAIN>
-	bool
-	cLead::appendFrom(CONTAIN &input, const cPlugTag *tag){
-		PROFILE;
-		tLitePlug<CONTAIN> tmp(&input);
-		return plugAppends(&tmp, tag);
-	}
-
-}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Unit testing

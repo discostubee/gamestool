@@ -3,7 +3,7 @@
 
 #if defined(DEBUG) && defined(GTUT)
 #	include "figment.hpp"
-#	include "plugContainer.hpp"
+#	include "plugContainerOps.hpp"
 
 namespace gt{
 	//- Some helpful 'fake' figments.

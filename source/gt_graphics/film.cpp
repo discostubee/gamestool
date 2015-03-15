@@ -60,7 +60,7 @@ cFilm::patGetLayout(ptrLead aLead){
 
 void
 cFilm::patGetRez(ptrLead aLead){
-	tDim2D<dUnitPix> rez;
-	getRez(rez);
-	aLead->assignFrom(rez, xPT_rez);
+	tPlug< tDim2D<dUnitPix> > rez;
+	getRez(rez.get());
+	aLead->setPlug(&rez, xPT_rez);
 }

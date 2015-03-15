@@ -44,11 +44,13 @@ cFigFactory::~cFigFactory(){
 
 void
 cFigFactory::patMakeFig(ptrLead aLead){
-	dNameHash hash=0;
-	aLead->assignTo(&hash, xPT_figHash);
+	tPlug<dNameHash> hash;
+	aLead->copyPlug(&hash, xPT_figHash);
 
-	ptrFig made = gWorld.get()->makeFig(hash);
-	aLead->assignFrom(made, xPT_newFig);
+	tPlug<ptrFig> made(
+		gWorld.get()->makeFig(hash.get())
+	);
+	aLead->setPlug(&made, xPT_newFig);
 }
 
 void

@@ -1,5 +1,5 @@
 #include "screens.hpp"
-#include "gt_base/plugContainer.hpp"
+#include "gt_base/plugContainerOps.hpp"
 
 using namespace gt;
 

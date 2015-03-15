@@ -19,7 +19,7 @@
 #ifndef PLUG_HPP
 #define PLUG_HPP
 
-#include "lead.hpp"
+#include "basePlug.hpp"
 #include "opOnAny.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////

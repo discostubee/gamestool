@@ -40,9 +40,9 @@ sPoly::operator+= (const sPoly &aCopyMe){
 sMesh&
 sMesh::operator+= (const sMesh &aCopyMe){
 	ASRT_NOTSELF(&aCopyMe);
-//	mVertexes.;
-//	mPolys.;
-//	mTMap.;
+	mVertexes.insert(mVertexes.end(), aCopyMe.mVertexes.begin(), aCopyMe.mVertexes.end());
+	mPolys.insert(mPolys.end(), aCopyMe.mPolys.begin(), aCopyMe.mPolys.end());
+	mTMap.insert(mTMap.end(), aCopyMe.mTMap.begin(), aCopyMe.mTMap.end());
 	mFresh = true;
 	return *this;
 }
@@ -113,8 +113,24 @@ void
 cPolyMesh::patAddToMesh(ptrLead aLead){
 	PROFILE;
 
-	aLead->appendTo<sVertex, std::vector>(&mLazyMesh.get().mVertexes, xPT_vertexs);
-	aLead->appendTo(&mLazyMesh.get().mPolys, xPT_polies);
+	tPlugLinearContainer<sVertex, std::vector> vecs;
+	tPlugLinearContainer<sPoly, std::vector> polies;
+	aLead->copyPlug(&vecs, xPT_vertexs);
+	aLead->copyPlug(&polies, xPT_polies);
+	for(
+		tPlugLinearContainer<sVertex, std::vector>::dItr itr = vecs.getItr();
+		itr.stillGood();
+		++itr
+	)
+		mLazyMesh.get().mVertexes.push_back( itr.get().get() );
+
+	for(
+		tPlugLinearContainer<sPoly, std::vector>::dItr itr = polies.getItr();
+		itr.stillGood();
+		++itr
+	)
+		mLazyMesh.get().mPolys.push_back( itr.get().get() );
+
 	mLazyMesh.get().mFresh = true;
 }
 
@@ -123,30 +139,42 @@ cPolyMesh::patGetMesh(ptrLead aLead){
 	PROFILE;
 
 	downloadLazy();
-	aLead->appendFrom(mLazyMesh.get().mVertexes, xPT_vertexs);
-	aLead->appendFrom(mLazyMesh.get().mPolys, xPT_polies);
+	tPlugLinearContainer<sVertex, std::vector> vecs(
+		mLazyMesh.get().mVertexes
+	);
+	tPlugLinearContainer<sPoly, std::vector> polies(
+		mLazyMesh.get().mPolys
+	);
+	aLead->setPlug(&vecs, xPT_vertexs);
+	aLead->setPlug(&polies, xPT_polies);
 }
 
 void
 cPolyMesh::patMeasure(ptrLead aLead){
 	PROFILE;
 	if(aLead->has(xPT_box)){
-		geometry::tCube<dUnitVDis> cube;
-		measure(cube);
-		aLead->assignFrom(cube, xPT_box);
+		tPlug< geometry::tCube<dUnitVDis> > cube;
+		measure(cube.get());
+		aLead->setPlug(&cube, xPT_box);
 	}else if(aLead->has(xPT_sphere)){
-		geometry::tSphere<dUnitVDis> sphere;
-		measure(sphere);
-		aLead->assignFrom(sphere, xPT_sphere);
+		tPlug< geometry::tSphere<dUnitVDis> > sphere;
+		measure(sphere.get());
+		aLead->setPlug(&sphere, xPT_sphere);
 	}
 }
 
 void
 cPolyMesh::patTexturize(ptrLead aLead){
 	PROFILE;
+	tPlugLinearContainer<sTexMap, std::vector> texs;
+	aLead->copyPlug(&texs, xPT_texMapping);
+	for(
+		tPlugLinearContainer<sTexMap, std::vector>::dItr itr = texs.getItr();
+		itr.stillGood();
+		++itr
+	)
+		mLazyMesh.get().mTMap.push_back( itr.get().get() );
 
-	aLead->appendTo(&mLazyMesh.get().mTMap, xPT_texMapping);
-	aLead->plugAppends(&mBMaps, xPT_bitmaps);
 	mLazyMesh.get().mFresh = true;
 }
 
