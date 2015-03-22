@@ -62,10 +62,10 @@ void
 cRunList::getLinks(std::list<ptrFig>* pOutLinks){
 	PROFILE;
 	ASRT_NOTNULL(pOutLinks);
-	ptrFig value;
+	dList::dContainer::value_type vt;
 	for(dList::dItr itr = mList.getItr(); itr.stillGood(); ++itr){
-		value = *itr;
-		pOutLinks->push_back(value);
+		vt = *itr;
+		pOutLinks->push_back(vt.get());
 	}
 }
 

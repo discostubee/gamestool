@@ -41,7 +41,7 @@
 #ifndef CONTEXT_HPP
 #define CONTEXT_HPP
 
-#include "world.hpp"
+#include "baseFigment.hpp"
 
 #include <deque>
 
@@ -51,6 +51,12 @@ namespace gt{
 	class cFigContext;
 
 	typedef std::deque<cFigContext*> dProgramStack;	//!< This is the entire stack of figments.
+}
+
+////////////////////////////////////////////////////////////////////
+// Typedefs
+namespace gt{
+	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

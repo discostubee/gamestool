@@ -243,7 +243,6 @@ namespace gt{
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
 	tPlugLinearContainer<ELEM_T, CONT_T>::save(cByteBuffer* pSaveHere){
-		PROFILE;
 #		ifdef GT_THREADS
 			dLock lock(mGuard);
 #		endif
@@ -257,7 +256,6 @@ namespace gt{
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
 	tPlugLinearContainer<ELEM_T, CONT_T>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
-		PROFILE;
 #		ifdef GT_THREADS
 			dLock lock(mGuard);
 #		endif

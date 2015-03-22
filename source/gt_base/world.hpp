@@ -75,13 +75,12 @@
 #	define DBUG_VERBOSE
 #endif
 
-///////////////////////////////////////////////////////////////////////////////////
-// Includes
-#include "blueprint.hpp"
-#include "threadTools.hpp"
-#include "profiler.hpp"
+#include "baseFigment.hpp"
+#include "context.hpp"
 #include "fridge.hpp"
-#include "opOnAny.hpp"
+#include "blueprint.hpp"
+#include "profiler.hpp"
+#include "threadTools.hpp"
 
 #include <set>
 #include <stack>
@@ -118,11 +117,6 @@ extern const char *MSG_UNKNOWN_ERROR;
 #endif
 
 
-////////////////////////////////////////////////////////////////////
-// Typedefs
-namespace gt{
-	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
-}
 
 ////////////////////////////////////////////////////////////////////
 // Config

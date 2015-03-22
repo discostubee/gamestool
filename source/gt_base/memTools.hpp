@@ -24,7 +24,7 @@
 #define MEMTOOLS_HPP
 
 #include "utils.hpp"
-#include "exceptions.hpp"
+
 #include <memory>
 
 #ifdef GTUT

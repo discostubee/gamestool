@@ -22,6 +22,7 @@
 #define UTILS_HPP
 
 #include "exceptions.hpp"
+
 #include <iostream>
 #include <vector>
 #include <map>
@@ -53,6 +54,7 @@
 #elif defined(__linux)
 #	define SHITPANTS abort()
 #endif
+
 //------------------------------------------------------------------------------------------
 // some defines which are common in this project.
 typedef unsigned int	dHash;

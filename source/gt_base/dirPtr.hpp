@@ -24,7 +24,6 @@
 #define FIGPTR_HPP
 
 #include "exceptions.hpp"
-//#include <memory>
 
 #ifdef GTUT
 #	include "unitTests.hpp"
