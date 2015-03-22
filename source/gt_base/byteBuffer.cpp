@@ -17,6 +17,7 @@
 */
 
 #include "byteBuffer.hpp"
+#include "exceptions.hpp"
 
 cByteBuffer::cByteBuffer():
 	mBuff(NULL),

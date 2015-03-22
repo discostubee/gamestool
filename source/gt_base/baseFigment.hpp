@@ -22,49 +22,22 @@
 #ifndef	BASEFIGMENT_HPP
 #define BASEFIGMENT_HPP
 
-#include "dirPtr.hpp"
-#include "gt_string.hpp"
-#include "byteBuffer.hpp"
-#include "memTools.hpp"
-#include "opOnAny.hpp"
+#include "plugContainerOps.hpp"
 #include "opsOrdinaryData.hpp"
-
-#include <list>
-#include <boost/shared_ptr.hpp>
+#include "blueprint.hpp"
+#include "dirPtr.hpp"
+#include "memTools.hpp"
 
 ////////////////////////////////////////////////////////////////////
-// forward declarations
+// forward decs
 namespace gt{
 	class ptrFig;
-	class cReload;
-	class cBase_plug;
-	class cPlugTag;
-	class cLead;
-	class cBlueprint;
-	class cCommand;
 	class cContext;
 }
 
-////////////////////////////////////////////////////////////////////
-// Typedefs
-namespace gt{
-	typedef
-#if defined(__APPLE__)
-	unsigned long long
-#elif defined(__linux)
-	unsigned long long
-#elif defined(WIN32)
-	INT64
-#endif
-		dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
-
-	typedef boost::shared_ptr<cLead> ptrLead;	//!<
-	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
-
-}
 
 ////////////////////////////////////////////////////////////////////
-// Classes
+// objects
 namespace gt{
 
 	//-------------------------------------------------------------------------------------
@@ -107,6 +80,7 @@ namespace gt{
 	friend class cBlueprint;
 	};
 
+
 	//-------------------------------------------------------------------------------------
 	//!\brief	Can be used as a clone sample, where it no longer cleans
 	//!			up director or counts towards the total.
@@ -130,7 +104,6 @@ namespace gt{
 		friend class cFigment;
 		friend class cBlueprint;
 	};
-
 
 	//-------------------------------------------------------------------------------------
 	//!\brief	An individual entry for a figment.
@@ -159,44 +132,6 @@ namespace gt{
 ////////////////////////////////////////////////////////////////////
 //
 namespace gt{
-
-	template<>
-	class cAnyOp::tOps<const dPlaChar *>{
-	private:
-		static void assignStr(const dPlaChar * const& pFrom, void * pTo){
-			reinterpret_cast<dStr*>(pTo)->assign( pFrom );
-		}
-
-		static void appendStr(const dPlaChar * const& pFrom, void * pTo){
-			reinterpret_cast<dStr*>(pTo)->append( pFrom );
-		}
-
-		static void assignNatStr(const dPlaChar * const& pFrom, void * pTo){
-			reinterpret_cast<dNatStr*>(pTo)->t = toNStr(pFrom);
-		}
-
-		static void appendNatStr(const dPlaChar * const& pFrom, void * pTo){
-			reinterpret_cast<dNatStr*>(pTo)->t.append( toNStr(pFrom) );
-		}
-
-		static void assignText(const dPlaChar * const& pFrom, void * pTo){
-			reinterpret_cast<dText*>(pTo)->t = toText(pFrom);
-		}
-
-		static void appendText(const dPlaChar * const& pFrom, void * pTo){
-			reinterpret_cast<dText*>(pTo)->t.append( toText(pFrom) );
-		}
-
-	public:
-		static void setup(tKat<const dPlaChar *> * pK, cAnyOp * pUsing){
-			pK->addAss(&getRef(), genPlugType<dStr>(), assignStr);
-			pK->addApp(&getRef(), genPlugType<dStr>(), appendStr);
-			pK->addAss(&getRef(), genPlugType<dNatStr>(), assignNatStr);
-			pK->addApp(&getRef(), genPlugType<dNatStr>(), appendNatStr);
-			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
-			pK->addApp(&getRef(), genPlugType<dText>(), appendText);
-		}
-	};
 
 	template<>
 	class cAnyOp::tOps<ptrFig>{

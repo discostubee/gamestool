@@ -19,8 +19,7 @@
 #ifndef PLUG_HPP
 #define PLUG_HPP
 
-#include "basePlug.hpp"
-#include "opOnAny.hpp"
+#include "lead.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Macros

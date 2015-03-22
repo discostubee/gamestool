@@ -24,15 +24,34 @@
 #define BASEPLUG_HPP
 
 
-///////////////////////////////////////////////////////////////////////////////////
-// Includes
+////////////////////////////////////////////////////////////////////
+// forward decs
+namespace gt{
+	class ptrFig;
+	class cReload;
+}
 
-#include "context.hpp"
+////////////////////////////////////////////////////////////////////
+// Typedefs
+namespace gt{
+	typedef
+#if defined(__APPLE__)
+	unsigned long long
+#elif defined(__linux)
+	unsigned long long
+#elif defined(WIN32)
+	INT64
+#endif
+		dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
+
+	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Classes
 namespace gt{
+
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	A plug is a data container that a lead can connect too. The lead can then connect that data to another
@@ -153,14 +172,12 @@ namespace gt{
 	template<typename A>
 	void
 	tDataPlug<A>::assignTo(void *pTo, dPlugType pType) const{
-		PROFILE;
 		cAnyOp::assign(getConst(), pTo, pType);
 	}
 
 	template<typename A>
 	void
 	tDataPlug<A>::appendTo(void *pTo, dPlugType pType) const{
-		PROFILE;
 		cAnyOp::append(getConst(), pTo, pType);
 	}
 
@@ -185,8 +202,6 @@ namespace gt{
 		pD.appendTo(&get(), genPlugType<A>());
 		return *this;
 	}
-
-
 }
 
 

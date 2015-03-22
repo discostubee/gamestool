@@ -22,10 +22,8 @@
 #ifndef FIGMENT_HPP
 #define FIGMENT_HPP
 
+#include "world.hpp"
 #include "outline.hpp"
-#include "context.hpp"
-#include "plug.hpp"
-#include "lead.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // exceptions

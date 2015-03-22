@@ -22,8 +22,9 @@
 #ifndef CHAINLINK_HPP
 #define CHAINLINK_HPP
 
-#include <list>
 #include "figment.hpp"
+
+#include <list>
 
 namespace gt{ //gamestool
 

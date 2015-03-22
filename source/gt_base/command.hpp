@@ -23,8 +23,23 @@
 #ifndef COMMAND_HPP
 #define COMMAND_HPP
 
-#include "baseFigment.hpp"
+#include "gt_string.hpp"
+#include "utils.hpp"
 
+#include <boost/shared_ptr.hpp>
+
+///////////////////////////////////////////////////////////////////////////////////
+// forward decs
+namespace gt{
+	class iFigment;
+	class cLead;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// types
+namespace gt{
+	typedef boost::shared_ptr<cLead> ptrLead;	//!<
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // constants
@@ -33,6 +48,7 @@ namespace gt{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+// objects
 namespace gt{
 
 	//----------------------------------------------------------------------------------------------------------------

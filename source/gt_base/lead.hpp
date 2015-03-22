@@ -23,10 +23,8 @@
 #ifndef	LEAD_HPP
 #define LEAD_HPP
 
-///////////////////////////////////////////////////////////////////////////////////
-// Includes
-
 #include "basePlug.hpp"
+#include "memTools.hpp"
 
 #ifdef GT_THREADS
 #	include "threadTools.hpp"

@@ -1,3 +1,6 @@
+#ifndef OPSORDINARYDATA_HPP
+#define OPSORDINARYDATA_HPP
+
 #include "opOnAny.hpp"
 #include "gt_string.hpp"
 
@@ -119,4 +122,44 @@ namespace gt{
 			pK->addApp(&getRef(), genPlugType<dStr>(), appendPlaStr);
 		}
 	};
+
+	template<>
+	class cAnyOp::tOps<const dPlaChar *>{
+	private:
+		static void assignStr(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dStr*>(pTo)->assign( pFrom );
+		}
+
+		static void appendStr(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dStr*>(pTo)->append( pFrom );
+		}
+
+		static void assignNatStr(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dNatStr*>(pTo)->t = toNStr(pFrom);
+		}
+
+		static void appendNatStr(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dNatStr*>(pTo)->t.append( toNStr(pFrom) );
+		}
+
+		static void assignText(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dText*>(pTo)->t = toText(pFrom);
+		}
+
+		static void appendText(const dPlaChar * const& pFrom, void * pTo){
+			reinterpret_cast<dText*>(pTo)->t.append( toText(pFrom) );
+		}
+
+	public:
+		static void setup(tKat<const dPlaChar *> * pK, cAnyOp * pUsing){
+			pK->addAss(&getRef(), genPlugType<dStr>(), assignStr);
+			pK->addApp(&getRef(), genPlugType<dStr>(), appendStr);
+			pK->addAss(&getRef(), genPlugType<dNatStr>(), assignNatStr);
+			pK->addApp(&getRef(), genPlugType<dNatStr>(), appendNatStr);
+			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
+			pK->addApp(&getRef(), genPlugType<dText>(), appendText);
+		}
+	};
 }
+
+#endif
