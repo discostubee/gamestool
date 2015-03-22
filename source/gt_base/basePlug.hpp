@@ -23,6 +23,9 @@
 #ifndef	BASEPLUG_HPP
 #define BASEPLUG_HPP
 
+#include "command.hpp"
+#include "byteBuffer.hpp"
+#include "opOnAny.hpp"
 
 ////////////////////////////////////////////////////////////////////
 // forward decs
