@@ -47,7 +47,7 @@ namespace gt{
 
 	protected:
 
-#ifdef GT_THREADS
+#	ifdef GT_THREADS
 		typedef boost::unique_lock<boost::mutex> dLock;
 
 		boost::thread myThread;
@@ -56,7 +56,7 @@ namespace gt{
 		bool threadStop;					//!< Stops the thread loop.
 		bool threading;						//!< Is this figment currently running a thread?
 		cContext mSharedConx;
-#endif
+#	endif
 
 		static void runThread(cThread *me);
 

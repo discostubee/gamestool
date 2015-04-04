@@ -58,6 +58,18 @@ namespace gt{
 		void patGetData(ptrLead aLead);
 	};
 
+	//!\brief
+	class cTestSleepy: public cFigment{
+	public:
+		cTestSleepy();
+		~cTestSleepy();
+
+		static const dPlaChar* identify(){ return "sleepy"; }
+		virtual const dPlaChar* name() const{ return cTestSleepy::identify(); }
+		virtual dNameHash hash() const{ return getHash<cTestSleepy>(); }
+		virtual void work(cContext* pCon);
+	};
+
 	//!\brief	Used to run a series of standard tests.
 	template<typename FIGTYPE>
 	void figmentTestSuit(){
@@ -71,13 +83,7 @@ namespace gt{
 		me.get()->jack(getCmds, &conx);
 		for(size_t iPlug = 0; iPlug < cmds.getCount(); ++iPlug){
 			try{
-				tPlug<cCommandContain> plugCmd;
-				ASRT_NOTNULL(cmds.getPlug(iPlug));
-				plugCmd = *cmds.getPlug(iPlug);
-				ASRT_TRUE(plugCmd.get().mCom != cCommandContain::DUMMY, "Command didn't copy");
-				ASRT_NOTNULL(plugCmd.get().mCom);
-				ptrLead testCmd = w->makeLead(plugCmd.get().mCom->mID);
-				me.get()->jack(testCmd, &conx);
+
 			}catch(std::exception &e){
 				DBUG_LO(e.what());
 			}

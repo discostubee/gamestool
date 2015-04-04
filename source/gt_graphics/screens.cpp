@@ -59,7 +59,6 @@ cScreen::getIDs(){
 }
 
 cScreen::cScreen(){
-	addUpdRoster(&mID);
 }
 
 cScreen::~cScreen(){

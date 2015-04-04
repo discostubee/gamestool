@@ -32,7 +32,6 @@
 // forward decs
 namespace gt{
 	class ptrFig;
-	class cContext;
 }
 
 

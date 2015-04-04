@@ -41,7 +41,9 @@ namespace gt{
 		}
 
 		static void app(const dMyType & pFrom, void *pTo){
-			reinterpret_cast< dMyType* >(pTo)->assign(pFrom.begin(), pFrom.end());
+			dMyType * mine=reinterpret_cast< dMyType* >(pTo);
+			for(typename dMyType::const_iterator itr=pFrom.begin(); itr!=pFrom.end(); ++itr)
+				mine->push_back(*itr);
 		}
 
 		static void peek(const dMyType & pFrom, void *pTo){

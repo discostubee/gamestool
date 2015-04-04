@@ -27,7 +27,6 @@ const cCommand::dUID cFilm::xGetRez = tOutline<cFilm>::makeCommand(
 );
 
 cFilm::cFilm(){
-	addUpdRoster(&mLayout);
 }
 
 cFilm::~cFilm(){

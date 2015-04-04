@@ -70,33 +70,51 @@ GTUT_START(testPlugLinier, assignAppend){
 }GTUT_END;
 
 GTUT_START(testPlugLinier, saveLoad){
-	tPlugLinearContainer<int, std::vector> vec;
-	tPlugLinearContainer<int, std::list> list;
+	typedef tPlugLinearContainer<int, std::vector> dTestVec;
+	typedef tPlugLinearContainer<int, std::list> dTestList;
+	dTestVec vec;
+	dTestList list;
 	tPlug<int> A(1), B(2), C(3);
 	cByteBuffer saved;
 	dReloadMap dontcare;
 
-	vec += A;
-	vec += B;
-	vec += C;
-	vec.save(&saved);
-	vec.clear();
-	GTUT_ASRT(vec.getCount() == 0, "didn't clear");
-	vec.loadEat(&saved, &dontcare);
-	GTUT_ASRT(*vec.getPlug(0) == A, "A isn't right");
-	GTUT_ASRT(*vec.getPlug(1) == B, "B isn't right");
-	GTUT_ASRT(*vec.getPlug(2) == C, "C isn't right");
+	{
+		vec += A;
+		vec += B;
+		vec += C;
+		vec.save(&saved);
+		vec.clear();
+		GTUT_ASRT(vec.getCount() == 0, "didn't clear");
+		vec.loadEat(&saved, &dontcare);
+		dTestVec::dItr itr=vec.getItr();
+		GTUT_ASRT(itr.stillGood(), "iterator bad");
+		GTUT_ASRT(*itr == A, "A isn't right");
+		++itr;
+		GTUT_ASRT(itr.stillGood(), "iterator bad");
+		GTUT_ASRT(*itr == B, "B isn't right");
+		++itr;
+		GTUT_ASRT(itr.stillGood(), "iterator bad");
+		GTUT_ASRT(*itr == C, "C isn't right");
+	}
 
-	list += A;
-	list += B;
-	list += C;
-	list.save(&saved);
-	list.clear();
-	GTUT_ASRT(list.getCount() == 0, "didn't clear");
-	list.loadEat(&saved, &dontcare);
-	GTUT_ASRT(*list.getPlug(0) == A, "A isn't right");
-	GTUT_ASRT(*list.getPlug(1) == B, "B isn't right");
-	GTUT_ASRT(*list.getPlug(2) == C, "C isn't right");
+	{
+		list += A;
+		list += B;
+		list += C;
+		list.save(&saved);
+		list.clear();
+		GTUT_ASRT(list.getCount() == 0, "didn't clear");
+		list.loadEat(&saved, &dontcare);
+		dTestList::dItr itr=list.getItr();
+		GTUT_ASRT(itr.stillGood(), "iterator bad");
+		GTUT_ASRT(*itr == A, "A isn't right");
+		++itr;
+		GTUT_ASRT(itr.stillGood(), "iterator bad");
+		GTUT_ASRT(*itr == B, "B isn't right");
+		++itr;
+		GTUT_ASRT(itr.stillGood(), "iterator bad");
+		GTUT_ASRT(*itr == C, "C isn't right");
+	}
 
 }GTUT_END;
 
@@ -119,59 +137,6 @@ GTUT_START(testPlugLinier, single2list){
 
 }GTUT_END;
 
-//#include "figment.hpp"
-//GTUT_START(testLead, appendingLead){
-//	cContext fakeConx;
-//	cPlugTag tag("some tag");
-//	tActualCommand<cFigment> fakeCom(0, "don't care", 0, NULL);
-//	ptrLead testMe = gWorld.get()->makeLead(fakeCom.mID);
-//	tPlugLinearContainer<int, std::vector> plug;
-//
-//	testMe->linkPlug(&plug, &tag);
-//
-//	std::vector<int> a;
-//	std::list<int> b;
-//	for(int i=1; i <= 10; ++i){
-//		if(i < 6)
-//			a.push_back(i);
-//		else
-//			b.push_back(i);
-//	}
-//
-//	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
-//
-//	std::vector<int> c;
-//	startLead(testMe, fakeConx.getSig());
-//		GTUT_ASRT(testMe->appendFrom(a, &tag), "Can't append with 'a'");
-//		GTUT_ASRT(testMe->appendFrom(b, &tag), "Can't append with 'b'");
-//		GTUT_ASRT(testMe->assignTo(&c, &tag), "Can't append to 'c'");
-//	stopLead(testMe);
-//
-//	for(int i=0; i < 10; ++i){
-//		GTUT_ASRT(c.at(i)==i+1, "Didn't get the right return.");
-//	}
-//
-//}GTUT_END;
 
-//GTUT_START(testPlugLinier, dllAddedAnyOp){
-//	std::cout << "hello A" << std::endl;
-//
-//	cContext dontcare;
-//	dRefWorld w = gWorld.get();
-//	tPlug<ptrFig> mesh = w->makeFig(makeHash("polymesh"));	//- Make sure it's drafted.
-//	tPlug<dText> text;
-//	tPlug<dText> result;
-//
-//	ptrLead makeMesh = w->makeLead("polymesh", "add to mesh");
-//	text.get().t = "1,1,1;2,2,2;3,3,3";
-//	makeMesh->linkPlug(&text, w->getPlugTag("polymesh", "vertexes"));
-//	mesh.get()->jack(makeMesh, &dontcare);
-//
-//	ptrLead getMesh = w->makeLead("polymesh", "get mesh");
-//	getMesh->linkPlug(&result, w->getPlugTag("polymesh", "vertexes"));
-//	mesh.get()->jack(getMesh, &dontcare);
-//	DBUG_LO(result.get().t);
-//
-//}GTUT_END;
 
 #endif

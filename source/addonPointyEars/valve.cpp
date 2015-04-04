@@ -43,9 +43,6 @@ const cCommand::dUID cValve::xGetState = tOutline<cValve>::makeCommand(
 );
 
 cValve::cValve(){
-	addUpdRoster(&mLink);
-	addUpdRoster(&mState);
-
 	mState = true;
 }
 

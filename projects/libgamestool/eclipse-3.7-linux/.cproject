@@ -32,6 +32,7 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.65435972" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.648194581" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.1016569789" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1586917447" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -41,6 +42,7 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1973363012" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.257179566" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.pic.1448627651" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1096224865" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -96,6 +98,7 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.902942507" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="GT_THREADS"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.329292854" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1722117483" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -106,6 +109,7 @@
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.817748579" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="GT_THREADS"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.pic.1387026834" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.985340282" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>

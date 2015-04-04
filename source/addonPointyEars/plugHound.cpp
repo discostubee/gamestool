@@ -37,9 +37,6 @@ const cCommand::dUID cPlugHound::xGoGetIt = tOutline<cPlugHound>::makeCommand(
 
 
 cPlugHound::cPlugHound(){
-	addUpdRoster(&mCom);
-	addUpdRoster(&mTag);
-	addUpdRoster(&mTarget);
 }
 
 cPlugHound::~cPlugHound(){
@@ -67,11 +64,11 @@ cPlugHound::patGoGetit(ptrLead aLead){
 	aLead->copyPlug(&mTarget, xPT_contextTargetID);
 
 	ptrLead getLead = gWorld.get()->makeLead(mCom.get());
-	ptrFig fig = currentCon->getFirstOfType(mTarget.get());
+	ptrFig fig = aLead->getCurrentContext()->getFirstOfType(mTarget.get());
 
 	const cPlugTag *tagTarget = gWorld.get()->getPlugTag(fig->hash(), mTag.get());
 
-	fig->jack(getLead, currentCon);
+	fig->jack(getLead, aLead->getCurrentContext());
 	getLead->passPlug(
 		aLead.get(),
 		tagTarget,

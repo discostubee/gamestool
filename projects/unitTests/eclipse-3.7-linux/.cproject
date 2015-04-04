@@ -27,6 +27,7 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="GTUT"/>
 									<listOptionValue builtIn="false" value="GTUT_GOOGLE"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1637689833" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
@@ -43,6 +44,7 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="GTUT"/>
 									<listOptionValue builtIn="false" value="GTUT_GOOGLE"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.1976726498" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
@@ -112,6 +114,7 @@
 									<listOptionValue builtIn="false" value="GTUT"/>
 									<listOptionValue builtIn="false" value="GTUT_GOOGLE"/>
 									<listOptionValue builtIn="false" value="GT_THREADS"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.215042235" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
@@ -129,6 +132,7 @@
 									<listOptionValue builtIn="false" value="GTUT"/>
 									<listOptionValue builtIn="false" value="GTUT_GOOGLE"/>
 									<listOptionValue builtIn="false" value="GT_THREADS"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.542348233" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
@@ -168,7 +172,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="BIN_LOC|eclipse_share" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="addonPointyEars|BIN_LOC|eclipse_share" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

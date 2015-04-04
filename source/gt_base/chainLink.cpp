@@ -28,7 +28,6 @@ const cCommand::dUID cChainLink::xSetLink = tOutline<cChainLink>::makeCommand(
 );
 
 cChainLink::cChainLink(){
-	addUpdRoster(&mLink);
 }
 
 cChainLink::~cChainLink(){

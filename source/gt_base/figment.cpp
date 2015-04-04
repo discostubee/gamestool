@@ -62,16 +62,6 @@ const cCommand::dUID cFigment::xGetLinks = tOutline<cFigment>::makeCommand(
 	NULL
 );
 
-
-#if defined(DEBUG) && defined(GT_SPEED)
-	const cPlugTag* cFigment::xPT_life = tOutline<cFigment>::makePlugTag("life");
-	const cCommand::dUID cFigment::xTestJack = tOutline<cFigment>::makeCommand(
-		"test jack", &cFigment::patTestJack, cFigment::xPT_life,
-		NULL
-	);
-
-#endif
-
 cFigment::cFigment()
 :	mBlueprint(NULL), mSelf(NULL)
 {
@@ -165,33 +155,26 @@ cFigment::loadEat(cByteBuffer* pLoadFrom, dReloadMap *aReloads){
 void
 cFigment::jack(ptrLead pLead, cContext* pCon){
 	PROFILE;
-
-	pCon->startJackMode();
-	start(pCon);
 	try{
 		ASRT_NOTNULL(mBlueprint);
 		ASRT_NOTNULL(pCon);
 
-#		ifdef GT_THREADS
-			pLead->start(pCon->getSig());
-			try{
-				mBlueprint->getCom(pLead->mCom)->use(this, pLead);
-			}catch(...){
-				pLead->stop();
-				throw;
-			}
-			pLead->stop();
-#		else
+		pCon->startJackMode();
+		start(pCon);
+		try{
 			mBlueprint->getCom(pLead->mCom)->use(this, pLead);
-#		endif
-
+		}catch(...){
+			stop(pCon);
+			throw;
+		}
+		stop(pCon);
 	}catch(std::exception &e){
-		WARN_S(name() << e.what());
+		WARN(e.what());
 
 	}catch(...){
 		UNKNOWN_ERROR;
 	}
-	stop(pCon);
+
 }
 
 
@@ -199,7 +182,6 @@ void
 cFigment::run(cContext* pCon){
 	//- Run these in case the child figment doesn't have a run function but has plugs to update.
 	start(pCon);
-	updatePlugs();
 	work(pCon);
 	stop(pCon);
 }
@@ -216,6 +198,31 @@ cFigment::getSmart(){
 	ptrFig rtnFig;
 	rtnFig.linkDir(mSelf);
 	return rtnFig;
+}
+
+const dPlaChar*
+cFigment::name() const {
+	return identify();
+}
+
+dNameHash
+cFigment::hash() const {
+	return getHash<cFigment>();
+}
+
+dNameHash
+cFigment::getReplacement() const{
+	return replaces();
+}
+
+dNameHash
+cFigment::getExtension() const {
+	return extends();
+}
+
+cFigment::dNumVer
+cFigment::getVersion() const {
+	return version();
 }
 
 void
@@ -407,8 +414,8 @@ public:
 	virtual void work(cContext* pCon){
 		if(throwOnRun)
 			throw excep::base_error(__FILE__, __LINE__);
-		else
-			if(refOther) refOther->run(currentCon);
+		else if(refOther)
+			refOther->run(pCon);
 	}
 
 	virtual void jack(ptrLead pLead, cContext* pCon){
@@ -423,7 +430,7 @@ public:
 		++timesJacked;
 	}
 
-	bool stillStacked(){ return currentCon != NULL; }
+	bool stillStacked(){ return false; }
 };
 
 GTUT_START(test_context, preventSelfReference){

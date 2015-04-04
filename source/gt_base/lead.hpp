@@ -32,17 +32,6 @@
 
 #include <boost/smart_ptr.hpp>
 
-///////////////////////////////////////////////////////////////////////////////////
-// Forward dec.
-namespace gt{
-
-#	ifdef GUTU
-		void startLead(ptrLead, dConSig);	//!< In order to use a lead inside a unit tests, we need to treat it like it was jacked.
-		void stopLead(ptrLead);				//!< End with this.
-		void startLead(cLead &, dConSig);	//!< Handy if you're not using the usual smart pointer.
-		void stopLead(cLead &);
-#	endif
-}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Classes
@@ -99,30 +88,29 @@ namespace gt{
 		//!\brief	When a plug dies, it must let the lead know it is no longer valid.
 		void unplug(cBase_plug* pPlug);
 
-		bool has(const cPlugTag *pTag);
+		//
+		bool hasTag(const cPlugTag *pTag);
+
+		//
+		void startLead(cContext *pConx);
+
+		//
+		void stopLead();
+
+		//!\brief	If there is no current context, it throws.
+		cContext* getCurrentContext();
 
 	protected:
 		typedef std::map<cPlugTag::dUID, cBase_plug*> dDataMap;
 		
 		dDataMap mTaggedData;
-		dDataMap::iterator scrItr;
+		cContext *mConx;
 
 		//-
 #		ifdef GT_THREADS
 			typedef boost::lock_guard<boost::recursive_mutex> dLock;
 
 			boost::recursive_mutex mu;
-			dConSig mCurrentSig;
-
-			void start(dConSig pSig);
-			void stop();
-
-#			ifdef GTUT
-				friend void startLead(ptrLead, dConSig);
-				friend void stopLead(ptrLead);
-				friend void startLead(cLead &, dConSig);
-				friend void stopLead(cLead &);
-#			endif
 #		endif
 
 	friend class cFigment;
@@ -133,20 +121,5 @@ namespace gt{
 	};
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////
-// Unit testing
-#ifdef GTUT
-
-namespace gt{
-	//- In a couple of unit tests we need to emulate how leads are stopped and started in jack and run mode.
-	void startLead(ptrLead lead, dConSig pSig);
-	void stopLead(ptrLead lead);
-	void startLead(cLead &lead, dConSig sig);
-	void stopLead(cLead &lead);
-}
-
 #endif
 
-
-#endif

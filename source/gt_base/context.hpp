@@ -53,12 +53,6 @@ namespace gt{
 	typedef std::deque<cFigContext*> dProgramStack;	//!< This is the entire stack of figments.
 }
 
-////////////////////////////////////////////////////////////////////
-// Typedefs
-namespace gt{
-	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
-}
-
 ///////////////////////////////////////////////////////////////////////////////////
 // errors
 namespace excep{
@@ -153,6 +147,12 @@ namespace gt{
 		int mJackModeIdx;	//!< The index at which jackmode was engaged.
 
 		dMapInfo::iterator itrInfo;	//!< scratch space.
+
+#		ifdef GT_THREADS
+			typedef boost::lock_guard<boost::recursive_mutex> dLock;
+
+			boost::recursive_mutex muCon;	//!< Mutex for start and stop.
+#		endif
 	};
 
 	//-------------------------------------------------------------------------------------
@@ -165,34 +165,13 @@ namespace gt{
 
 		virtual const dPlaChar* name() const { return "fig context"; }	//!< Need this when stack dumping from destructor.
 
-		void start(cContext *con);	//!< If threaded, this figment is locked. Puts this figment onto the given context stack, but only if that figment isn't already stacked. Updates all plugs in the roster.
-		void stop(cContext *con);	//!< If threaded, this figment is unlocked. Takes the figment off the stack.
-		void addUpdRoster(cBase_plug *pPlug);	//!< Adds a plug to the list of things to update when we start. Typically you can use this in the constructor. NOT threadsafe.
-		void remFromRoster(cBase_plug *pPlug);	//!< Used only if a plug is removed from a class during its jack/run functions. NOT threadsafe.
+		void start(cContext *con);	//!< Puts this figment onto the given context stack, but only if that figment isn't already stacked.
+		void stop(cContext *con);	//!< Takes this figment off the stack.
 
 	protected:
-		cContext *currentCon;	//!< This allows a thread to check this figment to see if it already has a context, and if it's blocked or not.
-
-		void emergencyStop();	//!< If there is a problem, we want the figment to be able to stop using a context.
-
-		//- It is hoped that the compiler will reduce the cost to call these to 0 if we use a un-threaded version.
-		void updatePlugs();	//!< Update all the plug shadows.
-
 	friend class cContext;
 	friend class cBlueprint;
 
-	private:
-		bool locked;
-
-		#ifdef GT_THREADS
-
-			typedef boost::lock_guard<boost::recursive_mutex> dLock;
-
-			boost::recursive_mutex muCon;	//!< Mutex for start and stop.
-			std::vector<cBase_plug*> updateRoster;	//!< Reference to plugs that need to update. DO NOT delete the contents, even on destruction.
-			std::vector<cBase_plug*>::iterator itrRos;
-			bool updating;
-		#endif
 	};
 }
 

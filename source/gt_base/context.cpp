@@ -66,11 +66,11 @@ cContext::~cContext(){
 		while( static_cast<int>(mStack.size())-1 > mCopyIdx){
 			itrInfo = mStackInfo.find(mStack.back());
 			if(itrInfo == mStackInfo.end()){
-				WARN_S("Expected to find signature on info map.");	//- This zombie
+				WARN_S("Expected to find signature on info map.");	//- It's a zombie
 
 			}else{
-				if(!itrInfo->second.mCurMode != sStackInfo::eModeRestacked)
-					mStack.back()->emergencyStop();
+				//if(!itrInfo->second.mCurMode != sStackInfo::eModeRestacked)
+				//	mStack.back()->emergencyStop();
 			}
 
 			mStack.pop_back();
@@ -117,14 +117,12 @@ cContext::finished(cFigContext *pFig){
 	PROFILE;
 
 	ASRT_NOTNULL(pFig);
-
 	do{
 		if(mStack.empty() || static_cast<int>(mStack.size()) <= mCopyIdx)
 			throw excep::stackFault(mStack, "context stack underflow.", __FILE__, __LINE__);
 
 		if(mStack.back() != pFig){
-			//WARN_S("Figment on top of the stack is incorrect. Forcibly unwinding until we find the right one.");	//- You'll see the warnings from the emergency stop.
-			mStack.back()->emergencyStop();
+			WARN_S("Figment on top of the stack is incorrect. Forcibly unwinding until we find the right one.");	//- You'll see the warnings from the emergency stop.
 			mKeepPopping = true;
 		}else{
 			mKeepPopping = false;
@@ -217,36 +215,14 @@ cContext::operator=(const cContext &pCon){
 	mStack = pCon.mStack;
 	mStackInfo = pCon.mStackInfo;
 	mCopyIdx = mStack.size();
-
 	return *this;
 }
 
 ////////////////////////////////////////////////////////////
-cFigContext::cFigContext() :
-	currentCon(NULL),
-	locked(false)
-{
-#	ifdef GT_THREADS
-		updating = false;
-#	endif
+cFigContext::cFigContext(){
 }
 
 cFigContext::~cFigContext(){
-	try{
-		if(currentCon!=NULL){
-			WARN_S("Figment died still holding a context.");
-			currentCon->finished(this);	//- Assume this pointer is the same as when stacked.
-		}
-
-#		ifdef GT_THREADS
-			if(locked)
-				muCon.unlock();
-#		endif
-	}catch(excep::base_error &e){
-		WARN(e);
-	}catch(...){
-		WARN_S("unknown error while destroying a figment");
-	}
 }
 
 void
@@ -257,99 +233,16 @@ cFigContext::start(cContext *con){
 		throw excep::stackFault_selfReference(con->makeStackDump(), __FILE__, __LINE__);
 
 	con->add(this);
-
-#	ifdef GT_THREADS
-		muCon.lock();
-#	endif
-
-	locked = true;
-	currentCon = con;
 }
 
 void
 cFigContext::stop(cContext *con){
 	PROFILE;
 
-	if(con == currentCon){
-		con->finished(this);
-
-		if(!con->isStacked(this))
-			currentCon = NULL;
-
-#		ifdef GT_THREADS
-			if(updating){
-				for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
-					(*itrRos)->updateFinish();
-
-				updating = false;
-			}
-#		endif
-
-	}else{
-		currentCon = NULL;
-		WARN_S("tried to stop a figment with a context that wasn't right.");
-	}
-
-#	ifdef GT_THREADS
-		muCon.unlock();
-#	endif
-
-	locked = false;
+	con->finished(this);
 }
 
-void
-cFigContext::addUpdRoster(cBase_plug *pPlug){
-#	ifdef GT_THREADS
-		updateRoster.push_back(pPlug);
-#	endif
-}
 
-void
-cFigContext::updatePlugs(){
-	PROFILE;
-#	ifdef GT_THREADS
-		if(locked){
-			updating = true;
-			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
-				(*itrRos)->updateStart();
-		}
-#	endif
-}
-
-void
-cFigContext::remFromRoster(cBase_plug *pPlug){
-	PROFILE;
-#	ifdef GT_THREADS
-		if(!updating){
-			for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos){
-				if(*itrRos == pPlug){
-					updateRoster.erase(itrRos);
-					return;
-				}
-			}
-		}
-#	endif
-}
-
-void
-cFigContext::emergencyStop(){
-	PROFILE;
-	currentCon = NULL;
-
-	if(locked){
-#		ifdef GT_THREADS
-			if(updating){
-				for(itrRos = updateRoster.begin(); itrRos != updateRoster.end(); ++itrRos)
-					(*itrRos)->updateFinish();
-				updating = false;
-			}
-			muCon.unlock();
-#		endif
-		locked = false;
-	}
-
-	WARN_S("Emergency stop pulled for " << name());
-}
 
 //--- PLEASE NOTE ---//
 //- Testing for these classes is done inside the figment source file.

@@ -36,7 +36,6 @@ const cCommand::dUID cTextFig::xGetText = tOutline<cTextFig>::makeCommand(
 );
 
 cTextFig::cTextFig(){
-	addUpdRoster(&mText);
 }
 
 cTextFig::~cTextFig(){

@@ -44,6 +44,7 @@
 	#define CRITLOCK
 #endif
 
+
 //----------------------------------------------------------------------------------------------------------------
 //!\class		cProfiler
 //!\brief		Manages profiling tokens which track how long they are alive for. Can give
@@ -56,7 +57,7 @@ public:
 	class cToken{
 	public:
 		const dNameHash	mEntryID;	//!< \note Can't use iterators because the vector changes all the time.
-		const dMillisec			mTimeStarted;
+		const dMillisec	mTimeStarted;
 
 		cToken(cProfiler *pParent, dNameHash pID, dMillisec pTime);
 		cToken(const cToken &);
@@ -116,5 +117,14 @@ private:
 #endif
 };
 
+
+//------------------------------------------------------------------------------------------
+#ifdef DEBUG
+	cProfiler::cToken makeProfileToken(const char* pFile, unsigned int pLine);
+#	define PROFILE\
+		cProfiler::cToken profileToken = makeProfileToken(__FILE__, __LINE__)
+#else
+#	define PROFILE
+#endif
 
 #endif

@@ -91,7 +91,7 @@ ptrFig makeMesh(){
 ptrFig makeEditor(){
 	dRefWorld world = gWorld.get();
 	cContext setupConx;
-	ptrFig rlTop = world->makeFig("run list");
+	ptrFig rlTop = world->makeFig(getHash<cRunList>());
 
 	tPlug<ptrFig> stage = world->makeFig(getHash<cStage>());
 	tPlug<ptrFig> film = world->makeFig(getHash<cFilm>());
