@@ -29,7 +29,7 @@ cThread::runThread(cThread *me){
 
 		cContext newContext;
 		while(!me->threadStop){
-			{
+			{	//- Update thread context
 				dLock lockConx(me->muConx);
 				newContext = me->mSharedConx;
 			}
@@ -65,28 +65,28 @@ void
 cThread::work(cContext* pCon){
 	PROFILE;
 
-#ifdef GT_THREADS
 	if(mLink.get().valid()){
-		if(!threading){
-			dLock lockMake(muSync); // If we don't wait for the thread to be made, it can be possible to deadlock.
-			threadStop = false;
-			threading = true;
+#		ifdef GT_THREADS
+			if(!threading){
+				dLock lockMake(muSync); // If we don't wait for the thread to be made, it can be possible to deadlock.
+				threadStop = false;
+				threading = true;
 
-			mSharedConx = *pCon;
-			isMultithreading::nowThreading();
-			myThread = boost::thread(cThread::runThread, this);
-
-		}else{
-			{
-				dLock lockConx(muConx);
 				mSharedConx = *pCon;
+				isMultithreading::nowThreading();
+				myThread = boost::thread(cThread::runThread, this);
+
+			}else{
+				{
+					dLock lockConx(muConx);
+					mSharedConx = *pCon;
+				}
+				sync.notify_all();	// Run the thread once if it's waiting.
 			}
-			sync.notify_all();	// Run the thread once if it's waiting.
-		}
+#		else
+			mLink.get()->run(pCon);
+#		endif
 	}
-#else
-	mLink.get()->run(pCon);
-#endif
 }
 
 void
@@ -189,7 +189,7 @@ namespace gt{
 		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
 		virtual dNameHash hash() const { return getHash<cShareTarget>(); }
 
-		cShareTarget(): hits(0) { addUpdRoster(&chatter); addUpdRoster(&hits); }
+		cShareTarget(): hits(0) {}
 		virtual ~cShareTarget(){}
 
 	};
@@ -214,7 +214,7 @@ namespace gt{
 		static const cCommand::dUID xSetup;
 		static const cPlugTag *xPT_word, *xPT_target;
 
-		cWriter(){ addUpdRoster(&target); addUpdRoster(&phrase); }
+		cWriter(){}
 		cWriter(cShareTarget *inT, dStr inS) : target(inT), phrase(inS) {}
 		virtual ~cWriter() {}
 
@@ -243,10 +243,8 @@ namespace gt{
 
 		gWorld.get()->flushLines();
 
-		const int timeout = 10000;
 		const int testLength = 20;
 		int testCount = 0;
-		int time = 0;
 		cContext fakeContext;
 		tPlug<dStr> AChatter;
 		tPlug<dStr> BChatter;
@@ -287,28 +285,26 @@ namespace gt{
 		}
 
 		ptrLead getHits = gWorld.get()->makeLead(cShareTarget::xGetHits);
+		std::stringstream ss;
+		ss << "Hits:";
 		while(testCount < testLength){
 			threadA.get()->run(&fakeContext);
 			threadB.get()->run(&fakeContext);
 			share.get()->jack(getHits, &fakeContext);
 
-			startLead(getHits, fakeContext.getSig());
-			getHits->assignTo(&testCount, cShareTarget::xPT_hits);
-			stopLead(getHits);
+			tLitePlug<int> tmp(&testCount);
+			getHits->copyPlug(&tmp, cShareTarget::xPT_hits);
 
-			++time;
-			GTUT_ASRT(time < timeout, "timeout when running.");
+			ss << tmp.get() << ",";
 		}
+		DBUG_LO(ss.str());
 
 		{
 			tPlug<dStr> chatter;
 			ptrLead getChatter = gWorld.get()->makeLead(cShareTarget::xGetChatter);
 
 			share.get()->jack(getChatter, &fakeContext);
-
-			startLead(getChatter, fakeContext.getSig());
 			getChatter->copyPlug(&chatter, cShareTarget::xPT_chatter);
-			stopLead(getChatter);
 
 			DBUG_LO("chatter='" << chatter.get() << "'");
 

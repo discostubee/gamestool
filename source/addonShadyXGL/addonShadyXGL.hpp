@@ -1,8 +1,8 @@
 //!\file	addonShadyXGL.hpp
 //!\brief	This version of the open GL addon uses shaders, and displays through X11.
 
-#ifndef ADDONX11GL_HPP
-#define ADDONX11GL_HPP
+#ifndef ADDONSHADYX11GL_HPP
+#define ADDOSHADYNX11GL_HPP
 
 #if defined(__APPLE__)
 #	include "gt_OSX/OSX_world.hpp"

@@ -38,6 +38,11 @@
 	}
 
 	////////////////////////////////////////////////////////////
+	void cTestSleepy::work(cContext* pCon){
+		sleep(1);
+	}
+
+	////////////////////////////////////////////////////////////
 	const cPlugTag *cSaveTester::xPT_str = tOutline<cSaveTester>::makePlugTag("my str");
 
 	const cPlugTag *cSaveTester::xPT_num = tOutline<cSaveTester>::makePlugTag("my num");

@@ -103,45 +103,41 @@ namespace gt{
 		static const cCommand::dUID	xGetCommands;	//!< Gets a list of all the commands used by this figment.
 		static const cCommand::dUID	xGetLinks;		//!< Fills a provided container with the list of links found using getLinks
 
-		//--- Implemented
-		cFigment();
-		virtual ~cFigment();
-
-		//!\brief	Jack is your interface for using data with this figment.
-		virtual void jack(ptrLead pLead, cContext* pCon);
-
-		void run(cContext* pCon);	//!< Performs all the normal stuff needed before doing work, such as using the context to ensure it doesn't run into itself or other threads.
-		ptrFig getSmart();
-
-		//--- These things are REQUIRED for any figment class.
+		//---
 
 		//!\brief	Used to define the string name of this object. It is also hashed to give the unique number
 		//!			used to quickly compare objects.
 		//!\note	You MUST replace this to identify your own
 		static const dPlaChar* identify(){ return "figment"; }
 
-		virtual const dPlaChar* name() const { return identify(); }		//!< Virtual version of identify.
-		virtual dNameHash hash() const { return getHash<cFigment>(); }
-
-		//--- standard interface. These are all optional in later classes.
-
 		//!\brief	If a non zero number is returned, this object replaces another in the world factory.
 		//!			For instance, a base level file IO object needs to be replaced with a linux or windows
 		//!			specific version.
 		//!\note	You'll also need to specify the polymorphic function below as well.
 		static dNameHash replaces(){ return uDoesntReplace; }
-		virtual dNameHash getReplacement() const{ return replaces(); }	//!<	You'll need to override this if you are replacing stuff.
 
 		//!\brief	If you want your figment to support the commands and tags from its parent, you'll need to extend from the parent.
 		//!\note	You don't need to extend if you have replaced a parent.
 		static dNameHash extends(){ return uDoesntExtend; }
-		virtual dNameHash getExtension() const { return extends(); }	//!\<	You'll need to override this if you are replacing stuff.
 
 		//!\brief	Version number used when loading. 0 Means that this version has no member plugs to load.
 		//!\note	Migration is demo-ed in the testMigration class.
 		static dNumVer version(){ return 0; }
-		virtual dNumVer getVersion() const { return version(); }
 
+		//---
+		cFigment();
+		virtual ~cFigment();
+
+		void jack(ptrLead pLead, cContext* pCon);	//!< Jack is your interface for using data with this figment.
+		void run(cContext* pCon);	//!< Performs all the normal stuff needed before doing work, such as using the context to ensure it doesn't run into itself or other threads.
+		ptrFig getSmart();
+
+		//---
+		virtual const dPlaChar* name() const;	//!< Virtual version of identify.
+		virtual dNameHash hash() const;
+		virtual dNameHash getReplacement() const;	//!<	You'll need to override this if you are replacing stuff.
+		virtual dNameHash getExtension() const;	//!\<	You'll need to override this if you are replacing stuff.
+		virtual dNumVer getVersion() const;
 		virtual void work(cContext* pCon);	//!< Gives the child figments some runtime to do whatever it is that they normally do.
 		virtual dStr const & requiredAddon() const;	//!< Unless this figment comes from an addon, only an empty string should be returned.
 		virtual dMigrationPattern getLoadPattern();	//!< Load patterns offer you a way to migrate an older version of a figment to the current version. Override this function to pass back different load patterns. \note NOT threadsafe.

@@ -240,16 +240,10 @@ GTUT_START(testAnchor, basicLoad){
 	tPlug<int> myNum(0);
 	ptrLead checkData = gWorld.get()->makeLead(cSaveTester::xGetData);
 
-	PLUG_REFRESH(tester);
 	tester.get()->jack(checkData, &fake);
 
-	startLead(checkData, fake.getSig());
 	GTUT_ASRT(checkData->copyPlug(&myStr, cSaveTester::xPT_str), "didn't find plug");
 	GTUT_ASRT(checkData->copyPlug(&myNum, cSaveTester::xPT_num), "didn't find plug");
-	stopLead(checkData);
-
-	PLUG_REFRESH(myStr);
-	PLUG_REFRESH(myNum);
 	GTUT_ASRT(myStr.get().compare(testStr)==0, "saved string doesn't match");
 	GTUT_ASRT(myNum.get()==42, "saved numbers are not the same");
 

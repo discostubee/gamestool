@@ -31,6 +31,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 //
 #include "utils.hpp"
+#include "exceptions.hpp"
 
 #include <vector>
 #include <list>
@@ -165,6 +166,7 @@ namespace gt{
 		void setupAll();
 		void merge(cAnyOp * pOther);	//!< Mutual merge. Remembers the other Any-op, so when you call clear the 2 can be unlinked again.
 		void demerge();	//!< Unlinks all other Any-ops.
+		void demerge(cAnyOp * pOther); //!< Unlinks the given Any-op from this one.
 
 		//---
 		static cAnyOp& getRef();
@@ -174,18 +176,17 @@ namespace gt{
 	private:
 		struct sKatOrig{
 			iKat * const mKat;
-			cAnyOp * const mOrig; //!< Can by NULL
+			cAnyOp * const mOrig; //!< Is NULL if the origin of this catalogue is this heap/any-op.
 
 			sKatOrig(iKat *pKat) : mKat(pKat), mOrig(NULL) {}
 			sKatOrig(iKat *pKat, cAnyOp *pOrig) : mKat(pKat), mOrig(pOrig) {}
 		};
 
 		typedef std::map<dPlugType, sKatOrig> dMapKatTypes;
-		typedef std::set<cAnyOp*> dSetOrig;
 
 		//---
 		dMapKatTypes mKats;
-		dSetOrig mOrig;
+		std::list<cAnyOp*> mLinkedAnyOps;	//!< Remember the other ops we linked to.
 
 		//---
 		cAnyOp();	//!<
@@ -260,6 +261,8 @@ namespace gt{
 	template<typename ELEM_T>
 	void
 	cAnyOp::tKat<ELEM_T>::link(cAnyOp * pFrom, iKat * pOps){
+		ASRT_NOTNULL(pFrom);
+		ASRT_NOTNULL(pOps);
 		ASRT_TRUE(pOps->getType() == getType(), "Not the same types");
 		tKat<ELEM_T> * you = dynamic_cast< tKat<ELEM_T>* >(pOps);
 		ASRT_NOTNULL(you);
@@ -267,6 +270,7 @@ namespace gt{
 		if(found == mLinks.end())
 			found = mLinks.insert(mLinks.end(), typename dOp2Link::value_type(pFrom, sLinkOp()));
 
+		DBUG_VERBOSE_LO("Linked: " << getType());
 		std::set<dPlugType> plusMyAss;
 		std::set<dPlugType> hasYourAss;
 		typename dMapAssigns::iterator itrMyAss;
@@ -275,6 +279,7 @@ namespace gt{
 			for(itrYourAss = you->mAsss.begin(); itrYourAss != you->mAsss.end(); ++itrYourAss){
 				if(itrMyAss->first == itrYourAss->first){
 					hasYourAss.insert(itrYourAss->first);
+					DBUG_VERBOSE_LO("   to " << itrYourAss->first);
 					break;
 				}
 			}
@@ -282,16 +287,17 @@ namespace gt{
 			if(itrYourAss == mAsss.end())
 				plusMyAss.insert(itrMyAss->first);
 		}
-
 	}
 
 	template<typename ELEM_T>
 	void
 	cAnyOp::tKat<ELEM_T>::unlink(cAnyOp * pFrom){
+		ASRT_NOTNULL(pFrom);
 		typename dOp2Link::iterator found = mLinks.find(pFrom);
 		if(found == mLinks.end())
 			return;
 
+		DBUG_VERBOSE_LO("Unlinking: " << getType());
 		dListAssItr & listAss = found->second.mAsss;
 		for(
 			typename dListAssItr::iterator itrAss = listAss.begin();
@@ -299,6 +305,7 @@ namespace gt{
 			++itrAss
 		){
 			mAsss.erase((*itrAss));
+			DBUG_VERBOSE_LO( "   assign op from " << (*itrAss)->first);
 		}
 
 		dListAppItr & listApp = found->second.mApps;
@@ -308,6 +315,7 @@ namespace gt{
 			++itrApp
 		){
 			mApps.erase((*itrApp));
+			DBUG_VERBOSE_LO( "   append op from " << (*itrApp)->first);
 		}
 		mLinks.erase(found);
 	}
@@ -315,6 +323,7 @@ namespace gt{
 	template<typename ELEM_T>
 	bool
 	cAnyOp::tKat<ELEM_T>::addAss(cAnyOp * pFrom, dPlugType pFor, fuAssign pFu){
+		ASRT_NOTNULL(pFrom);
 		std::pair<typename dMapAssigns::iterator, bool> result = mAsss.insert(
 			typename dMapAssigns::value_type(pFor, pFu)
 		);
@@ -329,6 +338,7 @@ namespace gt{
 		);
 		link->second.mAsss.push_back(result.first);
 
+		DBUG_VERBOSE_LO("Assignment op added: " << getType() << " to " << pFor);
 		return true;
 	}
 
@@ -349,6 +359,7 @@ namespace gt{
 		);
 		link->second.mApps.push_back(result.first);
 
+		DBUG_VERBOSE_LO("Append op added: " << getType() << " to " << pFor);
 		return true;
 	}
 

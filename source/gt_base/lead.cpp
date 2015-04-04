@@ -24,26 +24,17 @@ using namespace gt;
 ////////////////////////////////////////////////////////////
 
 cLead::cLead(cCommand::dUID aCom):
-	mCom(aCom)
+	mCom(aCom), mConx(NULL)
 {
 	DBUG_TRACK_START("lead");
-
-#	ifdef GT_THREADS
-		mCurrentSig = SL_NO_ENTRY;
-#	endif
 }
 
 cLead::cLead(const cLead &otherLead):
-	mCom(otherLead.mCom)
+	mCom(otherLead.mCom), mConx(NULL)
 {
 	DBUG_TRACK_START("lead");
 
-#	ifdef GT_THREADS
-		mCurrentSig = SL_NO_ENTRY;
-#	endif
-
 	cLead *other = const_cast<cLead*>(&otherLead);
-
 	for(dDataMap::iterator itr = other->mTaggedData.begin(); itr != other->mTaggedData.end(); ++itr){
 		mTaggedData[itr->first] = itr->second;
 		mTaggedData[itr->first]->linkLead(this);
@@ -52,9 +43,12 @@ cLead::cLead(const cLead &otherLead):
 
 cLead::~cLead(){
 	try{
-		for(scrItr = mTaggedData.begin(); scrItr != mTaggedData.end(); ++scrItr){
+#	ifdef GT_THREADS
+		dLock lock(mu);
+#	endif
+		for(dDataMap::iterator itr = mTaggedData.begin(); itr != mTaggedData.end(); ++itr){
 			try{
-				scrItr->second->unlinkLead(this);
+				itr->second->unlinkLead(this);
 			}catch(excep::base_error &e){
 				WARN(e);
 			}
@@ -79,10 +73,10 @@ cLead::linkPlug(cBase_plug *linkMe, const cPlugTag *aTag){
 		dLock lock(mu);
 #	endif
 
-	scrItr = mTaggedData.find(aTag->mID);
-	if(scrItr != mTaggedData.end()){
-		scrItr->second->unlinkLead(this);
-		scrItr->second = linkMe;
+	dDataMap::iterator data = mTaggedData.find(aTag->mID);
+	if(data != mTaggedData.end()){
+		data->second->unlinkLead(this);
+		data->second = linkMe;
 	}else{
 		mTaggedData[aTag->mID] =linkMe;
 	}
@@ -99,17 +93,11 @@ cLead::copyPlug(cBase_plug *setMe, const cPlugTag* pTag){
 		dLock lock(mu);
 #	endif
 
-	scrItr = mTaggedData.find(pTag->mID);
-	if(scrItr == mTaggedData.end())
+	dDataMap::iterator data = mTaggedData.find(pTag->mID);
+	if(data == mTaggedData.end())
 		return false;
 
-#	ifdef GT_THREADS
-		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
-		scrItr->second->readShadow(setMe, mCurrentSig);
-#	else
-		*setMe = *scrItr->second;
-#	endif
-
+	*setMe = *data->second;
 	return true;
 }
 
@@ -124,17 +112,11 @@ cLead::setPlug(const cBase_plug *copyMe, const cPlugTag *aTag){
 		dLock lock(mu);
 #	endif
 
-	scrItr = mTaggedData.find(aTag->mID);
-	if(scrItr == mTaggedData.end())
+	dDataMap::iterator data = mTaggedData.find(aTag->mID);
+	if(data == mTaggedData.end())
 		return false;
 
-#	ifdef GT_THREADS
-		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
-		scrItr->second->writeShadow(copyMe, mCurrentSig);
-#	else
-		*scrItr->second = *copyMe;
-#	endif
-
+	*data->second = *copyMe;
 	return true;
 }
 
@@ -149,17 +131,11 @@ cLead::appendPlug(cBase_plug *addTo, const cPlugTag *pTag){
 		dLock lock(mu);
 #	endif
 
-	scrItr = mTaggedData.find(pTag->mID);
-	if(scrItr == mTaggedData.end())
+	dDataMap::iterator data = mTaggedData.find(pTag->mID);
+	if(data == mTaggedData.end())
 		return false;
 
-#	ifdef GT_THREADS
-		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
-		scrItr->second->shadowAppends(addTo, mCurrentSig);
-#	else
-		*addTo += *scrItr->second;
-#	endif
-
+	*addTo += *data->second;
 	return true;
 }
 
@@ -174,17 +150,11 @@ cLead::plugAppends(cBase_plug *addFrom,  const cPlugTag *pTag){
 		dLock lock(mu);
 #	endif
 
-	scrItr = mTaggedData.find(pTag->mID);
-	if(scrItr == mTaggedData.end())
+	dDataMap::iterator data = mTaggedData.find(pTag->mID);
+	if(data == mTaggedData.end())
 		return false;
 
-#	ifdef GT_THREADS
-		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Not current signature");
-		scrItr->second->appendShadow(addFrom, mCurrentSig);
-#	else
-		*scrItr->second += *addFrom;
-#	endif
-
+	*data->second += *addFrom;
 	return true;
 }
 
@@ -199,15 +169,15 @@ cLead::passPlug(cLead *passTo, const cPlugTag *aGetTag, const cPlugTag *aPutTag)
 		dLock lock(mu);
 #	endif
 
-	scrItr = mTaggedData.find(aGetTag->mID);
-	if(scrItr == mTaggedData.end()){
+	dDataMap::iterator data = mTaggedData.find(aGetTag->mID);
+	if(data == mTaggedData.end()){
 		return false;
 	}
 
 	if(aPutTag == NULL)
 		aPutTag = aGetTag;
 
-	passTo->linkPlug(scrItr->second, aPutTag);
+	passTo->linkPlug(data->second, aPutTag);
 
 	return true;
 }
@@ -218,12 +188,11 @@ cLead::remPlug(const cPlugTag *pGetTag){
 		dLock lock(mu);
 #	endif
 
-	scrItr = mTaggedData.find(pGetTag->mID);
-
-	if(scrItr == mTaggedData.end())
+	dDataMap::iterator data = mTaggedData.find(pGetTag->mID);
+	if(data == mTaggedData.end())
 		return;
 
-	scrItr->second->unlinkLead(this);
+	data->second->unlinkLead(this);
 }
 
 void
@@ -235,22 +204,22 @@ cLead::unplug(cBase_plug* aPlug){
 #	endif
 
 	//- Search for plug.
-	scrItr = mTaggedData.begin();
-	while(scrItr != mTaggedData.end()){
-		if(scrItr->second == aPlug){
-			dDataMap::iterator delMe = scrItr;
-			++scrItr;
+	dDataMap::iterator itr = mTaggedData.begin();
+	while(itr != mTaggedData.end()){
+		if(itr->second == aPlug){
+			dDataMap::iterator delMe = itr;
+			++itr;
 			mTaggedData.erase(delMe);
-			if(scrItr == mTaggedData.end())
+			if(itr == mTaggedData.end())
 				break;
 		}else{
-			++scrItr;
+			++itr;
 		}
 	}
 }
 
 bool
-cLead::has(const cPlugTag *pTag){
+cLead::hasTag(const cPlugTag *pTag){
 	PROFILE;
 
 #	ifdef GT_THREADS
@@ -260,51 +229,32 @@ cLead::has(const cPlugTag *pTag){
 	return mTaggedData.end() != mTaggedData.find(pTag->mID);
 }
 
+void
+cLead::startLead(cContext *pConx){
+	ASRT_TRUE(mConx == NULL, "context already set.");
+	mConx = pConx;
+}
 
 
-#ifdef GT_THREADS
-	void
-	cLead::start(dConSig pSig){
-		ASRT_TRUE(mCurrentSig == SL_NO_ENTRY, "signature already set.");
-		mCurrentSig = pSig;
-	}
+void
+cLead::stopLead(){
+	ASRT_TRUE(mConx != NULL, "context not set.");
+	mConx = NULL;
+}
 
-	void
-	cLead::stop(){
-		ASRT_TRUE(mCurrentSig != SL_NO_ENTRY, "Signature not set.");
-		mCurrentSig = SL_NO_ENTRY;
-	}
-#endif
+//
+cContext*
+cLead::getCurrentContext(){
+	ASRT_NOTNULL(mConx);
+	return mConx;
+}
+
 
 
 ////////////////////////////////////////////////////////////
 // Tests
 #ifdef GTUT
 using namespace gt;
-
-#	ifdef GT_THREADS
-		void gt::startLead(ptrLead lead, dConSig pSig){
-			lead->start(pSig);
-		}
-
-		void gt::stopLead(ptrLead lead){
-			lead->stop();
-		}
-
-		void gt::startLead(cLead &lead, dConSig sig){
-			lead.start(sig);
-		}
-
-		void gt::stopLead(cLead &lead){
-			lead.stop();
-		}
-
-#	else
-		void gt::startLead(ptrLead lead, dConSig pSig){}
-		void gt::stopLead(ptrLead lead){}
-		void gt::startLead(cLead &lead, dConSig sig){}
-		void gt::stopLead(cLead &lead){}
-#	endif
 
 
 GTUT_START(testLead, tagging){
@@ -325,21 +275,12 @@ GTUT_START(testLead, tagging){
 	{
 		tPlug<int> testA=0;
 
-		startLead(tmpLead, fakeConx.getSig());
-			tmpLead->copyPlug(&testA, &tag);
-			GTUT_ASRT(testA == magic, "Lead didn't store A");
-			tmpLead->copyPlug(&numB, &tag);
-		stopLead(tmpLead);
-
+		tmpLead->copyPlug(&testA, &tag);
+		GTUT_ASRT(testA == magic, "Lead didn't store A");
+		tmpLead->copyPlug(&numB, &tag);
 		GTUT_ASRT(numB == magic, "B didn't get A's number");
 	}
 }GTUT_END;
-
-
-#ifdef GT_THREADS
-GTUT_START(testLead, shadowUpdate){
-}GTUT_END;
-#endif
 
 GTUT_START(testLead, appending){
 	cContext fakeConx;
@@ -351,11 +292,8 @@ GTUT_START(testLead, appending){
 
 	gWorld.get()->regContext(&fakeConx);	//- unreg-es on death.
 
-	startLead(testMe, fakeConx.getSig());
-		testMe->linkPlug(&b, &tag);
-		GTUT_ASRT(testMe->appendPlug(&a, &tag), "append failed");
-	stopLead(testMe);
-	PLUG_REFRESH(a);
+	testMe->linkPlug(&b, &tag);
+	GTUT_ASRT(testMe->appendPlug(&a, &tag), "append failed");
 	GTUT_ASRT(a.get() == 9, "Didn't append");
 
 }GTUT_END;

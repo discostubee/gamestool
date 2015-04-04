@@ -38,6 +38,29 @@ gt::loop(){
 }
 
 ////////////////////////////////////////////////////////////
+
+void
+logtest::lo(const dStr& pLine){
+	gt::cWorld::primordial::lo(pLine);
+}
+
+void
+logtest::warnError(const char *msg, const char* pFile, const unsigned int pLine){
+	gt::cWorld::primordial::warnError(msg, pFile, pLine);
+}
+
+void
+logtest::warnError(std::exception &pE, const char* pFile, const unsigned int pLine){
+	gt::cWorld::primordial::warnError(pE, pFile, pLine);
+}
+
+cProfiler::cToken
+makeProfileToken(const char* pFile, unsigned int pLine){
+	return gt::cWorld::primordial::makeProfileToken(pFile, pLine);
+}
+
+
+////////////////////////////////////////////////////////////
 // World
 
 using namespace gt;
@@ -464,6 +487,7 @@ cWorld::primordial cWorld::primordial::gPrim;
 #ifdef GT_THREADS
 	boost::recursive_mutex *gt::cWorld::primordial::xProfileGuard;
 	boost::recursive_mutex *gt::cWorld::primordial::xLineGuard;
+	boost::recursive_mutex *gt::cWorld::primordial::xPlugGuard;
 #endif
 
 cWorld::primordial::primordial(){
@@ -620,11 +644,30 @@ cWorld::primordial::addonClosed(const dPlaChar *addonFilename){
 		dStr name;
 		w->getAddonNameFromFilename(addonFilename, &name);
 		w->removeAddonBlueprints(name);
-		w->mOps.demerge();
-		w->flushLines();
+		w->mOps.demerge(&cAnyOp::getRef());
 	}
 	gWorld.drop();
 }
+
+#ifdef GT_THREADS
+
+	cBase_plug::dPlugLock
+	cWorld::primordial::getDataLock(bool pCleanup){
+		static bool setupLock=false;
+		if(!setupLock){
+			xPlugGuard = new boost::recursive_mutex();
+			setupLock=true;
+		}else if(pCleanup){
+			SAFEDEL(xPlugGuard);
+			pCleanup=false;
+			return cBase_plug::dPlugLock();
+		}
+
+		return cBase_plug::dPlugLock(
+			new boost::lock_guard<boost::recursive_mutex>(*xPlugGuard)
+		);
+	}
+#endif
 
 void
 cWorld::primordial::getLines(dLines *output, bool recursive){

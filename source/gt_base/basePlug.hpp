@@ -27,11 +27,18 @@
 #include "byteBuffer.hpp"
 #include "opOnAny.hpp"
 
+#ifdef GT_THREADS
+#	include <boost/smart_ptr.hpp>
+#	include <boost/thread.hpp>
+#	include <boost/thread/locks.hpp>
+#endif
+
 ////////////////////////////////////////////////////////////////////
 // forward decs
 namespace gt{
 	class ptrFig;
 	class cReload;
+	class cContext;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -48,6 +55,7 @@ namespace gt{
 		dFigSaveSig;	//!< This is used to uniquely identify a figment at save and load time. Should be enough room for 64 bit memory locations.
 
 	typedef std::map<dFigSaveSig, cReload*> dReloadMap;
+	typedef dIDSLookup dConSig;		//!< This is the signature of a context.
 }
 
 
@@ -82,27 +90,24 @@ namespace gt{
 		virtual void save(cByteBuffer* pSaveHere) =0;	//!< Appends the buffer with binary data that should be understandable by any platform.
 		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) =0;	//!< Reloads data from the buffer and deletes the contents it used (because save or loading is a one to one operation).
 
-		virtual bool operator== (const cBase_plug &pD) const =0;
+		virtual bool operator== (const cBase_plug &pD) const =0;	//!< Only compares types.
 		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;	//!< Assigns only the content, should not copy any linked lead info.
 		virtual cBase_plug& operator+= (const cBase_plug &pD) =0;
 
-		#ifdef GT_THREADS
-			virtual void updateStart() =0;	//!< Write shadow updates to origin.
-			virtual void updateFinish() =0;	//!< Update all shadows using the origin. Any shadow writes after the update was started are overwritten.
-		#endif
+#	ifdef GT_THREADS
+		typedef boost::shared_ptr< typename boost::lock_guard<boost::recursive_mutex> > dPlugLock;
+		dPlugLock lockData() const;
 
+#		define PLUG_DATALOCK\
+			cBase_plug::dPlugLock lock = cBase_plug::lockData()
+#	else
+#		define PLUG_DATALOCK
+#	endif
 
 	protected:
 		typedef std::map<cLead*, unsigned int> dMapLeads;
 
 		dMapLeads mLeadsConnected;		//!< Lead connections are not copied when copy plug values.
-
-		#ifdef GT_THREADS
-			virtual void readShadow(cBase_plug *pWriteTo, dConSig pSig) =0;
-			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig pSig) =0;
-			virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig) =0;
-			virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig) =0;
-		#endif
 
 	friend class cLead;
 	friend class cBasePlugLinierContainer;
@@ -125,86 +130,11 @@ namespace gt{
 
 		//- Would like to protect these, but can't.
 		virtual size_t getCount() const =0;
-		virtual cBase_plug* getPlug(size_t idx) =0;
-		virtual const cBase_plug* getPlugConst(size_t idx) const =0;
 		virtual void add(const cBase_plug &addMe) =0;
 		virtual void clear() =0;
 
 	};
 
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Another step towards a full plug, designed just to manage assignments and appends.
-	//!\note	Putting the assignments and append maps in here so that it's easier to specialise the tOpOnAny.
-	template<typename A>
-	class tDataPlug: public cBase_plug{
-	public:
-
-		//--- implemented
-		virtual dPlugType getType() const;
-		virtual void assignTo(void *pTo, dPlugType pType) const;
-		virtual void appendTo(void *pTo, dPlugType pType) const;
-
-		virtual bool operator== (const cBase_plug &pD) const;
-		virtual cBase_plug& operator= (const cBase_plug &pD);
-		virtual cBase_plug& operator+= (const cBase_plug &pD);
-
-		//--- new interface
-		virtual A& get() =0;
-		virtual const A& getConst() const =0;
-
-	private:
-		tDataPlug<A>& operator= (const tDataPlug<A> &dontcare){ return *this; }
-		tDataPlug<A>& operator+= (const tDataPlug<A> &dontcare){ return *this; }
-	};
-
-
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////
-// Template implementation
-namespace gt{
-
-	//-----------------------------------------------------------------------------
-	template<typename A>
-	dPlugType
-	tDataPlug<A>::getType() const {
-		return genPlugType<A>();
-	}
-
-	template<typename A>
-	void
-	tDataPlug<A>::assignTo(void *pTo, dPlugType pType) const{
-		cAnyOp::assign(getConst(), pTo, pType);
-	}
-
-	template<typename A>
-	void
-	tDataPlug<A>::appendTo(void *pTo, dPlugType pType) const{
-		cAnyOp::append(getConst(), pTo, pType);
-	}
-
-	template<typename A>
-	bool
-	tDataPlug<A>::operator== (const cBase_plug &pD) const {
-		return (genPlugType<A>() == pD.getType());
-	}
-
-	template<typename A>
-	cBase_plug&
-	tDataPlug<A>::operator= (const cBase_plug &pD){
-		NOTSELF(&pD);
-		pD.assignTo(&get(), genPlugType<A>());
-		return *this;
-	}
-
-	template<typename A>
-	cBase_plug&
-	tDataPlug<A>::operator+= (const cBase_plug &pD){
-		NOTSELF(&pD);
-		pD.appendTo(&get(), genPlugType<A>());
-		return *this;
-	}
 }
 
 

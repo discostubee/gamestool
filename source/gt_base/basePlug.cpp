@@ -80,3 +80,10 @@ cBase_plug::unlinkLead(cLead *pLead){
 		WARN_S("lead isn't connected to this plug.");
 	}
 }
+
+#ifdef GT_THREADS
+	cBase_plug::dPlugLock
+	cBase_plug::lockData() const{
+		return cWorld::primordial::getDataLock();
+	}
+#endif

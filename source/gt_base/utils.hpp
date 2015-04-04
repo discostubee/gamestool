@@ -44,9 +44,39 @@
 #endif
 
 //------------------------------------------------------------------------------------------
+namespace logtest{
+	void lo(const dStr& pLine);
+	void warnError(const char *msg, const char* pFile, const unsigned int pLine);
+	void warnError(std::exception &pE, const char* pFile, const unsigned int pLine);
+}
+
+//------------------------------------------------------------------------------------------
 #define SAFEDEL(P) {delete P; P=NULL;}
 #define SAFEDEL_ARR(P) {delete [] P; P=NULL;}
 
+#define WARN(x)\
+	logtest::warnError(x, __FILE__, __LINE__)
+
+#define WARN_S(x)\
+	{ std::stringstream ss; ss << "!: " << x; logtest::warnError(ss.str().c_str(), __FILE__, __LINE__); }
+
+// Handy for all those (...) catch blocks.
+extern const char *MSG_UNKNOWN_ERROR;
+#define UNKNOWN_ERROR	WARN_S(MSG_UNKNOWN_ERROR);
+
+#ifdef DEBUG
+#	define DBUG_LO(x)\
+		{ std::stringstream ss; ss << x; logtest::lo(ss.str()); }
+#else
+#	define DBUG_LO(x) {}
+#endif
+
+#if defined(DBUG_VERBOSE) && defined(DEBUG)
+#	define DBUG_VERBOSE_LO(x)\
+		{ std::stringstream ss; ss << x; logtest::lo(ss.str()); }
+#else
+#	define DBUG_VERBOSE_LO(x) {}
+#endif
 
 //------------------------------------------------------------------------------------------
 #if defined(__APPLE__)

@@ -50,8 +50,6 @@ namespace gt{
 		//--- override container
 		dPlugType getType() const;
 		size_t getCount() const;
-		cBase_plug* getPlug(size_t idx);
-		const cBase_plug* getPlugConst(size_t idx) const;
 		void add(const cBase_plug &addMe);
 		void clear();
 
@@ -65,16 +63,10 @@ namespace gt{
 		cBase_plug& operator= (const cBase_plug &pCopyMe);
 		cBase_plug& operator+= (const cBase_plug &pCopyMe);
 
-#		ifdef GT_THREADS
-			virtual void updateStart();
-			virtual void updateFinish();
-#		endif
-
-		//--- new
 		typedef CONT_T<
 			tPlug<ELEM_T>,
 			std::allocator< tPlug<ELEM_T> >
-		> dContainer;	//!<
+		> dContainer;
 
 		typedef CONT_T<
 			ELEM_T,
@@ -99,28 +91,10 @@ namespace gt{
 		template<typename OTHER>	tPlugLinearContainer<ELEM_T, CONT_T>& operator= (const OTHER &pCopyMe);
 		template<typename OTHER>	tPlugLinearContainer<ELEM_T, CONT_T>& operator+= (const OTHER &pCopyMe);
 
-	protected:
-
-#		ifdef GT_THREADS
-			typedef boost::lock_guard<boost::recursive_mutex> dLock;
-
-			static const size_t NO_CLEAR;
-
-			boost::recursive_mutex mGuard;
-			size_t mClearTo;	//!< We may have wanted to clear the container to fill it with new plugs. Instead we append, and on update we clear away the old nodes.
-
-			virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig);
-			virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig);
-			virtual void readShadow(cBase_plug *pWriteTo, dConSig pCon);
-			virtual void writeShadow(const cBase_plug *pReadFrom, dConSig pCon);
-#		endif
-
 	private:
 		dContainer mContainer;	//!<
 
 	};
-
-
 }
 
 
@@ -130,17 +104,8 @@ namespace gt{
 namespace gt{
 
 
-	//-----------------------------------------------------------------------------------------------
-#	ifdef GT_THREADS
-		template< typename ELEM_T, template<typename, typename> class CONT_T >
-		const size_t tPlugLinearContainer<ELEM_T, CONT_T>::NO_CLEAR = 0;
-#	endif
-
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	tPlugLinearContainer<ELEM_T, CONT_T>::tPlugLinearContainer(){
-#		ifdef GT_THREADS
-			mClearTo = NO_CLEAR;
-#		endif
 	}
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
@@ -167,7 +132,10 @@ namespace gt{
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	tPlugLinearContainer<ELEM_T, CONT_T>&
-	tPlugLinearContainer<ELEM_T, CONT_T>::operator= (const tPlugLinearContainer<ELEM_T, CONT_T> &pCopyMe){
+	tPlugLinearContainer<ELEM_T, CONT_T>::operator= (
+		const tPlugLinearContainer<ELEM_T, CONT_T> &pCopyMe
+	){
+		PLUG_DATALOCK;
 		if(&pCopyMe != this)
 			cAnyOp::assign(pCopyMe.mContainer, &mContainer, getType());
 		return *this;
@@ -178,6 +146,7 @@ namespace gt{
 	tPlugLinearContainer<ELEM_T, CONT_T>::operator+= (
 		const tPlugLinearContainer<ELEM_T, CONT_T> &pCopyMe
 	){
+		PLUG_DATALOCK;
 		if(&pCopyMe != this)
 			cAnyOp::append(pCopyMe.mContainer, &mContainer, getType());
 		return *this;
@@ -188,6 +157,7 @@ namespace gt{
 	tPlugLinearContainer<ELEM_T, CONT_T>::operator= (
 		const tPlugLinearContainer<ELEM_T, CONT_T>::dBaseContainer &pCopyMe
 	){
+		PLUG_DATALOCK;
 		mContainer.clear();
 		return operator+=(pCopyMe);
 	}
@@ -197,6 +167,7 @@ namespace gt{
 	tPlugLinearContainer<ELEM_T, CONT_T>::operator+= (
 		const tPlugLinearContainer<ELEM_T, CONT_T>::dBaseContainer &pCopyMe
 	){
+		PLUG_DATALOCK;
 		for(typename dBaseContainer::const_iterator itr = pCopyMe.begin(); itr != pCopyMe.end(); ++itr)
 			mContainer.push_back( tPlug<ELEM_T>(*itr) );
 
@@ -216,6 +187,7 @@ namespace gt{
 	template<typename OTHER>
 	tPlugLinearContainer<ELEM_T, CONT_T>&
 	tPlugLinearContainer<ELEM_T, CONT_T>::operator= (const OTHER &pCopyMe){
+		PLUG_DATALOCK;
 		cAnyOp::assign(pCopyMe, &mContainer, getType());
 		return *this;
 	}
@@ -224,6 +196,7 @@ namespace gt{
 	template<typename OTHER>
 	tPlugLinearContainer<ELEM_T, CONT_T>&
 	tPlugLinearContainer<ELEM_T, CONT_T>::operator+= (const OTHER &pCopyMe){
+		PLUG_DATALOCK;
 		cAnyOp::append(pCopyMe, &mContainer, getType());
 		return *this;
 	}
@@ -231,22 +204,21 @@ namespace gt{
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
 	tPlugLinearContainer<ELEM_T, CONT_T>::assignTo(void *pTo, dPlugType pType) const{
+		PLUG_DATALOCK;
 		cAnyOp::assign(mContainer, pTo, pType);
 	}
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
 	tPlugLinearContainer<ELEM_T, CONT_T>::appendTo(void *pTo, dPlugType pType) const{
+		PLUG_DATALOCK;
 		cAnyOp::append(mContainer, pTo, pType);
 	}
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
 	tPlugLinearContainer<ELEM_T, CONT_T>::save(cByteBuffer* pSaveHere){
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
+		PLUG_DATALOCK;
 		size_t s = mContainer.size();
 		pSaveHere->add( &s );
 		for(typename dContainer::iterator itr = mContainer.begin(); itr != mContainer.end(); ++itr)
@@ -256,10 +228,7 @@ namespace gt{
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
 	tPlugLinearContainer<ELEM_T, CONT_T>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
-#		ifdef GT_THREADS
-			dLock lock(mGuard);
-#		endif
-
+		PLUG_DATALOCK;
 		typedef typename dContainer::value_type element;
 
 		clear();
@@ -304,32 +273,7 @@ namespace gt{
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	size_t
 	tPlugLinearContainer<ELEM_T, CONT_T>::getCount() const{
-#		ifdef GT_THREADS
-			if(mClearTo != NO_CLEAR)
-				return mContainer.size() - mClearTo;
-#		endif
-
 		return mContainer.size();
-	}
-
-	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	cBase_plug*
-	tPlugLinearContainer<ELEM_T, CONT_T>::getPlug(size_t idx){
-#		ifdef GT_THREADS
-			if(mClearTo != NO_CLEAR)
-				idx += mClearTo;
-#		endif
-		return tGetterPlug< tPlug<ELEM_T>, CONT_T>::get(mContainer, idx);
-	}
-
-	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	const cBase_plug*
-	tPlugLinearContainer<ELEM_T, CONT_T>::getPlugConst(size_t idx) const{
-#		ifdef GT_THREADS
-			if(mClearTo != NO_CLEAR)
-				idx += mClearTo;
-#		endif
-		return tGetterPlug< tPlug<ELEM_T>, CONT_T>::getConst(mContainer, idx);
 	}
 
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
@@ -341,71 +285,10 @@ namespace gt{
 	template< typename ELEM_T, template<typename, typename> class CONT_T >
 	void
 	tPlugLinearContainer<ELEM_T, CONT_T>::clear(){
-#		ifdef GT_THREADS
-			mClearTo = mContainer.size();
-#		else
-			mContainer.clear();
-#		endif
+		mContainer.clear();
 	}
 
 
-#ifdef GT_THREADS
-
-	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	void
-	tPlugLinearContainer<ELEM_T, CONT_T>::updateStart(){
-		PROFILE;
-		dLock lock(mGuard);
-		if(mClearTo != NO_CLEAR){
-			if(mClearTo == 1){
-				mContainer.erase(mContainer.begin());
-			}else{
-				typename dContainer::iterator end;
-				std::advance(end, mClearTo-1);
-				mContainer.erase(mContainer.begin(), end);
-			}
-			mClearTo = NO_CLEAR;
-		}
-
-		for(typename dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
-			itr->updateStart();
-	}
-
-	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	void
-	tPlugLinearContainer<ELEM_T, CONT_T>::updateFinish(){
-		PROFILE;
-		dLock lock(mGuard);
-		for(typename dContainer::iterator itr=mContainer.begin(); itr != mContainer.end(); ++itr)
-			itr->updateFinish();
-	}
-
-	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	void
-	tPlugLinearContainer<ELEM_T, CONT_T>::readShadow(cBase_plug *pWriteTo, dConSig aCon){
-		internalAssignTo(pWriteTo, pWriteTo->getType(), aCon);
-	}
-
-	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	void
-	tPlugLinearContainer<ELEM_T, CONT_T>::writeShadow(const cBase_plug *pReadFrom, dConSig aCon){
-		internalAssign(*pReadFrom, aCon);
-	}
-
-
-	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	void
-	tPlugLinearContainer<ELEM_T, CONT_T>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
-		internalAssignTo(pWriteTo, pWriteTo->getType(), pSig);
-	}
-
-	template< typename ELEM_T, template<typename, typename> class CONT_T >
-	void
-	tPlugLinearContainer<ELEM_T, CONT_T>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
-		internalAssign(*pReadFrom, pSig);
-	}
-
-#endif
 
 }
 

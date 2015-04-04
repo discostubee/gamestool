@@ -70,10 +70,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Preprocessor config
-#ifdef DEBUG
-	//!\brief	Defined so that all debug versions are verbose at the moment.
-#	define DBUG_VERBOSE
-#endif
+
+//!\brief	Defined so that all debug versions are verbose at the moment.
+//#define DBUG_VERBOSE
 
 #include "baseFigment.hpp"
 #include "context.hpp"
@@ -85,37 +84,6 @@
 #include <set>
 #include <stack>
 #include <stdarg.h>
-
-////////////////////////////////////////////////////////////////////
-// Macros
-
-#define WARN(x)\
-	gt::cWorld::primordial::warnError(x, __FILE__, __LINE__)
-
-#define WARN_S(x)\
-	{ std::stringstream ss; ss << "!: " << x; gt::cWorld::primordial::warnError(ss.str().c_str(), __FILE__, __LINE__); }
-
-// Handy for all those (...) catch blocks.
-extern const char *MSG_UNKNOWN_ERROR;
-#define UNKNOWN_ERROR	WARN_S(MSG_UNKNOWN_ERROR);
-
-#ifdef DEBUG
-#	define PROFILE\
-		cProfiler::cToken profileToken = gt::cWorld::primordial::makeProfileToken(__FILE__, __LINE__)
-#	define DBUG_LO(x)\
-		{ std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
-#else
-#	define PROFILE
-#	define DBUG_LO(x) {}
-#endif
-
-#if defined(DBUG_VERBOSE) && defined(DEBUG)
-#	define DBUG_VERBOSE_LO(x)\
-		{ std::stringstream ss; ss << x; gt::cWorld::primordial::lo(ss.str()); }
-#else
-#	define DBUG_VERBOSE_LO(x) {}
-#endif
-
 
 
 ////////////////////////////////////////////////////////////////////
@@ -220,6 +188,10 @@ namespace gt{
 			static void link(gt::cWorld *pLinkme);	//!<
 			static void addonClosed(const dPlaChar *addonFilename);	//!< Called by a library when is closes. Expects the main addon filename, extensions and all.
 
+#			ifdef GT_THREADS
+				static cBase_plug::dPlugLock getDataLock(bool pCleanup=false);
+#			endif
+
 #			ifdef GTUT
 				static void suppressNextError();	//!< Helpful when running tests where we expect at most 1 error. This isn't to be used outside of testing.
 #			endif
@@ -236,6 +208,7 @@ namespace gt{
 #			ifdef GT_THREADS
 				static boost::recursive_mutex *xProfileGuard;
 				static boost::recursive_mutex *xLineGuard;
+				static boost::recursive_mutex *xPlugGuard;
 #			endif
 
 			static dLines *xLines;	//!< A pointer so its memory is initialised correctly once used.
@@ -314,8 +287,6 @@ namespace gt{
 		cWorld& operator=(cWorld&) { return *this; };	//!< Banned.
 	};
 
-	extern tMrSafety<cWorld> gWorld;	//!< Gives you threadsafe access to the world.
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -341,10 +312,9 @@ namespace gt{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-// Typedefs
+// Types
 namespace gt{
-	//typedef tPtrRef<iFigment> refFig;	//!< Used when you want access to a figment
-
+	extern tMrSafety<cWorld> gWorld;	//!< Gives you threadsafe access to the world.
 	typedef gt::tMrSafety<gt::cWorld>::dLemming dRefWorld;
 }
 

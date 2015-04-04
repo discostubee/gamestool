@@ -32,6 +32,7 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1902614220" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.2097820073" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1230493702" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
@@ -44,6 +45,7 @@
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.156390957" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1552989" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.1308860094" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
@@ -103,6 +105,7 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.442244295" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="GT_THREADS"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.187830221" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>
@@ -116,6 +119,7 @@
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1157435138" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="GT_THREADS"/>
+									<listOptionValue builtIn="false" value="DBUG_VERBOSE"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.1302580466" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../source&quot;"/>

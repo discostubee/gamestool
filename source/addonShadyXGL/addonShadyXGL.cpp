@@ -5,31 +5,17 @@
  *      Author: stuandlou
  */
 
-#include "addonX11GL.hpp"
+#include "addonShadyXGL.hpp"
 
-#include "openGL_stage.hpp"
-#include "openGL_film.hpp"
-#include "openGL_polyMesh.hpp"
-#include "openGL_camera.hpp"
 
 DYN_LIB_DEF(void)
 draftAll(gt::cWorld *pWorld){
 	try{
-		gt::cWorld::primordial::redirectWorld(pWorld);
+		gt::cWorld::primordial::link(pWorld);
 		gt::gWorld.take(pWorld);	//- Old world cleaned up by doing this.
 
-		gt::tOutline<gt::cStage>::draft();
-		gt::tOutline<gt::cStage_X11GL>::draft();
-		gt::tOutline<gt::cFilm>::draft();
-		gt::tOutline<gt::cFilm_X11GL>::draft();
-		gt::tOutline<gt::cPolyMesh>::draft();
-		gt::tOutline<gt::cPolyMesh_X11GL>::draft();
-		gt::tOutline<gt::c3DCamera>::draft();
-		gt::tOutline<gt::c3DCamera_X11GL>::draft();
-		gt::tOutline<gt::c2DCamera>::draft();
-		gt::tOutline<gt::c2DCamera_X11GL>::draft();
 
-		DBUG_LO("x11 addon open.");
+		DBUG_LO("shady x11 addon open.");
 
 	}catch(std::exception &e){
 		excep::delayExcep::add(e.what());
@@ -42,22 +28,7 @@ draftAll(gt::cWorld *pWorld){
 DYN_LIB_DEF(void)
 closeLib(){
 	try{
-		gt::tOutline<gt::cFilm_X11GL>::remove();
-		gt::tOutline<gt::cFilm>::remove();
-		gt::tOutline<gt::cPolyMesh_X11GL>::remove();
-		gt::tOutline<gt::cPolyMesh>::remove();
-		gt::tOutline<gt::c3DCamera_X11GL>::remove();
-		gt::tOutline<gt::c3DCamera>::remove();
-		gt::tOutline<gt::c2DCamera_X11GL>::remove();
-		gt::tOutline<gt::c2DCamera>::remove();
-		gt::tOutline<gt::cStage_X11GL>::remove();
-		gt::tOutline<gt::cStage>::remove();
-
-		DBUG_LO("closed x11 addon.");
-
-		gt::gWorld.drop();
-		cTracker::makeReport(std::cout);
-
+		gt::cWorld::primordial::addonClosed(__FILE__);
 	}catch(std::exception &e){
 		excep::delayExcep::add(e.what());
 

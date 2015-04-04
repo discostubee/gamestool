@@ -87,7 +87,6 @@ const cCommand::dUID cPolyMesh::xTexturize = tOutline<cPolyMesh>::makeCommand(
 
 cPolyMesh::cPolyMesh(){
 	mLazyMesh.get().mFresh = false;
-	addUpdRoster(&mLazyMesh);
 }
 
 cPolyMesh::~cPolyMesh(){
@@ -152,11 +151,11 @@ cPolyMesh::patGetMesh(ptrLead aLead){
 void
 cPolyMesh::patMeasure(ptrLead aLead){
 	PROFILE;
-	if(aLead->has(xPT_box)){
+	if(aLead->hasTag(xPT_box)){
 		tPlug< geometry::tCube<dUnitVDis> > cube;
 		measure(cube.get());
 		aLead->setPlug(&cube, xPT_box);
-	}else if(aLead->has(xPT_sphere)){
+	}else if(aLead->hasTag(xPT_sphere)){
 		tPlug< geometry::tSphere<dUnitVDis> > sphere;
 		measure(sphere.get());
 		aLead->setPlug(&sphere, xPT_sphere);

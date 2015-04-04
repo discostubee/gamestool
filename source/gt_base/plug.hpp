@@ -21,17 +21,68 @@
 
 #include "lead.hpp"
 
-///////////////////////////////////////////////////////////////////////////////////
-// Macros
-#ifdef GT_THREADS
-#	define PLUG_PARENT tShadowPlug
-#else
-#	define PLUG_PARENT tPlugFlakes
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////
 //
 namespace gt{
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief	Another step towards a full plug, designed just to manage assignments and appends.
+	//!\note	Putting the assignments and append maps in here so that it's easier to specialise the tOpOnAny.
+	template<typename A>
+	class tDataPlug: public cBase_plug{
+	public:
+		~tDataPlug();
+
+		//--- implemented
+		virtual dPlugType getType() const;
+		virtual void assignTo(void *pTo, dPlugType pType) const;
+		virtual void appendTo(void *pTo, dPlugType pType) const;
+
+		virtual bool operator== (const cBase_plug &pD) const;
+		virtual cBase_plug& operator= (const cBase_plug &pD);
+		virtual cBase_plug& operator+= (const cBase_plug &pD);
+
+		//--- new interface
+		virtual A& get() =0;
+		virtual const A& getConst() const =0;
+
+	private:
+		tDataPlug<A>& operator= (const tDataPlug<A> &dontcare){ return *this; }
+		tDataPlug<A>& operator+= (const tDataPlug<A> &dontcare){ return *this; }
+	};
+
+
+	//----------------------------------------------------------------------------------------------------------------
+	//!\brief
+	template<typename A>
+	class tLitePlug: public cBase_plug{
+	public:
+
+		//--- implemented
+		dPlugType getType() const;
+		void assignTo(void *pTo, dPlugType pType) const;
+		void appendTo(void *pTo, dPlugType pType) const;
+
+		bool operator== (const cBase_plug &pD) const;
+		cBase_plug& operator= (const cBase_plug &pD);
+		cBase_plug& operator+= (const cBase_plug &pD);
+
+		//--- new interface
+		tLitePlug(A * pRef);
+		~tLitePlug();
+
+		//---
+		void save(cByteBuffer* pSaveHere) { DONT_USE_THIS; }
+		void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL) { DONT_USE_THIS; }
+
+		A& get();
+		const A& getConst() const;
+
+	private:
+		A * mRef;	//!< DON'T cleanup.
+	};
+
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Provides serialization as a healthy breakfast. Get it, cereal, haha haha, uuuuhhh.
@@ -43,98 +94,11 @@ namespace gt{
 		virtual const A& getConst() const =0;
 
 		//---
-		virtual ~tPlugFlakes(){
-		}
-
-		virtual void save(cByteBuffer* pSaveHere){
-			pSaveHere->add(&get());
-		}
-
-		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL){
-			DUMB_REF_PAR(aReloads);
-			pChewToy->trimHead( pChewToy->fill(&get()) );
-		}
-
+		virtual ~tPlugFlakes();
+		virtual void save(cByteBuffer* pSaveHere);
+		virtual void loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads = NULL);
 	};
 
-
-#	ifdef GT_THREADS
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	Used to indicate how shadows are effects, and how the effect the source.
-	enum eShadowMode{
-		eSM_init,	//!< Initial value.
-		eSM_read,	//!< The data has only be read from, or nothing has happened. So just update the shadow and nothing else.
-		eSM_write	//!< Data is written to the source.
-	};
-
-#	define PLUG_REFRESH(p) p.updateStart(); p.updateFinish()
-
-	//----------------------------------------------------------------------------------------------------------------
-	//!\brief	The shadow plug allows you to manipulate a plug in a multi-threaded environment, while avoiding deadlocks.
-	//!			It does this by using copies/shadows of its data per thread that tries to access it via the lead. When it runs,
-	//!			it then updates these copies/shadows and the origin depending on what was done to the copy.
-	template<typename A>
-	class tShadowPlug: public tPlugFlakes<A>{
-	public:
-		tShadowPlug();
-		virtual ~tShadowPlug();
-
-		//virtual void assignTo(void *pTo, dPlugType pType) const;
-		//virtual void appendTo(void *pTo, dPlugType pType) const;
-
-		virtual void linkLead(cLead* pLead);
-		virtual void unlinkLead(cLead* pLead);
-		virtual void updateStart();
-		virtual void updateFinish();
-
-		virtual	cBase_plug& operator= (const cBase_plug &pD) =0;
-		virtual A& get() = 0;	//!< Shouldn't need to be locked because only the containing figment should have access to this, and jacking/working are already locked.
-		virtual const A& getConst() const =0;
-
-	protected:
-		virtual void readShadow(cBase_plug *pWriteTo, dConSig pSig);
-		virtual void writeShadow(const cBase_plug *pReadFrom, dConSig pSig);
-		virtual void shadowAppends(cBase_plug *pWriteTo, dConSig pSig);
-		virtual void appendShadow(cBase_plug *pReadFrom, dConSig pSig);
-
-	friend class cLead;
-
-	private:
-		typedef boost::lock_guard<boost::recursive_mutex> dLock;
-
-		struct tShadow{
-			boost::recursive_mutex mGuard;
-			eShadowMode mMode;
-			A mData;
-			dConSig mSig;
-		};
-
-		//!\brief	Used to manage access to an individual shadow.
-		class tCheckout{
-		public:
-			tCheckout(tShadow *manage);
-			tCheckout(const tCheckout &copyMe);
-			~tCheckout();
-
-			tShadow* operator-> ();
-			tShadow& operator* ();
-
-		protected:
-			tShadow *mShadow;
-		};
-
-		typedef std::vector< tShadow* > dVecShadows;
-		typedef typename dVecShadows::iterator itrShadow;
-
-		boost::recursive_mutex mGuardShadows, mGuardData, mGuardLinks;
-		dVecShadows mShadows;
-
-		tCheckout getShadow(dConSig pSig);	//!< Expands the shadow list, if needed.
-	};
-#	else
-#		define PLUG_REFRESH(p)
-#	endif
 
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	Implements most of what's left unimplemented from cBase_plug. It also provides easy access to its data
@@ -142,7 +106,7 @@ namespace gt{
 	//!			through this interface by 2 threads. Which can't really happen because async leads use shadows.
 	//!\note	Refer to the cBase_plug class for more info.
 	template<typename A>
-	class tPlug: public PLUG_PARENT<A>{
+	class tPlug: public tPlugFlakes<A>{
 	public:
 		tPlug();
 		tPlug(const cBase_plug &other);
@@ -172,242 +136,141 @@ namespace gt{
 // Template implementation
 namespace gt{
 
-#	ifdef GT_THREADS
+	//-----------------------------------------------------------------------------
+	template<typename A>
+	tDataPlug<A>::~tDataPlug(){
+		PLUG_DATALOCK;
+	}
 
-		//--------------------------------------
-		template<typename A>
-		tShadowPlug<A>::tShadowPlug(){
-		}
+	template<typename A>
+	dPlugType
+	tDataPlug<A>::getType() const {
+		return genPlugType<A>();
+	}
 
-		template<typename A>
-		tShadowPlug<A>::~tShadowPlug(){
-			typedef tPlugFlakes<A> p;
-			try{
-				dLock a(mGuardShadows);
-				dLock b(mGuardData);
-				dLock c(mGuardLinks);
+	template<typename A>
+	void
+	tDataPlug<A>::assignTo(void *pTo, dPlugType pType) const{
+		PLUG_DATALOCK;
+		cAnyOp::assign(getConst(), pTo, pType);
+	}
 
-				//- We need to unplug first before destroying shadows.
-				for(
-					cBase_plug::dMapLeads::iterator itr = p::mLeadsConnected.begin();
-					itr != p::mLeadsConnected.end();
-					++itr
-				)
-					itr->first->unplug(this);
+	template<typename A>
+	void
+	tDataPlug<A>::appendTo(void *pTo, dPlugType pType) const{
+		PLUG_DATALOCK;
+		cAnyOp::append(getConst(), pTo, pType);
+	}
 
-				p::mLeadsConnected.clear();
+	template<typename A>
+	bool
+	tDataPlug<A>::operator== (const cBase_plug &pD) const {
+		return (genPlugType<A>() == pD.getType());
+	}
 
-				for(itrShadow itr = mShadows.begin(); itr != mShadows.end(); ++itr){
-					delete (*itr);
-				}
+	template<typename A>
+	cBase_plug&
+	tDataPlug<A>::operator= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		PLUG_DATALOCK;
+		pD.assignTo(&get(), genPlugType<A>());
+		return *this;
+	}
 
-			}catch(...){
-				WARN_S("Unknown error when destroying a plug");
-			}
-		}
+	template<typename A>
+	cBase_plug&
+	tDataPlug<A>::operator+= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		PLUG_DATALOCK;
+		pD.appendTo(&get(), genPlugType<A>());
+		return *this;
+	}
 
+	//-----------------------------------------------------------------------------
 
-		template<typename A>
-		void
-		tShadowPlug<A>::linkLead(cLead* pLead){
-			PROFILE;
+	template<typename A>
+	dPlugType
+	tLitePlug<A>::getType() const{
+		return genPlugType<A>();
+	}
 
-			dLock lock(mGuardLinks);
+	template<typename A>
+	void
+	tLitePlug<A>::assignTo(void *pTo, dPlugType pType) const{
+		cAnyOp::assign(*mRef, pTo, pType);
+	}
 
-			cBase_plug::linkLead(pLead);
-		}
+	template<typename A>
+	void
+	tLitePlug<A>::appendTo(void *pTo, dPlugType pType) const{
+		cAnyOp::assign(*mRef, pTo, pType);
+	}
 
-		template<typename A>
-		void
-		tShadowPlug<A>::unlinkLead(cLead* pLead){
-			PROFILE;
+	template<typename A>
+	bool
+	tLitePlug<A>::operator== (const cBase_plug &pD) const{
+		return (genPlugType<A>() == pD.getType());
+	}
 
-			dLock lock(mGuardLinks);
+	template<typename A>
+	cBase_plug&
+	tLitePlug<A>::operator= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		pD.assignTo(mRef, genPlugType<A>());
+		return *this;
+	}
 
-			cBase_plug::unlinkLead(pLead);
-		}
+	template<typename A>
+	cBase_plug&
+	tLitePlug<A>::operator+= (const cBase_plug &pD){
+		NOTSELF(&pD);
+		pD.appendTo(mRef, genPlugType<A>());
+		return *this;
+	}
 
-		template<typename A>
-		void
-		tShadowPlug<A>::updateStart(){
-			PROFILE;
+	template<typename A>
+	A&
+	tLitePlug<A>::get(){
+		return *mRef;
+	}
 
-			dLock lock(mGuardShadows);
-			dLock lockData(mGuardData);
+	template<typename A>
+	const A&
+	tLitePlug<A>::getConst() const{
+		return *mRef;
+	}
 
-			for(itrShadow itr = mShadows.begin(); itr != mShadows.end(); ++itr){
-				if(*itr != NULL){
-					dLock lockShadow((*itr)->mGuard);
+	template<typename A>
+	tLitePlug<A>::tLitePlug(A * pRef)
+	: mRef(pRef)
+	{}
 
-					get() = (*itr)->mData;
-				}
-			}
-		}
+	template<typename A>
+	tLitePlug<A>::~tLitePlug()
+	{}
 
-		template<typename A>
-		void
-		tShadowPlug<A>::updateFinish(){
-			PROFILE;
+	//-----------------------------------------------------------------------------
+	template<typename A>
+	tPlugFlakes<A>::~tPlugFlakes(){
+	}
 
-			dLock lockShadows(mGuardShadows);
-			dLock lockData(mGuardData);
+	template<typename A>
+	void
+	tPlugFlakes<A>::save(cByteBuffer* pSaveHere){
+		PLUG_DATALOCK;
+		pSaveHere->add(&get());
+	}
 
-			for(itrShadow itr = mShadows.begin(); itr != mShadows.end(); ++itr){
-				if(*itr != NULL){
-					if(!gWorld.get()->activeContext( (*itr)->mSig )){	//- It's fine that we don't lock here because guard data is locked.
-						SAFEDEL(*itr);
-					}else{
-						dLock lockShadow((*itr)->mGuard);
+	template<typename A>
+	void
+	tPlugFlakes<A>::loadEat(cByteBuffer* pChewToy, dReloadMap *aReloads){
+		PLUG_DATALOCK;
+		DUMB_REF_PAR(aReloads);
+		pChewToy->trimHead( pChewToy->fill(&get()) );
+	}
 
-						(*itr)->mData = get();
-						(*itr)->mMode = eSM_read;
-					}
+	//-----------------------------------------------------------------------------
 
-
-				}
-
-			}
-		}
-
-		template<typename A>
-		void
-		tShadowPlug<A>::readShadow(cBase_plug *pWriteTo, dConSig pSig){
-			PROFILE;
-
-			tCheckout shadow( getShadow(pSig) );
-
-			if(shadow->mMode == eSM_init){
-				dLock lock(mGuardData);
-
-				shadow->mData = get();
-			}
-
-			tLitePlug<A> tmp(&shadow->mData);
-
-			*pWriteTo = tmp;
-		}
-
-		template<typename A>
-		void
-		tShadowPlug<A>::writeShadow(const cBase_plug *pReadFrom, dConSig pSig){
-			PROFILE;
-
-			tCheckout shadow( getShadow(pSig) );
-
-			pReadFrom->assignTo(
-				&shadow->mData,
-				genPlugType<A>()
-			);
-
-			shadow->mMode = eSM_write;
-		}
-
-		template<typename A>
-		void
-		tShadowPlug<A>::appendShadow(cBase_plug *pReadFrom, dConSig pSig){
-			PROFILE;
-
-			tCheckout shadow( getShadow(pSig) );
-
-			if(shadow->mMode == eSM_init){
-				dLock lock(mGuardData);
-
-				shadow->mData = get();
-			}
-
-			pReadFrom->appendTo(
-				&shadow->mData,
-				genPlugType<A>()
-			);
-
-			shadow->mMode = eSM_write;
-		}
-
-		template<typename A>
-		void
-		tShadowPlug<A>::shadowAppends(cBase_plug *pWriteTo, dConSig pSig){
-			PROFILE;
-
-			tCheckout shadow( getShadow(pSig) );
-
-			if(shadow->mMode == eSM_init){
-				dLock lock(mGuardData);
-
-				shadow->mData = get();
-			}
-
-			tLitePlug<A> tmp(&shadow->mData);
-			*pWriteTo += tmp;
-		}
-
-
-		template<typename A>
-		typename tShadowPlug<A>::tCheckout
-		tShadowPlug<A>::getShadow(dConSig pSig){
-			dLock lockShadows(mGuardShadows);
-
-			size_t s = static_cast<dConSig>(pSig);
-			if(mShadows.size() <= s){
-				while(mShadows.size() <= s)
-					mShadows.push_back(NULL);
-			}
-
-			if(mShadows[pSig] == NULL){
-				mShadows[pSig] = new tShadow();
-				mShadows[pSig]->mMode = eSM_init;
-			}
-
-			return tCheckout( mShadows[pSig] );
-		}
-
-
-		//--------------------------------------
-		template<typename A>
-		tShadowPlug<A>::tCheckout::tCheckout(tShadow *manage){
-			manage->mGuard.lock();
-			mShadow = manage;
-		}
-
-		template<typename A>
-		tShadowPlug<A>::tCheckout::tCheckout(const tCheckout &transfer)
-		: mShadow(NULL)
-		{
-			if(transfer.mShadow != NULL){
-				tCheckout &ref = const_cast<tCheckout&>(transfer);
-
-				mShadow = ref.mShadow;
-				ref.mShadow = NULL;
-			}
-		}
-
-		template<typename A>
-		tShadowPlug<A>::tCheckout::~tCheckout(){
-			try{
-				if(mShadow != NULL)
-					mShadow->mGuard.unlock();
-
-			}catch(std::exception &e){
-				WARN_S(e.what());
-			}catch(...){
-
-			}
-		}
-
-		template<typename A>
-		typename tShadowPlug<A>::tShadow*
-		tShadowPlug<A>::tCheckout::operator-> (){
-			return mShadow;
-		}
-
-		template<typename A>
-		typename tShadowPlug<A>::tShadow&
-		tShadowPlug<A>::tCheckout::operator* (){
-			return *mShadow;
-		}
-
-#	endif
-
-	//--------------------------------------
 	template<typename A>
 	tPlug<A>::tPlug(){
 	}
@@ -493,7 +356,7 @@ namespace gt{
 	//----------------------------------------------------------------------------------------------------------------
 	//!\brief	plug leads are illegal. Don't make much sense anyhow.
 	template<>
-	class tPlug<cLead>: public PLUG_PARENT<cLead>{
+	class tPlug<cLead>: public tPlugFlakes<cLead>{
 	};
 
 }

@@ -28,7 +28,6 @@ const cCommand::dUID cRunList::xAdd = tOutline<cRunList>::makeCommand(
 );
 
 cRunList::cRunList(){
-	addUpdRoster(&mList);
 }
 
 cRunList::~cRunList(){

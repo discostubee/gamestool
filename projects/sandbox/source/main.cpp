@@ -72,7 +72,6 @@ gt::ptrFig getRootAnchor(dNatStr & rootFile){
 		ptrLead getRoot = gWorld.get()->makeLead(cAnchor::xGetLinks);
 		getRoot->linkPlug(&root, cAnchor::xPT_links);
 		ank->jack(getRoot, &conxLoading);
-		PLUG_REFRESH(root);
 	}
 
 	return root.get();

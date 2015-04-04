@@ -38,8 +38,6 @@ cStage::cStage(){
 	mLayout.get().top = 10;
 	mLayout.get().right = 110;
 	mLayout.get().bottom = 110;
-	addUpdRoster(&mCloser);
-	addUpdRoster(&mLayout);
 }
 
 cStage::~cStage(){
