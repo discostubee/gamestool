@@ -22,3 +22,9 @@ bin/*
 *sandbox_dt
 *sandbox_d
 makefile
+projects/unitTests/eclipse-3.7-linux/DebugThreading/unitTests_dt
+projects/unitTests/eclipse-3.7-linux/DebugThreading/unitTests_d
+projects/shared/eclipse/linux-3.7/lib/gtest
+projects/shared/eclipse/linux-3.7/lib/boost_thread
+projects/shared/eclipse/linux-3.7/includes/gtest
+projects/editor/eclipse-3.7-linux/DebugThreading/grind.txt
