@@ -57,6 +57,8 @@ namespace gt{
 	//!\breif	Any-op allows you to expand, at runtime, the ways in which ELEM_T data type can
 	//!			be assigned or appended. This is perfect for dynamic libraries which can
 	//!			contain new types.
+	//!\note	There should be no need to make this threadsafe, because Any-ops are manipulated
+	//!			only when a library opens or closes, which is made threadsafe by gWorld.
 	class cAnyOp{
 	public:
 
@@ -77,7 +79,8 @@ namespace gt{
 			virtual ~iKat(){}
 
 			virtual void setup(cAnyOp * ops) =0;
-			virtual dPlugType getType() =0;
+			virtual dPlugType getType() const =0;
+			virtual const dPlaChar * getName() const =0;
 			virtual void link(cAnyOp * pFrom, iKat * pOps) =0;
 			virtual void unlink(cAnyOp * pFrom) =0;	//!< Remove any operations that came from this Any-op collection.
 		};
@@ -102,7 +105,8 @@ namespace gt{
 
 			//---
 			void setup(cAnyOp * ops);
-			dPlugType getType();
+			dPlugType getType() const;
+			const dPlaChar * getName() const;
 			void link(cAnyOp * pFrom, iKat * pOps);
 			void unlink(cAnyOp * pFrom);	//!< Not an error if it doesn't have that Any-op linked.
 
@@ -165,8 +169,10 @@ namespace gt{
 		//---
 		void setupAll();
 		void merge(cAnyOp * pOther);	//!< Mutual merge. Remembers the other Any-op, so when you call clear the 2 can be unlinked again.
+		void merge(cAnyOp *me, cAnyOp *you);
 		void demerge();	//!< Unlinks all other Any-ops.
-		void demerge(cAnyOp * pOther); //!< Unlinks the given Any-op from this one.
+		void demerge(cAnyOp *pOther);
+		void demerge(cAnyOp *me, cAnyOp *you); //!< Unlinks the given Any-op from this one.
 
 		//---
 		static cAnyOp& getRef();
@@ -175,11 +181,11 @@ namespace gt{
 
 	private:
 		struct sKatOrig{
-			iKat * const mKat;
+			iKat * const mRefKat;	//!< Don't clean up.
 			cAnyOp * const mOrig; //!< Is NULL if the origin of this catalogue is this heap/any-op.
 
-			sKatOrig(iKat *pKat) : mKat(pKat), mOrig(NULL) {}
-			sKatOrig(iKat *pKat, cAnyOp *pOrig) : mKat(pKat), mOrig(pOrig) {}
+			sKatOrig(iKat *pKat) : mRefKat(pKat), mOrig(NULL) {}
+			sKatOrig(iKat *pKat, cAnyOp *pOrig) : mRefKat(pKat), mOrig(pOrig) {}
 		};
 
 		typedef std::map<dPlugType, sKatOrig> dMapKatTypes;
@@ -254,8 +260,14 @@ namespace gt{
 
 	template<typename ELEM_T>
 	dPlugType
-	cAnyOp::tKat<ELEM_T>::getType(){
+	cAnyOp::tKat<ELEM_T>::getType() const{
 		return genPlugType<ELEM_T>();
+	}
+
+	template<typename ELEM_T>
+	const dPlaChar *
+	cAnyOp::tKat<ELEM_T>::getName() const{
+		return typeid(ELEM_T).name();
 	}
 
 	template<typename ELEM_T>
@@ -263,29 +275,54 @@ namespace gt{
 	cAnyOp::tKat<ELEM_T>::link(cAnyOp * pFrom, iKat * pOps){
 		ASRT_NOTNULL(pFrom);
 		ASRT_NOTNULL(pOps);
+		typename dOp2Link::iterator links = mLinks.find(pFrom);
+		if(links != mLinks.end()){
+			DBUG_LO("Already linked " << getName());
+			return;
+		}
+
 		ASRT_TRUE(pOps->getType() == getType(), "Not the same types");
 		tKat<ELEM_T> * you = dynamic_cast< tKat<ELEM_T>* >(pOps);
 		ASRT_NOTNULL(you);
-		typename dOp2Link::iterator found = mLinks.find(pFrom);
-		if(found == mLinks.end())
-			found = mLinks.insert(mLinks.end(), typename dOp2Link::value_type(pFrom, sLinkOp()));
 
-		DBUG_VERBOSE_LO("Linked: " << getType());
-		std::set<dPlugType> plusMyAss;
-		std::set<dPlugType> hasYourAss;
-		typename dMapAssigns::iterator itrMyAss;
-		typename dMapAssigns::iterator itrYourAss;
-		for(itrMyAss = mAsss.begin(); itrMyAss != mAsss.end(); ++itrMyAss){
-			for(itrYourAss = you->mAsss.begin(); itrYourAss != you->mAsss.end(); ++itrYourAss){
-				if(itrMyAss->first == itrYourAss->first){
-					hasYourAss.insert(itrYourAss->first);
-					DBUG_VERBOSE_LO("   to " << itrYourAss->first);
-					break;
-				}
+		links = mLinks.insert(
+			mLinks.end(),
+			typename dOp2Link::value_type(pFrom, sLinkOp())
+		);
+		DBUG_VERBOSE_LO("Linking " << getName() << " to " << std::hex << pFrom);
+
+		typename dMapAssigns::iterator hasAss;
+		for(
+			typename dMapAssigns::iterator itrYourAss = you->mAsss.begin();
+			itrYourAss != you->mAsss.end();
+			++itrYourAss
+		){
+			hasAss = mAsss.find(itrYourAss->first);
+			if(hasAss == you->mAsss.end()){
+				hasAss = mAsss.insert(
+					mAsss.end(),
+					*itrYourAss
+				);
+				links->second.mAsss.push_back(hasAss);
+				DBUG_VERBOSE_LO("   assignment op for " << itrYourAss->first);
 			}
+		}
 
-			if(itrYourAss == mAsss.end())
-				plusMyAss.insert(itrMyAss->first);
+		typename dMapAssigns::iterator hasApp;
+		for(
+			typename dMapAppends::iterator itrYourApp = you->mApps.begin();
+			itrYourApp != you->mApps.end();
+			++itrYourApp
+		){
+			hasApp = mApps.find(itrYourApp->first);
+			if(hasApp == you->mApps.end()){
+				hasApp = mApps.insert(
+					mApps.end(),
+					*itrYourApp
+				);
+				links->second.mApps.push_back(hasApp);
+				DBUG_VERBOSE_LO("   assignment op for " << itrYourApp->first);
+			}
 		}
 	}
 
@@ -294,10 +331,12 @@ namespace gt{
 	cAnyOp::tKat<ELEM_T>::unlink(cAnyOp * pFrom){
 		ASRT_NOTNULL(pFrom);
 		typename dOp2Link::iterator found = mLinks.find(pFrom);
-		if(found == mLinks.end())
+		if(found == mLinks.end()){
+			DBUG_LO(getName() << " not linked to " << std::hex << pFrom);
 			return;
+		}
 
-		DBUG_VERBOSE_LO("Unlinking: " << getType());
+		DBUG_VERBOSE_LO("Unlinking: " << getName());
 		dListAssItr & listAss = found->second.mAsss;
 		for(
 			typename dListAssItr::iterator itrAss = listAss.begin();
@@ -305,7 +344,7 @@ namespace gt{
 			++itrAss
 		){
 			mAsss.erase((*itrAss));
-			DBUG_VERBOSE_LO( "   assign op from " << (*itrAss)->first);
+			DBUG_VERBOSE_LO( "   assignment op from " << (*itrAss)->first);
 		}
 
 		dListAppItr & listApp = found->second.mApps;
@@ -338,7 +377,7 @@ namespace gt{
 		);
 		link->second.mAsss.push_back(result.first);
 
-		DBUG_VERBOSE_LO("Assignment op added: " << getType() << " to " << pFor);
+		DBUG_VERBOSE_LO("Assignment op added: " << getName() << " to " << pFor);
 		return true;
 	}
 
