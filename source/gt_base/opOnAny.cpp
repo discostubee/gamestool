@@ -48,7 +48,7 @@ cAnyOp::setupAll(){
 	static bool beenSetup=false;
 	if(!beenSetup){
 		for(dMapKatTypes::iterator itrKat = getRef().mKats.begin(); itrKat != getRef().mKats.end(); ++itrKat)
-			itrKat->second.mKat->setup(this);
+			itrKat->second.mRefKat->setup(this);
 
 		beenSetup=true;
 	}
@@ -57,43 +57,41 @@ cAnyOp::setupAll(){
 void
 cAnyOp::merge(cAnyOp * pOther){
 	DBUG_VERBOSE_LO("Merging ops " << std::hex << &mKats << " to " << std::hex << &pOther->mKats);
-	merge(&mKats, &pOther->mKats, this);
-	merge(&pOther->mKats, &mKats, pOther);
-	mLinkedAnyOps.push_back(pOther);
-	pOther->mLinkedAnyOps.push_back(this);
+	merge(this, pOther);
+	merge(pOther, this);
 }
 
 void
-cAnyOp::merge(dMapKatTypes *myKats, dMapKatTypes *yourKats, cAnyOp *me){
+cAnyOp::merge(cAnyOp *me, cAnyOp *you){
 	dMapKatTypes::iterator itrK;
 	dMapKatTypes::iterator found;
 
-	for(itrK = myKats->begin(); itrK != myKats->end(); ++itrK){
-		found = yourKats->find(itrK->first);
-		if(found == yourKats->end()){
-			found = yourKats->insert(
-				yourKats->end(),
+	for(itrK = you->mKats.begin(); itrK != you->mKats.end(); ++itrK){
+		found = me->mKats.find(itrK->first);
+		if(found == me->mKats.end()){
+			found = me->mKats.insert(
+				me->mKats.end(),
 				dMapKatTypes::value_type(
 					itrK->first,
 					sKatOrig(
-						itrK->second.mKat,
-						me
+						itrK->second.mRefKat,
+						you
 					)
 				)
 			);
 		}
 
-		found->second.mKat->link(me, itrK->second.mKat);
+		found->second.mRefKat->link(me, itrK->second.mRefKat);
 	}
+	me->mLinkedAnyOps.push_back(you);
 }
 
 void
 cAnyOp::demerge(){
 	DBUG_VERBOSE_LO("Demerging all...");
-	std::list<cAnyOp*> removeThese = mLinkedAnyOps;
 	for(
-		std::list<cAnyOp*>::iterator itrLinks = removeThese.begin();
-		itrLinks != removeThese.end();
+		std::list<cAnyOp*>::iterator itrLinks = mLinkedAnyOps.begin();
+		itrLinks != mLinkedAnyOps.end();
 		++itrLinks
 	){
 		demerge(*itrLinks);
@@ -101,55 +99,43 @@ cAnyOp::demerge(){
 }
 
 void
-cAnyOp::demerge(cAnyOp * pOther){
-	ASRT_NOTNULL(pOther);
+cAnyOp::demerge(cAnyOp *pOther){
+	demerge(this, pOther);
+	demerge(pOther, this);
+}
 
-	cAnyOp * tmpAnyOp;
-	cAnyOp * tmpMe;
-	enum{ eStarted, eDidThisHeap, eDidOtherHeap } currentHeap = eStarted;
+void
+cAnyOp::demerge(cAnyOp *me, cAnyOp *you){
+	ASRT_NOTNULL(me);
+	ASRT_NOTNULL(you);
 
-	do{
-		switch(currentHeap){
-			case eStarted:
-				currentHeap = eDidThisHeap;
-				tmpMe = this;
-				break;
-			case eDidThisHeap:
-				currentHeap = eDidOtherHeap;
-				tmpMe = pOther;
-				pOther = this;
-				break;
-			default:
-				ASRT_TRUE(false, "Bad state");
-				break;
-		}
-		DBUG_VERBOSE_LO("Demerging " << std::hex << pOther << " form " << std::hex << tmpMe);
+	DBUG_VERBOSE_LO("Demerging me(" << std::hex << me << ") from you(" << std::hex << you << ") :");
+	for(
+		std::list<cAnyOp*>::iterator itrLink = me->mLinkedAnyOps.begin();
+		itrLink != me->mLinkedAnyOps.end();
+		++itrLink
+	){
+		if(*itrLink == you){
+			typename dMapKatTypes::iterator itrYourKats = you->mKats.begin();
+			while(itrYourKats != you->mKats.end()){
+				if(itrYourKats->second.mOrig == me){
+					DBUG_VERBOSE_LO("   removing my op " << itrYourKats->second.mRefKat->getName());
+					itrYourKats->second.mRefKat->unlink(you);
+					typename dMapKatTypes::iterator delMe = itrYourKats;
+					++itrYourKats;
+					you->mKats.erase(delMe);
 
-		dMapKatTypes::iterator itrMyK = tmpMe->mKats.begin();
-		while(itrMyK != tmpMe->mKats.end()){
-			itrMyK->second.mKat->unlink(pOther);
-			tmpAnyOp = itrMyK->second.mOrig;
-			if(tmpAnyOp != NULL){
-				dMapKatTypes::iterator itrEraseMe = itrMyK;
-				++itrMyK;
-				tmpMe->mKats.erase(itrEraseMe);
-			}else{
-				++itrMyK;
+				}else{
+					DBUG_VERBOSE_LO("   removing your op " << itrYourKats->second.mRefKat->getName());
+					itrYourKats->second.mRefKat->unlink(me);
+					++itrYourKats;
+				}
 			}
+			you->mLinkedAnyOps.erase(itrLink);
+			return;
 		}
-
-		for(
-			std::list<cAnyOp*>::iterator itrLinks = tmpMe->mLinkedAnyOps.begin();
-			itrLinks != tmpMe->mLinkedAnyOps.end();
-			++itrLinks
-		){
-			if(*itrLinks == pOther){
-				tmpMe->mLinkedAnyOps.erase(itrLinks);
-				break;
-			}
-		}
-
-	}while(currentHeap != eDidOtherHeap);
+	}
+	DBUG_LO("   Did't find you");
 }
 
 cAnyOp&
