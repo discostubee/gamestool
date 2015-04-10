@@ -194,7 +194,6 @@ ENTRYPOINT
 		}
 
 		gt::gWorld.cleanup();	//- Because we can't be certain of the order globals are destroyed, you need to call this explicitly or risk loosing logs.
-		cWorld::primordial::lo("Ended.");
 		excep::delayExcep::shake();
 
 		rtn = EXIT_SUCCESS;

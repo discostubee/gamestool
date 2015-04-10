@@ -222,6 +222,8 @@ namespace gt{
 	public:
 
 		static void setup(tKat< dVertPlugs > * pK, cAnyOp * pUsing){
+			pK->addAss(&getRef(), genPlugType<dVertPlugs>(), tCommonContainerOps<sVertex, std::vector>::ass);
+			pK->addApp(&getRef(), genPlugType<dVertPlugs>(), tCommonContainerOps<sVertex, std::vector>::app);
 			pK->addAss(&getRef(), genPlugType<dText>(), assignText);
 			pK->addApp(&getRef(), genPlugType<dText>(), appendText);
 			cAnyOp::tKat<dText>::xKat.addApp(

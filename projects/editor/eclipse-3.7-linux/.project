@@ -3,7 +3,11 @@
 	<name>editor</name>
 	<comment></comment>
 	<projects>
+		<project>addonMaths</project>
+		<project>addonPointyEars</project>
 		<project>addonX11GL</project>
+		<project>libgamestool</project>
+		<project>libgt_linux</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

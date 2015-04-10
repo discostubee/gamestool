@@ -3,7 +3,7 @@
 	<name>sandbox</name>
 	<comment></comment>
 	<projects>
-		<project>addonX11GL</project>
+		<project>editor</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -92,8 +92,8 @@ void
 cBase_fileIO::patRead(ptrLead aLead){
 	PROFILE;
 
-	tPlug<size_t> readSize;
-	tPlug<size_t> readStart;
+	tPlug<size_t> readSize((size_t)0);
+	tPlug<size_t> readStart((size_t)0);
 	tPlug<size_t> fileSize(getFileSize());
 
 	(void)aLead->copyPlug(&readSize, xPT_readSize);
