@@ -56,7 +56,6 @@ cAnyOp::setupAll(){
 
 void
 cAnyOp::merge(cAnyOp * pOther){
-	DBUG_VERBOSE_LO("Merging ops " << std::hex << &mKats << " to " << std::hex << &pOther->mKats);
 	merge(this, pOther);
 	merge(pOther, this);
 }
@@ -64,12 +63,13 @@ cAnyOp::merge(cAnyOp * pOther){
 void
 cAnyOp::merge(cAnyOp *me, cAnyOp *you){
 	dMapKatTypes::iterator itrK;
-	dMapKatTypes::iterator found;
+	dMapKatTypes::iterator iHave;
 
+	DBUG_VERBOSE_LO("Merging Any-ops (" << std::hex << me << ") to (" << std::hex << you << ")");
 	for(itrK = you->mKats.begin(); itrK != you->mKats.end(); ++itrK){
-		found = me->mKats.find(itrK->first);
-		if(found == me->mKats.end()){
-			found = me->mKats.insert(
+		iHave = me->mKats.find(itrK->first);
+		if(iHave == me->mKats.end()){
+			iHave = me->mKats.insert(
 				me->mKats.end(),
 				dMapKatTypes::value_type(
 					itrK->first,
@@ -79,9 +79,11 @@ cAnyOp::merge(cAnyOp *me, cAnyOp *you){
 					)
 				)
 			);
-		}
+			DBUG_VERBOSE_LO("   Adding entire catelogue " << itrK->second.mRefKat->getType());
 
-		found->second.mRefKat->link(me, itrK->second.mRefKat);
+		}else{
+			iHave->second.mRefKat->link(you, itrK->second.mRefKat);
+		}
 	}
 	me->mLinkedAnyOps.push_back(you);
 }
@@ -117,17 +119,19 @@ cAnyOp::demerge(cAnyOp *me, cAnyOp *you){
 	){
 		if(*itrLink == you){
 			typename dMapKatTypes::iterator itrYourKats = you->mKats.begin();
+			iKat * tmpKat;
 			while(itrYourKats != you->mKats.end()){
+				tmpKat = itrYourKats->second.mRefKat;
 				if(itrYourKats->second.mOrig == me){
-					DBUG_VERBOSE_LO("   removing my op " << itrYourKats->second.mRefKat->getName());
-					itrYourKats->second.mRefKat->unlink(you);
+					DBUG_VERBOSE_LO("   removing my catalogue " << tmpKat->getType());
+					tmpKat->unlink(you);
 					typename dMapKatTypes::iterator delMe = itrYourKats;
 					++itrYourKats;
 					you->mKats.erase(delMe);
 
 				}else{
-					DBUG_VERBOSE_LO("   removing your op " << itrYourKats->second.mRefKat->getName());
-					itrYourKats->second.mRefKat->unlink(me);
+					DBUG_VERBOSE_LO("   removing your catalogue " << tmpKat->getType());
+					tmpKat->unlink(me);
 					++itrYourKats;
 				}
 			}

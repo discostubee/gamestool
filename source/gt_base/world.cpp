@@ -544,6 +544,7 @@ cWorld::primordial::lo(const dStr& pLine, bool cleanup){
 			boost::lock_guard<boost::recursive_mutex> lock(*xLineGuard);
 #		endif
 
+			{FILE *f=fopen("text.txt", "a"); fprintf(f, "%s\n", pLine.c_str()); fclose(f);}	//!!!
 		xLines->push_back(pLine);
 	}
 }

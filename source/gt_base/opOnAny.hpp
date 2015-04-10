@@ -275,12 +275,12 @@ namespace gt{
 	cAnyOp::tKat<ELEM_T>::link(cAnyOp * pFrom, iKat * pOps){
 		ASRT_NOTNULL(pFrom);
 		ASRT_NOTNULL(pOps);
-		typename dOp2Link::iterator links = mLinks.find(pFrom);
-		if(links != mLinks.end()){
-			DBUG_LO("Already linked " << getName());
-			return;
-		}
 
+		typename dOp2Link::iterator links = mLinks.find(pFrom);
+		if(links != mLinks.end())
+			return;
+
+		DBUG_LO("Linking " << getType() << " to " << std::hex << pFrom);
 		ASRT_TRUE(pOps->getType() == getType(), "Not the same types");
 		tKat<ELEM_T> * you = dynamic_cast< tKat<ELEM_T>* >(pOps);
 		ASRT_NOTNULL(you);
@@ -289,7 +289,6 @@ namespace gt{
 			mLinks.end(),
 			typename dOp2Link::value_type(pFrom, sLinkOp())
 		);
-		DBUG_VERBOSE_LO("Linking " << getName() << " to " << std::hex << pFrom);
 
 		typename dMapAssigns::iterator hasAss;
 		for(
@@ -298,7 +297,7 @@ namespace gt{
 			++itrYourAss
 		){
 			hasAss = mAsss.find(itrYourAss->first);
-			if(hasAss == you->mAsss.end()){
+			if(hasAss == mAsss.end()){
 				hasAss = mAsss.insert(
 					mAsss.end(),
 					*itrYourAss
@@ -315,7 +314,7 @@ namespace gt{
 			++itrYourApp
 		){
 			hasApp = mApps.find(itrYourApp->first);
-			if(hasApp == you->mApps.end()){
+			if(hasApp == mApps.end()){
 				hasApp = mApps.insert(
 					mApps.end(),
 					*itrYourApp
@@ -331,12 +330,10 @@ namespace gt{
 	cAnyOp::tKat<ELEM_T>::unlink(cAnyOp * pFrom){
 		ASRT_NOTNULL(pFrom);
 		typename dOp2Link::iterator found = mLinks.find(pFrom);
-		if(found == mLinks.end()){
-			DBUG_LO(getName() << " not linked to " << std::hex << pFrom);
+		if(found == mLinks.end())
 			return;
-		}
 
-		DBUG_VERBOSE_LO("Unlinking: " << getName());
+		DBUG_VERBOSE_LO("Unlinking: " << getType() << " from " << std::hex << pFrom);
 		dListAssItr & listAss = found->second.mAsss;
 		for(
 			typename dListAssItr::iterator itrAss = listAss.begin();
@@ -377,7 +374,7 @@ namespace gt{
 		);
 		link->second.mAsss.push_back(result.first);
 
-		DBUG_VERBOSE_LO("Assignment op added: " << getName() << " to " << pFor);
+		DBUG_VERBOSE_LO("Assignment op " << getType() << " added to " << pFor);
 		return true;
 	}
 
@@ -398,7 +395,7 @@ namespace gt{
 		);
 		link->second.mApps.push_back(result.first);
 
-		DBUG_VERBOSE_LO("Append op added: " << getType() << " to " << pFor);
+		DBUG_VERBOSE_LO("Append op " << getType() << " added to " << pFor);
 		return true;
 	}
 

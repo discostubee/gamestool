@@ -81,7 +81,7 @@ cLinuxWorld::openAddon(const dStr &name){
 
 	dStr libPath = dStr("./") + ADDON_PREFIX + name + ADDON_POSTFIX;
 
-	DBUG_LO("using Linux to load shared library " << libPath);
+	DBUG_LO("Loading shared library " << libPath);
 
 	void *handLib = dlopen(libPath.c_str(), RTLD_NOW | RTLD_LOCAL);
 	if(handLib != NULL){
